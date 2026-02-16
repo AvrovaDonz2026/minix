@@ -90,7 +90,7 @@ MAINTAINER_MODE_TRUE = #
 # -------------------------------------------------
 
 # The gcc driver likes to know the arguments it was configured with.
-TOPLEVEL_CONFIGURE_ARGUMENTS=/home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/configure --target=riscv64-elf32-minix --disable-nls --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-werror --with-pkgversion='NetBSD Binutils nb1' --with-bugurl=http://www.NetBSD.org/support/send-pr.html --with-lib-path==/usr/lib --with-sysroot --prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
+TOPLEVEL_CONFIGURE_ARGUMENTS=/home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/configure --target=riscv64-elf32-minix --disable-nls --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-werror --with-pkgversion='NetBSD Binutils nb1' --with-bugurl=http://www.NetBSD.org/support/send-pr.html --with-lib-path==/usr/lib --with-sysroot --prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64 --disable-shared
 
 tooldir = ${exec_prefix}/riscv64-elf32-minix
 build_tooldir = ${exec_prefix}/riscv64-elf32-minix
@@ -108,7 +108,7 @@ GCC_SHLIB_SUBDIR =
 BUILD_SUBDIR = build-x86_64-unknown-linux-gnu
 # This is set by the configure script to the arguments to use when configuring
 # directories built for the build system.
-BUILD_CONFIGARGS =  --cache-file=../config.cache '--disable-nls' '--disable-werror' '--with-pkgversion=NetBSD Binutils nb1' '--with-bugurl=http://www.NetBSD.org/support/send-pr.html' '--with-lib-path==/usr/lib' '--with-sysroot' '--prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking --with-build-subdir="$(BUILD_SUBDIR)"
+BUILD_CONFIGARGS =  --cache-file=../config.cache '--disable-nls' '--disable-werror' '--with-pkgversion=NetBSD Binutils nb1' '--with-bugurl=http://www.NetBSD.org/support/send-pr.html' '--with-lib-path==/usr/lib' '--with-sysroot' '--prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--disable-shared' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking --with-build-subdir="$(BUILD_SUBDIR)"
 
 # Linker flags to use on the host, for stage1 or when not
 # bootstrapping.
@@ -171,7 +171,7 @@ SUBDIRS =  intl libiberty opcodes bfd binutils gas ld gprof etc
 TARGET_CONFIGDIRS = 
 # This is set by the configure script to the arguments to use when configuring
 # directories built for the host system.
-HOST_CONFIGARGS =  --cache-file=./config.cache  --with-gnu-as --with-gnu-ld --with-system-zlib '--disable-nls' '--disable-werror' '--with-pkgversion=NetBSD Binutils nb1' '--with-bugurl=http://www.NetBSD.org/support/send-pr.html' '--with-lib-path==/usr/lib' '--with-sysroot' '--prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking
+HOST_CONFIGARGS =  --cache-file=./config.cache  --with-gnu-as --with-gnu-ld --with-system-zlib '--disable-nls' '--disable-werror' '--with-pkgversion=NetBSD Binutils nb1' '--with-bugurl=http://www.NetBSD.org/support/send-pr.html' '--with-lib-path==/usr/lib' '--with-sysroot' '--prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--disable-shared' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking
 # Host programs are put under this directory, which is . except if building
 # with srcdir=..
 HOST_SUBDIR = .
@@ -242,7 +242,7 @@ POSTSTAGE1_HOST_EXPORTS = \
 TARGET_SUBDIR = riscv64-elf32-minix
 # This is set by the configure script to the arguments to use when configuring
 # directories built for the target.
-TARGET_CONFIGARGS = --cache-file=./config.cache --enable-multilib --with-cross-host=x86_64-unknown-linux-gnu   '--disable-nls' '--disable-werror' '--with-pkgversion=NetBSD Binutils nb1' '--with-bugurl=http://www.NetBSD.org/support/send-pr.html' '--with-lib-path==/usr/lib' '--with-sysroot' '--prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking --with-target-subdir="$(TARGET_SUBDIR)"
+TARGET_CONFIGARGS = --cache-file=./config.cache --enable-multilib --with-cross-host=x86_64-unknown-linux-gnu   '--disable-nls' '--disable-werror' '--with-pkgversion=NetBSD Binutils nb1' '--with-bugurl=http://www.NetBSD.org/support/send-pr.html' '--with-lib-path==/usr/lib' '--with-sysroot' '--prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--disable-shared' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking --with-target-subdir="$(TARGET_SUBDIR)"
 # This is the list of variables to export in the environment when
 # configuring subdirectories for the target system.
 BASE_TARGET_EXPORTS = \

@@ -5,10 +5,10 @@
 # It is necessary for linking the library.
 
 # The name that we can dlopen(3).
-dlname='libldtestplug.so.0'
+dlname=''
 
 # Names of this library.
-library_names='libldtestplug.so.0.0.0 libldtestplug.so.0 libldtestplug.so'
+library_names=''
 
 # The name of the static archive.
 old_library='libldtestplug.a'

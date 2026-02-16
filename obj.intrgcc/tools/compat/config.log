@@ -911,7 +911,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for asnprintf
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccf6ozrl.o: in function `main':
+/usr/bin/ld: /tmp/cc2JgTFH.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `asnprintf'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -954,7 +954,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for devname
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccsaAFyb.o: in function `main':
+/usr/bin/ld: /tmp/ccnoddIg.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `devname'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1009,7 +1009,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for esetfunc
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc724VVz.o: in function `main':
+/usr/bin/ld: /tmp/ccuAFZfW.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `esetfunc'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1046,7 +1046,7 @@ f = esetfunc;
 configure:5110: result: no
 configure:5054: checking for fgetln
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccT6e9YM.o: in function `main':
+/usr/bin/ld: /tmp/ccB4hIP8.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `fgetln'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1089,7 +1089,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for fpurge
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccRe3ilV.o: in function `main':
+/usr/bin/ld: /tmp/cc5Dw3ub.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `fpurge'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1156,7 +1156,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for group_from_gid
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccagsGtI.o: in function `main':
+/usr/bin/ld: /tmp/ccrZD9cH.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `group_from_gid'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1193,7 +1193,7 @@ f = group_from_gid;
 configure:5110: result: no
 configure:5054: checking for gid_from_group
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccRDu8nB.o: in function `main':
+/usr/bin/ld: /tmp/cc0IW2kq.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `gid_from_group'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1230,7 +1230,7 @@ f = gid_from_group;
 configure:5110: result: no
 configure:5054: checking for heapsort
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccDyN2yo.o: in function `main':
+/usr/bin/ld: /tmp/ccvUI4iJ.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `heapsort'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1275,7 +1275,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for issetugid
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccvPgYU5.o: in function `main':
+/usr/bin/ld: /tmp/ccrldaYP.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `issetugid'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1312,7 +1312,7 @@ f = issetugid;
 configure:5110: result: no
 configure:5054: checking for lchflags
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccrj6dXy.o: in function `main':
+/usr/bin/ld: /tmp/ccDympTw.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `lchflags'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1398,7 +1398,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for pwcache_userdb
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccEEdcEz.o: in function `main':
+/usr/bin/ld: /tmp/ccBByRzP.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `pwcache_userdb'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1435,7 +1435,7 @@ f = pwcache_userdb;
 configure:5110: result: no
 configure:5054: checking for pwcache_groupdb
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc20de0K.o: in function `main':
+/usr/bin/ld: /tmp/ccpecF2v.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `pwcache_groupdb'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1478,7 +1478,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for raise_default_signal
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc565MiQ.o: in function `main':
+/usr/bin/ld: /tmp/ccGzHTs5.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `raise_default_signal'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1521,7 +1521,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for reallocarr
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccxeLZaZ.o: in function `main':
+/usr/bin/ld: /tmp/ccTHjNj2.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `reallocarr'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1564,7 +1564,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for setgroupent
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc7K5Q3M.o: in function `main':
+/usr/bin/ld: /tmp/ccu8TBvP.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `setgroupent'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1601,7 +1601,7 @@ f = setgroupent;
 configure:5110: result: no
 configure:5054: checking for setprogname
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccje0LrD.o: in function `main':
+/usr/bin/ld: /tmp/ccfvFJ6a.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `setprogname'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1638,7 +1638,7 @@ f = setprogname;
 configure:5110: result: no
 configure:5054: checking for setpassent
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc4mXhbs.o: in function `main':
+/usr/bin/ld: /tmp/ccvddUrA.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `setpassent'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1675,7 +1675,7 @@ f = setpassent;
 configure:5110: result: no
 configure:5054: checking for snprintb_m
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc8FC76B.o: in function `main':
+/usr/bin/ld: /tmp/ccFEGQ6m.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `snprintb_m'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1732,7 +1732,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for strmode
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccu1dKlP.o: in function `main':
+/usr/bin/ld: /tmp/cc5ZkODd.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `strmode'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1789,7 +1789,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for strsuftoll
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccN9xPaM.o: in function `main':
+/usr/bin/ld: /tmp/cciJcH2K.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `strsuftoll'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1826,7 +1826,7 @@ f = strsuftoll;
 configure:5110: result: no
 configure:5054: checking for strtoi
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccICXxKA.o: in function `main':
+/usr/bin/ld: /tmp/ccDVOp7s.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `strtoi'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1869,7 +1869,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for strtou
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccL5uxum.o: in function `main':
+/usr/bin/ld: /tmp/ccPutlUf.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `strtou'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1906,7 +1906,7 @@ f = strtou;
 configure:5110: result: no
 configure:5054: checking for user_from_uid
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cch3n8fg.o: in function `main':
+/usr/bin/ld: /tmp/ccdXXzTR.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `user_from_uid'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1943,7 +1943,7 @@ f = user_from_uid;
 configure:5110: result: no
 configure:5054: checking for uid_from_user
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccUW4JvV.o: in function `main':
+/usr/bin/ld: /tmp/ccAYiCJw.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `uid_from_user'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1986,7 +1986,7 @@ configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for vasnprintf
 configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccsQZ3vh.o: in function `main':
+/usr/bin/ld: /tmp/ccg5VAg5.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `vasnprintf'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -2818,7 +2818,7 @@ configure:7884: $? = 0
 configure:7895: result: yes
 configure:7909: checking for fparseln
 configure:7946: cc -o conftest -O -fcommon   conftest.c -lrt -lz  >&5
-/usr/bin/ld: /tmp/cc1yrQu2.o: in function `main':
+/usr/bin/ld: /tmp/ccWlFWUh.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `fparseln'
 collect2: error: ld returned 1 exit status
 configure:7949: $? = 1

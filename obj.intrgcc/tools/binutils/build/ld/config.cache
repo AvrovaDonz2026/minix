@@ -127,7 +127,6 @@ gcc_cv_initfini_array=${gcc_cv_initfini_array='no'}
 gcc_cv_prog_cmp_skip=${gcc_cv_prog_cmp_skip='cmp --ignore-initial=16 $$f1 $$f2'}
 ld_cv_decl_getopt_unistd_h=${ld_cv_decl_getopt_unistd_h='yes'}
 ld_cv_string_concatenation=${ld_cv_string_concatenation='yes'}
-lt_cv_archive_cmds_need_lc=${lt_cv_archive_cmds_need_lc='no'}
 lt_cv_deplibs_check_method=${lt_cv_deplibs_check_method='pass_all'}
 lt_cv_file_magic_cmd=${lt_cv_file_magic_cmd='$MAGIC_CMD'}
 lt_cv_file_magic_test_file=${lt_cv_file_magic_test_file=''}

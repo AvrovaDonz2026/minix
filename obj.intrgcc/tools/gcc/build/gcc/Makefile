@@ -640,7 +640,7 @@ exeext =
 build_exeext = 
 
 # NetBSD mknative-gcc addition
-ENABLE_SHARED = yes
+ENABLE_SHARED = no
 
 # Directory in which to put man pages.
 mandir = ${datarootdir}/man
@@ -2067,7 +2067,7 @@ DRIVER_DEFINES = \
   -DTOOLDIR_BASE_PREFIX=\"$(libsubdir_to_prefix)$(prefix_to_exec_prefix)\" \
   -DTARGET_SYSTEM_ROOT=\"$(TARGET_SYSTEM_ROOT)\" \
   $(VALGRIND_DRIVER_DEFINES) \
-  `test "X$${SHLIB}" = "X" || test "yes" != "yes" || echo "-DENABLE_SHARED_LIBGCC"` \
+  `test "X$${SHLIB}" = "X" || test "no" != "yes" || echo "-DENABLE_SHARED_LIBGCC"` \
   -DCONFIGURE_SPECS="\"\""
 
 gcc.o: gcc.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) intl.h multilib.h \

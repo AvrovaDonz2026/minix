@@ -129,7 +129,6 @@ bu_cv_decl_time_t_time_h=${bu_cv_decl_time_t_time_h='yes'}
 bu_cv_decl_time_t_types_h=${bu_cv_decl_time_t_types_h='yes'}
 bu_cv_header_utime_h=${bu_cv_header_utime_h='yes'}
 gcc_cv_header_string=${gcc_cv_header_string='yes'}
-lt_cv_archive_cmds_need_lc=${lt_cv_archive_cmds_need_lc='no'}
 lt_cv_deplibs_check_method=${lt_cv_deplibs_check_method='pass_all'}
 lt_cv_file_magic_cmd=${lt_cv_file_magic_cmd='$MAGIC_CMD'}
 lt_cv_file_magic_test_file=${lt_cv_file_magic_test_file=''}

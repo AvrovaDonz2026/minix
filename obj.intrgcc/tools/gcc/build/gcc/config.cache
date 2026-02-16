@@ -337,7 +337,6 @@ gcc_cv_prog_makeinfo_modern=${gcc_cv_prog_makeinfo_modern='yes'}
 gcc_cv_readelf=${gcc_cv_readelf='/usr/bin/readelf'}
 gcc_cv_target_dl_iterate_phdr=${gcc_cv_target_dl_iterate_phdr='unknown'}
 gcc_cv_type_clock_t=${gcc_cv_type_clock_t='yes'}
-lt_cv_archive_cmds_need_lc=${lt_cv_archive_cmds_need_lc='no'}
 lt_cv_deplibs_check_method=${lt_cv_deplibs_check_method='pass_all'}
 lt_cv_file_magic_cmd=${lt_cv_file_magic_cmd='$MAGIC_CMD'}
 lt_cv_file_magic_test_file=${lt_cv_file_magic_test_file=''}

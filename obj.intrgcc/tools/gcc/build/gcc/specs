@@ -65,7 +65,7 @@ cc1 -E %{traditional|traditional-cpp:-traditional-cpp}
 
 
 *libgcc:
-%{static|static-libgcc:-lgcc -lgcc_eh}%{!static:%{!static-libgcc:%{!shared-libgcc:-lgcc --as-needed -lgcc_s --no-as-needed}%{shared-libgcc:--as-needed -lgcc_s --no-as-needed -lgcc}}}
+-lgcc
 
 *startfile:
 %{!shared:			     %{pg:gcrt0%O%s}		     %{!pg:				 %{p:gcrt0%O%s}			 %{!p:%{profile:gcrt0%O%s} 	      %{!profile:crt0%O%s}}}}    %:if-exists(crti%O%s)	   %{static:%:if-exists-else(crtbeginT%O%s crtbegin%O%s)}    %{!static:                        %{!shared:				 %{!pie:crtbegin%O%s}		 %{pie:crtbeginS%O%s}}	     %{shared:crtbeginS%O%s}}

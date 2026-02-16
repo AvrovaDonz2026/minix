@@ -114,7 +114,6 @@ gas_cv_have_sys_stat_type_member_st_mtim_tv_nsec=${gas_cv_have_sys_stat_type_mem
 gas_cv_have_sys_stat_type_member_st_mtim_tv_sec=${gas_cv_have_sys_stat_type_member_st_mtim_tv_sec='yes'}
 gas_cv_have_time_type_member_tm_gmtoff=${gas_cv_have_time_type_member_tm_gmtoff='yes'}
 gcc_cv_header_string=${gcc_cv_header_string='yes'}
-lt_cv_archive_cmds_need_lc=${lt_cv_archive_cmds_need_lc='no'}
 lt_cv_deplibs_check_method=${lt_cv_deplibs_check_method='pass_all'}
 lt_cv_file_magic_cmd=${lt_cv_file_magic_cmd='$MAGIC_CMD'}
 lt_cv_file_magic_test_file=${lt_cv_file_magic_test_file=''}

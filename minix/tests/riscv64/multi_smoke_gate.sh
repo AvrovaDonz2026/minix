@@ -23,11 +23,12 @@ DESTDIR="${DESTDIR:-$DESTDIR_DEFAULT}"
 ROUNDS=3
 TIMEOUT_SEC=140
 WITH_DISK=1
-DISK_IMAGE="${DISK_IMAGE:-/tmp/minix-smoke-gate.img}"
+DISK_IMAGE="${DISK_IMAGE:-}"
 DISK_SIZE_MB=128
 LOG_ROOT="${LOG_ROOT:-/tmp/minix-smoke-gate-$(date +%Y%m%d-%H%M%S)}"
 MAX_TOTAL_SAFECOPY=24
 MAX_PRE_SHELL_SAFECOPY=8
+REUSE_DISK=0
 
 passed=0
 failed=0
@@ -43,7 +44,8 @@ Options:
   --timeout SEC                  Per-run timeout seconds (default: 140)
   --with-disk                    Enable with-disk runs (default: on)
   --without-disk                 Disable with-disk runs
-  --disk-image PATH              Raw disk image path (default: /tmp/minix-smoke-gate.img)
+  --disk-image PATH              Raw disk image path (default: <log-root>/minix-smoke-gate.img)
+  --reuse-disk                   Reuse existing disk image at --disk-image
   --disk-size-mb N               Disk image size in MB if created (default: 128)
   --log-root PATH                Output log directory
   --max-total-safecopy N         Triage threshold (default: 24)
@@ -60,6 +62,7 @@ while [ $# -gt 0 ]; do
         --with-disk) WITH_DISK=1; shift ;;
         --without-disk) WITH_DISK=0; shift ;;
         --disk-image) DISK_IMAGE="$2"; shift 2 ;;
+        --reuse-disk) REUSE_DISK=1; shift ;;
         --disk-size-mb) DISK_SIZE_MB="$2"; shift 2 ;;
         --log-root) LOG_ROOT="$2"; shift 2 ;;
         --max-total-safecopy) MAX_TOTAL_SAFECOPY="$2"; shift 2 ;;
@@ -92,8 +95,17 @@ fi
 
 mkdir -p "$LOG_ROOT"
 
-if [ "$WITH_DISK" -eq 1 ] && [ ! -f "$DISK_IMAGE" ]; then
-    truncate -s "${DISK_SIZE_MB}M" "$DISK_IMAGE"
+if [ "$WITH_DISK" -eq 1 ]; then
+    if [ -z "$DISK_IMAGE" ]; then
+        DISK_IMAGE="$LOG_ROOT/minix-smoke-gate.img"
+    fi
+    if [ "$REUSE_DISK" -eq 1 ] && [ -f "$DISK_IMAGE" ]; then
+        echo "[INFO] reusing disk image: $DISK_IMAGE"
+    else
+        rm -f "$DISK_IMAGE"
+        truncate -s "${DISK_SIZE_MB}M" "$DISK_IMAGE"
+        echo "[INFO] fresh disk image prepared: $DISK_IMAGE"
+    fi
 fi
 
 run_one() {
@@ -106,8 +118,26 @@ run_one() {
     local rc
 
     echo "[INFO] round=${round} case=${case_name}"
-    timeout "$TIMEOUT_SEC" "$QEMU_SCRIPT" -s -k "$KERNEL" -B "$DESTDIR" "$@" \
-        >"$log_file" 2>&1 || true
+    if timeout "$TIMEOUT_SEC" "$QEMU_SCRIPT" -s -k "$KERNEL" -B "$DESTDIR" "$@" \
+        >"$log_file" 2>&1; then
+        rc=0
+    else
+        rc=$?
+    fi
+
+    case "$rc" in
+        0)
+            echo "[INFO] ${case_name} round ${round}: runner exited cleanly (rc=0)"
+            ;;
+        124|137)
+            echo "[INFO] ${case_name} round ${round}: runner timeout/terminated (rc=${rc})"
+            ;;
+        *)
+            echo "[FAIL] ${case_name} round ${round}: runner exited abnormally (rc=${rc})"
+            failed=$((failed + 1))
+            return
+            ;;
+    esac
 
     if ! grep -Eq 'MINIX 3\.4\.0|exec path="/bin/sh"' "$log_file"; then
         echo "[FAIL] ${case_name} round ${round}: boot marker missing"

@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-02-16  
-**Version / 版本**: 1.20
+**Version / 版本**: 1.21
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -16,7 +16,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 ## Repair Priority / 修复优先级（从重到轻）
 
 - P0 / 最高优先（含新发现）:
-  1) `#27` VFS magic-grant 失败路径缺少 revoke，可能累积 grant 资源泄漏
+  1) `[DONE]` `#27` VFS magic-grant 失败路径缺少 revoke，可能累积 grant 资源泄漏
   2) `[DONE]` `#22` RS `free_slot()` endpoint unset 时越界写 `rproc_ptr[]`
   3) `[DONE]` `#21` RS endpoint 校验接受 task slot，导致 `rproc_ptr[]` 越界访问
   4) `[DONE]` `#20` RS `do_upd_ready()` 异常消息路径空指针解引用
@@ -28,15 +28,15 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   3) `A3` 含盘场景 `minix-service`/`virtio_blk_mmio` SIGSEGV
   4) `#25` 内建 GCC 不支持 `-mabi=lp64d`，阻断部分 GCC-only 增量构建
   5) `#26` RS `do_up`/`do_update` 失败路径未回收 slot 资源，`RSS_COPY` 可触发可重复内存泄漏
-  6) `#28` RS `init_state_data` 在多个错误出口缺少内存回收
-  7) `#29` safecopy 首错分类规则过宽，存在门禁假阴性风险
+  6) `[DONE]` `#28` RS `init_state_data` 在多个错误出口缺少内存回收
+  7) `[DONE]` `#29` safecopy 首错分类规则过宽，存在门禁假阴性风险
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
   3) `#13` `phys_copy` fault handler 注册缺失
   4) `#14` DT 多段内存/保留区解析补齐
-  5) `#30` multi-smoke 默认复用磁盘镜像，削弱跨次可复现性
-  6) `#31` smoke/repro 门禁对退出语义与宿主可移植性校验不足
+  5) `[DONE]` `#30` multi-smoke 默认复用磁盘镜像，削弱跨次可复现性
+  6) `[DONE]` `#31` smoke/repro 门禁对退出语义与宿主可移植性校验不足
 - P3 / 低优先（可维护性与技术债）:
   1) `#19` kernel/VM/RS 无条件调试日志收敛
   2) `#11` `minimal_kernel` RISC-V 适配
@@ -486,6 +486,17 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     unify exits with a `revoke-on-error` cleanup path.
   - Add a regression that repeatedly triggers these `EINVAL` branches and
     verifies grant-table stability.
+- Update / 进展:
+  - `req_getdents_actual()` and `req_readwrite_actual()` now validate
+    64-bit offset capability before grant creation, removing the early-return
+    grant leak path. Evidence: `minix/servers/vfs/request.c`.
+    `req_getdents_actual()` 与 `req_readwrite_actual()` 已在创建 grant 前完成
+    64 位 offset 能力校验，消除 `EINVAL` 早退泄漏路径。证据：`minix/servers/vfs/request.c`。
+- Status / 状态:
+  - Fixed in working tree; targeted rebuild passed:
+    `nbmake-evbriscv64 -C minix/servers/vfs`.
+    已在当前工作树修复；定向重编译通过：
+    `nbmake-evbriscv64 -C minix/servers/vfs`。
 
 ### 28) RS `init_state_data()` leaks heap buffers on multiple error exits / RS `init_state_data()` 在多个错误出口泄漏堆内存
 - Evidence / 证据:
@@ -502,6 +513,18 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - Introduce a single cleanup label for `init_state_data()` and free all
     partially allocated state on every non-OK exit.
   - Add an RS memory-regression test for repeated failing update-prepare calls.
+- Update / 进展:
+  - `init_state_data()` now uses a unified cleanup path for all error exits,
+    freeing partially allocated `eval_addr` / `ipcf_els_buff` and resetting
+    state-data fields before returning.
+    `init_state_data()` 已改为统一 cleanup 错误出口，失败时会释放
+    `eval_addr` / `ipcf_els_buff` 并重置状态字段。
+  - Evidence / 证据: `minix/servers/rs/manager.c`
+- Status / 状态:
+  - Fixed in working tree; targeted rebuild passed:
+    `nbmake-evbriscv64 -C minix/servers/rs`.
+    已在当前工作树修复；定向重编译通过：
+    `nbmake-evbriscv64 -C minix/servers/rs`。
 
 ### 29) safecopy first-error triage rules are too broad and may cause false negatives / safecopy 首错分类规则过宽，可能造成假阴性
 - Evidence / 证据:
@@ -519,6 +542,22 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     of error code only.
   - Treat unknown context combinations as `potential_consistency_issue` by
     default and require explicit allowlisting.
+- Update / 进展:
+  - `safecopy_triage.py` now uses allowlisted signatures that bind
+    `(error code + caller + direction)` and records
+    `first_safecopy_signature` in output.
+    `safecopy_triage.py` 现已改为基于
+    `(错误码 + 调用者 + 方向)` 的白名单签名，并在输出中记录
+    `first_safecopy_signature`。
+  - Unknown first-error contexts now default to
+    `potential_consistency_issue`.
+    未知首错上下文默认判定为 `potential_consistency_issue`。
+  - Evidence / 证据: `minix/tests/riscv64/safecopy_triage.py`
+- Status / 状态:
+  - Fixed in working tree; replay on existing smoke logs remains stable
+    (`acceptable_noise` for known boot fallback signatures).
+    已在当前工作树修复；用既有 smoke 日志回放结果稳定
+    （已知启动回退签名仍判定为 `acceptable_noise`）。
 
 ## Moderate / 中等
 
@@ -562,6 +601,16 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     `--fresh-disk` and make it default in gate mode.
   - Keep explicit opt-in for persistent images only when doing long-running
     stateful experiments.
+- Update / 进展:
+  - `multi_smoke_gate.sh` now defaults to a per-run fresh disk image under
+    `LOG_ROOT`, and adds `--reuse-disk` for explicit persistent-image reuse.
+    `multi_smoke_gate.sh` 现默认在 `LOG_ROOT` 下创建每轮全新磁盘镜像，
+    并新增 `--reuse-disk` 作为显式复用开关。
+  - Evidence / 证据: `minix/tests/riscv64/multi_smoke_gate.sh`
+- Status / 状态:
+  - Fixed in working tree; one-round diskless+with-disk smoke passed after
+    the change.
+    已在当前工作树修复；变更后执行一轮无盘+带盘 smoke 均通过。
 
 ### 31) smoke/repro gate scripts under-check runner semantics and host portability / smoke/repro 门禁脚本对执行语义与宿主可移植性校验不足
 - Evidence / 证据:
@@ -583,6 +632,28 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - Add `nproc` fallback (`getconf _NPROCESSORS_ONLN` etc.).
   - Add a minimal linker behavior probe for `R_RISCV_RELAX` compatibility in
     addition to tracked-patch checks.
+- Update / 进展:
+  - `multi_smoke_gate.sh` now records runner exit semantics explicitly
+    (`rc=0`, timeout `124/137`, abnormal non-zero) instead of masking with
+    `|| true`.
+    `multi_smoke_gate.sh` 现显式记录执行语义（`rc=0`、timeout `124/137`、
+    异常非零），不再通过 `|| true` 吞掉状态。
+  - `repro_build_gate.sh` now uses portable CPU-count auto-detection
+    (`nproc`/`getconf`/`sysctl` fallback), and adds a best-effort
+    `R_RISCV_RELAX` linker behavior probe.
+    `repro_build_gate.sh` 已加入可移植并发核数探测
+    （`nproc`/`getconf`/`sysctl` 回退），并增加
+    `R_RISCV_RELAX` 链接行为探针（best-effort）。
+  - Evidence / 证据:
+    `minix/tests/riscv64/multi_smoke_gate.sh`,
+    `minix/tests/riscv64/repro_build_gate.sh`
+- Status / 状态:
+  - Fixed in working tree; `repro_build_gate.sh --objdir obj.intrgcc
+    --skip-tools --skip-distribution --smoke-rounds 1 --smoke-timeout 60
+    --without-disk` passes.
+    已在当前工作树修复；`repro_build_gate.sh --objdir obj.intrgcc
+    --skip-tools --skip-distribution --smoke-rounds 1 --smoke-timeout 60
+    --without-disk` 复验通过。
 
 ### 17) Repeated safecopy errors during boot are still noisy and unexplained / 启动期重复 safecopy 错误仍有噪声且原因未闭环
 - Evidence / 证据:

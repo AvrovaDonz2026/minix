@@ -1,27 +1,26 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-02-16  
-**Version / 版本**: 1.4  
-**Status / 状态**: Phase 1 in progress — buildable, boots to interactive shell, runtime gaps remain  
-**Progress / 进度**: ~70% (boot path stabilized; I/O/SMP issues outstanding)
+**Version / 版本**: 1.3  
+**Status / 状态**: Phase 2 stabilization — boots to shell; core smoke mostly passes  
+**Progress / 进度**: ~72% (boot/userland path stabilized; with-disk/driver/toolchain gaps remain)
 
 ## Summary / 摘要
 
 **中文**
-- 构建可通过（需使用绕过项与特定构建变量），详见 `README-RISCV64.md`。
-- QEMU 启动链路已稳定到可交互 shell（2026-02-16 冒烟：`echo SMOKE_OK` 成功）。
-- 关键风险集中在页表根传参、UART、TLB 刷新与 SBI IPI/fence 路径（见 `issue.md`）。
-- 2026-01-31 已完成 tools + distribution 构建并运行 `run_tests.sh all`。
-  用户态编译测试全部通过；内核启动与定时器测试通过；SMP 跳过；virtio 块设备 I/O smoke 失败。
-- 2026-02-16 修复了早期启动中的 PFS/MFS/RS 初始化握手与 ilp32 用户地址上限问题，未再复现 shell 前 SIGSEGV。
+- 构建可通过（GCC + workaround 组合），详见 `README-RISCV64.md`。
+- QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
+- 本轮已确认并修复 RV64 用户态 `memset` 递归导致的栈顶 SIGSEGV（见 `issue.md` A3 进展）。
+- 仍有待闭环风险：含盘 virtio 启动链路复核、`procfs` safecopy 回退噪声（#17）、以及 in-tree 链接器 `R_RISCV_RELAX` 兼容性（#24）。
 
 **English**
-- Build passes with workaround flags; see `README-RISCV64.md` for exact commands.
-- QEMU boot path is now stable to an interactive shell (2026-02-16 smoke: `echo SMOKE_OK` succeeds).
-- Key risks are in page-table root handoff, UART, TLB flush, and SBI IPI/fence paths (see `issue.md`).
-- 2026-01-31: tools + distribution built and `run_tests.sh all` executed.
-  User-level compile tests pass; kernel boot + timer pass; SMP skipped; virtio block I/O smoke fails.
-- 2026-02-16: fixed early boot handshake (PFS/MFS/RS) and ilp32 user-address-top issues; no pre-shell SIGSEGV reproduced.
+- Build passes with GCC + workaround flags; see `README-RISCV64.md` for exact commands.
+- QEMU now reaches a stable shell and passes interactive smoke commands:
+  `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
+- This cycle confirms and mitigates the RV64 userland `memset` recursion SIGSEGV signature
+  (see `issue.md` A3 update).
+- Remaining open risks: with-disk virtio startup recheck, procfs safecopy retry noise (#17),
+  and in-tree linker `R_RISCV_RELAX` compatibility (#24).
 
 ## Build Status / 构建状态
 
@@ -29,37 +28,41 @@
 - 基线命令：使用 GCC、禁用 LLVM/C++、放宽 `checkflist`（见 `README-RISCV64.md`）。
 - 产物：`minix/kernel/obj/kernel` 与 `obj/destdir.evbriscv64`。
 - 限制：`CHECKFLIST_FLAGS='-m -e'` 为临时绕过，需在 sets 完整后移除。
-- 补充：tools 可在修复 LLVM `ValueMap.h` 后构建；内核可用 GCC + `MAKEOBJDIRPREFIX` 重建
-  （`RISCV_ARCH_FLAGS='-march=RV64IMAFD -mcmodel=medany'`，当前工具链不接受 `-mabi=lp64d`）。
+- 工具链风险：in-tree `ld`（NetBSD binutils 2.23.2）在增量重建中可能无法处理
+  `R_RISCV_RELAX`，见 `issue.md` #24。
 
 **English**
 - Baseline: GCC, LLVM/C++ disabled, relaxed `checkflist` (see `README-RISCV64.md`).
 - Outputs: `minix/kernel/obj/kernel` and `obj/destdir.evbriscv64`.
 - Limitation: `CHECKFLIST_FLAGS='-m -e'` is a temporary workaround until sets are complete.
-- Note: tools now build with LLVM after the `ValueMap.h` fix; kernel rebuild works with GCC +
-  `MAKEOBJDIRPREFIX` (`RISCV_ARCH_FLAGS='-march=RV64IMAFD -mcmodel=medany'`, toolchain rejects `-mabi=lp64d`).
+- Toolchain risk: in-tree `ld` (NetBSD binutils 2.23.2) can fail on `R_RISCV_RELAX`
+  during incremental rebuilds; tracked as `issue.md` #24.
 
 ## Runtime Status / 运行状态
 
 **中文**
-- QEMU 可稳定到达 shell 提示符并执行交互命令（`echo SMOKE_OK` 验证通过）。
-- `minix-service -c up /service/virtio_blk_mmio -dev /dev/c0d0` 触发 SIGSEGV（`pc=0x3bb38`, `sp=0xefbffff0`），导致 virtio smoke 失败。
-- SMP 初始化仍标记为跳过（not yet implemented）。
+- 启动链路已稳定可进入 `#` 提示符，`init` 与核心服务可完成基本握手。
+- 交互复测通过：`ps -aux` 返回进程列表；`cat /proc/meminfo` 可返回内存信息。
+- `/proc/meminfo` 路径仍可见一次可恢复 safecopy 回退（先失败后重试成功），属于已知噪声问题（#17）。
+- 含盘 virtio 启动链路仍需单独复测后才能确认 A3 全量闭环。
 
 **English**
-- QEMU now reaches shell prompt stably and accepts interactive commands (`echo SMOKE_OK` verified).
-- `minix-service -c up /service/virtio_blk_mmio -dev /dev/c0d0` triggers SIGSEGV (`pc=0x3bb38`, `sp=0xefbffff0`), causing virtio smoke failure.
-- SMP initialization remains skipped (not yet implemented).
+- Boot path is stable to the `#` shell prompt; init and core services complete basic startup handshake.
+- Interactive retest passes: `ps -aux` returns process list; `cat /proc/meminfo` returns data.
+- `/proc/meminfo` still shows one recoverable safecopy fallback (fail-then-retry-success),
+  tracked as known noise in #17.
+- With-disk virtio startup path still needs dedicated revalidation to close A3 end-to-end.
 
 ## Key Issues (Snapshot) / 关键问题（摘要）
 
 **Critical / 严重**
-- None newly introduced during 2026-02-16 boot stabilization validation.
+- None newly confirmed in current workspace.
 
 **Major / 重要**
-- UART deferred replies, TLB flush after leaf splits, and SBI legacy PA fixes are in-tree but need runtime validation.
-- `ld.elf_so` still missing when `MKPIC=no`, so dynamic binaries remain untested.
-- SMP core (`smp.c` + arch hooks) is still unimplemented.
+- A3: with-disk virtio startup path still needs revalidation after `memset` fix.
+- #17: recoverable safecopy fallback noise on `/proc/*` path remains.
+- #24: in-tree linker `R_RISCV_RELAX` compatibility blocks clean incremental rebuild flow.
+- #23: RV64 `vm_memset` fault-recovery capability gap remains high-priority kernel robustness work.
 
 详见 `issue.md` 的证据与修复建议 / See `issue.md` for evidence and fixes.
 
@@ -72,27 +75,27 @@
 ## Next Priorities / 下一阶段优先级
 
 **中文**
-1) 验证 UART/TLB/SBI 修复在 QEMU 下的运行时行为。
-2) 恢复动态加载器（MKPIC/MKPICLIB）并验证最小动态程序。
-3) 调试 `minix-service` 启动 virtio_blk_mmio 的崩溃并恢复 virtio I/O 测试。
-4) 补齐 SMP 核心与 IPI 路径实现。
+1) 跑含盘 QEMU 轮廓，验证 `minix-service` + `virtio_blk_mmio` 路径是否已闭环。
+2) 处理 #24（升级/替换 in-tree 链接器能力或加能力探测），恢复可重复的增量构建体验。
+3) 继续收敛 #17（统计/限流 + 负载下验证），区分噪声与真实功能缺陷。
+4) 在稳定后恢复动态装载链路（`MKPIC/MKPICLIB`）并验证最小动态程序。
 
 **English**
-1) Validate UART/TLB/SBI fixes in QEMU.
-2) Restore dynamic loader (MKPIC/MKPICLIB) and test a minimal dynamic binary.
-3) Debug `minix-service` crash when starting virtio_blk_mmio and restore virtio I/O testing.
-4) Implement SMP core and IPI paths.
+1) Run with-disk QEMU profile and revalidate `minix-service` + `virtio_blk_mmio` path.
+2) Resolve #24 (in-tree linker capability upgrade/check) for reproducible incremental rebuilds.
+3) Continue closing #17 with counters/rate-limit + stress validation.
+4) Restore dynamic loader path (`MKPIC/MKPICLIB`) and test a minimal dynamic binary.
 
 ## Success Criteria / 下一里程碑判定
 
 **中文**
-- QEMU 中稳定进入用户态（无 `System reset...` 循环）。
-- 时钟中断驱动调度与时间推进。
-- UART 阻塞读可正常返回。
-- sys_vmctl PTROOT 在 >4GB 物理地址下可靠切换 SATP。
+- 无盘与含盘两种 QEMU 轮廓均可稳定进入 shell 且不出现 `minix-service` SIGSEGV。
+- `ps -aux`、`cat /proc/meminfo` 在连续回归中稳定通过。
+- 增量重建可在不替换链接器的前提下完成（不再出现 `R_RISCV_RELAX` 链接错误）。
+- `procfs` 路径 safecopy 错误噪声降到可接受水平并有计数证据。
 
 **English**
-- Stable boot to userland in QEMU without reset loops.
-- Timer IRQ drives scheduling/timekeeping.
-- UART blocking reads return correctly.
-- sys_vmctl PTROOT switches SATP reliably above 4GB physical roots.
+- Both diskless and with-disk QEMU profiles reach shell without `minix-service` SIGSEGV.
+- `ps -aux` and `cat /proc/meminfo` pass consistently across regressions.
+- Incremental rebuild works without ad-hoc linker substitution (`R_RISCV_RELAX` link failures gone).
+- procfs safecopy noise is reduced to an acceptable level with measurable counters.

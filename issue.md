@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-02-16  
-**Version / 版本**: 1.14
+**Version / 版本**: 1.15
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题。  
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -25,7 +25,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   1) `#16` VFS 服务端点“先写后验”可能弱化代际校验
   2) `#17` 启动期 safecopy 噪声错误闭环（定位根因并降噪）
   3) `A3` 含盘场景 `minix-service`/`virtio_blk_mmio` SIGSEGV
-  4) `#24` in-tree 交叉链接器不支持 `R_RISCV_RELAX`，阻断增量重建
+  4) `#25` 内建 GCC 不支持 `-mabi=lp64d`，阻断部分 GCC-only 增量构建
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -347,7 +347,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - Extend RISC-V exception fault window handling to include memset recovery, matching i386/ARM behavior.
   - Ensure `vm_memset` can return `VMSUSPEND` on recoverable write faults.
 
-### 24) In-tree RISC-V linker cannot handle `R_RISCV_RELAX`, blocking incremental rebuilds / in-tree RISC-V 链接器不支持 `R_RISCV_RELAX`，阻断增量重建
+### 24) In-tree RISC-V linker cannot handle `R_RISCV_RELAX`, blocking incremental rebuilds (mitigated) / in-tree RISC-V 链接器不支持 `R_RISCV_RELAX`，阻断增量重建（已缓解）
 - Evidence / 证据:
   - Rebuilding `minix/drivers/storage/memory` with in-tree toolchain fails at link stage:
     `ld: unrecognized relocation (0x33)` from `libblockdriver.a(driver_st.o)`.
@@ -358,13 +358,34 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     `obj/destdir.evbriscv64/usr/lib/libblockdriver.a`,
     `obj/destdir.evbriscv64/usr/lib/libchardriver.a` (`readelf -r`).
   - Temporary validation workaround: using host `riscv64-unknown-elf-ld` (binutils 2.44) allows link to proceed.
+  - 2026-02-16 update: add tracked patch
+    `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`
+    to accept `R_RISCV_RELAX` as linker-hint/no-op in in-tree binutils bfd.
+  - Validation on in-tree `ld` (2.23.2) succeeds with archives containing `R_RISCV_RELAX`:
+    `ld -r --whole-archive obj/destdir.evbriscv64/usr/lib/libaudiodriver.a --no-whole-archive -o /tmp/libaudiodriver.whole.o`.
 - Impact / 影响:
-  - Blocks rebuilding core components (`service/memory` etc.) with the intended in-tree GCC toolchain flow.
-  - Forces ad-hoc linker substitution, reducing reproducibility and increasing CI/local divergence risk.
+  - Previously blocked rebuilding core components with the intended in-tree GCC toolchain flow.
+  - Current workspace mitigation removes the `0x33` linker blocker; incremental-link reproducibility improves.
 - Suggested fix / 修复建议:
-  - Upgrade/refresh in-tree RISC-V binutils (`ld`) to a version that supports `R_RISCV_RELAX`.
+  - Completed in current workspace: compatibility handling for `R_RISCV_RELAX` in binutils bfd via patch `0011`.
+  - Optional follow-up: upgrade/refresh in-tree RISC-V binutils (`ld`) to a newer upstream version.
   - Add a build-time toolchain capability check (fail fast with actionable message when linker is too old).
-  - If upgrade is not immediate, add a documented temporary path in `README-RISCV64.md` for compatible linker usage.
+  - Keep a documented fallback path in `README-RISCV64.md` for environments with older/unpatched linker trees.
+
+### 25) In-tree GCC rejects `-mabi=lp64d`, blocking some GCC-only incremental rebuilds / 内建 GCC 不接受 `-mabi=lp64d`，阻断部分 GCC-only 增量重建
+- Evidence / 证据:
+  - Forcing GCC path on memory-service incremental rebuild:
+    `nbmake-evbriscv64 ... ACTIVE_CC=gcc ... -C minix/drivers/storage/memory dependall install`
+    fails at compile stage with:
+    `riscv64-elf32-minix-gcc: error: unrecognized command line option '-mabi=lp64d'`.
+  - Same cycle confirms #24 linker path is already mitigated; failure occurs before link.
+- Impact / 影响:
+  - Blocks clean GCC-only incremental rebuild workflow for some components.
+  - Increases divergence between default compiler path and explicit GCC validation path.
+- Suggested fix / 修复建议:
+  - Normalize RISC-V ABI flag selection for in-tree GCC capability (e.g., `-mabi=lp64` fallback).
+  - Add compiler capability probing and emit actionable diagnostics when ABI flags are unsupported.
+  - Keep per-component overrides documented until GCC flag baseline is unified.
 
 ## Moderate / 中等
 
@@ -485,6 +506,11 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 说明 / Note: 本节记录“已合入代码但可能仍待运行时复验”的归档项，并保留原始问题编号以便追溯。  
 This section archives items with code-level fixes landed (some may still require runtime re-validation), keeping original IDs for traceability.
 
+- Former Major #24: in-tree binutils now accepts `R_RISCV_RELAX` as a hint/no-op via
+  `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`; in-tree `ld` no longer aborts
+  on relocation `0x33` during archive link validation.
+  历史 Major #24：已通过 `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`
+  让 in-tree binutils 将 `R_RISCV_RELAX` 作为 hint/no-op 处理；归档链接验证不再因 `0x33` 中断。
 - `minimal_kernel/proto.h:175` uses `reg_t` for `arch_set_secondary_ipc_return` to avoid RV64 truncation
   (matches `minix/kernel/proto.h` and arch implementations).  
   `minimal_kernel/proto.h:175` 已改为 `reg_t`，避免 RV64 截断（与 `minix/kernel/proto.h` 及架构实现一致）。

@@ -147,3 +147,42 @@ cat /proc/meminfo
 **Toolchain note / 工具链备注**:
 - In-tree linker compatibility issue with `R_RISCV_RELAX` remained visible during incremental rebuild attempts
   (`ld: unrecognized relocation (0x33)`), tracked as `issue.md` #24.
+
+### Entry 9 — #24 `R_RISCV_RELAX` Compatibility Mitigation (2026-02-16) / #24 `R_RISCV_RELAX` 兼容性缓解
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Toolchain / 工具链**: `obj/tooldir.Linux-6.12.63+deb13-amd64-x86_64`
+
+**Code change / 代码改动**:
+- Added tracked binutils patch:
+  `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`
+  to treat `R_RISCV_RELAX` as a hint/no-op in in-tree bfd paths.
+
+**Build/validation steps / 构建与验证步骤**:
+```bash
+# Rebuild tools pipeline (binutils rebuilt/installed before later LLVM stages)
+MKPCI=no HOST_CFLAGS='-O -fcommon' HAVE_GOLD=no ./build.sh -U -m evbriscv64 tools
+
+# Confirm in-tree linker version
+obj/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/ld --version
+
+# Verify RELAX relocations exist in target archives
+obj/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-readelf -r \
+  obj/destdir.evbriscv64/usr/lib/libaudiodriver.a | grep R_RISCV_RELAX
+
+# Validate in-tree ld can link RELAX-bearing archive (no 0x33 abort)
+obj/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/ld -r \
+  --whole-archive obj/destdir.evbriscv64/usr/lib/libaudiodriver.a \
+  --no-whole-archive -o /tmp/libaudiodriver.whole.o
+```
+
+**Observed result / 观察结果**:
+- `readelf -r` shows multiple `R_RISCV_RELAX` entries in `libaudiodriver.a`.
+- In-tree `ld` (NetBSD binutils 2.23.2) links the RELAX-bearing archive successfully,
+  no `unrecognized relocation (0x33)` appears.
+- #24 is mitigated in the current workspace and moved to fixed archive in `issue.md`.
+
+**Follow-up note / 后续说明**:
+- During forced GCC-only memory-service rebuild, a separate compiler capability issue was observed:
+  `riscv64-elf32-minix-gcc: error: unrecognized command line option '-mabi=lp64d'`.
+  This is distinct from #24 and should be tracked separately.

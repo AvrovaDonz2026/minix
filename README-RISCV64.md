@@ -9,13 +9,13 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.5
+- 版本：1.6
 - 最后更新：2026-02-16
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.5
+- Version: 1.6
 - Last updated: 2026-02-16
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -25,7 +25,7 @@ targeting the QEMU virt platform.
 **中文**
 - 构建：可通过（需使用 workaround 组合，见本文构建命令与 `RISC64-STATUS.md`）
 - 运行：QEMU 可稳定进入 shell，并通过 `echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo` 交互复测
-- 关键风险：含盘 virtio 启动路径待复核、`procfs` safecopy 回退噪声、SMP 未实现、in-tree linker `R_RISCV_RELAX` 兼容性（详见 `issue.md`）
+- 关键风险：含盘 virtio 启动路径待复核、`procfs` safecopy 回退噪声、SMP 未实现、GCC-only 增量链路 ABI 参数兼容性（#25，详见 `issue.md`）
 - 进度估计：约 72%（启动链路与基础用户态已稳定，设备与工具链链路仍待完善）
 - 代码更新（至 2026-01-06 01:00 前）：用户态 gp 初始化（crt0 + gp.c）、exec/ucontext 与
   VM 执行权限标记、IPC/缺页 ABI 修复（64 位地址、senda 参数顺序）。
@@ -36,7 +36,7 @@ targeting the QEMU virt platform.
 - Runtime: QEMU reaches a stable shell prompt and passes interactive retests:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`
 - Key risks: with-disk virtio startup path recheck, procfs safecopy fallback noise,
-  SMP not implemented, and in-tree linker `R_RISCV_RELAX` compatibility (see `issue.md`)
+  SMP not implemented, and GCC-only incremental ABI-flag compatibility (#25; see `issue.md`)
 - Progress estimate: ~72% (boot + basic userland path stabilized; device/toolchain work remains)
 - Code updates (through 2026-01-06 01:00): userland gp init (crt0 + gp.c),
   exec/ucontext + VM exec flags, IPC/pagefault ABI fixes (64-bit addr, senda arg order).
@@ -340,12 +340,25 @@ cat /proc/meminfo
    - Status: stack-top SIGSEGV signature is mitigated in ramdisk profile; with-disk path still needs focused retest.
    - Action: re-run `minix-service -c up /service/virtio_blk_mmio -dev /dev/c0d0` under `-i <disk image>` profile.
 
-6. **in-tree linker 与 `R_RISCV_RELAX` 兼容性问题（#24）**  
-   - 表现：增量重建（如 `service/memory`）可能报 `ld: unrecognized relocation (0x33)`。  
-   - 建议：升级/替换 in-tree `ld`，或先加能力探测并给出明确失败提示。  
-   **in-tree linker compatibility issue with `R_RISCV_RELAX` (#24)**  
-   - Symptom: incremental rebuilds (for example `service/memory`) may fail with `ld: unrecognized relocation (0x33)`.
-   - Action: upgrade/replace in-tree `ld`, or add capability checks with actionable diagnostics.
+6. **in-tree linker `R_RISCV_RELAX` 兼容性（#24，已缓解）**  
+   - 现状：已加入 `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`，
+     让 in-tree `ld` 将 `R_RISCV_RELAX` 视为 hint/no-op。  
+   - 验证：`ld -r --whole-archive obj/destdir.evbriscv64/usr/lib/libaudiodriver.a --no-whole-archive -o /tmp/libaudiodriver.whole.o`
+     使用 in-tree `ld` 可通过，不再触发 `unrecognized relocation (0x33)`。  
+   **in-tree linker compatibility with `R_RISCV_RELAX` (#24, mitigated)**  
+   - Status: `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch` handles
+     `R_RISCV_RELAX` as a linker hint/no-op in in-tree `ld`.
+   - Validation: in-tree `ld` now links RELAX-bearing archives without
+     `unrecognized relocation (0x33)`.
+
+7. **GCC-only 增量构建 ABI 参数兼容性（#25）**  
+   - 表现：在显式 `ACTIVE_CC=gcc` 路径下，部分组件重建会报
+     `riscv64-elf32-minix-gcc: error: unrecognized command line option '-mabi=lp64d'`。  
+   - 建议：补齐 ABI 参数能力探测，并在 GCC 路径中统一可接受的 `-mabi` 组合。  
+   **GCC-only incremental ABI-flag compatibility (#25)**  
+   - Symptom: explicit `ACTIVE_CC=gcc` rebuild path can fail with
+     `unrecognized command line option '-mabi=lp64d'`.
+   - Action: add ABI-flag capability probing and normalize GCC-accepted `-mabi` selection.
 
 详细证据与文件行号见 `issue.md`。  
 See `issue.md` for evidence and file/line references.

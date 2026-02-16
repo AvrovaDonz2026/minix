@@ -17,6 +17,10 @@
 - 本轮已确认并修复 RV64 用户态 `memset` 递归导致的栈顶 SIGSEGV（见 `issue.md` A3 进展）。
 - 含盘 smoke 复测通过：`virtio_blk_mmio` 报告 capacity/initialized，未再出现
   `device not found` / `Request 0x700 to RS failed` / `couldn't start virtio_blk_mmio`。
+- 已完成 source-driven 复现门禁全链路：`repro_build_gate.sh` 在同一 `obj.intrgcc`
+  跑通 `tools -> distribution -> smoke`（无需手工补丁/手工拷贝产物）。
+- 多轮自动门禁通过：`minix/tests/riscv64/multi_smoke_gate.sh --rounds 2 --timeout 90`
+  在无盘+带盘共 4 轮全部通过，`safecopy` 首错被自动定性为 `acceptable_noise`。
 - #24 已缓解：in-tree binutils 增加 `R_RISCV_RELAX` 兼容补丁，`ld` 不再因 `0x33` 中断链接。
 - 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）、GCC-only 增量构建 ABI 参数兼容性（#25）。
 
@@ -33,6 +37,12 @@
   (see `issue.md` A3 update).
 - With-disk smoke now passes: `virtio_blk_mmio` reports capacity/initialized and no longer logs
   `device not found`, `Request 0x700 to RS failed`, or `couldn't start virtio_blk_mmio`.
+- A source-driven reproducibility gate now passes end-to-end:
+  `repro_build_gate.sh` completes `tools -> distribution -> smoke`
+  on the same `obj.intrgcc` without manual patching/artifact injection.
+- Multi-run automated gate now passes: `minix/tests/riscv64/multi_smoke_gate.sh --rounds 2 --timeout 90`
+  completes 4/4 passes across diskless + with-disk runs, and safecopy first-error
+  triage reports `acceptable_noise`.
 - #24 is now mitigated: in-tree binutils has a compatibility patch for `R_RISCV_RELAX`,
   and `ld` no longer aborts on relocation `0x33`.
 - Remaining open risks: procfs safecopy retry noise (#17) and GCC-only incremental
@@ -73,6 +83,11 @@
   但命令返回保持成功（`RC=0`）。
 - 含盘 smoke（`/tmp/qemu-smoke-disk.log`）已验证 `virtio_blk_mmio` 初始化成功；
   `-i` 轮廓下未复现 `device not found` / `Request 0x700 ... not alive` 告警。
+- 多轮日志门禁输出位于 `/tmp/minix-smoke-gate-20260216-221610/` 与
+  `/tmp/minix-smoke-gate-20260216-224157/`，含每轮 `.log` 与 `.triage.txt`，
+  可用于回归比较与首错审计。
+- `repro_build_gate.sh --objdir obj.intrgcc --smoke-rounds 1 --smoke-timeout 60 --without-disk`
+  全链路通过，产出日志 `/tmp/minix-smoke-gate-20260216-223948/`（diskless 1/1 通过）。
 
 **English**
 - Boot path is stable to the `#` shell prompt; init and core services complete basic startup handshake.
@@ -85,6 +100,11 @@
   procfs/safecopy fallback noise while command return codes remain successful (`RC=0`).
 - The with-disk smoke run (`/tmp/qemu-smoke-disk.log`) confirms `virtio_blk_mmio`
   initialization and does not reproduce the previous startup warning signature.
+- Multi-run gate artifacts are under `/tmp/minix-smoke-gate-20260216-221610/` and
+  `/tmp/minix-smoke-gate-20260216-224157/` with per-round `.log` and `.triage.txt`
+  outputs for regression auditing.
+- `repro_build_gate.sh --objdir obj.intrgcc --smoke-rounds 1 --smoke-timeout 60 --without-disk`
+  also passed end-to-end, with artifacts under `/tmp/minix-smoke-gate-20260216-223948/`.
 
 ## Key Issues (Snapshot) / 关键问题（摘要）
 
@@ -113,6 +133,7 @@
 3) 修复 #25：统一 GCC 路径的 `-mabi` 参数能力探测与回退策略。
 4) 在稳定后恢复动态装载链路（`MKPIC/MKPICLIB`）并验证最小动态程序。
 5) 增加带盘回归轮次（含 `virtio_blk_mmio` 启动检查）作为常规 smoke 条目。
+6) 将 `repro_build_gate.sh` 纳入例行流水（至少每日一次），验证构建链路不依赖手工注入。
 
 **English**
 1) Continue closing #17 with counters/rate-limit + stress validation.
@@ -120,6 +141,7 @@
 3) Fix #25 by normalizing GCC `-mabi` probing/fallback in incremental paths.
 4) Restore dynamic loader path (`MKPIC/MKPICLIB`) and test a minimal dynamic binary.
 5) Keep with-disk regression runs (including `virtio_blk_mmio` startup checks) as regular smoke.
+6) Run `repro_build_gate.sh` in routine CI (at least daily) to enforce source-driven reproducibility.
 
 ## Success Criteria / 下一里程碑判定
 

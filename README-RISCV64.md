@@ -403,6 +403,41 @@ timeout 45 ./minix/scripts/qemu-riscv64.sh \
 - `distribution` 在同一 `obj.intrgcc` 完成，且 QEMU 可达 shell（`#`）；`Boot module not found: ds` 未复现。  
   `distribution` completes on the same `obj.intrgcc`; QEMU reaches shell (`#`) and `Boot module not found: ds` is not reproduced.
 
+#### 5.7 最小回归门禁（自动化，多轮）/ Minimum Regression Gate (Automated, Multi-Run)
+
+建议将以下三项固定为最小门禁：
+Recommended minimum gate chain:
+
+1) safecopy 首错定性 / safecopy first-error triage:
+```bash
+python3 ./minix/tests/riscv64/safecopy_triage.py /tmp/qemu-smoke.log
+```
+
+2) 多轮 smoke（无盘 + 带盘）/ multi-run smoke (diskless + with-disk):
+```bash
+./minix/tests/riscv64/multi_smoke_gate.sh \
+  --kernel obj.intrgcc/minix/kernel/kernel \
+  --destdir obj.intrgcc/destdir.evbriscv64 \
+  --rounds 2 --timeout 90
+```
+
+3) 可重复构建门禁（隔离 objdir）/ reproducible build gate (isolated objdir):
+```bash
+./minix/tests/riscv64/repro_build_gate.sh \
+  --objdir obj.repro \
+  --smoke-rounds 2
+```
+
+脚本说明 / Script notes:
+- `multi_smoke_gate.sh` 要求每轮满足：
+  shell 可达、无 fatal 签名、`safecopy_triage` 不判定为潜在一致性问题；
+  带盘轮次还要求 `virtio-blk-mmio: initialized`，且不能出现历史启动失败签名。
+- `repro_build_gate.sh` 执行受控参数的 `tools -> distribution -> multi_smoke_gate`，
+  并检查 `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`
+  为 tracked 文件，用于避免“手工补丁/手工拷贝产物”依赖。
+- `run_tests.sh` 新增 `gate` 子命令，可直接触发多轮门禁：
+  `./minix/tests/riscv64/run_tests.sh gate`
+
 ## 已知问题与解决方案 / Known Issues and Workarounds
 
 ### 0. 运行时关键问题（持续跟踪）/ Runtime Key Issues (Ongoing)

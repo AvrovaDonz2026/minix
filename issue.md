@@ -1,18 +1,18 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
-**Date / 日期**: 2026-01-31  
-**Version / 版本**: 1.3  
+**Date / 日期**: 2026-02-16  
+**Version / 版本**: 1.4  
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
 This file records concrete issues in the RISC-V 64-bit port with evidence and suggested fixes.
 
-**复核说明**：2026-01-31 完成 tools/distribution 构建并运行 `run_tests.sh all`；新增 virtio_blk_mmio 启动期崩溃记录。  
-**Review note**: 2026-01-31 built tools/distribution and ran `run_tests.sh all`; added virtio_blk_mmio startup crash record.
+**复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。  
+**Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`.
 
 ## Active Investigation / 当前主问题跟踪
 
-### A1) Userland services stuck in user pagefault loop during boot / 用户态服务启动期反复缺页
+### A1) Boot-time user pagefault loop (mostly mitigated) / 启动期用户态反复缺页（大部分已缓解）
 - Evidence / 证据:
   - VFS: `sef_receive_status` at `minix/lib/libsys/sef.c:150`, `mthread_trampoline` at `minix/lib/libmthread/allocate.c:531`,
     `malloc_bytes` at `lib/libc/stdlib/malloc.c:875`, `memset` at `common/lib/libc/string/memset.c:156`
@@ -21,7 +21,7 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
   - DS: `_regcomp` at `lib/libc/regex/regcomp.c:333`, `extend_pgdir` at `lib/libc/stdlib/malloc.c:534`,
     `imalloc` at `lib/libc/stdlib/malloc.c:934`, `kdoprnt` at `sys/lib/libsa/subr_prf.c:189`
 - Impact / 影响:
-  - Boot does not reach stable userland; init dies and services spin on faults. / 启动无法进入稳定用户态；init 退出且服务反复缺页。
+  - Historically blocked stable boot; currently boot can reach interactive shell, but related memory-path regressions must still be watched. / 历史上阻断稳定启动；当前已可进入交互 shell，但相关内存路径仍需持续监控回归。
 - Hypothesis / 假设:
   - RV64 heap growth or page table extension path (`extend_pgdir` / `malloc_pages`) maps invalid VA. / RV64 堆扩展或页表扩展路径可能映射了非法 VA。
   - May be related to address-space handoff or missing TLB flush after leaf splits (Major #4). / 可能与地址空间切换或叶子拆分页后的 TLB 刷新缺失（Major #4）相关。
@@ -29,6 +29,9 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
   - Capture faulting `addr` with matching `pc` to confirm heap boundaries. / 采集 fault addr 与 pc 对应关系以确认堆边界。
   - Audit `malloc.c` + VM mappings on RV64; verify `brk`/`sbrk` flow and VM map permissions. / 审核 RV64 的 `malloc.c` 与 VM 映射；核对 `brk`/`sbrk` 路径与权限。
 - Update / 进展:
+  - 2026-02-16: after startup-handshake fixes (PFS/MFS/RS) and ilp32 user-address-top adjustment,
+    no pre-shell SIGSEGV reproduced in QEMU smoke; shell command `echo SMOKE_OK` succeeds.
+    / 2026-02-16：修复 PFS/MFS/RS 启动握手并调整 ilp32 用户地址上限后，QEMU 冒烟未再复现 shell 前 SIGSEGV，`echo SMOKE_OK` 成功。
   - Boot now reaches shell after mapping `.usermapped` into the boot page table for `minix_kerninfo_user`. / 启动页表加入 `.usermapped` 后可进入 shell（修复早期 `minix_kerninfo_user` 缺页）。
     Evidence: `minix/kernel/arch/riscv64/protect.c`
   - `virtio_blk_mmio` sys_vumap failures are fixed by using SELF iovec addresses; `/usr` mount succeeds. / `virtio_blk_mmio` 的 sys_vumap 失败已修复（SELF 用地址），`/usr` 可挂载。

@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-02-16  
-**Version / 版本**: 1.21
+**Version / 版本**: 1.23
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -27,7 +27,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   2) `#17` 启动期 safecopy 噪声错误闭环（定位根因并降噪）
   3) `A3` 含盘场景 `minix-service`/`virtio_blk_mmio` SIGSEGV
   4) `#25` 内建 GCC 不支持 `-mabi=lp64d`，阻断部分 GCC-only 增量构建
-  5) `#26` RS `do_up`/`do_update` 失败路径未回收 slot 资源，`RSS_COPY` 可触发可重复内存泄漏
+  5) `[DONE]` `#26` RS `do_up`/`do_update` 失败路径未回收 slot 资源，`RSS_COPY` 可触发可重复内存泄漏
   6) `[DONE]` `#28` RS `init_state_data` 在多个错误出口缺少内存回收
   7) `[DONE]` `#29` safecopy 首错分类规则过宽，存在门禁假阴性风险
 - P2 / 中优先（功能完备性与平台能力）:
@@ -468,6 +468,23 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - In `do_up()` and `do_update()`, add a unified error-exit path that always calls `free_slot(rp/new_rp)` when a slot has been initialized but not successfully created/published.
   - Clear `r_exec` ownership deterministically on all post-`init_slot()` failure branches (including duplicate checks).
   - Add a regression test that issues repeated failing `RSS_COPY` requests and asserts no net RS memory growth.
+- Update / 进展:
+  - `do_up()` now has a unified cleanup exit for post-`init_slot()` duplicate
+    failures, and calls `free_slot(rp)` before returning `EBUSY`.
+    `do_up()` 现已为 `init_slot()` 之后的重复校验失败路径统一走 cleanup，
+    返回 `EBUSY` 前会执行 `free_slot(rp)`。
+  - `do_update()` regular-update path now frees the allocated slot when
+    `init_slot(new_rp, ...)` fails, and unlinks `rp->r_new_rp/new_rp->r_old_rp`
+    if `create_service(new_rp)` fails.
+    `do_update()` 的常规更新路径在 `init_slot(new_rp, ...)` 失败时会释放已分配
+    slot；若 `create_service(new_rp)` 失败则会回滚 `rp->r_new_rp/new_rp->r_old_rp`
+    链接，避免悬挂引用。
+  - Evidence / 证据: `minix/servers/rs/request.c`
+- Status / 状态:
+  - Fixed in working tree; targeted rebuild passed:
+    `nbmake-evbriscv64 -C minix/servers/rs`.
+    已在当前工作树修复；定向重编译通过：
+    `nbmake-evbriscv64 -C minix/servers/rs`。
 
 ### 27) VFS magic-grant error paths can leak grants on early `EINVAL` returns / VFS magic grant 错误路径在 `EINVAL` 早退时可能泄漏 grant
 - Evidence / 证据:
@@ -519,6 +536,14 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     state-data fields before returning.
     `init_state_data()` 已改为统一 cleanup 错误出口，失败时会释放
     `eval_addr` / `ipcf_els_buff` 并重置状态字段。
+  - Follow-up hardening: when no eval/IPC-filter payload exists,
+    `dst_rs_state_data->size` now remains `0` (instead of always copying
+    `sizeof(struct rs_state_data)`), preventing unnecessary state-data grant
+    creation on no-state updates.
+    后续加固：当不存在 eval/IPC-filter 负载时，
+    `dst_rs_state_data->size` 现保持为 `0`
+    （不再无条件复制 `sizeof(struct rs_state_data)`），避免无状态更新
+    误创建 state-data grant。
   - Evidence / 证据: `minix/servers/rs/manager.c`
 - Status / 状态:
   - Fixed in working tree; targeted rebuild passed:
@@ -649,6 +674,12 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     `repro_build_gate.sh` 已加入可移植并发核数探测
     （`nproc`/`getconf`/`sysctl` 回退），并增加
     `R_RISCV_RELAX` 链接行为探针（best-effort）。
+  - Relax probe now links candidate archives with
+    `ld -r --whole-archive ... --no-whole-archive`, so the check exercises
+    real archive members instead of potentially passing on an empty object.
+    relax 探针现使用
+    `ld -r --whole-archive ... --no-whole-archive`，
+    确保实际覆盖 archive 成员路径，避免“空对象误通过”。
   - Evidence / 证据:
     `minix/tests/riscv64/multi_smoke_gate.sh`,
     `minix/tests/riscv64/repro_build_gate.sh`
@@ -659,6 +690,14 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     已在当前工作树修复；`repro_build_gate.sh --objdir obj.intrgcc
     --skip-tools --skip-distribution --smoke-rounds 1 --smoke-timeout 60
     --without-disk` 复验通过。
+  - Additional follow-up run:
+    `repro_build_gate.sh --objdir obj.intrgcc --skip-tools --skip-distribution
+    --smoke-rounds 1 --smoke-timeout 45 --without-disk` also passes
+    (`/tmp/minix-smoke-gate-20260217-000150`).
+    后续复验：
+    `repro_build_gate.sh --objdir obj.intrgcc --skip-tools --skip-distribution
+    --smoke-rounds 1 --smoke-timeout 45 --without-disk`
+    亦通过（`/tmp/minix-smoke-gate-20260217-000150`）。
 
 ### 17) Repeated safecopy errors during boot are still noisy and unexplained / 启动期重复 safecopy 错误仍有噪声且原因未闭环
 - Evidence / 证据:

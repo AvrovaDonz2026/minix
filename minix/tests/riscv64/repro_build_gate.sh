@@ -137,14 +137,14 @@ run_relax_compat_probe() {
     fi
 
     tmp_out="$(mktemp "${TMPDIR:-/tmp}/minix-relax-probe.XXXXXX.o")"
-    if "$ld" -r "$relax_archive" -o "$tmp_out" >/dev/null 2>&1; then
-        echo "[INFO] relax probe passed: ld accepts archive with R_RISCV_RELAX ($relax_archive)"
+    if "$ld" -r --whole-archive "$relax_archive" --no-whole-archive -o "$tmp_out" >/dev/null 2>&1; then
+        echo "[INFO] relax probe passed: ld accepts whole archive with R_RISCV_RELAX ($relax_archive)"
         rm -f "$tmp_out"
         return 0
     fi
 
     rm -f "$tmp_out"
-    echo "[FAIL] relax probe failed: linker rejected archive with R_RISCV_RELAX ($relax_archive)" >&2
+    echo "[FAIL] relax probe failed: linker rejected whole archive with R_RISCV_RELAX ($relax_archive)" >&2
     return 1
 }
 

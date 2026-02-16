@@ -31,7 +31,11 @@ TOOLS_BUILDRUMP?=no
 
 .if ${TOOLCHAIN_MISSING} == "no"
 . if defined(HAVE_GCC) && ${HAVE_GCC} > 0
+.  if defined(USE_HOST_GMAKE) && ${USE_HOST_GMAKE} != "no"
+TOOLCHAIN_BITS?=
+.  else
 TOOLCHAIN_BITS= gmake .WAIT
+.  endif
 TOOLCHAIN_BITS+= gmp .WAIT
 TOOLCHAIN_BITS+= mpfr .WAIT
 TOOLCHAIN_BITS+= mpc .WAIT

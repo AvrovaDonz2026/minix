@@ -60,7 +60,7 @@ __RCSID("$NetBSD: regexec.c,v 1.5 2014/01/26 21:47:00 christos Exp $");
 #include <string.h>
 #include <limits.h>
 #include <ctype.h>
-#include <regex.h>
+#include "regex.h"
 
 #include "utils.h"
 #include "regex2.h"

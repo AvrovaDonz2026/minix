@@ -36,6 +36,10 @@ __RCSID("$NetBSD: icmp.c,v 1.3 2014/07/12 12:09:37 spz Exp $");
 #include "netinet/ip.h"
 #include "netinet/ip_icmp.h"
 
+#ifndef IP_HL
+#define IP_HL(iph)	((iph)->ip_hl << 2)
+#endif
+
 struct icmp_state *icmp_state;
 static omapi_object_type_t *dhcp_type_icmp;
 static int no_icmp;

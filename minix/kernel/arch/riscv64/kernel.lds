@@ -75,6 +75,12 @@ SECTIONS
     /* Data section */
     .data : AT(ADDR(.data)) {
         *(.data .data.*)
+    }
+
+    . = ALIGN(8);
+    PROVIDE(__global_pointer$ = . + 0x800);
+
+    .sdata : AT(ADDR(.sdata)) {
         *(.sdata .sdata.*)
     }
 

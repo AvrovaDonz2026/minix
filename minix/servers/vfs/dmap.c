@@ -207,8 +207,13 @@ int map_service(struct rprocpub *rpub)
 
   /* Process is a service */
   if (isokendpt(rpub->endpoint, &slot) != OK) {
-	printf("VFS: can't map service with unknown endpoint %d\n",
-		rpub->endpoint);
+	printf("VFS: can't map service with unknown endpoint %d label=%s "
+		"in_use=%d dev=%d\n", rpub->endpoint, rpub->label,
+		rpub->in_use, rpub->dev_nr);
+	if (slot >= 0 && slot < NR_PROCS) {
+		printf("VFS: fproc[%d] endpoint=%d pid=%d\n", slot,
+			fproc[slot].fp_endpoint, fproc[slot].fp_pid);
+	}
 	return(EINVAL);
   }
   rfp = &fproc[slot];
@@ -231,6 +236,7 @@ void init_dmap(void)
 {
 /* Initialize the device mapping table. */
   int i;
+  char label[LABEL_MAX];
 
   memset(dmap, 0, sizeof(dmap));
 
@@ -242,7 +248,8 @@ void init_dmap(void)
   }
 
   /* CTTY_MAJOR is a special case, which is handled by VFS itself. */
-  if (map_driver("vfs", CTTY_MAJOR, CTTY_ENDPT) != OK)
+  strlcpy(label, "vfs", sizeof(label));
+  if (map_driver(label, CTTY_MAJOR, CTTY_ENDPT) != OK)
 	panic("map_driver(CTTY_MAJOR) failed");
 }
 

@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
-**Date / 日期**: 2026-01-07  
-**Version / 版本**: 1.2  
+**Date / 日期**: 2026-01-31  
+**Version / 版本**: 1.3  
 **Status / 状态**: Phase 1 in progress — buildable with workarounds, runtime unstable  
 **Progress / 进度**: ~60% (core kernel present; VM/IO issues outstanding)
 
@@ -9,19 +9,17 @@
 
 **中文**
 - 构建可通过（需使用绕过项与特定构建变量），详见 `README-RISCV64.md`。
-- QEMU 启动可进入早期内核初始化，但用户态未稳定进入。
+- QEMU 可启动并进入 shell，但用户态仍不稳定（`minix-service` 启动 virtio_blk_mmio 时 SIGSEGV）。
 - 关键风险集中在页表根传参、UART、TLB 刷新与 SBI IPI/fence 路径（见 `issue.md`）。
-- 2026-01-06 01:00 前代码变更已补充：用户态 gp 初始化、exec/ucontext 与 VM 执行权限标记、
-  IPC/缺页 ABI 修复。
-- 2026-01-07 已重建 tools 与 kernel；尚未运行新的 QEMU/测试。
+- 2026-01-31 已完成 tools + distribution 构建并运行 `run_tests.sh all`。
+  用户态编译测试全部通过；内核启动与定时器测试通过；SMP 跳过；virtio 块设备 I/O smoke 失败。
 
 **English**
 - Build passes with workaround flags; see `README-RISCV64.md` for exact commands.
-- QEMU boot reaches early kernel init; user space is not yet stable.
+- QEMU reaches a shell prompt, but user space remains unstable (`minix-service` SIGSEGV when starting virtio_blk_mmio).
 - Key risks are in page-table root handoff, UART, TLB flush, and SBI IPI/fence paths (see `issue.md`).
-- Pre-2026-01-06 01:00 changes documented: userland gp init, exec/ucontext + VM exec flags,
-  IPC/pagefault ABI fixes.
-- Tools + kernel rebuilt on 2026-01-07; no new QEMU/test runs yet.
+- 2026-01-31: tools + distribution built and `run_tests.sh all` executed.
+  User-level compile tests pass; kernel boot + timer pass; SMP skipped; virtio block I/O smoke fails.
 
 ## Build Status / 构建状态
 
@@ -42,16 +40,14 @@
 ## Runtime Status / 运行状态
 
 **中文**
-- 观察到 `rv64: kernel_main` 等早期日志，但随后出现 `System reset...` 并重复 OpenSBI banner。
-- 运行时稳定性不足，用户态服务尚未可靠启动。
-- 该行为与 `issue.md` 中的 PTROOT 截断等关键问题一致。
-- 最新内核尚未重新验证运行时行为。
+- QEMU 可到达 shell 提示符并执行 `sysenv`/`fsck_mfs` 等命令，但仍会出现用户态崩溃。
+- `minix-service -c up /service/virtio_blk_mmio -dev /dev/c0d0` 触发 SIGSEGV（`pc=0x3bb38`, `sp=0xefbffff0`），导致 virtio smoke 失败。
+- SMP 初始化仍标记为跳过（not yet implemented）。
 
 **English**
-- Logs show early messages like `rv64: kernel_main`, then `System reset...` with repeated OpenSBI banner.
-- Runtime stability is insufficient; user space services are not reliably started.
-- This matches the PTROOT truncation and other key issues in `issue.md`.
-- Latest kernel changes have not been re-validated at runtime.
+- QEMU reaches a shell prompt and can run `sysenv`/`fsck_mfs`, but userland crashes still occur.
+- `minix-service -c up /service/virtio_blk_mmio -dev /dev/c0d0` triggers SIGSEGV (`pc=0x3bb38`, `sp=0xefbffff0`), causing virtio smoke failure.
+- SMP initialization remains skipped (not yet implemented).
 
 ## Key Issues (Snapshot) / 关键问题（摘要）
 
@@ -76,12 +72,14 @@
 **中文**
 1) 验证 UART/TLB/SBI 修复在 QEMU 下的运行时行为。
 2) 恢复动态加载器（MKPIC/MKPICLIB）并验证最小动态程序。
-3) 补齐 SMP 核心与 IPI 路径实现。
+3) 调试 `minix-service` 启动 virtio_blk_mmio 的崩溃并恢复 virtio I/O 测试。
+4) 补齐 SMP 核心与 IPI 路径实现。
 
 **English**
 1) Validate UART/TLB/SBI fixes in QEMU.
 2) Restore dynamic loader (MKPIC/MKPICLIB) and test a minimal dynamic binary.
-3) Implement SMP core and IPI paths.
+3) Debug `minix-service` crash when starting virtio_blk_mmio and restore virtio I/O testing.
+4) Implement SMP core and IPI paths.
 
 ## Success Criteria / 下一里程碑判定
 

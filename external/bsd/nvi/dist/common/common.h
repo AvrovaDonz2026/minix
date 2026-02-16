@@ -28,7 +28,11 @@
  * them in a very specific order, regardless.
  */
 #include "vi_db.h"
+#ifdef __REGEX_PRIVATE
+#include "../regex/regex.h"
+#else
 #include <regex.h>
+#endif
 
 /*
  * Forward structure declarations.  Not pretty, but the include files

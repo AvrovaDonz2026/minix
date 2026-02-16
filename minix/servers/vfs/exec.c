@@ -153,7 +153,11 @@ static int get_read_vp(struct vfs_exec_info *execi,
 	return OK;
 }
 
-#define FAILCHECK(expr) if((r=(expr)) != OK) { goto pm_execfinal; } while(0)
+#define FAILCHECK(expr) do {					\
+	if ((r = (expr)) != OK) {				\
+		goto pm_execfinal;				\
+	}							\
+} while (0)
 #define Get_read_vp(e,f,p,s,rs,fp) do { \
 	r=get_read_vp(&e,f,p,s,rs,fp); if(r != OK) { FAILCHECK(r); }	\
 	} while(0)
@@ -717,10 +721,11 @@ static int read_seg(struct exec_info *execi, off_t off, vir_bytes seg_addr, size
     return(r);
   }
 
-  if (r == OK && cum_io != seg_bytes)
+  if (r == OK && cum_io != seg_bytes) {
 	printf("VFS: read_seg segment has not been read properly\n");
+  }
 
-	return(r);
+  return(r);
 }
 
 

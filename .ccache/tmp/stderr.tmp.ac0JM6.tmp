@@ -1,0 +1,27 @@
+In file included from [01m[K../../../../external/bsd/llvm/dist/llvm/include/llvm/ADT/ArrayRef.h:14[m[K,
+                 from [01m[K../../../../external/bsd/llvm/dist/llvm/include/llvm/IR/Attributes.h:19[m[K,
+                 from [01m[K../../../../external/bsd/llvm/dist/llvm/include/llvm/IR/Argument.h:19[m[K,
+                 from [01m[K../../../../external/bsd/llvm/dist/llvm/include/llvm/IR/Function.h:22[m[K,
+                 from [01m[K../../../../external/bsd/llvm/dist/llvm/lib/IR/Function.cpp:14[m[K:
+[01m[K../../../../external/bsd/llvm/dist/llvm/include/llvm/ADT/STLExtras.h:35:31:[m[K [01;35m[Kwarning: [m[K'[01m[Ktemplate<class _Arg, class _Result> struct std::unary_function[m[K' is deprecated [[01;35m[K-Wdeprecated-declarations[m[K]
+   35 | struct identity : public std::[01;35m[Kunary_function[m[K<Ty, Ty> {
+      |                               [01;35m[K^~~~~~~~~~~~~~[m[K
+In file included from [01m[K/usr/include/c++/14/string:49[m[K,
+                 from [01m[K../../../../external/bsd/llvm/dist/llvm/include/llvm/ADT/StringRef.h:17[m[K,
+                 from [01m[K../../../../external/bsd/llvm/dist/llvm/include/llvm/ADT/Twine.h:13[m[K,
+                 from [01m[K../../../../external/bsd/llvm/dist/llvm/include/llvm/IR/Argument.h:17[m[K:
+[01m[K/usr/include/c++/14/bits/stl_function.h:117:12:[m[K [01;36m[Knote: [m[Kdeclared here
+  117 |     struct [01;36m[Kunary_function[m[K
+      |            [01;36m[K^~~~~~~~~~~~~~[m[K
+[01m[K../../../../external/bsd/llvm/dist/llvm/include/llvm/ADT/STLExtras.h:45:31:[m[K [01;35m[Kwarning: [m[K'[01m[Ktemplate<class _Arg1, class _Arg2, class _Result> struct std::binary_function[m[K' is deprecated [[01;35m[K-Wdeprecated-declarations[m[K]
+   45 | struct less_ptr : public std::[01;35m[Kbinary_function[m[K<Ty, Ty, bool> {
+      |                               [01;35m[K^~~~~~~~~~~~~~~[m[K
+[01m[K/usr/include/c++/14/bits/stl_function.h:131:12:[m[K [01;36m[Knote: [m[Kdeclared here
+  131 |     struct [01;36m[Kbinary_function[m[K
+      |            [01;36m[K^~~~~~~~~~~~~~~[m[K
+[01m[K../../../../external/bsd/llvm/dist/llvm/include/llvm/ADT/STLExtras.h:52:34:[m[K [01;35m[Kwarning: [m[K'[01m[Ktemplate<class _Arg1, class _Arg2, class _Result> struct std::binary_function[m[K' is deprecated [[01;35m[K-Wdeprecated-declarations[m[K]
+   52 | struct greater_ptr : public std::[01;35m[Kbinary_function[m[K<Ty, Ty, bool> {
+      |                                  [01;35m[K^~~~~~~~~~~~~~~[m[K
+[01m[K/usr/include/c++/14/bits/stl_function.h:131:12:[m[K [01;36m[Knote: [m[Kdeclared here
+  131 |     struct [01;36m[Kbinary_function[m[K
+      |            [01;36m[K^~~~~~~~~~~~~~~[m[K

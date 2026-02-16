@@ -168,8 +168,9 @@ struct vnode *eat_path(struct lookup *resolve, struct fproc *rfp);
 struct vnode *last_dir(struct lookup *resolve, struct fproc *rfp);
 void lookup_init(struct lookup *resolve, char *path, int flags, struct
 	vmnt **vmp, struct vnode **vp);
-int get_name(struct vnode *dirp, struct vnode *entry, char *_name);
-int canonical_path(char *orig_path, struct fproc *rfp);
+int get_name(struct vnode *dirp, struct vnode *entry,
+	char _name[NAME_MAX + 1]);
+int canonical_path(char orig_path[PATH_MAX], struct fproc *rfp);
 int do_socketpath(void);
 
 /* pipe.c */

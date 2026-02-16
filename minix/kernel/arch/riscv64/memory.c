@@ -668,8 +668,8 @@ void memory_init(void)
 /*===========================================================================*
  *				arch_proc_init				     *
  *===========================================================================*/
-void arch_proc_init(struct proc *pr, const u32_t ip, const u32_t sp,
-	const u32_t ps_str, char *name)
+void arch_proc_init(struct proc *pr, const vir_bytes ip, const vir_bytes sp,
+	const vir_bytes ps_str, char *name)
 {
 	reg_t saved_satp = pr->p_seg.p_satp;
 	reg_t *saved_satp_v = pr->p_seg.p_satp_v;

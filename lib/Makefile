@@ -55,6 +55,10 @@ SUBDIR+=	../minix/lib/libacpi \
 		../minix/lib/libvirtio
 .endif
 
+.if (${MACHINE_ARCH} == "riscv64")
+SUBDIR+=	../minix/lib/libvirtio_mmio
+.endif
+
 .if (${MACHINE_ARCH} == "earm")
 SUBDIR+=	../minix/lib/libclkconf \
 		../minix/lib/libgpio \

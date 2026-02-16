@@ -1,0 +1,6 @@
+./etc/mtree/set.minix-base
+./etc/mtree/set.minix-comp
+./etc/mtree/set.minix-games
+./etc/mtree/set.minix-kernel
+./etc/mtree/set.minix-man
+./usr/man/whatis.db

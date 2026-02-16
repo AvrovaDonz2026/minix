@@ -20,6 +20,14 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+LOGDIR="${LOGDIR:-/tmp}"
+if ! mkdir -p "$LOGDIR" 2>/dev/null || [ ! -w "$LOGDIR" ]; then
+    LOGDIR="${MINIX_ROOT}/obj/test-logs"
+    mkdir -p "$LOGDIR" 2>/dev/null || true
+fi
+
+TEST_CPPFLAGS="${TEST_CPPFLAGS:--D__minix}"
+
 passed=0
 failed=0
 skipped=0
@@ -109,13 +117,14 @@ run_kernel_tests() {
 
     # Test 1: Kernel boots
     log_info "Test: Kernel boot"
+    BOOT_LOG="${LOGDIR}/boot_test.$$.log"
     timeout $TIMEOUT "$QEMU_SCRIPT" \
         -s -k "$KERNEL" -B "$BOOTMODROOT" \
-        > /tmp/boot_test.log 2>&1 || true
+        > "$BOOT_LOG" 2>&1 || true
 
-    if grep -q "MINIX" /tmp/boot_test.log 2>/dev/null || \
-       grep -q "rv64: arch_post_init" /tmp/boot_test.log 2>/dev/null || \
-       grep -q "rv64: arch_boot_proc VM" /tmp/boot_test.log 2>/dev/null; then
+    if grep -q "MINIX" "$BOOT_LOG" 2>/dev/null || \
+       grep -q "rv64: arch_post_init" "$BOOT_LOG" 2>/dev/null || \
+       grep -q "rv64: arch_boot_proc VM" "$BOOT_LOG" 2>/dev/null; then
         log_pass "Kernel boot"
     else
         log_fail "Kernel boot"
@@ -123,11 +132,12 @@ run_kernel_tests() {
 
     # Test 2: SMP initialization
     log_info "Test: SMP initialization"
+    SMP_LOG="${LOGDIR}/smp_test.$$.log"
     timeout $TIMEOUT "$QEMU_SCRIPT" \
         -k "$KERNEL" -B "$BOOTMODROOT" \
-        > /tmp/smp_test.log 2>&1 || true
+        > "$SMP_LOG" 2>&1 || true
 
-    if grep -q "CPU.*online" /tmp/smp_test.log 2>/dev/null; then
+    if grep -q "CPU.*online" "$SMP_LOG" 2>/dev/null; then
         log_pass "SMP initialization"
     else
         log_skip "SMP initialization (not yet implemented)"
@@ -135,11 +145,12 @@ run_kernel_tests() {
 
     # Test 3: Timer interrupt
     log_info "Test: Timer interrupt"
+    TIMER_LOG="${LOGDIR}/timer_test.$$.log"
     timeout $TIMEOUT "$QEMU_SCRIPT" \
         -s -k "$KERNEL" -B "$BOOTMODROOT" \
-        > /tmp/timer_test.log 2>&1 || true
+        > "$TIMER_LOG" 2>&1 || true
 
-    if grep -q "timer" /tmp/timer_test.log 2>/dev/null; then
+    if grep -q "timer" "$TIMER_LOG" 2>/dev/null; then
         log_pass "Timer interrupt"
     else
         log_skip "Timer interrupt (not yet implemented)"
@@ -186,15 +197,30 @@ run_kernel_tests() {
             log_info "VirtIO block I/O smoke: compiler not found, will fall back to dd/cmp if available"
         else
             mkdir -p "$(dirname "$TEST_BIN")"
-            ARCH_FLAGS="${RISCV_ARCH_FLAGS:--march=RV64IMAFD -mcmodel=medany}"
+            ARCH_FLAGS="${RISCV_ARCH_FLAGS:--march=rv64imafd_zicsr_zifencei -mcmodel=medany}"
             SYSROOT_FLAGS="--sysroot=$BOOTMODROOT -I$BOOTMODROOT/usr/include"
-            if $CC_SMOKE $ARCH_FLAGS $SYSROOT_FLAGS -O2 -Wall -std=gnu99 -static \
-                   -Wl,--defsym,__global_pointer\$=_gp \
-                   -o "$TEST_BIN" "$TEST_SRC" 2>/dev/null; then
-                log_info "Built test binary: $TEST_BIN"
-                TEST_BIN_READY=1
+            GP_LDFLAGS="${GP_LDFLAGS:--Wl,--defsym,__global_pointer\\$=_gp}"
+            if [ -n "$GP_LDFLAGS" ]; then
+                if $CC_SMOKE $ARCH_FLAGS $SYSROOT_FLAGS $TEST_CPPFLAGS -O2 -Wall -std=gnu99 -static \
+                       $GP_LDFLAGS \
+                       -o "$TEST_BIN" "$TEST_SRC" 2>/dev/null; then
+                    log_info "Built test binary: $TEST_BIN"
+                    TEST_BIN_READY=1
+                elif $CC_SMOKE $ARCH_FLAGS $SYSROOT_FLAGS $TEST_CPPFLAGS -O2 -Wall -std=gnu99 -static \
+                       -o "$TEST_BIN" "$TEST_SRC" 2>/dev/null; then
+                    log_info "Built test binary without gp defsym: $TEST_BIN"
+                    TEST_BIN_READY=1
+                else
+                    log_info "VirtIO block I/O smoke: build failed, will fall back to dd/cmp if available"
+                fi
             else
-                log_info "VirtIO block I/O smoke: build failed, will fall back to dd/cmp if available"
+                if $CC_SMOKE $ARCH_FLAGS $SYSROOT_FLAGS $TEST_CPPFLAGS -O2 -Wall -std=gnu99 -static \
+                       -o "$TEST_BIN" "$TEST_SRC" 2>/dev/null; then
+                    log_info "Built test binary: $TEST_BIN"
+                    TEST_BIN_READY=1
+                else
+                    log_info "VirtIO block I/O smoke: build failed, will fall back to dd/cmp if available"
+                fi
             fi
         fi
     fi
@@ -299,7 +325,7 @@ run_user_tests() {
     fi
 
     log_info "Using compiler: $CC"
-    ARCH_FLAGS="${RISCV_ARCH_FLAGS:--march=RV64IMAFD -mcmodel=medany}"
+    ARCH_FLAGS="${RISCV_ARCH_FLAGS:--march=rv64imafd_zicsr_zifencei -mcmodel=medany}"
     SYSROOT="${SYSROOT:-${DESTDIR:-$DESTDIR_DEFAULT}}"
     SYSROOT_FLAGS=""
     if [ -n "$SYSROOT" ]; then
@@ -311,7 +337,7 @@ run_user_tests() {
         test_name=$(basename "$test_file" .c)
         log_info "Compiling: $test_name"
 
-        if $CC $ARCH_FLAGS $SYSROOT_FLAGS -O2 -Wall -std=gnu99 \
+        if $CC $ARCH_FLAGS $SYSROOT_FLAGS $TEST_CPPFLAGS -O2 -Wall -std=gnu99 \
                -c "$test_file" -o "/tmp/${test_name}.o" 2>/dev/null; then
             log_pass "Compile $test_name"
         else

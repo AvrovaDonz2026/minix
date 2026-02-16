@@ -429,7 +429,7 @@ int do_slink(void)
 int
 rdlink_direct(
 	char *orig_path,
-	char link_path[PATH_MAX], /* should have length PATH_MAX */
+	char *link_path, /* should have length PATH_MAX */
 	struct fproc *rfp
 )
 {

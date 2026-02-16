@@ -15,8 +15,6 @@
 
 static ddekit_sem_t *exit_sem;
 
-unsigned long long jiffies;
-
 void ddekit_pgtab_init(void);
 
 static  ddekit_thread_t *dispatch_th = 0;
@@ -136,4 +134,3 @@ void ddekit_minix_wait_exit(void)
 {
 	ddekit_sem_down(exit_sem);
 }
-

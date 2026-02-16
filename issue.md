@@ -1,14 +1,14 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
-**Date / 日期**: 2026-01-07  
-**Version / 版本**: 1.2  
+**Date / 日期**: 2026-01-31  
+**Version / 版本**: 1.3  
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
 This file records concrete issues in the RISC-V 64-bit port with evidence and suggested fixes.
 
-**复核说明**：2026-01-07 补充 2026-01-06 01:00 前代码变更；未重新构建或测试。  
-**Review note**: 2026-01-07 update after reviewing pre-2026-01-06 01:00 changes; no new build/test run.
+**复核说明**：2026-01-31 完成 tools/distribution 构建并运行 `run_tests.sh all`；新增 virtio_blk_mmio 启动期崩溃记录。  
+**Review note**: 2026-01-31 built tools/distribution and ran `run_tests.sh all`; added virtio_blk_mmio startup crash record.
 
 ## Active Investigation / 当前主问题跟踪
 
@@ -64,8 +64,24 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
     2) Prefer a minimal static executable if available; otherwise verify `PT_INTERP` points to `/libexec/ld.elf_so`. / 尽量使用静态可执行文件；否则确认 `PT_INTERP` 指向 `/libexec/ld.elf_so`。  
        Evidence: `minix/drivers/storage/ramdisk/proto.common.dynamic:2`, `minix/servers/vfs/exec.c:282`
     3) Ensure dynamic loader is mapped below stack as per VFS logic. / 确认动态加载器按 VFS 逻辑映射到栈下。  
-       Evidence: `minix/servers/vfs/exec.c:306`
+      Evidence: `minix/servers/vfs/exec.c:306`
     4) Keep the test binary minimal (single `main`, no threads) to isolate VM/exec issues. / 测试程序保持最小化以隔离 VM/exec 问题。
+
+### A3) minix-service SIGSEGV when starting virtio_blk_mmio / 启动 virtio_blk_mmio 时 minix-service 崩溃
+- Evidence / 证据:
+  - `./minix/tests/riscv64/run_tests.sh all` (2026-01-31) fails the VirtIO block I/O smoke test; running
+    `/sbin/minix-service -c up /service/virtio_blk_mmio -dev /dev/c0d0` triggers SIGSEGV.  
+    Logs: `/tmp/minix-riscv64-tests.log`, `/home/donz/minix/obj/test-logs/boot_test.*.log`
+  - Stacktrace in QEMU output: `pc=0x3bb38 sp=0xefbffff0 ra=0x3bbf0`, VM reports `SIGSEGV ... err 0xf nopage write`.
+  - Symbol mapping (no DWARF line info): `minix/commands/minix-service/obj/minix-service` shows
+    `0x3bb34 T memset`, so the fault PC is inside `memset` in the minix-service binary.
+- Impact / 影响:
+  - virtio_blk_mmio cannot be started; virtio I/O smoke test fails.
+- Hypothesis / 假设:
+  - Userland stack or address-space mapping issue (sp at `0xefbffff0`) during RS start path.
+- Next steps / 下一步:
+  - Rebuild `minix-service` with DWARF v4 or use a tool that can decode DWARF v5, then resolve `pc=0x3bb38`.
+  - Add tracing around RS `RS_UP` request path in `minix/commands/minix-service/minix-service.c` and verify stack setup.
 
 ## Critical / 严重
 

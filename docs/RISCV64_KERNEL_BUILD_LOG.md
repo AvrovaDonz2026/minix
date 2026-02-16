@@ -87,3 +87,55 @@ MAKEOBJDIRPREFIX=/root/minix/obj \
 **Result / 结果**:
 - Tools build succeeded after fixing `llvm/IR/ValueMap.h` explicit bool conversion.
 - Kernel build succeeded with GCC toolchain + `MAKEOBJDIRPREFIX` setup.
+
+### Entry 8 — Toolchain + Distribution + RISC-V Tests (2026-01-31) / 工具链 + 发行版 + RISC-V 测试
+**Workspace / 工作区**: `/home/donz/minix`  
+**Commands / 命令**:
+```bash
+# Tools (with ccache)
+CCACHE_CONFIGPATH=/home/donz/minix/obj/ccache/ccache.conf \
+CCACHE_BASEDIR=/home/donz/minix \
+CCACHE_DIR=/home/donz/minix/obj/ccache/cache \
+PATH="/usr/lib/ccache:$PATH" \
+MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
+HOST_CC="cc -Wno-implicit-int -Wno-implicit-function-declaration" \
+./build.sh -U -m evbriscv64 \
+  -V AVAILABLE_COMPILER=gcc -V ACTIVE_CC=gcc -V ACTIVE_CPP=gcc -V ACTIVE_CXX=gcc -V ACTIVE_OBJC=gcc \
+  tools
+
+# Distribution (external toolchain)
+CCACHE_CONFIGPATH=/home/donz/minix/obj/ccache/ccache.conf \
+CCACHE_BASEDIR=/home/donz/minix \
+CCACHE_DIR=/home/donz/minix/obj/ccache/cache \
+PATH="/usr/lib/ccache:$PATH" \
+EXTERNAL_TOOLCHAIN=/home/donz/minix/obj/exttoolchain \
+HOST_CC="cc -Wno-implicit-int -Wno-implicit-function-declaration" \
+MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
+CFLAGS="-fcommon" LDFLAGS='-Wl,--defsym,_gp=__global_pointer$$' \
+./build.sh -U -u -j"$(nproc)" -m evbriscv64 \
+  -V TOOLCHAIN_MISSING=yes \
+  -V AVAILABLE_COMPILER=gcc -V ACTIVE_CC=gcc -V ACTIVE_CPP=gcc -V ACTIVE_CXX=gcc -V ACTIVE_OBJC=gcc \
+  -V RISCV_ARCH_FLAGS='-march=rv64imafd -mcmodel=medany' \
+  -V NOGCCERROR=yes \
+  -V MKPIC=no -V MKPICLIB=no -V MKPICINSTALL=no \
+  -V MKGCCCMDS=no -V MKLIBSTDCXX=no -V MKCXX=no -V MKLIBCXX=no -V MKATF=yes -V MKKYUA=yes \
+  -V USE_PCI=no -V MKLIBOBJC=no -V MKLIBGOMP=no \
+  -V CHECKFLIST_FLAGS='-m -e' \
+  -V MKBINUTILS=no \
+  distribution
+
+# Tests
+TOOLDIR=/home/donz/minix/obj/exttoolchain \
+DESTDIR=/home/donz/minix/obj/destdir.evbriscv64 \
+LOGDIR=/home/donz/minix/obj/test-logs \
+RISCV_ARCH_FLAGS='-march=rv64imafd_zicsr_zifencei -mcmodel=medany' \
+./minix/tests/riscv64/run_tests.sh all
+```
+**Results / 结果**:
+- tools build: success (`/tmp/minix-tools.log`)
+- distribution: success (`/tmp/minix-build.log`); `checkflist` relaxed with `-m -e` shows extra/missing files (non-fatal)
+- tests: build/user tests pass; kernel boot + timer pass; SMP skipped; VirtIO block I/O smoke failed due to `minix-service` SIGSEGV during driver start (see `/tmp/minix-riscv64-tests.log`)
+
+**Notes / 说明**:
+- ccache config: `/home/donz/minix/obj/ccache/ccache.conf`
+- virtio smoke failure: `/sbin/minix-service -c up /service/virtio_blk_mmio -dev /dev/c0d0` crashes (`pc=0x3bb38`, `sp=0xefbffff0`)

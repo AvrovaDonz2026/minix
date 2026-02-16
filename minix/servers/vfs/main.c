@@ -515,7 +515,10 @@ static int sef_cb_init_fresh(int UNUSED(type), sef_init_info_t *info)
  *===========================================================================*/
 static void do_init_root(void)
 {
-  char *mount_type, *mount_label;
+  char mount_dev[PATH_MAX];
+  char mount_path[PATH_MAX];
+  char mount_type[FSTYPE_MAX];
+  char mount_label[LABEL_MAX];
   int r;
 
 #if defined(__riscv) || defined(__riscv64__)
@@ -532,10 +535,12 @@ static void do_init_root(void)
 #endif
 
   /* Mount the root file system. */
-  mount_type = "mfs";       /* FIXME: use boot image process name instead */
-  mount_label = "fs_imgrd"; /* FIXME: obtain this from RS */
+  strlcpy(mount_type, "mfs", sizeof(mount_type));
+  strlcpy(mount_label, "fs_imgrd", sizeof(mount_label));
+  strlcpy(mount_dev, "bootramdisk", sizeof(mount_dev));
+  strlcpy(mount_path, "/", sizeof(mount_path));
 
-  r = mount_fs(DEV_IMGRD, "bootramdisk", "/", MFS_PROC_NR, 0, mount_type,
+  r = mount_fs(DEV_IMGRD, mount_dev, mount_path, MFS_PROC_NR, 0, mount_type,
 	mount_label);
 #if defined(__riscv) || defined(__riscv64__)
   printf("VFS: init_root mount_fs r=%d\n", r);

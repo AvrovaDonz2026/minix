@@ -88,6 +88,10 @@
 #define DEF_UMASK 022
 #endif
 
+#ifndef BINDIR
+#define	BINDIR	"/usr/sbin"
+#endif
+
 #ifndef	PATH_MAX
 #  ifdef MAXPATHLEN
 #    define PATH_MAX	MAXPATHLEN

@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-02-16  
-**Version / 版本**: 1.3  
+**Version / 版本**: 1.4  
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 ## Log Entries / 日志条目
@@ -147,3 +147,49 @@ cat /proc/meminfo
 **Toolchain note / 工具链备注**:
 - In-tree linker compatibility issue with `R_RISCV_RELAX` remained visible during incremental rebuild attempts
   (`ld: unrecognized relocation (0x33)`), tracked as `issue.md` #24.
+
+### Entry 9 — `obj.intrgcc` Self-Bootstrap Distribution + QEMU Validation (2026-02-16) / `obj.intrgcc` 自举 distribution + QEMU 验证
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Objdir / 对象目录**: `obj.intrgcc`  
+
+**Goal / 目标**:
+- Validate a fully isolated rebuild path (`tools -> distribution`) without injecting artifacts from `obj/`.
+- Ensure QEMU can boot directly from `obj.intrgcc` outputs.
+
+**Build commands / 构建命令**:
+```bash
+# 1) tools in isolated objdir
+MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
+./build.sh -U -m evbriscv64 -O obj.intrgcc \
+  -V AVAILABLE_COMPILER=gcc -V ACTIVE_CC=gcc -V ACTIVE_CPP=gcc -V ACTIVE_CXX=gcc -V ACTIVE_OBJC=gcc \
+  tools
+
+# 2) distribution in the same objdir
+MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
+./build.sh -U -u -j"$(nproc)" -m evbriscv64 -O obj.intrgcc \
+  -V AVAILABLE_COMPILER=gcc -V ACTIVE_CC=gcc -V ACTIVE_CPP=gcc -V ACTIVE_CXX=gcc -V ACTIVE_OBJC=gcc \
+  -V RISCV_ARCH_FLAGS='-march=RV64IMAFD -mcmodel=medany' \
+  -V NOGCCERROR=yes \
+  -V MKPIC=no -V MKPICLIB=no -V MKPICINSTALL=no \
+  -V MKCXX=no -V MKLIBSTDCXX=no -V MKATF=no \
+  -V USE_PCI=no \
+  -V CHECKFLIST_FLAGS='-m -e' \
+  distribution
+```
+
+**QEMU command / QEMU 启动命令**:
+```bash
+./minix/scripts/qemu-riscv64.sh \
+  -k obj.intrgcc/minix/kernel/kernel \
+  -B obj.intrgcc/destdir.evbriscv64
+```
+
+**Observed result / 观察结果**:
+- Distribution completed successfully on the `obj.intrgcc` path.
+- QEMU reached interactive shell from `obj.intrgcc` outputs.
+- `Boot module not found: ds` was no longer reproduced in this profile.
+
+**Follow-up / 后续**:
+- Keep `issue.md` `#17` (procfs safecopy fallback noise) and `#24`
+  (`R_RISCV_RELAX` compatibility in targeted incremental-link scenarios) under ongoing tracking.

@@ -513,6 +513,35 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     2026-02-16 的 `qemu-p0-smoke`（`/tmp/qemu-p0-smoke.log`）在 `/proc/meminfo`
     路径仍可见可恢复 safecopy 回退（`err -996`），但命令返回成功
     （`__RC_MEMINFO__:0`），未出现崩溃。
+  - Added first-error triage tooling:
+    `minix/tests/riscv64/safecopy_triage.py` now classifies the first safecopy
+    error as `acceptable_noise` vs `potential_consistency_issue` using
+    fatal-signature checks, known recoverable patterns, and pre-shell/total-count thresholds.
+    新增首错定性工具：`minix/tests/riscv64/safecopy_triage.py` 可基于
+    fatal 特征、已知可恢复模式与 pre-shell/总量阈值，将首个 safecopy 错误自动判定为
+    `acceptable_noise` 或 `potential_consistency_issue`。
+  - 2026-02-16 multi-run gate result:
+    `minix/tests/riscv64/multi_smoke_gate.sh --rounds 2` completed
+    4/4 passes (diskless + with-disk), and triage output in
+    `/tmp/minix-smoke-gate-20260216-221610/*.triage.txt` classifies the first safecopy
+    event as `acceptable_noise` (`first_safecopy_line=414`, recoverable startup fallback pattern).
+    2026-02-16 多轮门禁结果：
+    `minix/tests/riscv64/multi_smoke_gate.sh --rounds 2`
+    在无盘+带盘共 4 轮均通过；`/tmp/minix-smoke-gate-20260216-221610/*.triage.txt`
+    将首个 safecopy 事件判定为 `acceptable_noise`
+    （`first_safecopy_line=414`，可恢复启动期回退模式）。
+  - 2026-02-16 reproducibility + fresh gate follow-up:
+    `repro_build_gate.sh --objdir obj.intrgcc --smoke-rounds 1 --smoke-timeout 60 --without-disk`
+    completed end-to-end (`tools -> distribution -> smoke`), then a fresh
+    `multi_smoke_gate.sh --rounds 2 --timeout 90` run also passed 4/4.
+    New triage artifacts under `/tmp/minix-smoke-gate-20260216-224157/*.triage.txt`
+    remain `acceptable_noise` with stable first-error signature (`first_safecopy_line=414`).
+    2026-02-16 复现门禁 + 新一轮回归：
+    `repro_build_gate.sh --objdir obj.intrgcc --smoke-rounds 1 --smoke-timeout 60 --without-disk`
+    端到端通过（`tools -> distribution -> smoke`）；随后再次执行
+    `multi_smoke_gate.sh --rounds 2 --timeout 90` 亦为 4/4 全通过。
+    新证据 `/tmp/minix-smoke-gate-20260216-224157/*.triage.txt`
+    仍将首错定性为 `acceptable_noise`，首错签名稳定（`first_safecopy_line=414`）。
 - Priority assessment / 优先级评估:
   - Keep at `P1` for now: the fault appears recoverable (retry succeeds), but repeated fallback/retry
     in hot read paths (`/proc/*`) can become a performance/logging storm and obscure real regressions.

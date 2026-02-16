@@ -340,6 +340,85 @@ timeout 45 ./minix/scripts/qemu-riscv64.sh \
 - The QEMU run was bounded by `timeout`; termination by SIGTERM at timeout boundary is expected
   for log-capture runs and does not indicate runtime crash.
 
+### Entry 15 — Full Reproducibility Gate + Fresh Multi-Run Smoke (2026-02-16) / 全量复现门禁 + 新一轮多轮 smoke
+**Workspace / 工作区**: `/home/donz/minix`
+**Target / 目标**: `evbriscv64`
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Close the loop on source-driven reproducibility (no manual patching/copying).
+- Re-run multi-round smoke after the full gate to avoid single-pass bias.
+
+**Commands executed / 实际执行命令**:
+```bash
+./minix/tests/riscv64/repro_build_gate.sh \
+  --objdir obj.intrgcc \
+  --smoke-rounds 1 \
+  --smoke-timeout 60 \
+  --without-disk
+
+./minix/tests/riscv64/multi_smoke_gate.sh \
+  --kernel obj.intrgcc/minix/kernel/kernel \
+  --destdir obj.intrgcc/destdir.evbriscv64 \
+  --rounds 2 --timeout 90
+```
+
+**Observed result / 观察结果**:
+- `repro_build_gate.sh` completed `tools -> distribution -> smoke` with `exit 0`.
+- `build.sh` reported `Successful make distribution` on `obj.intrgcc` in the same run.
+- Re-run multi-smoke finished `4/4` pass (diskless+with-disk x2).
+- All four triage reports classify first safecopy as `acceptable_noise`
+  (`first_safecopy_line=414`, `safecopy_total=8`, `safecopy_pre_shell=1`).
+- With-disk rounds preserved `virtio-blk-mmio: initialized` and did not reproduce
+  `device not found` / `Request 0x700 to RS failed` / `couldn't start virtio_blk_mmio`.
+
+**Evidence / 证据**:
+- Repro gate smoke log root: `/tmp/minix-smoke-gate-20260216-223948`
+- Fresh multi-run gate log root: `/tmp/minix-smoke-gate-20260216-224157`
+
+### Entry 14 — Automated Multi-Run Gate + Safecopy First-Error Triage (2026-02-16) / 自动化多轮门禁 + safecopy 首错定性
+**Workspace / 工作区**: `/home/donz/minix`
+**Target / 目标**: `evbriscv64`
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Convert ad-hoc smoke checks into a minimum automated gate.
+- Classify safecopy first error as acceptable noise vs potential consistency issue.
+- Add a reproducible-build gate entrypoint that avoids manual artifact injection.
+
+**Added scripts / 新增脚本**:
+```text
+minix/tests/riscv64/safecopy_triage.py
+minix/tests/riscv64/multi_smoke_gate.sh
+minix/tests/riscv64/repro_build_gate.sh
+```
+
+**Hook-up / 接入**:
+- `minix/tests/riscv64/run_tests.sh` adds `gate` mode:
+  `./minix/tests/riscv64/run_tests.sh gate`
+
+**Gate command executed / 实际执行命令**:
+```bash
+./minix/tests/riscv64/multi_smoke_gate.sh \
+  --kernel obj.intrgcc/minix/kernel/kernel \
+  --destdir obj.intrgcc/destdir.evbriscv64 \
+  --rounds 2 --timeout 90
+```
+
+**Observed result / 观察结果**:
+- 4/4 runs passed (diskless round1/2 + with-disk round1/2).
+- No panic/SIGSEGV fatal signature in any round log.
+- With-disk rounds kept `virtio-blk-mmio: initialized` and did not reproduce:
+  `device not found`, `Request 0x700 to RS failed`, `couldn't start virtio_blk_mmio`.
+- `safecopy_triage.py` on gate logs reports:
+  `classification: acceptable_noise`,
+  `first_safecopy_line: 414`,
+  known recoverable startup fallback pattern.
+
+**Evidence / 证据**:
+- Log root: `/tmp/minix-smoke-gate-20260216-221610`
+- Files include per-round `.log` and `.triage.txt`.
+
 ### Entry 13 — RS P0 Incremental Convergence + Diskless/With-Disk Smoke (2026-02-16) / RS P0 增量收敛 + 无盘/带盘冒烟
 **Workspace / 工作区**: `/home/donz/minix`
 **Target / 目标**: `evbriscv64`

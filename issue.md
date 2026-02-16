@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-02-16  
-**Version / 版本**: 1.9  
+**Version / 版本**: 1.11
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -246,6 +246,10 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Suggested fix / 修复建议:
   - Add `rp == NULL` checks before dereference in both paths and return `EINVAL`/ignore unexpected senders.
   - In boot catch path, validate source endpoint against expected initializing set before accepting `RS_INIT`.
+- Update / 进展:
+  - Added strict source validation via `rs_isokservice()` before dereferencing in both `do_init_ready()` and `catch_boot_init_ready()`, with explicit invalid-source handling. Runtime/QEMU validation is still required.
+    已在 `do_init_ready()` 与 `catch_boot_init_ready()` 中通过 `rs_isokservice()` 先做严格来源校验，再解引用；异常来源路径已显式处理。仍需运行时/QEMU 复验。
+    Evidence: `minix/servers/rs/request.c`, `minix/servers/rs/main.c`, `minix/servers/rs/utility.c`
 
 ### 20) RS update-ready path may dereference null slot on unexpected RS_LU_PREPARE / RS 更新就绪路径在异常 RS_LU_PREPARE 下可能空指针解引用
 - Evidence / 证据:
@@ -259,6 +263,10 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Suggested fix / 修复建议:
   - Validate `who_p` binding and `rp != NULL` before any dereference.
   - Reject senders that do not match `rupdate.curr_rpupd->rp` with `EINVAL` and keep RS running.
+- Update / 进展:
+  - `do_upd_ready()` now validates service endpoint binding using `rs_isokservice()` before touching `rproc_ptr[]`/`rp`, so malformed or stale senders are rejected safely. Runtime/QEMU validation is still required.
+    `do_upd_ready()` 已在访问 `rproc_ptr[]`/`rp` 前使用 `rs_isokservice()` 校验端点绑定，畸形或陈旧来源会被安全拒绝。仍需运行时/QEMU 复验。
+    Evidence: `minix/servers/rs/request.c`, `minix/servers/rs/utility.c`
 
 ### 21) RS endpoint validation accepts task numbers, enabling out-of-bounds `rproc_ptr[]` access / RS 端点校验接受任务号，可能导致 `rproc_ptr[]` 越界访问
 - Evidence / 证据:
@@ -275,6 +283,10 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Suggested fix / 修复建议:
   - Introduce a strict service-endpoint validator (`0 <= proc < NR_PROCS`) for all `rproc_ptr[]` indexing paths.
   - Keep task-range acceptance only in paths that never index process-slot arrays.
+- Update / 进展:
+  - Introduced `rs_isokservice()` (`0 <= proc < NR_PROCS`, mapping exists) and switched `rproc_ptr[]` indexing paths in RS main/signal/init/update handling to this strict validator, preventing negative-index task-slot access. Endpoint-generation hard match is intentionally not enforced in boot catch path due startup endpoint encoding differences. Runtime/QEMU validation is still required.
+    新增 `rs_isokservice()`（要求 `0 <= proc < NR_PROCS` 且映射存在），并将 RS main/signal/init/update 中访问 `rproc_ptr[]` 的路径切换为严格校验，阻断 task slot 负索引。考虑启动期 endpoint 编码差异，boot catch 路径未强制端点代际硬匹配。仍需运行时/QEMU 复验。
+    Evidence: `minix/servers/rs/utility.c`, `minix/servers/rs/main.c`, `minix/servers/rs/request.c`, `minix/servers/rs/proto.h`
 
 ### 22) RS can write out of bounds in `free_slot()` when endpoint is unset (-1) / `free_slot()` 在端点未设置(-1)时可能越界写
 - Evidence / 证据:
@@ -292,6 +304,10 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - In `free_slot()`, validate endpoint slot bounds before touching `rproc_ptr[]`.
   - Initialize/normalize unset endpoints to `NONE` and treat them as “no mapping to clear”.
   - Add assertions/tests covering clone->create failure paths.
+- Update / 进展:
+  - `free_slot()` now bounds-checks endpoint-derived slots, clears mapping only when ownership matches (`rproc_ptr[slot] == rp`), and normalizes released endpoints to `NONE`, eliminating the `endpoint=-1` write-underflow path. Runtime/QEMU validation is still required.
+    `free_slot()` 现已对 endpoint 槽位做边界校验，仅在映射归属匹配（`rproc_ptr[slot] == rp`）时清理，并将释放后的 endpoint 归一为 `NONE`，消除 `endpoint=-1` 的下溢写路径。仍需运行时/QEMU 复验。
+    Evidence: `minix/servers/rs/manager.c`
 
 ### 23) RISC-V `vm_memset` lacks fault-recovery path and may panic kernel on user-memory write faults / RISC-V `vm_memset` 缺少故障恢复路径，用户内存写故障可能直接触发内核 panic
 - Evidence / 证据:

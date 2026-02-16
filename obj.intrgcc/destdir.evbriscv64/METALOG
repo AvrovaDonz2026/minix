@@ -12080,3 +12080,6 @@
 ./service/pfs type=file uname=root gname=wheel mode=0755 size=82751 time=1771221691.0 sha256=9cb890d520af8fd87ab4e166ac4ae480dc550af501884aeacb37a4fb78af6fa2
 ./service/mfs type=file uname=root gname=wheel mode=0755 size=144468 time=1771221703.0 sha256=bae5bc1ebbc6c6c2bc43ae442dce081a1ad122f4aef3c788b2ec1bb6c3da2159
 ./service/vm type=file uname=root gname=wheel mode=0755 size=206268 time=1771221904.0 sha256=175c988e1c7a7ca54b99646ecd769dd69782bb8c147a4d909df49a9b3d1a25d3
+./service/rs type=file uname=root gname=wheel mode=0755 size=152933 time=1771229438.0 sha256=c9a2de416170370051c773a8da75651f282f0ebd54949a88ca12abfc321b3bb9
+./service/rs type=file uname=root gname=wheel mode=0755 size=152949 time=1771229520.0 sha256=f0c120d74543e7aae3707a86bee482e0057ac80234bc55e1119ef176c562bebb
+./service/rs type=file uname=root gname=wheel mode=0755 size=152853 time=1771229610.0 sha256=c53d0c738e82bb7a2aa2297b134153f8fbf0d4e8726ead410c101db03c51b531

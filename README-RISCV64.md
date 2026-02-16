@@ -432,9 +432,14 @@ python3 ./minix/tests/riscv64/safecopy_triage.py /tmp/qemu-smoke.log
 - `multi_smoke_gate.sh` 要求每轮满足：
   shell 可达、无 fatal 签名、`safecopy_triage` 不判定为潜在一致性问题；
   带盘轮次还要求 `virtio-blk-mmio: initialized`，且不能出现历史启动失败签名。
+  默认行为为“每轮独立带盘镜像”（例如 `...round1.img`、`...round2.img`）；
+  如需跨轮复用单一镜像，显式传 `--reuse-disk`。
 - `repro_build_gate.sh` 执行受控参数的 `tools -> distribution -> multi_smoke_gate`，
   并检查 `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`
   为 tracked 文件，用于避免“手工补丁/手工拷贝产物”依赖。
+  其 relax 兼容探针使用
+  `ld -r --whole-archive ... --no-whole-archive`，
+  确保实际覆盖 archive 成员链接路径。
 - `run_tests.sh` 新增 `gate` 子命令，可直接触发多轮门禁：
   `./minix/tests/riscv64/run_tests.sh gate`
 

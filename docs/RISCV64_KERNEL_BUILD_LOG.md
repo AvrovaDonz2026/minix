@@ -340,6 +340,62 @@ timeout 45 ./minix/scripts/qemu-riscv64.sh \
 - The QEMU run was bounded by `timeout`; termination by SIGTERM at timeout boundary is expected
   for log-capture runs and does not indicate runtime crash.
 
+### Entry 16 — RS Leak-Path Closure + Gate Hardening Follow-up (2026-02-16) / RS 泄漏路径收敛 + 门禁加固续验
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Close issue `#26` by fixing RS slot cleanup on post-`init_slot()` failures.
+- Preserve `#28` fix while restoring no-state update semantics (no payload => `size=0`).
+- Harden `#31` relax probe to avoid false-positive pass on empty archive links.
+- Revalidate per-round independent with-disk reproducibility.
+
+**Commands executed / 实际执行命令**:
+```bash
+# 1) targeted RS rebuild
+TOOLDIR=$(ls -d obj.intrgcc/tooldir.* | head -n1)
+"$TOOLDIR/bin/nbmake-evbriscv64" -C minix/servers/rs
+
+# 2) per-round reproducibility smoke (diskless + with-disk)
+./minix/tests/riscv64/multi_smoke_gate.sh \
+  --kernel obj.intrgcc/minix/kernel/kernel \
+  --destdir obj.intrgcc/destdir.evbriscv64 \
+  --rounds 2 --timeout 60 \
+  --log-root /tmp/minix-smoke-gate-indep-20260216-234830
+
+# 3) repro gate follow-up (skip rebuild, validate gate path)
+./minix/tests/riscv64/repro_build_gate.sh \
+  --objdir obj.intrgcc \
+  --skip-tools --skip-distribution \
+  --smoke-rounds 1 --smoke-timeout 45 \
+  --without-disk
+
+# 4) relax probe behavior sanity check
+TOOLDIR=$(ls -d obj.intrgcc/tooldir.* | head -n1)
+LD="$TOOLDIR/riscv64-elf32-minix/bin/ld"
+[ -x "$LD" ] || LD="$TOOLDIR/bin/riscv64-elf32-minix-ld"
+"$LD" -r --whole-archive obj.intrgcc/destdir.evbriscv64/usr/lib/libsys.a \
+  --no-whole-archive -o /tmp/ld-whole-check.o
+stat -c 'whole_archive_output_size=%s' /tmp/ld-whole-check.o
+```
+
+**Observed result / 观察结果**:
+- `nbmake-evbriscv64 -C minix/servers/rs` rebuilds and links successfully.
+- Multi-smoke passes `4/4`; logs show per-round disk images:
+  `...minix-smoke-gate.round1.img` and `...minix-smoke-gate.round2.img`.
+- `repro_build_gate.sh --skip-tools --skip-distribution ...` passes diskless smoke (`1/1`).
+- Whole-archive probe output is non-empty (`whole_archive_output_size=206453`), confirming
+  the probe now exercises real archive-member link paths.
+- Code changes landed in:
+  `minix/servers/rs/request.c`,
+  `minix/servers/rs/manager.c`,
+  `minix/tests/riscv64/repro_build_gate.sh`.
+
+**Evidence / 证据**:
+- `/tmp/minix-smoke-gate-indep-20260216-234830`
+- `/tmp/minix-smoke-gate-20260217-000150`
+
 ### Entry 15 — Full Reproducibility Gate + Fresh Multi-Run Smoke (2026-02-16) / 全量复现门禁 + 新一轮多轮 smoke
 **Workspace / 工作区**: `/home/donz/minix`
 **Target / 目标**: `evbriscv64`

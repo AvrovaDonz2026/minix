@@ -1,9 +1,9 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-02-16  
-**Version / 版本**: 1.6
-**Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and smoke-validated
-**Progress / 进度**: ~76% (boot/userland path stabilized; diskless/with-disk smoke validated, core follow-ups remain)
+**Version / 版本**: 1.7
+**Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
+**Progress / 进度**: ~79% (boot/userland path stabilized; diskless/with-disk gate hardened; core follow-ups remain)
 
 ## Summary / 摘要
 
@@ -21,6 +21,12 @@
   跑通 `tools -> distribution -> smoke`（无需手工补丁/手工拷贝产物）。
 - 多轮自动门禁通过：`minix/tests/riscv64/multi_smoke_gate.sh --rounds 2 --timeout 90`
   在无盘+带盘共 4 轮全部通过，`safecopy` 首错被自动定性为 `acceptable_noise`。
+- #26 已修复：RS `do_up`/`do_update` 在 `init_slot()` 后失败路径补齐 slot 清理，
+  并修正 regular-update `create_service` 失败时的 `r_new_rp/r_old_rp` 链接回滚。
+- 门禁脚本已加固为“每轮独立可复现”：`multi_smoke_gate.sh` 默认按轮创建
+  `...roundN.img`，仅在显式 `--reuse-disk` 时复用单镜像。
+- `repro_build_gate.sh` 的 relax 行为探针改为
+  `ld -r --whole-archive ... --no-whole-archive`，避免空对象误通过。
 - #24 已缓解：in-tree binutils 增加 `R_RISCV_RELAX` 兼容补丁，`ld` 不再因 `0x33` 中断链接。
 - 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）、GCC-only 增量构建 ABI 参数兼容性（#25）。
 
@@ -43,6 +49,12 @@
 - Multi-run automated gate now passes: `minix/tests/riscv64/multi_smoke_gate.sh --rounds 2 --timeout 90`
   completes 4/4 passes across diskless + with-disk runs, and safecopy first-error
   triage reports `acceptable_noise`.
+- #26 is fixed: RS `do_up`/`do_update` now clean up allocated slots on post-`init_slot()`
+  failures, and regular-update linkage is rolled back on `create_service` failure.
+- Gate behavior is now per-round reproducible by default:
+  `multi_smoke_gate.sh` creates `...roundN.img` images unless `--reuse-disk` is set.
+- `repro_build_gate.sh` relax probe now uses
+  `ld -r --whole-archive ... --no-whole-archive` to exercise real archive-member paths.
 - #24 is now mitigated: in-tree binutils has a compatibility patch for `R_RISCV_RELAX`,
   and `ld` no longer aborts on relocation `0x33`.
 - Remaining open risks: procfs safecopy retry noise (#17) and GCC-only incremental
@@ -86,8 +98,14 @@
 - 多轮日志门禁输出位于 `/tmp/minix-smoke-gate-20260216-221610/` 与
   `/tmp/minix-smoke-gate-20260216-224157/`，含每轮 `.log` 与 `.triage.txt`，
   可用于回归比较与首错审计。
+- 每轮独立镜像复验通过：`multi_smoke_gate.sh --rounds 2 --timeout 60`
+  在 `/tmp/minix-smoke-gate-indep-20260216-234830/` 生成
+  `...round1.img` 与 `...round2.img`，并完成 4/4 通过。
 - `repro_build_gate.sh --objdir obj.intrgcc --smoke-rounds 1 --smoke-timeout 60 --without-disk`
   全链路通过，产出日志 `/tmp/minix-smoke-gate-20260216-223948/`（diskless 1/1 通过）。
+- `repro_build_gate.sh --objdir obj.intrgcc --skip-tools --skip-distribution
+  --smoke-rounds 1 --smoke-timeout 45 --without-disk` 复验通过，
+  日志位于 `/tmp/minix-smoke-gate-20260217-000150/`。
 
 **English**
 - Boot path is stable to the `#` shell prompt; init and core services complete basic startup handshake.
@@ -103,8 +121,15 @@
 - Multi-run gate artifacts are under `/tmp/minix-smoke-gate-20260216-221610/` and
   `/tmp/minix-smoke-gate-20260216-224157/` with per-round `.log` and `.triage.txt`
   outputs for regression auditing.
+- Per-round disk-image reproducibility revalidation passes with
+  `multi_smoke_gate.sh --rounds 2 --timeout 60`; logs under
+  `/tmp/minix-smoke-gate-indep-20260216-234830/` show distinct
+  `...round1.img` / `...round2.img` images and 4/4 pass.
 - `repro_build_gate.sh --objdir obj.intrgcc --smoke-rounds 1 --smoke-timeout 60 --without-disk`
   also passed end-to-end, with artifacts under `/tmp/minix-smoke-gate-20260216-223948/`.
+- `repro_build_gate.sh --objdir obj.intrgcc --skip-tools --skip-distribution
+  --smoke-rounds 1 --smoke-timeout 45 --without-disk` also passed with artifacts
+  under `/tmp/minix-smoke-gate-20260217-000150/`.
 
 ## Key Issues (Snapshot) / 关键问题（摘要）
 
@@ -112,6 +137,7 @@
 - None newly confirmed in current workspace.
 
 **Major / 重要**
+- #16: VFS service endpoint pre-resync path still needs stricter generation-safe validation.
 - #17: recoverable safecopy fallback noise on `/proc/*` path remains.
 - #25: GCC-only incremental build path may fail on unsupported `-mabi=lp64d`.
 - #23: RV64 `vm_memset` recovery plumbing is implemented and smoke-validated; targeted
@@ -128,19 +154,19 @@
 ## Next Priorities / 下一阶段优先级
 
 **中文**
-1) 继续收敛 #17（统计/限流 + 负载下验证），区分噪声与真实功能缺陷。
-2) 在 clean 环境做一次从 `fetch.sh` 到 `tools/binutils` 的复验，确认 #24 补丁可重复生效。
-3) 修复 #25：统一 GCC 路径的 `-mabi` 参数能力探测与回退策略。
-4) 在稳定后恢复动态装载链路（`MKPIC/MKPICLIB`）并验证最小动态程序。
-5) 增加带盘回归轮次（含 `virtio_blk_mmio` 启动检查）作为常规 smoke 条目。
+1) 修复 #16：收敛 VFS 服务端点“先写后验”路径，补齐代际安全校验。
+2) 继续收敛 #17（统计/限流 + 负载下验证），区分噪声与真实功能缺陷。
+3) 在 clean 环境做一次从 `fetch.sh` 到 `tools/binutils` 的复验，确认 #24 补丁可重复生效。
+4) 修复 #25：统一 GCC 路径的 `-mabi` 参数能力探测与回退策略。
+5) 在稳定后恢复动态装载链路（`MKPIC/MKPICLIB`）并验证最小动态程序。
 6) 将 `repro_build_gate.sh` 纳入例行流水（至少每日一次），验证构建链路不依赖手工注入。
 
 **English**
-1) Continue closing #17 with counters/rate-limit + stress validation.
-2) Re-run from clean `fetch.sh` to `tools/binutils` and confirm #24 patch reproducibility.
-3) Fix #25 by normalizing GCC `-mabi` probing/fallback in incremental paths.
-4) Restore dynamic loader path (`MKPIC/MKPICLIB`) and test a minimal dynamic binary.
-5) Keep with-disk regression runs (including `virtio_blk_mmio` startup checks) as regular smoke.
+1) Fix #16 by tightening VFS endpoint-generation validation on service remap paths.
+2) Continue closing #17 with counters/rate-limit + stress validation.
+3) Re-run from clean `fetch.sh` to `tools/binutils` and confirm #24 patch reproducibility.
+4) Fix #25 by normalizing GCC `-mabi` probing/fallback in incremental paths.
+5) Restore dynamic loader path (`MKPIC/MKPICLIB`) and test a minimal dynamic binary.
 6) Run `repro_build_gate.sh` in routine CI (at least daily) to enforce source-driven reproducibility.
 
 ## Success Criteria / 下一里程碑判定

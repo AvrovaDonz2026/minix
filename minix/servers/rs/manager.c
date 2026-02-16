@@ -176,6 +176,7 @@ int init_state_data(endpoint_t src_e, int prepare_state,
     struct rs_state_data *dst_rs_state_data)
 {
   int s, i, j, num_ipc_filters = 0;
+  int has_state_data = 0;
   struct rs_ipc_filter_el (*rs_ipc_filter_els)[IPCF_MAX_ELEMENTS];
   struct rs_ipc_filter_el rs_ipc_filter[IPCF_MAX_ELEMENTS];
   size_t rs_ipc_filter_size = sizeof(rs_ipc_filter);
@@ -215,6 +216,7 @@ int init_state_data(endpoint_t src_e, int prepare_state,
           goto cleanup;
       }
       *((char*)dst_rs_state_data->eval_addr + dst_rs_state_data->eval_len) = '\0';
+      has_state_data = 1;
   }
 
   /* Initialize ipc filters. */
@@ -288,9 +290,10 @@ int init_state_data(endpoint_t src_e, int prepare_state,
   dst_rs_state_data->ipcf_els = ipcf_els_buff;
   ipcf_els_buff = NULL;
   dst_rs_state_data->ipcf_els_size = ipcf_els_buff_size;
+  has_state_data = 1;
 
 done:
-  dst_rs_state_data->size = src_rs_state_data->size;
+  dst_rs_state_data->size = has_state_data ? src_rs_state_data->size : 0;
   return OK;
 
 cleanup:

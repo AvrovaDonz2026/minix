@@ -26,7 +26,7 @@ top_srcdir = /home/donz/minix/tools/texinfo/../../gnu/dist/texinfo
 top_builddir = ..
 VPATH = $(srcdir)
 
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 exec_prefix = ${prefix}
 transform = s,^,nb,
 libdir = ${exec_prefix}/lib
@@ -37,7 +37,7 @@ gettextsrcdir = $(datadir)/gettext/intl
 aliaspath = $(localedir)
 subdir = intl
 
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c  -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_DATA = ${INSTALL} -m 644
 MKINSTALLDIRS = /home/donz/minix/tools/texinfo/../../gnu/dist/texinfo/mkinstalldirs
 mkinstalldirs = $(SHELL) $(MKINSTALLDIRS)
@@ -45,7 +45,7 @@ mkinstalldirs = $(SHELL) $(MKINSTALLDIRS)
 l = 
 
 AR = ar
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 LIBTOOL = @LIBTOOL@
 RANLIB = ranlib
 YACC = bison -y -d

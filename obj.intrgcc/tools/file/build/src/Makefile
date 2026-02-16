@@ -12,7 +12,7 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 
 
 
@@ -214,12 +214,12 @@ AR = ar
 AUTOCONF = ${SHELL} /home/donz/minix/external/bsd/file/dist/missing autoconf
 AUTOHEADER = ${SHELL} /home/donz/minix/external/bsd/file/dist/missing autoheader
 AUTOMAKE = ${SHELL} /home/donz/minix/external/bsd/file/dist/missing automake-1.14
-AWK = /home/donz/minix/obj.intrgcc/tooldir/bin/nbawk
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+AWK = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk
+CC = cc
 CCDEPMODE = depmode=none
 CFLAGS = -O -fcommon
 CFLAG_VISIBILITY = -fvisibility=hidden
-CPP = cc -Wno-implicit-int -Wno-implicit-function-declaration -E
+CPP = cc -E
 CPPFLAGS = 
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
@@ -235,7 +235,7 @@ EXEEXT =
 FGREP = /usr/bin/grep -F
 GREP = /usr/bin/grep
 HAVE_VISIBILITY = 1
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c -p -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
@@ -252,7 +252,7 @@ MAINT = #
 MAKEINFO = ${SHELL} /home/donz/minix/external/bsd/file/dist/missing makeinfo
 MANIFEST_TOOL = :
 MINGW = 0
-MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 NM = /usr/bin/nm -B
 NMEDIT = 
 OBJDUMP = objdump
@@ -269,7 +269,7 @@ PACKAGE_VERSION = 5.22
 PATH_SEPARATOR = :
 RANLIB = ranlib
 SED = /usr/bin/sed
-SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 SHELL = /usr/bin/sh
 STRIP = strip
 VERSION = 5.22
@@ -279,7 +279,7 @@ abs_srcdir = /home/donz/minix/tools/file/../../external/bsd/file/dist/src
 abs_top_builddir = /home/donz/minix/obj.intrgcc/tools/file/build
 abs_top_srcdir = /home/donz/minix/tools/file/../../external/bsd/file/dist
 ac_ct_AR = 
-ac_ct_CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+ac_ct_CC = cc
 ac_ct_DUMPBIN = 
 am__include = #
 am__leading_dot = .
@@ -316,7 +316,7 @@ mandir = ${datarootdir}/man
 mkdir_p = $(MKDIR_P)
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 program_transform_name = s&^&nb&
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin

@@ -14,19 +14,19 @@ PACKAGE = texinfo
 VERSION = 4.8
 
 SHELL = /usr/bin/sh
-MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 
 srcdir = /home/donz/minix/tools/texinfo/../../gnu/dist/texinfo/po
 top_srcdir = /home/donz/minix/tools/texinfo/../../gnu/dist/texinfo
 VPATH = /home/donz/minix/tools/texinfo/../../gnu/dist/texinfo/po
 
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 exec_prefix = ${prefix}
 datadir = ${prefix}/share
 localedir = $(datadir)/locale
 gettextsrcdir = $(datadir)/gettext/po
 
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c  -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_DATA = ${INSTALL} -m 644
 MKINSTALLDIRS = /home/donz/minix/tools/texinfo/../../gnu/dist/texinfo/mkinstalldirs
 mkinstalldirs = $(SHELL) $(MKINSTALLDIRS)

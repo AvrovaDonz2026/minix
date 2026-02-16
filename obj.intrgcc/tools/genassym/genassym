@@ -26,7 +26,7 @@
 #
 
 progname="$(basename "${0}")"
-: ${AWK:=/home/donz/minix/obj.intrgcc/tooldir/bin/nbawk}
+: ${AWK:=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk}
 
 ccode=0		# generate temporary C file, compile it, execute result
 fcode=0		# generate Forth code

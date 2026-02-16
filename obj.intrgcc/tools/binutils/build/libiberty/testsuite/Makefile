@@ -31,7 +31,7 @@ VPATH = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/libibe
 
 SHELL = /usr/bin/sh
 
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 CFLAGS = -O -fcommon
 LIBCFLAGS = $(CFLAGS)
 

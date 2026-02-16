@@ -27,7 +27,7 @@ ac_cv_cxx_compiler_gnu=${ac_cv_cxx_compiler_gnu='yes'}
 ac_cv_env_CCC_set=''
 ac_cv_env_CCC_value=''
 ac_cv_env_CC_set='set'
-ac_cv_env_CC_value='cc -Wno-implicit-int -Wno-implicit-function-declaration'
+ac_cv_env_CC_value='cc'
 ac_cv_env_CFLAGS_set='set'
 ac_cv_env_CFLAGS_value='-O -fcommon'
 ac_cv_env_CLOOGINC_set='set'
@@ -45,9 +45,9 @@ ac_cv_env_CXXFLAGS_value='-std=gnu++98'
 ac_cv_env_CXX_set='set'
 ac_cv_env_CXX_value='c++'
 ac_cv_env_GMPINC_set='set'
-ac_cv_env_GMPINC_value='-I/home/donz/minix/obj.intrgcc/tooldir/include -I/home/donz/minix/obj.intrgcc/tooldir/include -I/home/donz/minix/obj.intrgcc/tooldir/include '
+ac_cv_env_GMPINC_value='-I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include -I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include -I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include '
 ac_cv_env_GMPLIBS_set='set'
-ac_cv_env_GMPLIBS_value='-L/home/donz/minix/obj.intrgcc/tooldir/lib -L/home/donz/minix/obj.intrgcc/tooldir/lib -L/home/donz/minix/obj.intrgcc/tooldir/lib -lmpc -lmpfr -lgmp -lm'
+ac_cv_env_GMPLIBS_value='-L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib -L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib -L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib -lmpc -lmpfr -lgmp -lm'
 ac_cv_env_ISLINC_set='set'
 ac_cv_env_ISLINC_value=''
 ac_cv_env_ISLLIBS_set=''
@@ -146,13 +146,13 @@ ac_cv_path_GREP=${ac_cv_path_GREP='/usr/bin/grep'}
 ac_cv_path_SED=${ac_cv_path_SED='/usr/bin/sed'}
 ac_cv_path_gcc_cv_readelf=${ac_cv_path_gcc_cv_readelf='/usr/bin/readelf'}
 ac_cv_prog_AR=${ac_cv_prog_AR='ar'}
-ac_cv_prog_AWK=${ac_cv_prog_AWK='/home/donz/minix/obj.intrgcc/tooldir/bin/nbawk'}
+ac_cv_prog_AWK=${ac_cv_prog_AWK='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk'}
 ac_cv_prog_BISON=${ac_cv_prog_BISON='true'}
-ac_cv_prog_CC=${ac_cv_prog_CC='cc -Wno-implicit-int -Wno-implicit-function-declaration'}
-ac_cv_prog_CPP=${ac_cv_prog_CPP='cc -Wno-implicit-int -Wno-implicit-function-declaration -E'}
+ac_cv_prog_CC=${ac_cv_prog_CC='cc'}
+ac_cv_prog_CPP=${ac_cv_prog_CPP='cc -E'}
 ac_cv_prog_CXXCPP=${ac_cv_prog_CXXCPP='c++ -E'}
 ac_cv_prog_FLEX=${ac_cv_prog_FLEX='flex'}
-ac_cv_prog_MAKEINFO=${ac_cv_prog_MAKEINFO='/home/donz/minix/obj.intrgcc/tooldir/bin/nbmakeinfo'}
+ac_cv_prog_MAKEINFO=${ac_cv_prog_MAKEINFO='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmakeinfo'}
 ac_cv_prog_NM=${ac_cv_prog_NM='nm'}
 ac_cv_prog_OBJDUMP=${ac_cv_prog_OBJDUMP='objdump'}
 ac_cv_prog_RANLIB=${ac_cv_prog_RANLIB='ranlib'}
@@ -162,7 +162,7 @@ ac_cv_prog_cc_cc_c_o=${ac_cv_prog_cc_cc_c_o='yes'}
 ac_cv_prog_cc_g=${ac_cv_prog_cc_g='yes'}
 ac_cv_prog_cxx_g=${ac_cv_prog_cxx_g='yes'}
 ac_cv_prog_have_mktemp_command=${ac_cv_prog_have_mktemp_command='yes'}
-ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_bin_nbgmake_set=${ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_bin_nbgmake_set='yes'}
+ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_Linux_6_12_63pdeb13_amd64_x86_64_bin_nbgmake_set=${ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_Linux_6_12_63pdeb13_amd64_x86_64_bin_nbgmake_set='yes'}
 ac_cv_safe_to_define___extensions__=${ac_cv_safe_to_define___extensions__='yes'}
 ac_cv_search_dlopen=${ac_cv_search_dlopen='none required'}
 ac_cv_search_exc_resume=${ac_cv_search_exc_resume='no'}
@@ -220,7 +220,7 @@ am_cv_lib_iconv=${am_cv_lib_iconv='no'}
 am_cv_proto_iconv=${am_cv_proto_iconv='extern size_t iconv (iconv_t cd, char * *inbuf, size_t *inbytesleft, char * *outbuf, size_t *outbytesleft);'}
 am_cv_proto_iconv_arg1=${am_cv_proto_iconv_arg1=''}
 am_cv_val_LC_MESSAGES=${am_cv_val_LC_MESSAGES='yes'}
-gcc_cv_as=${gcc_cv_as='/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/as'}
+gcc_cv_as=${gcc_cv_as='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/as'}
 gcc_cv_as_balign_and_p2align=${gcc_cv_as_balign_and_p2align='yes'}
 gcc_cv_as_cfi_advance_working=${gcc_cv_as_cfi_advance_working='yes'}
 gcc_cv_as_cfi_directive=${gcc_cv_as_cfi_directive='yes'}
@@ -309,7 +309,7 @@ gcc_cv_have_decl_vsnprintf=${gcc_cv_have_decl_vsnprintf='yes'}
 gcc_cv_header_inttypes_h=${gcc_cv_header_inttypes_h='yes'}
 gcc_cv_header_string=${gcc_cv_header_string='yes'}
 gcc_cv_initfini_array=${gcc_cv_initfini_array='yes'}
-gcc_cv_ld=${gcc_cv_ld='/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/ld'}
+gcc_cv_ld=${gcc_cv_ld='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/ld'}
 gcc_cv_ld_as_needed=${gcc_cv_ld_as_needed='yes'}
 gcc_cv_ld_bfd_srcdir=${gcc_cv_ld_bfd_srcdir='/home/donz/minix/tools/gcc/../../external/gpl3/gcc/dist/bfd'}
 gcc_cv_ld_buildid=${gcc_cv_ld_buildid='yes'}
@@ -329,14 +329,15 @@ gcc_cv_ld_sysroot=${gcc_cv_ld_sysroot='yes'}
 gcc_cv_libc_provides_ssp=${gcc_cv_libc_provides_ssp='yes'}
 gcc_cv_lto_plugin=${gcc_cv_lto_plugin='2'}
 gcc_cv_mkdir_takes_one_arg=${gcc_cv_mkdir_takes_one_arg='no'}
-gcc_cv_nm=${gcc_cv_nm='/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/nm'}
-gcc_cv_objdump=${gcc_cv_objdump='/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/objdump'}
+gcc_cv_nm=${gcc_cv_nm='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/nm'}
+gcc_cv_objdump=${gcc_cv_objdump='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/objdump'}
 gcc_cv_prog_LN_S=${gcc_cv_prog_LN_S='ln -s'}
 gcc_cv_prog_cmp_skip=${gcc_cv_prog_cmp_skip='gnucompare'}
 gcc_cv_prog_makeinfo_modern=${gcc_cv_prog_makeinfo_modern='yes'}
 gcc_cv_readelf=${gcc_cv_readelf='/usr/bin/readelf'}
 gcc_cv_target_dl_iterate_phdr=${gcc_cv_target_dl_iterate_phdr='unknown'}
 gcc_cv_type_clock_t=${gcc_cv_type_clock_t='yes'}
+lt_cv_archive_cmds_need_lc=${lt_cv_archive_cmds_need_lc='no'}
 lt_cv_deplibs_check_method=${lt_cv_deplibs_check_method='pass_all'}
 lt_cv_file_magic_cmd=${lt_cv_file_magic_cmd='$MAGIC_CMD'}
 lt_cv_file_magic_test_file=${lt_cv_file_magic_test_file=''}

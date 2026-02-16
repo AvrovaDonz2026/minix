@@ -111,7 +111,7 @@
 /* #undef HAVE_GETTEXT */
 
 /* Define if you have a standard gettimeofday function */
-#define HAVE_GETTIMEOFDAY 1
+/* #undef HAVE_GETTIMEOFDAY */
 
 /* Define if you have the iconv() function. */
 /* #undef HAVE_ICONV */
@@ -368,7 +368,7 @@
 /* #undef STAT_MACROS_BROKEN */
 
 /* Define to 1 if you have the ANSI C header files. */
-#define STDC_HEADERS 1
+/* #undef STDC_HEADERS */
 
 /* Define if struct stat contains a nanoseconds field */
 #define ST_MTIM_NSEC tv_nsec

@@ -44,10 +44,10 @@
 # the path to the default path so that other commands we use are picked
 # properly.
 
-: ${JOIN:=/home/donz/minix/obj.intrgcc/tooldir/bin/nbjoin}
-: ${MKTEMP:=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmktemp}
-: ${NM:=/home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-nm}
-: ${SED:=/home/donz/minix/obj.intrgcc/tooldir/bin/nbsed}
+: ${JOIN:=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbjoin}
+: ${MKTEMP:=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmktemp}
+: ${NM:=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-nm}
+: ${SED:=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbsed}
 : ${SORT:=sort}
 for var in JOIN MKTEMP NM SED SORT ; do
 	if ! eval type "\$${var}" >/dev/null 2>&1 ; then

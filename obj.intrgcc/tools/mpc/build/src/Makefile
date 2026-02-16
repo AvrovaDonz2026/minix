@@ -13,7 +13,7 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 
 VPATH = /home/donz/minix/tools/mpc/../../external/lgpl3/mpc/dist/src
 am__make_dryrun = \
@@ -144,12 +144,12 @@ AS = as
 AUTOCONF = ${SHELL} /home/donz/minix/external/lgpl3/mpc/dist/missing --run autoconf
 AUTOHEADER = ${SHELL} /home/donz/minix/external/lgpl3/mpc/dist/missing --run autoheader
 AUTOMAKE = ${SHELL} /home/donz/minix/external/lgpl3/mpc/dist/missing --run automake-1.11
-AWK = /home/donz/minix/obj.intrgcc/tooldir/bin/nbawk
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+AWK = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk
+CC = cc
 CCDEPMODE = depmode=none
 CFLAGS = -O -fcommon
-CPP = cc -Wno-implicit-int -Wno-implicit-function-declaration -E
-CPPFLAGS = -I/home/donz/minix/obj.intrgcc/tooldir/include -I/home/donz/minix/obj.intrgcc/tooldir/include 
+CPP = cc -E
+CPPFLAGS = -I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include -I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include 
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -165,13 +165,13 @@ FGREP = /usr/bin/grep -F
 GCC_VERSION = 14
 GREP = /usr/bin/grep
 HASSVNVERSION = 
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c  -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LD = /usr/bin/ld -m elf_x86_64
-LDFLAGS = -L/home/donz/minix/obj.intrgcc/tooldir/lib -L/home/donz/minix/obj.intrgcc/tooldir/lib 
+LDFLAGS = -L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib -L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib 
 LIBOBJS = 
 LIBS = -lmpfr -lgmp -lm 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
@@ -181,7 +181,7 @@ LTLIBOBJS =
 MAINT = #
 MAKEINFO = ${SHELL} /home/donz/minix/external/lgpl3/mpc/dist/missing --run makeinfo
 MANIFEST_TOOL = :
-MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 MPC_LDFLAGS = 
 MPC_LOG_H = 
 NM = /usr/bin/nm -B
@@ -200,7 +200,7 @@ PACKAGE_VERSION = 1.0.1
 PATH_SEPARATOR = :
 RANLIB = ranlib
 SED = /usr/bin/sed
-SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 SHELL = /usr/bin/sh
 STRIP = strip
 SVNVERSION = 
@@ -211,7 +211,7 @@ abs_srcdir = /home/donz/minix/tools/mpc/../../external/lgpl3/mpc/dist/src
 abs_top_builddir = /home/donz/minix/obj.intrgcc/tools/mpc/build
 abs_top_srcdir = /home/donz/minix/tools/mpc/../../external/lgpl3/mpc/dist
 ac_ct_AR = 
-ac_ct_CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+ac_ct_CC = cc
 ac_ct_DUMPBIN = 
 am__include = #
 am__leading_dot = .
@@ -244,10 +244,10 @@ libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
 localstatedir = ${prefix}/var
 mandir = ${datarootdir}/man
-mkdir_p = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+mkdir_p = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin

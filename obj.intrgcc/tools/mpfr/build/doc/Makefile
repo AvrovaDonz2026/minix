@@ -13,7 +13,7 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 
 # Copyright 2010, 2011, 2012, 2013 Free Software Foundation, Inc.
 # This Makefile.am is free software; the Free Software Foundation
@@ -132,15 +132,15 @@ AS = as
 AUTOCONF = ${SHELL} /home/donz/minix/external/lgpl3/mpfr/dist/missing --run autoconf
 AUTOHEADER = ${SHELL} /home/donz/minix/external/lgpl3/mpfr/dist/missing --run autoheader
 AUTOMAKE = ${SHELL} /home/donz/minix/external/lgpl3/mpfr/dist/missing --run automake-1.11
-AWK = /home/donz/minix/obj.intrgcc/tooldir/bin/nbawk
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+AWK = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk
+CC = cc
 CCDEPMODE = depmode=none
 CFLAGS = -O -fcommon
-CPP = cc -Wno-implicit-int -Wno-implicit-function-declaration -E
-CPPFLAGS =  -I/home/donz/minix/obj.intrgcc/tooldir/include
+CPP = cc -E
+CPPFLAGS =  -I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include
 CYGPATH_W = echo
 DATAFILES = 
-DEFS = -DTIME_WITH_SYS_TIME=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_LOCALE_H=1 -DHAVE_WCHAR_H=1 -DHAVE_STDARG=1 -DHAVE_SYS_TIME_H=1 -DHAVE_ALLOCA_H=1 -DHAVE_STDINT_H=1 -DHAVE_VA_COPY=1 -DHAVE_SETLOCALE=1 -DHAVE_GETTIMEOFDAY=1 -DHAVE_LONG_LONG=1 -DHAVE_INTMAX_T=1 -DMPFR_HAVE_INTMAX_MAX=1 -DMPFR_HAVE_FESETROUND=1 -DHAVE_DENORMS=1 -DHAVE_ROUND=1 -DHAVE_TRUNC=1 -DHAVE_FLOOR=1 -DHAVE_CEIL=1 -DHAVE_NEARBYINT=1 -DHAVE_LDOUBLE_IEEE_EXT_LITTLE=1 -DMPFR_USE_THREAD_SAFE=1 -DHAVE_CLOCK_GETTIME=1 -DLT_OBJDIR=\".libs/\" -DHAVE_ATTRIBUTE_MODE=1 -DHAVE___GMPN_ROOTREM=1 -DHAVE___GMPN_SBPI1_DIVAPPR_Q=1
+DEFS = -DTIME_WITH_SYS_TIME=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_LOCALE_H=1 -DHAVE_WCHAR_H=1 -DHAVE_STDARG=1 -DHAVE_SYS_TIME_H=1 -DHAVE_ALLOCA_H=1 -DHAVE_STDINT_H=1 -DHAVE_VA_COPY=1 -DHAVE_SETLOCALE=1 -DHAVE_GETTIMEOFDAY=1 -DHAVE_LONG_LONG=1 -DHAVE_INTMAX_T=1 -DMPFR_HAVE_INTMAX_MAX=1 -DMPFR_HAVE_FESETROUND=1 -DHAVE_DENORMS=1 -DHAVE_ROUND=1 -DHAVE_TRUNC=1 -DHAVE_FLOOR=1 -DHAVE_CEIL=1 -DHAVE_NEARBYINT=1 -DHAVE_LDOUBLE_IEEE_EXT_LITTLE=1 -DMPFR_USE_THREAD_SAFE=1 -DHAVE_CLOCK_GETTIME=1 -DLT_OBJDIR=\".libs/\" -DHAVE_ATTRIBUTE_MODE=1 -DNPRINTF_J=1 -DNPRINTF_HH=1 -DNPRINTF_LL=1 -DNPRINTF_L=1 -DNPRINTF_T=1 -DHAVE___GMPN_ROOTREM=1 -DHAVE___GMPN_SBPI1_DIVAPPR_Q=1
 DEPDIR = .deps
 DLLTOOL = dlltool
 DSYMUTIL = 
@@ -152,13 +152,13 @@ EGREP = /usr/bin/grep -E
 EXEEXT = 
 FGREP = /usr/bin/grep -F
 GREP = /usr/bin/grep
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c  -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LD = /usr/bin/ld -m elf_x86_64
-LDFLAGS =  -L/home/donz/minix/obj.intrgcc/tooldir/lib
+LDFLAGS =  -L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib
 LIBMPFR_LDFLAGS = 
 LIBOBJS = 
 LIBS = -lgmp 
@@ -169,7 +169,7 @@ LTLIBOBJS =
 MAINT = 
 MAKEINFO = ${SHELL} /home/donz/minix/external/lgpl3/mpfr/dist/missing --run makeinfo
 MANIFEST_TOOL = :
-MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 MPFR_LDFLAGS = 
 MPFR_LIBM = -lm
 NM = /usr/bin/nm -B
@@ -188,7 +188,7 @@ PACKAGE_VERSION = 3.1.2
 PATH_SEPARATOR = :
 RANLIB = ranlib
 SED = /usr/bin/sed
-SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 SHELL = /usr/bin/sh
 STRIP = strip
 TUNE_LIBS = 
@@ -198,7 +198,7 @@ abs_srcdir = /home/donz/minix/tools/mpfr/../../external/lgpl3/mpfr/dist/doc
 abs_top_builddir = /home/donz/minix/obj.intrgcc/tools/mpfr/build
 abs_top_srcdir = /home/donz/minix/tools/mpfr/../../external/lgpl3/mpfr/dist
 ac_ct_AR = 
-ac_ct_CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+ac_ct_CC = cc
 ac_ct_DUMPBIN = 
 am__include = #
 am__leading_dot = .
@@ -231,10 +231,10 @@ libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
 localstatedir = ${prefix}/var
 mandir = ${datarootdir}/man
-mkdir_p = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+mkdir_p = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin

@@ -541,6 +541,10 @@ riscv_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
 
       switch (r_type)
 	{
+	case R_RISCV_RELAX:
+	  /* Pure linker-hint relocation; no symbol accounting needed.  */
+	  break;
+
 	case R_RISCV_TLS_GD_HI20:
 	  if (!riscv_elf_record_got_reference (abfd, info, h, r_symndx)
 	      || !riscv_elf_record_tls_type (abfd, h, r_symndx, GOT_TLS_GD))
@@ -791,6 +795,10 @@ riscv_elf_gc_sweep_hook (bfd *abfd, struct bfd_link_info *info,
 
       switch (ELF64_R_TYPE (rel->r_info))
 	{
+	case R_RISCV_RELAX:
+	  /* Pure hint relocation; no GOT/PLT reference side effects.  */
+	  break;
+
 	case R_RISCV_GOT_HI20:
 	case R_RISCV_TLS_GOT_HI20:
 	case R_RISCV_TLS_GD_HI20:
@@ -1466,6 +1474,10 @@ perform_relocation (const reloc_howto_type *howto,
 
   switch (ELF64_R_TYPE (rel->r_info))
     {
+    case R_RISCV_RELAX:
+      /* Relaxation marker only; no instruction/data rewrite needed.  */
+      return bfd_reloc_ok;
+
     case R_RISCV_HI20:
     case R_RISCV_TPREL_HI20:
     case R_RISCV_PCREL_HI20:
@@ -1770,6 +1782,7 @@ riscv_elf_relocate_section (bfd *output_bfd, struct bfd_link_info *info,
       switch (r_type)
 	{
 	case R_RISCV_NONE:
+	case R_RISCV_RELAX:
 	case R_RISCV_TPREL_ADD:
 	case R_RISCV_COPY:
 	case R_RISCV_JUMP_SLOT:

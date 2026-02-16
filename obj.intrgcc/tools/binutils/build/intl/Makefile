@@ -26,7 +26,7 @@ SHELL = /usr/bin/sh
 srcdir = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/intl
 VPATH = $(srcdir)
 
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 exec_prefix = ${prefix}
 transform = s,^,riscv64-elf32-minix-,
 libdir = ${exec_prefix}/lib
@@ -40,7 +40,7 @@ AR = ar
 ACLOCAL = /home/donz/minix/external/gpl3/binutils/dist/missing aclocal
 AUTOCONF = /home/donz/minix/external/gpl3/binutils/dist/missing autoconf
 AUTOHEADER = /home/donz/minix/external/gpl3/binutils/dist/missing autoheader
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 RANLIB = ranlib
 YACC = bison -y -d
 YFLAGS = --name-prefix=__gettext

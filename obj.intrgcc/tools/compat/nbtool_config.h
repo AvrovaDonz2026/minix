@@ -642,7 +642,7 @@
 /* #undef STACK_DIRECTION */
 
 /* Define if you have the ANSI C header files. */
-#define STDC_HEADERS 1
+/* #undef STDC_HEADERS */
 
 /* Define if your processor stores words with the most significant byte first
    (like Motorola and SPARC, unlike Intel and VAX). */

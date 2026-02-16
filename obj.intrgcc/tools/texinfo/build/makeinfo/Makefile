@@ -12,7 +12,7 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 
 # Id: Makefile.am,v 1.5 2004/04/11 17:56:46 karl Exp
 # Makefile.am for texinfo/makeinfo.
@@ -36,7 +36,7 @@ pkglibdir = $(libdir)/texinfo
 pkgincludedir = $(includedir)/texinfo
 top_builddir = ..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c  -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 install_sh_DATA = $(install_sh) -c -m 644
 install_sh_PROGRAM = $(install_sh) -c
 install_sh_SCRIPT = $(install_sh) -c
@@ -115,13 +115,13 @@ AMTAR = ${SHELL} /home/donz/minix/gnu/dist/texinfo/missing --run tar
 AUTOCONF = ${SHELL} /home/donz/minix/gnu/dist/texinfo/missing --run autoconf
 AUTOHEADER = ${SHELL} /home/donz/minix/gnu/dist/texinfo/missing --run autoheader
 AUTOMAKE = ${SHELL} /home/donz/minix/gnu/dist/texinfo/missing --run automake-1.9
-AWK = /home/donz/minix/obj.intrgcc/tooldir/bin/nbawk
+AWK = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk
 BUILD_INCLUDED_LIBINTL = no
 CATOBJEXT = .gmo
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 CCDEPMODE = depmode=none
 CFLAGS = -O -fcommon
-CPP = cc -Wno-implicit-int -Wno-implicit-function-declaration -E
+CPP = cc -E
 CPPFLAGS = 
 CYGPATH_W = echo
 DATADIRNAME = share
@@ -154,11 +154,11 @@ INTL_LIBTOOL_SUFFIX_PREFIX =
 LDFLAGS = 
 LIBICONV = 
 LIBINTL = 
-LIBOBJS = 
+LIBOBJS =  mkstemp$U.o tempname$U.o
 LIBS = 
 LTLIBICONV = 
 LTLIBINTL = 
-LTLIBOBJS = 
+LTLIBOBJS =  mkstemp$U.lo tempname$U.lo
 MAINT = #
 MAINTAINER_MODE_FALSE = 
 MAINTAINER_MODE_TRUE = #
@@ -176,7 +176,7 @@ PACKAGE_VERSION = 4.8
 PATH_SEPARATOR = :
 POSUB = po
 RANLIB = ranlib
-SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 SHELL = /usr/bin/sh
 STRIP = 
 TERMLIBS = 
@@ -186,7 +186,7 @@ USE_INCLUDED_LIBINTL = no
 USE_NLS = yes
 VERSION = 4.8
 XGETTEXT = /usr/bin/xgettext
-ac_ct_CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+ac_ct_CC = cc
 ac_ct_RANLIB = ranlib
 ac_ct_STRIP = 
 am__fastdepCC_FALSE = 
@@ -219,7 +219,7 @@ mandir = ${prefix}/man
 mkdir_p = mkdir -p --
 native_tools = 
 oldincludedir = /usr/include
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 program_transform_name = s,^,nb,
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com

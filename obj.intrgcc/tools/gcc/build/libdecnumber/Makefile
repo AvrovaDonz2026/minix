@@ -30,10 +30,10 @@ ARFLAGS = cru
 ACLOCAL = /home/donz/minix/obj.intrgcc/tools/gcc/build/libdecnumber/missing aclocal
 AUTOCONF = /home/donz/minix/obj.intrgcc/tools/gcc/build/libdecnumber/missing autoconf
 AUTOHEADER = /home/donz/minix/obj.intrgcc/tools/gcc/build/libdecnumber/missing autoheader
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 CFLAGS = -O -fcommon
 WARN_CFLAGS = -W -Wall -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wold-style-definition -Wmissing-format-attribute -Wcast-qual -pedantic -Wno-long-long 
-CPP = cc -Wno-implicit-int -Wno-implicit-function-declaration -E
+CPP = cc -E
 CPPFLAGS = -DNETBSD_TOOLS -DTARGET_SYSTEM_ROOT=0  -DTARGET_SYSTEM_ROOT_RELOCATABLE
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -46,10 +46,10 @@ objext = o
 
 datarootdir = ${prefix}/share
 datadir = ${datarootdir}
-exec_prefix = /home/donz/minix/obj.intrgcc/tooldir
+exec_prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 libdir = ${exec_prefix}/lib
 localedir = $(datadir)/locale
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 
 ADDITIONAL_OBJS = 
 

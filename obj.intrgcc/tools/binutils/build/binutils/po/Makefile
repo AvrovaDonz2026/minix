@@ -11,14 +11,14 @@ PACKAGE = binutils
 VERSION = 2.23.2
 
 SHELL = /bin/sh
-MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 
 srcdir = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/binutils/po
 top_srcdir = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/binutils
 VPATH = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/binutils/po
 top_builddir = ..
 
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 exec_prefix = ${prefix}
 datadir = $(prefix)/
 localedir = $(datadir)/locale
@@ -28,11 +28,11 @@ subdir = po
 
 DESTDIR =
 
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c -p -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_DATA = ${INSTALL} -m 644
 MKINSTALLDIRS = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/binutils/../mkinstalldirs
 
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 GENCAT = 
 GMSGFMT = PATH=../src:$$PATH /usr/bin/msgfmt
 MSGFMT = /usr/bin/msgfmt

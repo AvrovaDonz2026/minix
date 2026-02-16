@@ -53,7 +53,7 @@ if [ x$1 != x ] ; then
   prefix=$1
   shift
 else
-  prefix=/home/donz/minix/obj.intrgcc/tooldir
+  prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 fi
 
 # Allow for alternate isysroot in which to find headers

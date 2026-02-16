@@ -13,7 +13,7 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 VPATH = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/bfd/doc
 pkgdatadir = $(datadir)/bfd
 pkgincludedir = $(includedir)/bfd
@@ -112,7 +112,7 @@ AR = ar
 AUTOCONF = ${SHELL} /home/donz/minix/external/gpl3/binutils/dist/missing --run autoconf
 AUTOHEADER = ${SHELL} /home/donz/minix/external/gpl3/binutils/dist/missing --run autoheader
 AUTOMAKE = ${SHELL} /home/donz/minix/external/gpl3/binutils/dist/missing --run automake-1.11
-AWK = /home/donz/minix/obj.intrgcc/tooldir/bin/nbawk
+AWK = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk
 BFD_HOSTPTR_T = unsigned long
 BFD_HOST_64BIT_LONG = 1
 BFD_HOST_64BIT_LONG_LONG = 0
@@ -121,13 +121,13 @@ BFD_HOST_64_BIT_DEFINED = 1
 BFD_HOST_U_64_BIT = unsigned long
 CATALOGS = 
 CATOBJEXT = 
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 CCDEPMODE = depmode=none
-CC_FOR_BUILD = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC_FOR_BUILD = cc
 CFLAGS = -O -fcommon
 COREFILE = 
 COREFLAG = 
-CPP = cc -Wno-implicit-int -Wno-implicit-function-declaration -E
+CPP = cc -E
 CPPFLAGS = 
 CYGPATH_W = echo
 DATADIRNAME = 
@@ -148,7 +148,7 @@ GMSGFMT = /usr/bin/msgfmt
 GREP = /usr/bin/grep
 HDEFINES = 
 INCINTL = 
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c -p -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
@@ -166,8 +166,8 @@ LIPO =
 LN_S = ln -s
 LTLIBOBJS = 
 MAINT = #
-MAKEINFO = /home/donz/minix/obj.intrgcc/tooldir/bin/nbmakeinfo
-MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+MAKEINFO = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmakeinfo
+MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 MKINSTALLDIRS = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/bfd/../mkinstalldirs
 MSGFMT = /usr/bin/msgfmt
 MSGMERGE = /usr/bin/msgmerge
@@ -192,7 +192,7 @@ RANLIB = ranlib
 REPORT_BUGS_TEXI = @uref{http://www.NetBSD.org/support/send-pr.html}
 REPORT_BUGS_TO = <http://www.NetBSD.org/support/send-pr.html>
 SED = /usr/bin/sed
-SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 SHARED_LDFLAGS = 
 SHARED_LIBADD = 
 SHELL = /usr/bin/sh
@@ -248,10 +248,10 @@ libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
 localstatedir = ${prefix}/var
 mandir = ${datarootdir}/man
-mkdir_p = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+mkdir_p = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 program_transform_name = s,^,riscv64-elf32-minix-,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin

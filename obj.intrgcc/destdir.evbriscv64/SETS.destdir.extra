@@ -1,11 +1,3 @@
-./audit-packages
-./bpm
-./download-vulnerability-list
-./pkg_add
-./pkg_admin
-./pkg_create
-./pkg_delete
-./pkg_info
 ./service/virtio_blk_mmio
 ./usr/include/c++/bits/riscv32
 ./usr/include/c++/bits/riscv64
@@ -18,5 +10,7 @@
 ./usr/include/g++/tr1
 ./usr/include/g++/tr1_impl
 ./usr/include/minix/virtio_mmio.h
+./usr/lib/libgcc.a
+./usr/lib/libgcc_eh.a
 ./usr/lib/libgcov.a
 ./usr/lib/libvirtio_mmio.a

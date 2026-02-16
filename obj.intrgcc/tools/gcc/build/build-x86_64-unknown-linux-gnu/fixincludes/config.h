@@ -30,7 +30,7 @@
 /* Define to 1 if you have the declaration of `basename(char *)', and to 0 if
    you don't. */
 #ifndef USED_FOR_TARGET
-#define HAVE_DECL_BASENAME 1
+#define HAVE_DECL_BASENAME 0
 #endif
 
 

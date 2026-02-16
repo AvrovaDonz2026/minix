@@ -1232,13 +1232,6 @@
 ./usr/include/nl_types.h
 ./usr/include/nlist.h
 ./usr/include/nsswitch.h
-./usr/include/objc
-./usr/include/objc/NXConstStr.h
-./usr/include/objc/Object.h
-./usr/include/objc/Protocol.h
-./usr/include/objc/objc-decls.h
-./usr/include/objc/objc.h
-./usr/include/objc/thr.h
 ./usr/include/openssl
 ./usr/include/openssl/aes.h
 ./usr/include/openssl/asn1.h
@@ -1867,8 +1860,6 @@
 ./usr/lib/libfl.a
 ./usr/lib/libform.a
 ./usr/lib/libfsdriver.a
-./usr/lib/libgcc.a
-./usr/lib/libgcc_eh.a
 ./usr/lib/libgcc_s.a
 ./usr/lib/libinputdriver.a
 ./usr/lib/libintl.a
@@ -1892,7 +1883,6 @@
 ./usr/lib/libnetdriver.a
 ./usr/lib/libnetpgp.a
 ./usr/lib/libnetpgpverify.a
-./usr/lib/libobjc.a
 ./usr/lib/libpcap.a
 ./usr/lib/libpci.a
 ./usr/lib/libprop.a
@@ -1951,8 +1941,6 @@
 ./usr/libexec/ftpd
 ./usr/libexec/getty
 ./usr/libexec/httpd
-./usr/libexec/lto-wrapper
-./usr/libexec/lto1
 ./usr/libexec/makewhatis
 ./usr/libexec/rshd
 ./usr/libexec/telnetd

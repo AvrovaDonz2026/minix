@@ -47,7 +47,7 @@ target=riscv-ucb-minix
 
 program_transform_name = s,^,riscv64-elf32-minix-,
 
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 exec_prefix = ${prefix}
 
 srcdir = /home/donz/minix/tools/gcc/../../external/gpl3/gcc/dist
@@ -78,7 +78,7 @@ man7dir = $(mandir)/man7
 man8dir = $(mandir)/man8
 man9dir = $(mandir)/man9
 
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c -p -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
@@ -93,7 +93,7 @@ MAINTAINER_MODE_TRUE = #
 # -------------------------------------------------
 
 # The gcc driver likes to know the arguments it was configured with.
-TOPLEVEL_CONFIGURE_ARGUMENTS=/home/donz/minix/tools/gcc/../../external/gpl3/gcc/dist/configure --target=riscv64-elf32-minix --enable-long-long --enable-threads --with-bugurl=http://www.NetBSD.org/Misc/send-pr.html --with-pkgversion='NetBSD nb2 20150115' --with-system-zlib --enable-__cxa_atexit --disable-libssp --enable-visibility --disable-threads --disable-tls --with-sysroot=/home/donz/minix/obj.intrgcc/destdir.evbriscv64 --with-mpc=/home/donz/minix/obj.intrgcc/tooldir --with-mpfr=/home/donz/minix/obj.intrgcc/tooldir --with-gmp=/home/donz/minix/obj.intrgcc/tooldir --disable-nls --disable-multilib --program-transform-name='s,^,riscv64-elf32-minix-,' --enable-languages='c c++ objc' --prefix=/home/donz/minix/obj.intrgcc/tooldir --disable-shared
+TOPLEVEL_CONFIGURE_ARGUMENTS=/home/donz/minix/tools/gcc/../../external/gpl3/gcc/dist/configure --target=riscv64-elf32-minix --enable-long-long --enable-threads --with-bugurl=http://www.NetBSD.org/Misc/send-pr.html --with-pkgversion='NetBSD nb2 20150115' --with-system-zlib --enable-__cxa_atexit --disable-libssp --enable-visibility --disable-threads --disable-tls --with-sysroot=/home/donz/minix/obj.intrgcc/destdir.evbriscv64 --with-mpc=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64 --with-mpfr=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64 --with-gmp=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64 --disable-nls --disable-multilib --program-transform-name='s,^,riscv64-elf32-minix-,' --enable-languages='c c++ objc' --prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 
 tooldir = ${exec_prefix}/riscv64-elf32-minix
 build_tooldir = ${exec_prefix}/riscv64-elf32-minix
@@ -111,7 +111,7 @@ GCC_SHLIB_SUBDIR =
 BUILD_SUBDIR = build-x86_64-unknown-linux-gnu
 # This is set by the configure script to the arguments to use when configuring
 # directories built for the build system.
-BUILD_CONFIGARGS =  --cache-file=../config.cache '--enable-long-long' '--enable-threads' '--with-bugurl=http://www.NetBSD.org/Misc/send-pr.html' '--with-pkgversion=NetBSD nb2 20150115' '--with-system-zlib' '--enable-__cxa_atexit' '--disable-libssp' '--enable-visibility' '--disable-threads' '--disable-tls' '--with-sysroot=/home/donz/minix/obj.intrgcc/destdir.evbriscv64' '--with-mpc=/home/donz/minix/obj.intrgcc/tooldir' '--with-mpfr=/home/donz/minix/obj.intrgcc/tooldir' '--with-gmp=/home/donz/minix/obj.intrgcc/tooldir' '--disable-nls' '--disable-multilib' '--enable-languages=c c++ objc' '--prefix=/home/donz/minix/obj.intrgcc/tooldir' '--disable-shared' '--enable-languages=c,c++,lto,objc' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking --with-build-subdir="$(BUILD_SUBDIR)"
+BUILD_CONFIGARGS =  --cache-file=../config.cache '--enable-long-long' '--enable-threads' '--with-bugurl=http://www.NetBSD.org/Misc/send-pr.html' '--with-pkgversion=NetBSD nb2 20150115' '--with-system-zlib' '--enable-__cxa_atexit' '--disable-libssp' '--enable-visibility' '--disable-threads' '--disable-tls' '--with-sysroot=/home/donz/minix/obj.intrgcc/destdir.evbriscv64' '--with-mpc=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--with-mpfr=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--with-gmp=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--disable-nls' '--disable-multilib' '--enable-languages=c c++ objc' '--prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--enable-languages=c,c++,lto,objc' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking --with-build-subdir="$(BUILD_SUBDIR)"
 
 # Linker flags to use on the host, for stage1 or when not
 # bootstrapping.
@@ -174,7 +174,7 @@ SUBDIRS =  intl libiberty libbacktrace libcpp libdecnumber fixincludes gcc gnatt
 TARGET_CONFIGDIRS =  libgcc libbacktrace libstdc++-v3 libobjc
 # This is set by the configure script to the arguments to use when configuring
 # directories built for the host system.
-HOST_CONFIGARGS =  --cache-file=./config.cache  --with-system-zlib '--enable-long-long' '--enable-threads' '--with-bugurl=http://www.NetBSD.org/Misc/send-pr.html' '--with-pkgversion=NetBSD nb2 20150115' '--with-system-zlib' '--enable-__cxa_atexit' '--disable-libssp' '--enable-visibility' '--disable-threads' '--disable-tls' '--with-sysroot=/home/donz/minix/obj.intrgcc/destdir.evbriscv64' '--with-mpc=/home/donz/minix/obj.intrgcc/tooldir' '--with-mpfr=/home/donz/minix/obj.intrgcc/tooldir' '--with-gmp=/home/donz/minix/obj.intrgcc/tooldir' '--disable-nls' '--disable-multilib' '--enable-languages=c c++ objc' '--prefix=/home/donz/minix/obj.intrgcc/tooldir' '--disable-shared' '--enable-languages=c,c++,lto,objc' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking
+HOST_CONFIGARGS =  --cache-file=./config.cache  --with-system-zlib '--enable-long-long' '--enable-threads' '--with-bugurl=http://www.NetBSD.org/Misc/send-pr.html' '--with-pkgversion=NetBSD nb2 20150115' '--with-system-zlib' '--enable-__cxa_atexit' '--disable-libssp' '--enable-visibility' '--disable-threads' '--disable-tls' '--with-sysroot=/home/donz/minix/obj.intrgcc/destdir.evbriscv64' '--with-mpc=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--with-mpfr=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--with-gmp=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--disable-nls' '--disable-multilib' '--enable-languages=c c++ objc' '--prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--enable-languages=c,c++,lto,objc' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking
 # Host programs are put under this directory, which is . except if building
 # with srcdir=..
 HOST_SUBDIR = .
@@ -244,7 +244,7 @@ POSTSTAGE1_HOST_EXPORTS = \
 TARGET_SUBDIR = riscv64-elf32-minix
 # This is set by the configure script to the arguments to use when configuring
 # directories built for the target.
-TARGET_CONFIGARGS = --cache-file=./config.cache --with-cross-host=x86_64-unknown-linux-gnu   '--enable-long-long' '--enable-threads' '--with-bugurl=http://www.NetBSD.org/Misc/send-pr.html' '--with-pkgversion=NetBSD nb2 20150115' '--with-system-zlib' '--enable-__cxa_atexit' '--disable-libssp' '--enable-visibility' '--disable-threads' '--disable-tls' '--with-sysroot=/home/donz/minix/obj.intrgcc/destdir.evbriscv64' '--disable-nls' '--disable-multilib' '--enable-languages=c c++ objc' '--prefix=/home/donz/minix/obj.intrgcc/tooldir' '--disable-shared' '--enable-languages=c,c++,lto,objc' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking --with-target-subdir="$(TARGET_SUBDIR)"
+TARGET_CONFIGARGS = --cache-file=./config.cache --with-cross-host=x86_64-unknown-linux-gnu   '--enable-long-long' '--enable-threads' '--with-bugurl=http://www.NetBSD.org/Misc/send-pr.html' '--with-pkgversion=NetBSD nb2 20150115' '--with-system-zlib' '--enable-__cxa_atexit' '--disable-libssp' '--enable-visibility' '--disable-threads' '--disable-tls' '--with-sysroot=/home/donz/minix/obj.intrgcc/destdir.evbriscv64' '--disable-nls' '--disable-multilib' '--enable-languages=c c++ objc' '--prefix=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64' '--enable-languages=c,c++,lto,objc' --program-transform-name='s,^,riscv64-elf32-minix-,' --disable-option-checking --with-target-subdir="$(TARGET_SUBDIR)"
 # This is the list of variables to export in the environment when
 # configuring subdirectories for the target system.
 BASE_TARGET_EXPORTS = \
@@ -283,8 +283,8 @@ NORMAL_TARGET_EXPORTS = \
 	CXX="$(CXX_FOR_TARGET) $(XGCC_FLAGS_FOR_TARGET) $$TFLAGS"; export CXX;
 
 # Where to find GMP
-HOST_GMPLIBS = -L/home/donz/minix/obj.intrgcc/tooldir/lib -L/home/donz/minix/obj.intrgcc/tooldir/lib -L/home/donz/minix/obj.intrgcc/tooldir/lib -lmpc -lmpfr -lgmp -lm
-HOST_GMPINC = -I/home/donz/minix/obj.intrgcc/tooldir/include -I/home/donz/minix/obj.intrgcc/tooldir/include -I/home/donz/minix/obj.intrgcc/tooldir/include 
+HOST_GMPLIBS = -L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib -L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib -L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib -lmpc -lmpfr -lgmp -lm
+HOST_GMPINC = -I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include -I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include -I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include 
 
 # Where to find ISL
 HOST_ISLINC = 
@@ -343,13 +343,13 @@ BOOT_CFLAGS= -g -O2
 BOOT_LDFLAGS=
 BOOT_ADAFLAGS= -gnatpg
 
-AWK = /home/donz/minix/obj.intrgcc/tooldir/bin/nbawk
+AWK = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk
 SED = /usr/bin/sed
 BISON = bison
-YACC = /home/donz/minix/obj.intrgcc/tooldir/bin/nbyacc
+YACC = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbyacc
 FLEX = flex
-LEX = /home/donz/minix/obj.intrgcc/tooldir/bin/nblex
-M4 = /home/donz/minix/obj.intrgcc/tooldir/bin/nbm4
+LEX = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nblex
+M4 = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbm4
 MAKEINFO = /home/donz/minix/external/gpl3/gcc/dist/missing makeinfo
 EXPECT = expect
 RUNTEST = runtest
@@ -367,7 +367,7 @@ MAKEINFOFLAGS = --split-size=5000000
 AS = as
 AR = ar
 AR_FLAGS = rc
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 CXX = c++
 DLLTOOL = dlltool
 LD = ld
@@ -467,8 +467,8 @@ do-compare3 = $(do-compare)
 # Programs producing files for the TARGET machine
 # -----------------------------------------------
 
-AR_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/ar
-AS_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/as
+AR_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/ar
+AS_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/as
 CC_FOR_TARGET=$(STAGE_CC_WRAPPER) $$r/$(HOST_SUBDIR)/gcc/xgcc -B$$r/$(HOST_SUBDIR)/gcc/
 
 # If GCC_FOR_TARGET is not overriden on the command line, then this
@@ -482,14 +482,14 @@ GCJ_FOR_TARGET=$(STAGE_CC_WRAPPER) riscv64-elf32-minix-gcj
 GFORTRAN_FOR_TARGET=$(STAGE_CC_WRAPPER) riscv64-elf32-minix-gfortran
 GOC_FOR_TARGET=$(STAGE_CC_WRAPPER) riscv64-elf32-minix-gccgo
 DLLTOOL_FOR_TARGET=riscv64-elf32-minix-dlltool
-LD_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/ld
+LD_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/ld
 
 LIPO_FOR_TARGET=riscv64-elf32-minix-lipo
-NM_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/nm
-OBJDUMP_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/objdump
-RANLIB_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/ranlib
+NM_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/nm
+OBJDUMP_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/objdump
+RANLIB_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/ranlib
 READELF_FOR_TARGET=riscv64-elf32-minix-readelf
-STRIP_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/strip
+STRIP_FOR_TARGET=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/strip
 WINDRES_FOR_TARGET=riscv64-elf32-minix-windres
 WINDMC_FOR_TARGET=riscv64-elf32-minix-windmc
 

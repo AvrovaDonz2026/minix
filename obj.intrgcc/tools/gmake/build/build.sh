@@ -21,7 +21,7 @@
 # See Makefile.in for comments describing these variables.
 
 srcdir='/home/donz/minix/tools/gmake/../../external/gpl2/gmake/dist'
-CC='cc -Wno-implicit-int -Wno-implicit-function-declaration'
+CC='cc'
 CFLAGS='-O -fcommon'
 CPPFLAGS=''
 LDFLAGS=''
@@ -35,7 +35,7 @@ OBJEXT='o'
 EXEEXT=''
 
 # Common prefix for machine-independent installed files.
-prefix='/home/donz/minix/obj.intrgcc/tooldir'
+prefix='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64'
 # Common prefix for machine-dependent installed files.
 exec_prefix=`eval echo ${prefix}`
 # Directory to find libraries in for `-lXXX'.

@@ -24,20 +24,20 @@
 srcdir = /home/donz/minix/tools/gcc/../../external/gpl3/gcc/dist/libcpp
 top_builddir = .
 VPATH = /home/donz/minix/tools/gcc/../../external/gpl3/gcc/dist/libcpp
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c -p -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 AR = ar
 ARFLAGS = cru
 ACLOCAL = /home/donz/minix/external/gpl3/gcc/dist/missing aclocal
 AUTOCONF = /home/donz/minix/external/gpl3/gcc/dist/missing autoconf
 AUTOHEADER = /home/donz/minix/external/gpl3/gcc/dist/missing autoheader
 CATALOGS = $(patsubst %,po/%,)
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 CFLAGS = -O -fcommon
 WARN_CFLAGS = -W -Wall -Wno-narrowing -Wwrite-strings -Wmissing-format-attribute -Wstrict-prototypes -Wmissing-prototypes -Wold-style-definition -Wc++-compat -pedantic -Wno-long-long 
 CXX = c++
 CXXFLAGS = -std=gnu++98
 WARN_CXXFLAGS = -W -Wall -Wno-narrowing -Wwrite-strings -Wmissing-format-attribute -pedantic -Wno-long-long 
-CPP = cc -Wno-implicit-int -Wno-implicit-function-declaration -E
+CPP = cc -E
 CPPFLAGS = -DNETBSD_TOOLS -DTARGET_SYSTEM_ROOT=0  -DTARGET_SYSTEM_ROOT_RELOCATABLE
 EXEEXT = 
 GMSGFMT = /usr/bin/msgfmt
@@ -60,10 +60,10 @@ NOEXCEPTION_FLAGS = -fno-exceptions -fno-rtti
 
 datarootdir = ${prefix}/share
 datadir = ${datarootdir}
-exec_prefix = /home/donz/minix/obj.intrgcc/tooldir
+exec_prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 libdir = ${exec_prefix}/lib
 localedir = $(datadir)/locale
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 
 MSGMERGE = msgmerge
 mkinstalldirs = $(SHELL) $(srcdir)/../mkinstalldirs

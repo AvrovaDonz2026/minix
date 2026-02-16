@@ -13,7 +13,7 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 
 
 
@@ -140,17 +140,17 @@ AR = ar
 AUTOCONF = ${SHELL} /home/donz/minix/external/gpl3/binutils/dist/missing --run autoconf
 AUTOHEADER = ${SHELL} /home/donz/minix/external/gpl3/binutils/dist/missing --run autoheader
 AUTOMAKE = ${SHELL} /home/donz/minix/external/gpl3/binutils/dist/missing --run automake-1.11
-AWK = /home/donz/minix/obj.intrgcc/tooldir/bin/nbawk
+AWK = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk
 BFD_MACHINES =  riscv-dis.lo riscv-opc.lo
 BUILD_LIBS = ../libiberty/libiberty.a 
 BUILD_LIB_DEPS = ../libiberty/libiberty.a 
 CATALOGS = 
 CATOBJEXT = 
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 CCDEPMODE = depmode=none
-CC_FOR_BUILD = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC_FOR_BUILD = cc
 CFLAGS = -O -fcommon
-CPP = cc -Wno-implicit-int -Wno-implicit-function-declaration -E
+CPP = cc -E
 CPPFLAGS = 
 CYGPATH_W = echo
 DATADIRNAME = 
@@ -170,7 +170,7 @@ GMSGFMT = /usr/bin/msgfmt
 GREP = /usr/bin/grep
 HDEFINES = 
 INCINTL = 
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c -p -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
@@ -188,8 +188,8 @@ LIPO =
 LN_S = ln -s
 LTLIBOBJS = 
 MAINT = #
-MAKEINFO = /home/donz/minix/obj.intrgcc/tooldir/bin/nbmakeinfo
-MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+MAKEINFO = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmakeinfo
+MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 MKINSTALLDIRS = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/opcodes/../mkinstalldirs
 MSGFMT = /usr/bin/msgfmt
 MSGMERGE = /usr/bin/msgmerge
@@ -212,7 +212,7 @@ PATH_SEPARATOR = :
 POSUB = 
 RANLIB = ranlib
 SED = /usr/bin/sed
-SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 SHARED_DEPENDENCIES = 
 SHARED_LDFLAGS = 
 SHARED_LIBADD = 
@@ -267,10 +267,10 @@ libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
 localstatedir = ${prefix}/var
 mandir = ${datarootdir}/man
-mkdir_p = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+mkdir_p = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 program_transform_name = s,^,riscv64-elf32-minix-,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin

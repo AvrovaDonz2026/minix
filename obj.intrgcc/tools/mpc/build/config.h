@@ -69,7 +69,7 @@
 #define LT_OBJDIR ".libs/"
 
 /* C compiler */
-#define MPC_CC "cc -Wno-implicit-int -Wno-implicit-function-declaration"
+#define MPC_CC "cc"
 
 /* Gcc yes or no */
 #define MPC_GCC "yes"

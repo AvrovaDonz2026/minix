@@ -13,7 +13,7 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 
 # Copyright 2001, 2002, 2003, 2009, 2010, 2011, 2012 Free Software Foundation,
 # Inc.
@@ -358,15 +358,15 @@ ASMFLAGS =  -Wa,--noexecstack
 AUTOCONF = ${SHELL} /home/donz/minix/external/lgpl3/gmp/dist/missing --run autoconf
 AUTOHEADER = ${SHELL} /home/donz/minix/external/lgpl3/gmp/dist/missing --run autoheader
 AUTOMAKE = ${SHELL} /home/donz/minix/external/lgpl3/gmp/dist/missing --run automake-1.11
-AWK = /home/donz/minix/obj.intrgcc/tooldir/bin/nbawk
+AWK = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk
 CALLING_CONVENTIONS_OBJS = amd64call.lo amd64check$U.lo
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
-CCAS = cc -Wno-implicit-int -Wno-implicit-function-declaration -c
-CC_FOR_BUILD = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
+CCAS = cc -c
+CC_FOR_BUILD = c89
 CFLAGS = -O2 -pedantic -fomit-frame-pointer -m64 -mtune=k8 -march=k8
-CPP = cc -Wno-implicit-int -Wno-implicit-function-declaration -E
+CPP = cc -E
 CPPFLAGS = 
-CPP_FOR_BUILD = cc -Wno-implicit-int -Wno-implicit-function-declaration -E
+CPP_FOR_BUILD = c89 -E
 CXX = c++
 CXXCPP = c++ -E
 CXXFLAGS = 
@@ -398,14 +398,14 @@ HAVE_SIGALTSTACK_01 = 1
 HAVE_SIGSTACK_01 = 1
 HAVE_STACK_T_01 = 1
 HAVE_SYS_RESOURCE_H_01 = 1
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c  -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LD = /usr/bin/ld -m elf_x86_64
 LDFLAGS = 
-LEX = /home/donz/minix/obj.intrgcc/tooldir/bin/nblex
+LEX = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nblex
 LEXLIB = -lfl
 LEX_OUTPUT_ROOT = lex.yy
 LIBCURSES = 
@@ -421,11 +421,11 @@ LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
-M4 = /home/donz/minix/obj.intrgcc/tooldir/bin/nbm4
+M4 = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbm4
 MAINT = #
 MAKEINFO = ${SHELL} /home/donz/minix/external/lgpl3/gmp/dist/missing --run makeinfo
 MANIFEST_TOOL = :
-MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 NM = /usr/bin/nm -B
 NMEDIT = 
 OBJDUMP = objdump
@@ -442,7 +442,7 @@ PACKAGE_VERSION = 5.1.3
 PATH_SEPARATOR = :
 RANLIB = ranlib
 SED = /usr/bin/sed
-SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 SHELL = /usr/bin/sh
 SPEED_CYCLECOUNTER_OBJ = x86_64.lo
 STRIP = strip
@@ -452,14 +452,14 @@ TUNE_SQR_OBJ =
 U_FOR_BUILD = 
 VERSION = 5.1.3
 WITH_READLINE_01 = 0
-YACC = /home/donz/minix/obj.intrgcc/tooldir/bin/nbyacc
+YACC = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbyacc
 YFLAGS = 
 abs_builddir = /home/donz/minix/obj.intrgcc/tools/gmp/build/tests/mpn
 abs_srcdir = /home/donz/minix/tools/gmp/../../external/lgpl3/gmp/dist/tests/mpn
 abs_top_builddir = /home/donz/minix/obj.intrgcc/tools/gmp/build
 abs_top_srcdir = /home/donz/minix/tools/gmp/../../external/lgpl3/gmp/dist
 ac_ct_AR = ar
-ac_ct_CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+ac_ct_CC = cc
 ac_ct_CXX = 
 ac_ct_DUMPBIN = 
 am__leading_dot = .
@@ -492,12 +492,12 @@ libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
 localstatedir = ${prefix}/var
 mandir = ${datarootdir}/man
-mkdir_p = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+mkdir_p = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 mpn_objects =  invert_limb_table.lo add$U.lo add_1$U.lo add_n.lo sub$U.lo sub_1$U.lo sub_n.lo addcnd_n.lo subcnd_n.lo neg$U.lo com.lo mul_1.lo addmul_1.lo submul_1.lo add_err1_n.lo add_err2_n.lo add_err3_n.lo sub_err1_n.lo sub_err2_n.lo sub_err3_n.lo lshift.lo rshift.lo dive_1.lo diveby3$U.lo divis$U.lo divrem$U.lo divrem_1.lo divrem_2.lo fib2_ui$U.lo mod_1$U.lo mod_34lsub1.lo mode1o.lo pre_mod_1$U.lo dump$U.lo mod_1_1.lo mod_1_2.lo mod_1_3$U.lo mod_1_4.lo lshiftc.lo mul$U.lo mul_fft$U.lo mul_n$U.lo sqr$U.lo mul_basecase.lo sqr_basecase.lo nussbaumer_mul$U.lo mulmid_basecase.lo toom42_mulmid$U.lo mulmid_n$U.lo mulmid$U.lo random$U.lo random2$U.lo pow_1$U.lo rootrem$U.lo sqrtrem$U.lo get_str$U.lo set_str$U.lo scan0$U.lo scan1$U.lo popcount.lo hamdist.lo cmp$U.lo perfsqr$U.lo perfpow$U.lo gcd_1.lo gcd$U.lo gcdext_1$U.lo gcdext$U.lo gcd_subdiv_step$U.lo gcdext_lehmer$U.lo div_q$U.lo tdiv_qr$U.lo jacbase$U.lo jacobi_2$U.lo jacobi$U.lo get_d$U.lo matrix22_mul$U.lo matrix22_mul1_inverse_vector$U.lo hgcd_matrix$U.lo hgcd2$U.lo hgcd_step$U.lo hgcd_reduce$U.lo hgcd$U.lo hgcd_appr$U.lo hgcd2_jacobi$U.lo hgcd_jacobi$U.lo mullo_n$U.lo mullo_basecase.lo toom22_mul$U.lo toom32_mul$U.lo toom42_mul$U.lo toom52_mul$U.lo toom62_mul$U.lo toom33_mul$U.lo toom43_mul$U.lo toom53_mul$U.lo toom54_mul$U.lo toom63_mul$U.lo toom44_mul$U.lo toom6h_mul$U.lo toom6_sqr$U.lo toom8h_mul$U.lo toom8_sqr$U.lo toom_couple_handling$U.lo toom2_sqr$U.lo toom3_sqr$U.lo toom4_sqr$U.lo toom_eval_dgr3_pm1$U.lo toom_eval_dgr3_pm2$U.lo toom_eval_pm1$U.lo toom_eval_pm2$U.lo toom_eval_pm2exp$U.lo toom_eval_pm2rexp$U.lo toom_interpolate_5pts$U.lo toom_interpolate_6pts$U.lo toom_interpolate_7pts$U.lo toom_interpolate_8pts$U.lo toom_interpolate_12pts$U.lo toom_interpolate_16pts$U.lo invertappr$U.lo invert$U.lo binvert$U.lo mulmod_bnm1$U.lo sqrmod_bnm1$U.lo div_qr_2$U.lo div_qr_2n_pi1.lo div_qr_2u_pi1.lo sbpi1_div_q$U.lo sbpi1_div_qr$U.lo sbpi1_divappr_q$U.lo dcpi1_div_q$U.lo dcpi1_div_qr$U.lo dcpi1_divappr_q$U.lo mu_div_qr$U.lo mu_divappr_q$U.lo mu_div_q$U.lo bdiv_q_1.lo sbpi1_bdiv_q$U.lo sbpi1_bdiv_qr$U.lo dcpi1_bdiv_q$U.lo dcpi1_bdiv_qr$U.lo mu_bdiv_q$U.lo mu_bdiv_qr$U.lo bdiv_q$U.lo bdiv_qr$U.lo broot$U.lo brootinv$U.lo bsqrt$U.lo bsqrtinv$U.lo divexact$U.lo bdiv_dbm1c.lo redc_1.lo redc_2$U.lo redc_n$U.lo powm$U.lo powlo$U.lo powm_sec$U.lo sb_div_qr_sec$U.lo sb_div_r_sec$U.lo sbpi1_div_qr_sec$U.lo sbpi1_div_r_sec$U.lo trialdiv$U.lo remove$U.lo and_n.lo andn_n.lo nand_n.lo ior_n.lo iorn_n.lo nior_n.lo xor_n.lo xnor_n.lo copyi.lo copyd.lo zero$U.lo tabselect.lo comb_tables$U.lo invert_limb.lo mul_2.lo addmul_2.lo addlsh1_n.lo sublsh1_n.lo rsblsh1_n.lo rsh1add_n.lo rsh1sub_n.lo addlsh2_n.lo rsblsh2_n.lo addlsh_n.lo rsblsh_n.lo add_n_sub_n$U.lo addaddmul_1msb0.lo
 mpn_objs_in_libgmp =  mpn/invert_limb_table.lo mpn/add$U.lo mpn/add_1$U.lo mpn/add_n.lo mpn/sub$U.lo mpn/sub_1$U.lo mpn/sub_n.lo mpn/addcnd_n.lo mpn/subcnd_n.lo mpn/neg$U.lo mpn/com.lo mpn/mul_1.lo mpn/addmul_1.lo mpn/submul_1.lo mpn/add_err1_n.lo mpn/add_err2_n.lo mpn/add_err3_n.lo mpn/sub_err1_n.lo mpn/sub_err2_n.lo mpn/sub_err3_n.lo mpn/lshift.lo mpn/rshift.lo mpn/dive_1.lo mpn/diveby3$U.lo mpn/divis$U.lo mpn/divrem$U.lo mpn/divrem_1.lo mpn/divrem_2.lo mpn/fib2_ui$U.lo mpn/mod_1$U.lo mpn/mod_34lsub1.lo mpn/mode1o.lo mpn/pre_mod_1$U.lo mpn/dump$U.lo mpn/mod_1_1.lo mpn/mod_1_2.lo mpn/mod_1_3$U.lo mpn/mod_1_4.lo mpn/lshiftc.lo mpn/mul$U.lo mpn/mul_fft$U.lo mpn/mul_n$U.lo mpn/sqr$U.lo mpn/mul_basecase.lo mpn/sqr_basecase.lo mpn/nussbaumer_mul$U.lo mpn/mulmid_basecase.lo mpn/toom42_mulmid$U.lo mpn/mulmid_n$U.lo mpn/mulmid$U.lo mpn/random$U.lo mpn/random2$U.lo mpn/pow_1$U.lo mpn/rootrem$U.lo mpn/sqrtrem$U.lo mpn/get_str$U.lo mpn/set_str$U.lo mpn/scan0$U.lo mpn/scan1$U.lo mpn/popcount.lo mpn/hamdist.lo mpn/cmp$U.lo mpn/perfsqr$U.lo mpn/perfpow$U.lo mpn/gcd_1.lo mpn/gcd$U.lo mpn/gcdext_1$U.lo mpn/gcdext$U.lo mpn/gcd_subdiv_step$U.lo mpn/gcdext_lehmer$U.lo mpn/div_q$U.lo mpn/tdiv_qr$U.lo mpn/jacbase$U.lo mpn/jacobi_2$U.lo mpn/jacobi$U.lo mpn/get_d$U.lo mpn/matrix22_mul$U.lo mpn/matrix22_mul1_inverse_vector$U.lo mpn/hgcd_matrix$U.lo mpn/hgcd2$U.lo mpn/hgcd_step$U.lo mpn/hgcd_reduce$U.lo mpn/hgcd$U.lo mpn/hgcd_appr$U.lo mpn/hgcd2_jacobi$U.lo mpn/hgcd_jacobi$U.lo mpn/mullo_n$U.lo mpn/mullo_basecase.lo mpn/toom22_mul$U.lo mpn/toom32_mul$U.lo mpn/toom42_mul$U.lo mpn/toom52_mul$U.lo mpn/toom62_mul$U.lo mpn/toom33_mul$U.lo mpn/toom43_mul$U.lo mpn/toom53_mul$U.lo mpn/toom54_mul$U.lo mpn/toom63_mul$U.lo mpn/toom44_mul$U.lo mpn/toom6h_mul$U.lo mpn/toom6_sqr$U.lo mpn/toom8h_mul$U.lo mpn/toom8_sqr$U.lo mpn/toom_couple_handling$U.lo mpn/toom2_sqr$U.lo mpn/toom3_sqr$U.lo mpn/toom4_sqr$U.lo mpn/toom_eval_dgr3_pm1$U.lo mpn/toom_eval_dgr3_pm2$U.lo mpn/toom_eval_pm1$U.lo mpn/toom_eval_pm2$U.lo mpn/toom_eval_pm2exp$U.lo mpn/toom_eval_pm2rexp$U.lo mpn/toom_interpolate_5pts$U.lo mpn/toom_interpolate_6pts$U.lo mpn/toom_interpolate_7pts$U.lo mpn/toom_interpolate_8pts$U.lo mpn/toom_interpolate_12pts$U.lo mpn/toom_interpolate_16pts$U.lo mpn/invertappr$U.lo mpn/invert$U.lo mpn/binvert$U.lo mpn/mulmod_bnm1$U.lo mpn/sqrmod_bnm1$U.lo mpn/div_qr_2$U.lo mpn/div_qr_2n_pi1.lo mpn/div_qr_2u_pi1.lo mpn/sbpi1_div_q$U.lo mpn/sbpi1_div_qr$U.lo mpn/sbpi1_divappr_q$U.lo mpn/dcpi1_div_q$U.lo mpn/dcpi1_div_qr$U.lo mpn/dcpi1_divappr_q$U.lo mpn/mu_div_qr$U.lo mpn/mu_divappr_q$U.lo mpn/mu_div_q$U.lo mpn/bdiv_q_1.lo mpn/sbpi1_bdiv_q$U.lo mpn/sbpi1_bdiv_qr$U.lo mpn/dcpi1_bdiv_q$U.lo mpn/dcpi1_bdiv_qr$U.lo mpn/mu_bdiv_q$U.lo mpn/mu_bdiv_qr$U.lo mpn/bdiv_q$U.lo mpn/bdiv_qr$U.lo mpn/broot$U.lo mpn/brootinv$U.lo mpn/bsqrt$U.lo mpn/bsqrtinv$U.lo mpn/divexact$U.lo mpn/bdiv_dbm1c.lo mpn/redc_1.lo mpn/redc_2$U.lo mpn/redc_n$U.lo mpn/powm$U.lo mpn/powlo$U.lo mpn/powm_sec$U.lo mpn/sb_div_qr_sec$U.lo mpn/sb_div_r_sec$U.lo mpn/sbpi1_div_qr_sec$U.lo mpn/sbpi1_div_r_sec$U.lo mpn/trialdiv$U.lo mpn/remove$U.lo mpn/and_n.lo mpn/andn_n.lo mpn/nand_n.lo mpn/ior_n.lo mpn/iorn_n.lo mpn/nior_n.lo mpn/xor_n.lo mpn/xnor_n.lo mpn/copyi.lo mpn/copyd.lo mpn/zero$U.lo mpn/tabselect.lo mpn/comb_tables$U.lo mpn/invert_limb.lo mpn/mul_2.lo mpn/addmul_2.lo mpn/addlsh1_n.lo mpn/sublsh1_n.lo mpn/rsblsh1_n.lo mpn/rsh1add_n.lo mpn/rsh1sub_n.lo mpn/addlsh2_n.lo mpn/rsblsh2_n.lo mpn/addlsh_n.lo mpn/rsblsh_n.lo mpn/add_n_sub_n$U.lo mpn/addaddmul_1msb0.lo
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin

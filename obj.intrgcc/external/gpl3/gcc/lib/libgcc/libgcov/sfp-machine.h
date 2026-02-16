@@ -1,1 +1,0 @@
-/home/donz/minix/external/gpl3/gcc/dist/libgcc/config/no-sfp-machine.h

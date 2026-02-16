@@ -26,7 +26,7 @@ SHELL=/usr/bin/sh
 # in the kernel.  So, we use `echo' instead. 
 STAMP = echo timestamp >
 
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 CFLAGS = -O -fcommon
 WARN_CFLAGS = -W -Wall -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wold-style-definition -Wmissing-format-attribute -Wno-overlength-strings -pedantic -Wno-long-long 
 LDFLAGS = -static-libstdc++ -static-libgcc 

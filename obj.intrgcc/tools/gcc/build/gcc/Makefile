@@ -204,8 +204,8 @@ WARN_CXXFLAGS = $(GCC_WARN_CXXFLAGS)
 
 CPPFLAGS = -DNETBSD_TOOLS -DTARGET_SYSTEM_ROOT=0  -DTARGET_SYSTEM_ROOT_RELOCATABLE
 
-AWK = /home/donz/minix/obj.intrgcc/tooldir/bin/nbawk
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+AWK = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk
+CC = cc
 CXX = c++
 BISON = true
 BISONFLAGS =
@@ -248,7 +248,7 @@ SHELL = /usr/bin/sh
 # don't want to corrupt it.
 PWD_COMMAND = $${PWDCMD-pwd}
 # on sysV, define this as cp.
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c -p -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 # Some systems may be missing symbolic links, regular links, or both.
 # Allow configure to check this and use "ln -s", "ln", or "cp" as appropriate.
 LN=ln
@@ -256,10 +256,10 @@ LN_S=ln -s
 # These permit overriding just for certain files.
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
-INSTALL_SCRIPT = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c -p -r
+INSTALL_SCRIPT = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 install_sh = $(SHELL) $(srcdir)/../install-sh
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
-MAKEINFO = /home/donz/minix/obj.intrgcc/tooldir/bin/nbmakeinfo
+MAKEINFO = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmakeinfo
 MAKEINFOFLAGS = --no-split
 TEXI2DVI = texi2dvi
 TEXI2PDF = texi2pdf
@@ -312,8 +312,8 @@ ZLIB =  -lz
 ZLIBINC = 
 
 # How to find GMP
-GMPLIBS = -L/home/donz/minix/obj.intrgcc/tooldir/lib -L/home/donz/minix/obj.intrgcc/tooldir/lib -L/home/donz/minix/obj.intrgcc/tooldir/lib -lmpc -lmpfr -lgmp -lm
-GMPINC = -I/home/donz/minix/obj.intrgcc/tooldir/include -I/home/donz/minix/obj.intrgcc/tooldir/include -I/home/donz/minix/obj.intrgcc/tooldir/include 
+GMPLIBS = -L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib -L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib -L/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/lib -lmpc -lmpfr -lgmp -lm
+GMPINC = -I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include -I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include -I/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/include 
 
 # How to find ISL
 ISLINC = 
@@ -400,7 +400,7 @@ AR_FLAGS_FOR_TARGET =
 AR_CREATE_FOR_TARGET = $(AR_FOR_TARGET) $(AR_FLAGS_FOR_TARGET) rc
 AR_EXTRACT_FOR_TARGET = $(AR_FOR_TARGET) $(AR_FLAGS_FOR_TARGET) x
 LIPO_FOR_TARGET = lipo
-ORIGINAL_AS_FOR_TARGET = /home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/as
+ORIGINAL_AS_FOR_TARGET = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/as
 RANLIB_FOR_TARGET := $(shell \
   if [ -f $(objdir)/../binutils/ranlib ] ; then \
     echo $(objdir)/../binutils/ranlib ; \
@@ -411,8 +411,8 @@ RANLIB_FOR_TARGET := $(shell \
        t='$(program_transform_name)'; echo ranlib | sed -e "$$t" ; \
     fi; \
   fi)
-ORIGINAL_LD_FOR_TARGET = /home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/ld
-ORIGINAL_NM_FOR_TARGET = /home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/nm
+ORIGINAL_LD_FOR_TARGET = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/ld
+ORIGINAL_NM_FOR_TARGET = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/nm
 NM_FOR_TARGET = ./nm
 STRIP_FOR_TARGET := $(shell \
   if [ -f $(objdir)/../binutils/strip-new ] ; then \
@@ -552,7 +552,7 @@ endif
 
 # Common prefix for installation directories.
 # NOTE: This directory must exist when you start installation.
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 # Directory in which to put localized header files. On the systems with
 # gcc as the native cc, `local_prefix' may not be `prefix' which is
 # `/usr'.
@@ -640,7 +640,7 @@ exeext =
 build_exeext = 
 
 # NetBSD mknative-gcc addition
-ENABLE_SHARED = no
+ENABLE_SHARED = yes
 
 # Directory in which to put man pages.
 mandir = ${datarootdir}/man
@@ -2067,7 +2067,7 @@ DRIVER_DEFINES = \
   -DTOOLDIR_BASE_PREFIX=\"$(libsubdir_to_prefix)$(prefix_to_exec_prefix)\" \
   -DTARGET_SYSTEM_ROOT=\"$(TARGET_SYSTEM_ROOT)\" \
   $(VALGRIND_DRIVER_DEFINES) \
-  `test "X$${SHLIB}" = "X" || test "no" != "yes" || echo "-DENABLE_SHARED_LIBGCC"` \
+  `test "X$${SHLIB}" = "X" || test "yes" != "yes" || echo "-DENABLE_SHARED_LIBGCC"` \
   -DCONFIGURE_SPECS="\"\""
 
 gcc.o: gcc.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) intl.h multilib.h \

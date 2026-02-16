@@ -14,7 +14,7 @@
 ac_cv_build=${ac_cv_build='x86_64-unknown-linux-gnu'}
 ac_cv_c_compiler_gnu=${ac_cv_c_compiler_gnu='yes'}
 ac_cv_env_CC_set='set'
-ac_cv_env_CC_value='cc -Wno-implicit-int -Wno-implicit-function-declaration'
+ac_cv_env_CC_value='cc'
 ac_cv_env_CFLAGS_set='set'
 ac_cv_env_CFLAGS_value='-O -fcommon'
 ac_cv_env_CPPFLAGS_set='set'
@@ -98,17 +98,17 @@ ac_cv_path_MSGFMT=${ac_cv_path_MSGFMT='/usr/bin/msgfmt'}
 ac_cv_path_MSGMERGE=${ac_cv_path_MSGMERGE='/usr/bin/msgmerge'}
 ac_cv_path_SED=${ac_cv_path_SED='/usr/bin/sed'}
 ac_cv_path_XGETTEXT=${ac_cv_path_XGETTEXT='/usr/bin/xgettext'}
-ac_cv_path_mkdir=${ac_cv_path_mkdir='/home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d'}
+ac_cv_path_mkdir=${ac_cv_path_mkdir='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d'}
 ac_cv_prog_AR=${ac_cv_prog_AR='ar'}
-ac_cv_prog_AWK=${ac_cv_prog_AWK='/home/donz/minix/obj.intrgcc/tooldir/bin/nbawk'}
-ac_cv_prog_CC=${ac_cv_prog_CC='cc -Wno-implicit-int -Wno-implicit-function-declaration'}
-ac_cv_prog_CPP=${ac_cv_prog_CPP='cc -Wno-implicit-int -Wno-implicit-function-declaration -E'}
+ac_cv_prog_AWK=${ac_cv_prog_AWK='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk'}
+ac_cv_prog_CC=${ac_cv_prog_CC='cc'}
+ac_cv_prog_CPP=${ac_cv_prog_CPP='cc -E'}
 ac_cv_prog_OBJDUMP=${ac_cv_prog_OBJDUMP='objdump'}
 ac_cv_prog_RANLIB=${ac_cv_prog_RANLIB='ranlib'}
 ac_cv_prog_ac_ct_STRIP=${ac_cv_prog_ac_ct_STRIP='strip'}
 ac_cv_prog_cc_c89=${ac_cv_prog_cc_c89=''}
 ac_cv_prog_cc_g=${ac_cv_prog_cc_g='yes'}
-ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_bin_nbmake_set=${ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_bin_nbmake_set='no'}
+ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_Linux_6_12_63pdeb13_amd64_x86_64_bin_nbmake_set=${ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_Linux_6_12_63pdeb13_amd64_x86_64_bin_nbmake_set='no'}
 ac_cv_safe_to_define___extensions__=${ac_cv_safe_to_define___extensions__='yes'}
 ac_cv_search_opendir=${ac_cv_search_opendir='none required'}
 ac_cv_search_strerror=${ac_cv_search_strerror='none required'}

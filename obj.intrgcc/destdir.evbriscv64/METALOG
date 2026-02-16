@@ -1,74 +1,66 @@
 . type=dir uname=root gname=wheel mode=0755
-./audit-packages type=file uname=root gname=wheel mode=0755 size=2683 sha256=73e47bccf9d02b477198540163432624897a17746e9892cbb509dc1b384823ac
-./bpm type=file uname=root gname=wheel mode=0755 size=6200 sha256=4a664b41b745a714cac6fd1718b615ba4dba5524985ceb625a51dfb839b1564c
-./download-vulnerability-list type=file uname=root gname=wheel mode=0755 size=616 sha256=a6f56a61918912379c321aab11b2147a322b429c0568c308647c761bce6d8b55
-./pkg_add type=file uname=root gname=wheel mode=0755 size=2747452 sha256=f0eb0859ff703f049563144883fea58c89b740598131025077806d8151851db9
-./pkg_admin type=file uname=root gname=wheel mode=0755 size=2715372 sha256=5c15779a6f7db0c8377834bfaa14e5f99634fdea5ee54a9146816b57a36cb583
-./pkg_create type=file uname=root gname=wheel mode=0755 size=2541268 sha256=9fdcfee5c890f800dc8a4b0eb36cf93bce1be73b3dc087dd10121bba4d928cd4
-./pkg_delete type=file uname=root gname=wheel mode=0755 size=2251588 sha256=deab39b2fada3d23eba0535e01066ee2229edca6e37de4fd12fdf9a6c1ee7f59
-./pkg_info type=file uname=root gname=wheel mode=0755 size=2691311 sha256=d1be3cb55447110de37e448756908f8ff817fc6dbd57e9f47f66fb9863e84f3d
 ./bin type=dir uname=root gname=wheel mode=0755
-./bin/[ type=file uname=root gname=wheel mode=0755 size=216704 sha256=757c376897ea503cf465e5a4b19b2f7aa1d2780bad5744bd21aeb9395330f8f6
-./bin/cat type=file uname=root gname=wheel mode=0755 size=218468 sha256=b4d4cb00d0d2578ea617d5e5b52e8948f40cb94f894c670a35cc3855cc45a5cf
+./bin/[ type=file uname=root gname=wheel mode=0755 size=216704 sha256=cc20c863170c68961cd8f7bb850cbb270ec3e2d730971442d04613b01d3f9437
+./bin/cat type=file uname=root gname=wheel mode=0755 size=218468 sha256=e5e26e797937fa00eed58a613c30231dc7509b2961c55c8f61c680ae9e4eb327
 ./bin/chgrp type=link mode=0755 link=/sbin/chown
-./bin/chmod type=file uname=root gname=wheel mode=0755 size=231535 sha256=b355ad0a1e90f9ec1943c68a970758cdd84d392c2c151ca17049f8d2ee6e1afb
-./bin/cp type=file uname=root gname=wheel mode=0755 size=235752 sha256=466ae720a8644087441436875d9a5aa2b4b7018d5753b341a9e8e6a399b5089e
-./bin/cpio type=file uname=root gname=wheel mode=0755 size=548431 sha256=8e6a3d5297b504af8f9f8d37ae1d3ed1d7fc4531c0a6b949b825e3d3e36e2106
-./bin/csh type=file uname=root gname=wheel mode=0755 size=786077 sha256=652e36ee8648b123c176ba105f5c68e2a5edcb97a952fd8fd695a2cd5191798f
-./bin/date type=file uname=root gname=wheel mode=0755 size=356564 sha256=38ac709d3f3f0096532c8e1b4a82fce0c17d6ded656d3e7814986ed0d20abd7c
-./bin/dd type=file uname=root gname=wheel mode=0755 size=233577 sha256=f008b3fa1a8fab393f98d63917a8ec1b7c1bcb568acad4ec2e2b1737c9f93037
-./bin/df type=file uname=root gname=wheel mode=0755 size=219766 sha256=c51d915d96b788b57eeb4d80fc96466ac03101ea6c24780084adae65cef064e5
-./bin/domainname type=file uname=root gname=wheel mode=0755 size=187407 sha256=94fd8e6000bff97a4c9685fd9abb8f6b2acafe114f89fca2e5dd8f981bf2d1f8
-./bin/echo type=file uname=root gname=wheel mode=0755 size=206886 sha256=7e1bf9f643732fdbc391c4aae0befbc60a4348bd511e365aee179ee2bcd64f59
-./bin/ed type=file uname=root gname=wheel mode=0755 size=335893 sha256=b4b9cb527cde96ca27c760643a2133afc783f65d0afca6b01d44c6bd46df2053
-./bin/expr type=file uname=root gname=wheel mode=0755 size=248010 sha256=8fc482260a19b4216cad8075b9df64bc5bd8dd03f36c40ffbfbb5045bde195a9
-./bin/hostname type=file uname=root gname=wheel mode=0755 size=187250 sha256=da0d267b0094470f5171556006fd6808942cb059f490d41e399983cffc7390a9
-./bin/intr type=file uname=root gname=wheel mode=0755 size=196139 sha256=03faebeea1be432514bcf6b7f0a4411450b544d97dfee33eb3574951d0a81210
-./bin/kill type=file uname=root gname=wheel mode=0755 size=210383 sha256=7cb633ab933740889e188763e8d0a70b40a6a8f3d337666996df780b6d35a9bf
-./bin/ksh type=file uname=root gname=wheel mode=0755 size=587605 sha256=2ca35308a9f2aac400a9c7649556c5834b1dec35687934d899804900679f315d
-./bin/ln type=file uname=root gname=wheel mode=0755 size=211180 sha256=3b45c267220f9eddcd9aa70e20772587d25c8922bfd7b590fc32d200d0f1b424
-./bin/loadkeys type=file uname=root gname=wheel mode=0755 size=185957 sha256=d6978bc5677479bcaf4f15bc77aaf637001152ed86d40240d5fcdd4938610ab6
-./bin/ls type=file uname=root gname=wheel mode=0755 size=402827 sha256=e7a29138382be779eb4f1e64cb5b2751bfb27792890d61e9f81dffdbe76835bc
-./bin/mkdir type=file uname=root gname=wheel mode=0755 size=212622 sha256=f4ea37951bca1eb87618a08f6be146c2c7af419869ca227f3cfe8145e1a2bbde
-./bin/mount type=file uname=root gname=wheel mode=0755 size=250967 sha256=ca7bfa7141d959a46c79c0abb145ae2ab3b20ccd05928af870e6d7495299ad62
-./bin/mv type=file uname=root gname=wheel mode=0755 size=354094 sha256=44d8847cc309a78ef77b19d8922a94989429e86182d8bc3b333c7f27eb595864
+./bin/chmod type=file uname=root gname=wheel mode=0755 size=231535 sha256=3830c73943c62c173cf2e06c71a3afc74f31b03344ae8cd788f5fbbf28e4e9ae
+./bin/cp type=file uname=root gname=wheel mode=0755 size=235752 sha256=938ca23a9e1dd94692578ba1ae9f54c79c361e76ba9d1d6ae6fefbec779d29d2
+./bin/cpio type=file uname=root gname=wheel mode=0755 size=548431 sha256=8afba160435b79e06f8a848b2957d1e145a4232bca00f8e3aa655a473dbfe6bc
+./bin/csh type=file uname=root gname=wheel mode=0755 size=786077 sha256=7eb1bb0977cd6f9bbe98192b705210e95a852df4f8c833ca09cd4d49197e6e2c
+./bin/date type=file uname=root gname=wheel mode=0755 size=356564 sha256=93ec4cc8d30e45d1e439c925544e4b52b853d75edf96c2fd8faea84c31837c8e
+./bin/dd type=file uname=root gname=wheel mode=0755 size=233619 sha256=633d701f16da5b73d4982962c4b02b0fa281d324b9ad7d00ea0824dc8e8c226e
+./bin/df type=file uname=root gname=wheel mode=0755 size=219766 sha256=86b683829ee6a3cae8cf31d377546b05712a923107ac20a9d955e07871af6a24
+./bin/domainname type=file uname=root gname=wheel mode=0755 size=187407 sha256=4486f59500dcbf51b6c671aa9602c0a8f930c6bb0d0616fa20b0d0052a91cc58
+./bin/echo type=file uname=root gname=wheel mode=0755 size=206886 sha256=ce100f7183f7c1d3816c8e0121f10d0c59c673a36164450d4cb3a68a4c430469
+./bin/ed type=file uname=root gname=wheel mode=0755 size=335893 sha256=3d55c9f728c2cc74967dbae4adecb115e32829f40bf01986b52e1c0778c0f876
+./bin/expr type=file uname=root gname=wheel mode=0755 size=248010 sha256=27b0ca9231989326a0cad453ca0b2d2296d2ae17f1199afa7d9611703632e050
+./bin/hostname type=file uname=root gname=wheel mode=0755 size=187250 sha256=2c0b2282dfb0d444ea1bb4eedd3abe74d99ee853403df6ef6137db28e839a21c
+./bin/intr type=file uname=root gname=wheel mode=0755 size=196139 sha256=d0cc5c06647cd1348bda4341259514f7f19dcee382d35be75c20624d07c22198
+./bin/kill type=file uname=root gname=wheel mode=0755 size=210383 sha256=006280782429824f1bd0593ca9463fa4755a7fc2ea081a62006b6ebc35291a49
+./bin/ksh type=file uname=root gname=wheel mode=0755 size=587605 sha256=c42ebe49627b84b10bd72d0ae61201a8b662b2d3fc56093de33c7d726e5045e3
+./bin/ln type=file uname=root gname=wheel mode=0755 size=211180 sha256=d2cde845e26fcad2a723a12f1ed8c7dea5687108ca224b1e5144596e2085aa3f
+./bin/loadkeys type=file uname=root gname=wheel mode=0755 size=185957 sha256=9eff0679d42525632ba680e384c3796d508e8ca01e167ec0e3591e17a096e688
+./bin/ls type=file uname=root gname=wheel mode=0755 size=402827 sha256=dc251f8715c84074a62bb89917fb0af5dc14027cd1e98e737d99aaa5e24c5086
+./bin/mkdir type=file uname=root gname=wheel mode=0755 size=212622 sha256=7ef417b5aedb91731d6607b627ee3a42fe4214a1aa968f4af1347988e64e7268
+./bin/mount type=file uname=root gname=wheel mode=0755 size=250967 sha256=8d0fffd1f1863460cc48c5a5cba6f71528509dc2204474d351e8bde4d7142319
+./bin/mv type=file uname=root gname=wheel mode=0755 size=354094 sha256=d36f99a60d4480e929f4a2726e3b002b47b0621bf838c65c54646a3e8fea2118
 ./bin/netconf type=file uname=root gname=wheel mode=0755 size=9857 sha256=64c388962e6c9facb27a0d0d3a83c48e9fe1a16989371763e881827e4f283c03
-./bin/pax type=file uname=root gname=wheel mode=0755 size=548431 sha256=8e6a3d5297b504af8f9f8d37ae1d3ed1d7fc4531c0a6b949b825e3d3e36e2106
-./bin/printroot type=file uname=root gname=wheel mode=0755 size=195923 sha256=4f05044250e3df0762b9a948d91d2de1e496801eb7cd1109f3791e8766b268c8
-./bin/ps type=file uname=root gname=wheel mode=0755 size=454381 sha256=5a1a53450e049c0b9a3eebdb5bd0f9968873e75582b5a38d01ea874944090274
-./bin/pwd type=file uname=root gname=wheel mode=0755 size=218775 sha256=035a6f1faaab04cc6a4f1880fc0258e7630f6b143c22d1f6f2ebed2c12ce1b18
-./bin/rcmd type=file uname=root gname=wheel mode=04555 size=481654 sha256=dc9b09a144eeaa6528631bb2bdb54249e62a0a1ddb5b7fbc8ac54b0c1e377ee4
-./bin/rcp type=file uname=root gname=wheel mode=0755 size=514023 sha256=8750f1602201c2440ac3c0f38774153539b4d524cace4cbe15a488e6429bb21d
-./bin/readclock type=file uname=root gname=wheel mode=0755 size=186541 sha256=fcdef78ffe417745a9bb3ea732e48284f73c940b9e88a7e929472c158940b78a
-./bin/rm type=file uname=root gname=wheel mode=0755 size=369257 sha256=e690d50532ed6dd337ed7906782f7365234687c8f2deb9d6258dee6c06480541
-./bin/rmdir type=file uname=root gname=wheel mode=0755 size=208019 sha256=6f82e1076e00f994b6a2bb4e846b42b4fcd32937f6def19e305115a01e4a4a73
+./bin/pax type=file uname=root gname=wheel mode=0755 size=548431 sha256=8afba160435b79e06f8a848b2957d1e145a4232bca00f8e3aa655a473dbfe6bc
+./bin/printroot type=file uname=root gname=wheel mode=0755 size=195923 sha256=0fdc92385c89a3dd7e9b70b9d1b97d5ad6a5c0d0806e4b7b33a35e0728155f75
+./bin/ps type=file uname=root gname=wheel mode=0755 size=454381 sha256=e5aaaa742df4577788a72c5c132a175f858e1dab38bbf83900e9a3a4ddf77a42
+./bin/pwd type=file uname=root gname=wheel mode=0755 size=218775 sha256=1257c41e864490228e7b32687c7ff9096b68ec43aa7f155db181a290b8df1979
+./bin/rcmd type=file uname=root gname=wheel mode=04555 size=481654 sha256=c5f130fefc8f0309c1ceb25373b0aff430c57f7a7ab13b842b1a0ddba8371251
+./bin/rcp type=file uname=root gname=wheel mode=0755 size=514023 sha256=357391885abba7d5789d4e5f1bbe9eca6fad0f8ed0b6941374c62668d0890e40
+./bin/readclock type=file uname=root gname=wheel mode=0755 size=186541 sha256=034b90a07dfdf035326d8dec19bde946ce36657d76cc0010664bd6fc7c03b9d2
+./bin/rm type=file uname=root gname=wheel mode=0755 size=369257 sha256=7467af39e9c75b5a8f0a0ed8fb01de33d4bdf70748573a2c70c06f6455a81846
+./bin/rmdir type=file uname=root gname=wheel mode=0755 size=208019 sha256=9269721a0a2cbc5e6cab226c92511f70bcb34da0e704e7f0bc37fbbdbbd7c2f7
 ./bin/setup type=file uname=root gname=wheel mode=0755 size=17115 sha256=ac3996d30d45cabe2382f0eb84efd5e4bd9c69328e16a1fa376da0e077732dea
-./bin/sh type=file uname=root gname=wheel mode=0755 size=781855 sha256=258154013b42591a5432fe2d04fcc83e3b030c4ffef7e5f9d0aaacfd09bab39a
-./bin/sleep type=file uname=root gname=wheel mode=0755 size=229292 sha256=651929f6aefc95a7d41ce7d6a7579db8090eb3fb6e00b719ff321fbf5c87f995
-./bin/stty type=file uname=root gname=wheel mode=0755 size=270697 sha256=1de0c9af3d7b435a805d736bf796cc29906a3215cecf747b15f60723891178ae
-./bin/sync type=file uname=root gname=wheel mode=0755 size=185985 sha256=fb1f089d1a4ca6f97fb47b8f1c1e5439a1272f8234f12dbbd5fd429f9e31c244
-./bin/sysenv type=file uname=root gname=wheel mode=0755 size=186079 sha256=448328b0a9b1fa3b68a21178b2de0353d3da7d4ee38c53b341f31b256094783f
-./bin/tar type=file uname=root gname=wheel mode=0755 size=548431 sha256=8e6a3d5297b504af8f9f8d37ae1d3ed1d7fc4531c0a6b949b825e3d3e36e2106
-./bin/test type=file uname=root gname=wheel mode=0755 size=216704 sha256=757c376897ea503cf465e5a4b19b2f7aa1d2780bad5744bd21aeb9395330f8f6
-./bin/umount type=file uname=root gname=wheel mode=0755 size=229451 sha256=395c73d25ec4a88193fec9910d4b04ccca9ee0b14b57ba8f5b5951389bb472ac
+./bin/sh type=file uname=root gname=wheel mode=0755 size=781855 sha256=b1438ae21097f1f747f5e40e4b20a90e6a20a998b3651770287e645d037f0644
+./bin/sleep type=file uname=root gname=wheel mode=0755 size=229292 sha256=b58168471085e057b62431207aa3ecaaf6eb1e15f7237afc00401007d35743cf
+./bin/stty type=file uname=root gname=wheel mode=0755 size=270697 sha256=4845b2ff327dd062c3bf5af583686d23dfd8af0d1c57f22c535ad87e95a736d4
+./bin/sync type=file uname=root gname=wheel mode=0755 size=185985 sha256=8c9c21c7a4765fac279f1f2809415f954fcc4661e9d28f7d72c408de1aa93016
+./bin/sysenv type=file uname=root gname=wheel mode=0755 size=186079 sha256=81b67d94a7fe0a7c2eebabda88a98a72526fa7555337152966d9eceda228678b
+./bin/tar type=file uname=root gname=wheel mode=0755 size=548431 sha256=8afba160435b79e06f8a848b2957d1e145a4232bca00f8e3aa655a473dbfe6bc
+./bin/test type=file uname=root gname=wheel mode=0755 size=216704 sha256=cc20c863170c68961cd8f7bb850cbb270ec3e2d730971442d04613b01d3f9437
+./bin/umount type=file uname=root gname=wheel mode=0755 size=229451 sha256=946bada9f475deedb19c44489995a78634951449133d4c392cd223b21901a480
 ./bin/update_bootcfg type=file uname=root gname=wheel mode=0755 size=3151 sha256=8534a017a2197a03ae3f0d5f0f7852abb50da059324d2746dd52b008de8d55f2
 ./bin/updateboot type=file uname=root gname=wheel mode=0755 size=598 sha256=853085595d32ff1b611bc46950f931ea97addd4b0967b8753ac1b3c755fed6db
 ./boot type=dir uname=root gname=wheel mode=0755
 ./boot/minix type=dir uname=root gname=wheel mode=0755
 ./boot/minix/.temp type=dir mode=0755
-./boot/minix/.temp/kernel type=file mode=0755 size=196927 sha256=41d2c4191a547f97df6dde9db19c5984474a08d454673c066604d21416a77334
-./boot/minix/.temp/mod01_ds type=file mode=0755 size=106774 sha256=a6a7576ab9a43388ff88680efd3262f249e5b94ce472c6720d17d20177e2734c
-./boot/minix/.temp/mod02_rs type=file mode=0755 size=151846 sha256=2e9e96f0a54439a88d918bf4fcf2eea03ed2c4a217b6290f43496a17e7c445ff
-./boot/minix/.temp/mod03_pm type=file mode=0755 size=114147 sha256=94a4295dc1d50e7d45bf8be0c223e6b3dbd823870c8ad24b8bdb5f223174b8f9
-./boot/minix/.temp/mod04_sched type=file mode=0755 size=69221 sha256=1106b78f8a90ddad61dd2917352381a79a8730b98c628cf99e4908f0df82ae05
-./boot/minix/.temp/mod05_vfs type=file mode=0755 size=250269 sha256=9cb3f3e63ee31de33c1a9a6251e5b84cfe0ddb4d7737a6fb3e676d64586d25a0
-./boot/minix/.temp/mod06_memory type=file mode=0755 size=4574822 sha256=70127490e29fcbef784dd15bd72ee862f06e14cabd72590d633f3540e3d2b555
-./boot/minix/.temp/mod07_tty type=file mode=0755 size=91604 sha256=de4a83f6b3758709df8f8fb094da0fa0abb1d3894f01481787e13b126d0c4845
-./boot/minix/.temp/mod08_mib type=file mode=0755 size=122324 sha256=6aaee9c5596a40832c6abb8903b8761f2e92776c6a2d055a887737c8a6022e06
-./boot/minix/.temp/mod09_vm type=file mode=0755 size=210589 sha256=c2977d08b33f961fe1deba0b84e4013f1ce8032d7ba0a12fbcbcb9492455de00
-./boot/minix/.temp/mod10_pfs type=file mode=0755 size=82655 sha256=4942261e6f5fe1042846cb63026c4fe0762329998ba4a457be06226ff8fcd888
-./boot/minix/.temp/mod11_mfs type=file mode=0755 size=144468 sha256=56913fe6bde78fd94a2845b35549288db5124cb036f11a2f7c617df626c0f03e
-./boot/minix/.temp/mod12_init type=file mode=0755 size=402739 sha256=0e4388bfd1aae56977f849d98c48f2353104f42afc786709d9a659f31f21eb2e
+./boot/minix/.temp/kernel type=file mode=0755 size=201057 sha256=96f5a7f4b03278ca66cb2cbd0b1925320120ef37c5091ccc3b52ed77ce316bda
+./boot/minix/.temp/mod01_ds type=file mode=0755 size=106774 sha256=391e63eed5ae4ef10c298ac32e8ab455d1b7de7cc640b10ce4a272c5b2724e6d
+./boot/minix/.temp/mod02_rs type=file mode=0755 size=152765 sha256=05f3b666071b26ddb07f1c0c066b6aed54b838dad571a9fdfd74442c8c867a39
+./boot/minix/.temp/mod03_pm type=file mode=0755 size=114147 sha256=62ef48121874cac6866505a42b8cf961a2602954052e9cd6336659c47238fde0
+./boot/minix/.temp/mod04_sched type=file mode=0755 size=69221 sha256=e3c7d19ea994b119adae8dd47e2fe77899fdbf4a0db8d456f3430d5208edc714
+./boot/minix/.temp/mod05_vfs type=file mode=0755 size=250360 sha256=43f07423a3a6e1ce1b3994b382ce8d8e2eaa9a8c27bef274e4e8614d7f4f452b
+./boot/minix/.temp/mod06_memory type=file mode=0755 size=4574822 sha256=4e02bdffc2a3b24e12f9c22a8ad88bba037640e854edb95e067fc2f24a1c91f4
+./boot/minix/.temp/mod07_tty type=file mode=0755 size=91604 sha256=af0668a40bd6eaabe419f25b023c31aa6027a675a238ee021fb9b5ff19db2826
+./boot/minix/.temp/mod08_mib type=file mode=0755 size=122324 sha256=0508aa57903c61aeab461c50e8e21e63d3b59361e747b45bf59d3e4278e4e0be
+./boot/minix/.temp/mod09_vm type=file mode=0755 size=210589 sha256=f773500ac8789132c1ea421f92d908f35f46e94f02163678f7a2bf7d07b13267
+./boot/minix/.temp/mod10_pfs type=file mode=0755 size=82655 sha256=7b1791e10b4bc50891d85d9a2acce7df84c94503de0ee256e415f30d8af111e2
+./boot/minix/.temp/mod11_mfs type=file mode=0755 size=144468 sha256=528850734abe836b277c616259d34ffa5b7e95e8a4bd4b925085da950d6a5978
+./boot/minix/.temp/mod12_init type=file mode=0755 size=402739 sha256=0545c10a6d66f1d63e408471ad1905203373e17dc5e6e40a3d49f4fa1777b5ae
 ./boot/minix_default type=dir uname=root gname=wheel mode=0755
 ./dev type=dir uname=root gname=wheel mode=0755
 ./dev/bmp085b1s77 type=char uname=root gname=wheel mode=0444 device=0x3500
@@ -641,7 +633,7 @@
 ./etc/rc.minix type=file uname=root gname=wheel mode=0644 size=5255 sha256=4cbac10f5809b825b17e3d596e9a5fda9ec0152d457ca1d0b3b518b094eab2ce
 ./etc/rc.shutdown type=file uname=root gname=wheel mode=0644 size=1593 sha256=4c02d0bc1a9f70cf2d2d91d4e6ca84f625520cf260fb2e88049bb0f3ab4a1f87
 ./etc/rc.subr type=file uname=root gname=wheel mode=0644 size=32170 sha256=01981ab0f25100ffe2cb0e902bee1174a84f118f5329718cdd1f381236a0be1b
-./etc/release type=file uname=root gname=wheel mode=0444 size=3893 sha256=671d0fa28c8d78b737a7326e6ae5321cfe78023a549923b3bf0234bc0b2d63a3 tags=etc_pkg
+./etc/release type=file uname=root gname=wheel mode=0444 size=3966 sha256=e9f8140534ccc56098eae153020f6e97b61c0fb1dcfde2aa9a8cc77c60a8286f tags=etc_pkg
 ./etc/rs.lwip type=file uname=root gname=wheel mode=0644 size=2572 sha256=1d2ec3ce06d0de6d52c0ad400cb6b9428fc92df156c347745750c7190cfbef4a
 ./etc/rs.single type=file uname=root gname=wheel mode=0644 size=232 sha256=0d124fd2e51b119326dfb7bf6a7e6cd96b4c187fd0e70db7f69b8bb04db37edf
 ./etc/services type=file uname=root gname=wheel mode=0644 size=3268990 sha256=bc6cffd02f96cf380421590d502f71bbe7950649a5fc48861c0976ec4ce116e8
@@ -695,39 +687,6 @@
 ./etc/openssl/misc type=dir uname=root gname=wheel mode=0755
 ./etc/openssl/private type=dir uname=root gname=wheel mode=0700
 ./etc/rc.d type=dir uname=root gname=wheel mode=0755
-./etc/rc.d/DAEMON type=file uname=root gname=wheel mode=0755 size=224 sha256=189682b4d19fe4fcb3f75bced8ebec6dbb024c1e5121e2ea5deff0d2df32977d
-./etc/rc.d/DISKS type=file uname=root gname=wheel mode=0755 size=200 sha256=d8c1e7676c299ad58703485a80e83e477eb84944fd8996a40a969f69bbe6d17c
-./etc/rc.d/LOGIN type=file uname=root gname=wheel mode=0755 size=386 sha256=348bf84c9b6a8131322934e9a9a5277b92db2afebf42de8498d80023f364d70f
-./etc/rc.d/NETWORKING type=file uname=root gname=wheel mode=0755 size=213 sha256=f61696fbfe70d87535b8b793635c4c7357bf9b6a5d66eb3e64a2f7739479a64a
-./etc/rc.d/SERVERS type=file uname=root gname=wheel mode=0755 size=214 sha256=c7d88f309551e2593bc3aff426f394834ff957c36a246b1d4b46aa5ff54572f3
-./etc/rc.d/blacklistd type=file uname=root gname=wheel mode=0755 size=1257 sha256=cc4bf1863a85b23fe1b7319fcba12178000d9ece1665602371c53227a43b86b8
-./etc/rc.d/bootconf.sh type=file uname=root gname=wheel mode=0755 size=1522 sha256=c9e2a42053096679690db0c175b1f5ba50d0c71952244b4b13d140f470d920fa
-./etc/rc.d/dhclient type=file uname=root gname=wheel mode=0755 size=458 sha256=bcb36d90f8d92b6594023217c88d2cb53ba522c4d313571d556ed74a48be6caa
-./etc/rc.d/dhcpcd type=file uname=root gname=wheel mode=0755 size=801 sha256=39cc195ea03af31452d390e8ae672b7fa15b227162c92ecb92ed330d57412c34
-./etc/rc.d/dhcpd type=file uname=root gname=wheel mode=0755 size=525 sha256=716d9de53c02cd2e5abfd30bff9a381dc6b24e64be6ca7ccbd015e25bc63927c
-./etc/rc.d/dhcrelay type=file uname=root gname=wheel mode=0755 size=293 sha256=407926d0268274161a7ec60df9b84191bac0bcbb6899c2594aa8c610871fb9be
-./etc/rc.d/downinterfaces type=file uname=root gname=wheel mode=0755 size=616 sha256=076040669a89874657a1485996042ca15b911be841aacef964c092aa4104073a
-./etc/rc.d/fsck type=file uname=root gname=wheel mode=0755 size=60 sha256=7aa9fa5ea25d4085d079892ed3ac1674c90a884479c01520d1e39b39f34243c9
-./etc/rc.d/ftpd type=file uname=root gname=wheel mode=0755 size=302 sha256=470858d94e9ed1d2a16bfba8d7a6fb26f5b3d681a96c59ff42410ba6dac516fc
-./etc/rc.d/inetd type=file uname=root gname=wheel mode=0755 size=352 sha256=bca92ed571d37f72eb23e5390a56ea12d9a38efe3b13d5ff867da89c3b8ba5fd
-./etc/rc.d/ipfilter type=file uname=root gname=wheel mode=0755 size=1960 sha256=7f650906693babd4be411cbfc5f8bae251a95d4eb311364b56f04b7ec51011d6
-./etc/rc.d/ipsec type=file uname=root gname=wheel mode=0755 size=1551 sha256=b139c789394c70d5f33b1e56da8e766cdc5c3d22da75ee9ba20b92aa9d93ab0b
-./etc/rc.d/local type=file uname=root gname=wheel mode=0755 size=440 sha256=cfa0013011c34e3bca9989c6d233f4a05a41f02fbb2e3db3fa3adbaad71c08a1
-./etc/rc.d/minixrc type=file uname=root gname=wheel mode=0755 size=441 sha256=49352b1625cf5e5eb3a40d0c53f965b62b4dbd3f04684f98af89bbea78edd868
-./etc/rc.d/mountcritlocal type=file uname=root gname=wheel mode=0755 size=69 sha256=8813815e72f0106656437b337788bded81b4953cd31046744e71cf837d030847
-./etc/rc.d/mountcritremote type=file uname=root gname=wheel mode=0755 size=237 sha256=0ba7920e9dd265ebc6f234e3b5c39ca85195ff1c977ec5a8ec96002496a479c1
-./etc/rc.d/named type=file uname=root gname=wheel mode=0755 size=3561 sha256=64a193c85b84eb16726b4ee2ab32a1f04c99cba9f5f9ee674e604ed8dad5414b
-./etc/rc.d/network type=file uname=root gname=wheel mode=0755 size=13860 sha256=77ae1589aeff0e23a21c9762efd57c4abbb0f300776d6f286cde966c0e8314b5
-./etc/rc.d/npf type=file uname=root gname=wheel mode=0755 size=806 sha256=f9db0add022e4d4fe5805768a33c7cfcb2d7657e279d63b6b0da7648f7b0f1b3
-./etc/rc.d/pwcheck type=file uname=root gname=wheel mode=0755 size=453 sha256=a74ed82d2b6193a6587d38c6c3631589faa5f73eeefb4d4d823a614da4fb6bac
-./etc/rc.d/root type=file uname=root gname=wheel mode=0755 size=43 sha256=58462d1feed155414f018e9591d29623b8d27704373cc020ad3acdf990799006
-./etc/rc.d/rtadvd type=file uname=root gname=wheel mode=0755 size=1081 sha256=6b9749aecc5dc6463aec7462ccecb7124580cf70db149696a955fe1c0c05c632
-./etc/rc.d/staticroute type=file uname=root gname=wheel mode=0755 size=892 sha256=c62afbfc6b64eef613710f367460aaddb0026ac14f636e387f62aa6a2d701893
-./etc/rc.d/sysctl type=file uname=root gname=wheel mode=0755 size=391 sha256=e32eb0861b690c7ce817c7314967d4d5f7fc2603f216e09730c3c5730a78e4b7
-./etc/rc.d/sysdb type=file uname=root gname=wheel mode=0755 size=1588 sha256=7a0cb081bc971db645c4bdb53f521f7624fb93b07399d5f12744b19dc549e890
-./etc/rc.d/syslogd type=file uname=root gname=wheel mode=0755 size=1381 sha256=2b22f87eca06f14cb48a0977014be092f1c80ae52fb89b52e67639501267bbcd
-./etc/rc.d/ttys type=file uname=root gname=wheel mode=0755 size=293 sha256=51c1be89a0c4745068e49d7e213ac5619615129a4f110c8c2f917731c2fe7435
-./etc/rc.d/wscons type=file uname=root gname=wheel mode=0755 size=2597 sha256=54dc117ee7ad1b56cf72ac355f1e72c283b8858569c06da0e246fc12186b058b
 ./etc/saslc.d type=dir uname=root gname=wheel mode=0755
 ./etc/saslc.d/postfix type=dir uname=root gname=wheel mode=0755
 ./etc/saslc.d/postfix/mech type=dir uname=root gname=wheel mode=0755
@@ -740,13 +699,6 @@
 ./etc/skel/.profile type=file uname=root gname=wheel mode=0644 size=1517 sha256=59185989eb7ec615cafe9feff1f53dc6b49751c16ffc71b273dd355fb8e8ef8d
 ./etc/skel/.shrc type=file uname=root gname=wheel mode=0644 size=166 sha256=48ecee647f7ca1283a0a0bfed04557e26365cfe4b70babb957a5370dc4bb954c
 ./etc/system.conf.d type=dir uname=root gname=wheel mode=0755
-./etc/system.conf.d/hello type=file uname=root gname=wheel mode=0644 size=240 sha256=abc227ae0a29d8a21928c6675855bc292e597a78461ec74f4e112e3638055969
-./etc/system.conf.d/ipc type=file uname=root gname=wheel mode=0644 size=178 sha256=9eac5accff5573070fcf40e7658ceb865619fc5338b8222b3780a73dae1d0333
-./etc/system.conf.d/lwip type=file uname=root gname=wheel mode=0644 size=112 sha256=25c29c8e59b28f8ba5bb5116b79510ebfc4d8413444e2886ac047b9f512a8abc
-./etc/system.conf.d/random type=file uname=root gname=wheel mode=0644 size=21 sha256=869e14a4da615adcf364fcf3dc893d0203e23f432f10952a45152e6dc2a55648
-./etc/system.conf.d/uds type=file uname=root gname=wheel mode=0644 size=133 sha256=e1a1feb99ebde67ee676c92afacde09083260c576e98dfcc9fdfc40d8a072199
-./etc/system.conf.d/usb_hub type=file uname=root gname=wheel mode=0644 size=207 sha256=2320d085fa481a5579e9968d8bf4aa7d574ef3f441f94f329785160ff70dfa84
-./etc/system.conf.d/usb_storage type=file uname=root gname=wheel mode=0644 size=211 sha256=e9b5330f3915c2c71fccce8f93846f4824e48d18891784b6a089722dd91775c9
 ./home type=dir uname=root gname=wheel mode=0755
 ./lib type=dir uname=root gname=wheel mode=0755
 ./libexec type=dir uname=root gname=wheel mode=0755
@@ -774,68 +726,68 @@
 ./root/.profile type=file uname=root gname=wheel mode=0644 size=904 sha256=fb83b67ec520cab2b952622f3fe709641e928f61d8df39facaea658939c56045
 ./root/.shrc type=file uname=root gname=wheel mode=0644 size=221 sha256=4750e1eff03fdeec6fe1f329d2a0c72b158dd3de75d5727b328719d0f8e1e280
 ./sbin type=dir uname=root gname=wheel mode=0755
-./sbin/blacklistctl type=file uname=root gname=wheel mode=0755 size=510708 sha256=4c75e07183ea733e704108367188cac33942438adad5045f41a8ce14411539a0
-./sbin/blacklistd type=file uname=root gname=wheel mode=0755 size=543001 sha256=8db53a5b4daa63a8a83df8a26958e3ffb7c5830af50468a65f29da5b153720ba
-./sbin/chown type=file uname=root gname=wheel mode=0755 size=369506 sha256=1796257ffe8b5fa156432ffb6b6bee59a6b65f8e6da293f56476497996a179a3
-./sbin/dhclient type=file uname=root gname=wheel mode=0755 size=4355446 sha256=426aaa04f5b99cfa02b8747fb9f2ca89597ed9113c59f7ef50da13315c218c2a
+./sbin/blacklistctl type=file uname=root gname=wheel mode=0755 size=510708 sha256=a00afd9b3d05a44eef4b7d5cb9becbd5a560feaf05ebc87efc21e03cff8499ca
+./sbin/blacklistd type=file uname=root gname=wheel mode=0755 size=543001 sha256=318dae0c94598de2e4cd944dc38ee09ea5fd251d34210a677395ea7eccaec632
+./sbin/chown type=file uname=root gname=wheel mode=0755 size=369506 sha256=06ceec6aec7d75b100d585765da0e9e54835bde3c080d9dcc77dad9fad25640b
+./sbin/dhclient type=file uname=root gname=wheel mode=0755 size=4355446 sha256=57d6bd65b795cc60055d632a7885d68ac1e0b84598627a4ec16d0e94466c68ac
 ./sbin/dhclient-script type=file uname=root gname=wheel mode=0755 size=6228 sha256=1ec962e1ac8cd396385f61b6445016409c0556a89a6c9fd70fb82a2d0360575e
-./sbin/dhcpcd type=file uname=root gname=wheel mode=0755 size=569849 sha256=dd69125d661a5fe94cb770038b04a6afdd2984ec578cf1f77a0378844c8acaf0
-./sbin/fsck type=file uname=root gname=wheel mode=0755 size=224654 sha256=9883aab13de0f94faf1647e60c2825ae8bfd65a99dde2cb142e48408f8929378
-./sbin/fsck_ext2fs type=file uname=root gname=wheel mode=0755 size=357363 sha256=4ed0f7a09346e54df8d1118ec17d76df98011120c0407a2ff19fbfd56684c1e4
-./sbin/fsck_mfs type=file uname=root gname=wheel mode=0755 size=215911 sha256=137d0436256feae8a6336eee981ccaf4430f70599b93d9de5a89f70f24c8dbab
-./sbin/halt type=file uname=root gname=wheel mode=0755 size=333481 sha256=e7aa68fcfdae524546c56c50e17d7b6e1225b25264125426b2630954bb498c36
-./sbin/ifconfig type=file uname=root gname=wheel mode=0755 size=564283 sha256=03f1dcd3a56c0b3f2ee4dcbf4cffff335e91b23e5682f4443b7ba2e508bdbb8a
-./sbin/init type=file uname=root gname=wheel mode=0755 size=402739 sha256=0e4388bfd1aae56977f849d98c48f2353104f42afc786709d9a659f31f21eb2e
-./sbin/minix-service type=file uname=root gname=wheel mode=0755 size=343733 sha256=c90b190125f7342a3fb5b1e2c7d2ec0dd5afba1bae23db01ea5bee7431d8d897
+./sbin/dhcpcd type=file uname=root gname=wheel mode=0755 size=569849 sha256=5a7c800354504f99406ce8b391695280cb09a7c799dc63c4da550daf2ac658dd
+./sbin/fsck type=file uname=root gname=wheel mode=0755 size=224654 sha256=a5872369f680dfef2a82594dd527aa59338e73b93cc7978c93984c94f62b6ff3
+./sbin/fsck_ext2fs type=file uname=root gname=wheel mode=0755 size=357363 sha256=e6ff539a63a5326cf076cc56f57f0f41095defe772e3e609a8e1d7537ef670cb
+./sbin/fsck_mfs type=file uname=root gname=wheel mode=0755 size=215911 sha256=3771cb67abd469256760fd90377a78a1ea64b0adf65047e457de4da5029e0494
+./sbin/halt type=file uname=root gname=wheel mode=0755 size=333481 sha256=3b37adcbf85ecc1fff0289ac1b96be1e2236f14dd8fc7ca92abab08bd5e17b80
+./sbin/ifconfig type=file uname=root gname=wheel mode=0755 size=564283 sha256=5e423b72a6c55266fb56e06e264d446d34e08d197170c750f60a6488df89a9af
+./sbin/init type=file uname=root gname=wheel mode=0755 size=402739 sha256=0545c10a6d66f1d63e408471ad1905203373e17dc5e6e40a3d49f4fa1777b5ae
+./sbin/minix-service type=file uname=root gname=wheel mode=0755 size=343733 sha256=789ee6c97eeea0107c3ca35dd472e5ace80807777aad09de04603a098226aa74
 ./sbin/mkfs.mfs type=link mode=0755 link=/usr/sbin/mkfs.mfsv3
-./sbin/mknod type=file uname=root gname=wheel mode=0755 size=334358 sha256=aa9fe580e3d266a665c8b1858dde08e737d5aa874a9b035d48a7c5cf2cc3b71f
-./sbin/newfs_ext2fs type=file uname=root gname=wheel mode=0755 size=230791 sha256=4cc540b9687f0a30a188351fb5096bb8ab99b1b73e5884d8a5e0568333a3e78f
-./sbin/newfs_msdos type=file uname=root gname=wheel mode=0755 size=221748 sha256=094b9b8d78e62ac455dc143f340ce93c5fb7e4b24351ce78f723a28d76547913
-./sbin/newfs_udf type=file uname=root gname=wheel mode=0755 size=370041 sha256=62c07fa49e02743ac11abfbc13642ce69df1bc07fc5d88b1b955be76f957b557
-./sbin/newfs_v7fs type=file uname=root gname=wheel mode=0755 size=211780 sha256=5597375e85703f882b7df733c2c99b37894ccba7fca1890e246af6eb38dd4825
+./sbin/mknod type=file uname=root gname=wheel mode=0755 size=334358 sha256=3b65993ef6ebad71d9182d7876a65277848c3070f644efce7c6c17fc7f8fdfb6
+./sbin/newfs_ext2fs type=file uname=root gname=wheel mode=0755 size=230791 sha256=9cd197373dbe11232280fad83a47eea4c9ddc0fd4e4946fbac5cc9a008f83419
+./sbin/newfs_msdos type=file uname=root gname=wheel mode=0755 size=221748 sha256=bcdeae5ff0ce7380268d55944302716f00a7bf3f576aa6466f73349ee1a19d65
+./sbin/newfs_udf type=file uname=root gname=wheel mode=0755 size=370041 sha256=86d31720d30d215f50d9e9eb1b18c45c19a105ff28a9540b2c6e44d348683004
+./sbin/newfs_v7fs type=file uname=root gname=wheel mode=0755 size=211780 sha256=e04343ef3da3d0a177c681454116b12203769b0b042b7bd68f2231ccbe91c130
 ./sbin/nologin type=file uname=root gname=wheel mode=0755 size=66 sha256=e35dc0730804dfc4dac727f4fa8c5c8e146fba7e63a387ceb133fbc2eed145ba
-./sbin/ping type=file uname=root gname=wheel mode=04555 size=431963 sha256=b9f2f12f6918669e5f860a33ebb1ace56aec2477656defedfd9b426b4747ee02
-./sbin/ping6 type=file uname=root gname=wheel mode=04555 size=443439 sha256=3fc77570341af3de52d47df524f399c4d0b7a9e01b05e270ef84720af472b871
-./sbin/poweroff type=file uname=root gname=wheel mode=0755 size=333481 sha256=e7aa68fcfdae524546c56c50e17d7b6e1225b25264125426b2630954bb498c36
-./sbin/printconfig type=file uname=root gname=wheel mode=0755 size=333923 sha256=774566fe1aa577e85397ff72454c2e294089a01086fe45de5f9256ac9023b5d5
-./sbin/rcorder type=file uname=root gname=wheel mode=0755 size=204002 sha256=2245ef1e6105712823e569b83f812251a3a4943d19565e446e6e9d99026a0abb
-./sbin/reboot type=file uname=root gname=wheel mode=0755 size=333481 sha256=e7aa68fcfdae524546c56c50e17d7b6e1225b25264125426b2630954bb498c36
+./sbin/ping type=file uname=root gname=wheel mode=04555 size=431963 sha256=72894957dafe2a8849421dc004840e2ac1dff96140520ced5484bdc8a2f1c8d3
+./sbin/ping6 type=file uname=root gname=wheel mode=04555 size=443439 sha256=7d38f4a18cf6bf0735817ee452e61f1277d1045d00b0cd14f67ae764fd55c20f
+./sbin/poweroff type=file uname=root gname=wheel mode=0755 size=333481 sha256=3b37adcbf85ecc1fff0289ac1b96be1e2236f14dd8fc7ca92abab08bd5e17b80
+./sbin/printconfig type=file uname=root gname=wheel mode=0755 size=333923 sha256=3658e94499ff7cfd7568f6593e6e1b7442757f03fd5433eda9552e25c8cba729
+./sbin/rcorder type=file uname=root gname=wheel mode=0755 size=204002 sha256=c8e764b1bb1096f52eaf47273c0fca329aa2f7ed1e9880e304698f54f565cc46
+./sbin/reboot type=file uname=root gname=wheel mode=0755 size=333481 sha256=3b37adcbf85ecc1fff0289ac1b96be1e2236f14dd8fc7ca92abab08bd5e17b80
 ./sbin/resolvconf type=file uname=root gname=wheel mode=0755 size=17207 sha256=919c1bc50eece2eb14637e0e8fbce5b66b1d4a9f8e6819163e09b7c834a66e5d
-./sbin/route type=file uname=root gname=wheel mode=0755 size=421933 sha256=e07d7c246839ecd1dc6349cbdb9f12b03797a298f696126ec46db70269a5ae58
-./sbin/shutdown type=file uname=root gname=wheel mode=04554 size=325451 sha256=12bc756715084f469db746b03cd746c7e0f83dcc78de0dfeb754046db8fb9c8b
-./sbin/sysctl type=file uname=root gname=wheel mode=0755 size=284424 sha256=5f911a09354bb073b2fb30b340d9b6142b1391bd0682b531eeec2d7c5eb6cce7
+./sbin/route type=file uname=root gname=wheel mode=0755 size=421933 sha256=3cebfe1d6541a421f1f66d1f101a01eae8cbee5f5b8961761b00629c8dfeaa4c
+./sbin/shutdown type=file uname=root gname=wheel mode=04554 size=325451 sha256=263573ba031eaddb7420a74ca1f7991c65a028b2eacfe19999d66ac62e3fbb5b
+./sbin/sysctl type=file uname=root gname=wheel mode=0755 size=284424 sha256=fb3df23a53a7e863c7ac53682a2d32ac79f3c8843ba793c68b7c30e5fd465837
 ./service type=dir uname=root gname=wheel mode=0755
 ./service/asr type=link mode=0755 link=/usr/service/asr
-./service/devman type=file uname=root gname=wheel mode=0755 size=105536 sha256=5ccfd7aa87c64906efed8018db2bcce884cb14ed8b0a597f9b2173e420cd91c2
-./service/ds type=file uname=root gname=wheel mode=0755 size=106774 sha256=a6a7576ab9a43388ff88680efd3262f249e5b94ce472c6720d17d20177e2734c
-./service/ext2 type=file uname=root gname=wheel mode=0755 size=154165 sha256=4835b0e6898a71240646f6a8622652156ba03e3a303d24cc83aa2698f55722b7
-./service/hello type=file uname=root gname=wheel mode=0755 size=73604 sha256=ec56af265275e71a7c9c015dea7f6dc2b128c72edb961f0b0df80161e0bbdcc0
-./service/input type=file uname=root gname=wheel mode=0755 size=77866 sha256=9aaa19d8ea0dbb982c5002f380256f1f1e3c32c94041acbe8b49ebd175a06be4
-./service/ipc type=file uname=root gname=wheel mode=0755 size=86473 sha256=bd646278ab09483f22b46234ae6ec59d5ba74f2f343345604f787b7ce851a62e
-./service/is type=file uname=root gname=wheel mode=0755 size=81013 sha256=96de8a60a70df05fac4190e0965bf72da66d1f580d8bce442d4a3e738a70576c
-./service/isofs type=file uname=root gname=wheel mode=0755 size=155331 sha256=f2ee81e602ea93a1087137293710c39be23ccd3784401f2d3d2f02a6c10c38ba
-./service/log type=file uname=root gname=wheel mode=0755 size=79134 sha256=374acc034df1f636ff1b92d14ce53f83c740c2d151918e8390eb5cea0158a098
-./service/lwip type=file uname=root gname=wheel mode=0755 size=428641 sha256=5f51237d35bd8a579e609de96444cda194806574da22fff281001c242012ce36
-./service/memory type=file uname=root gname=wheel mode=0755 size=4574822 sha256=70127490e29fcbef784dd15bd72ee862f06e14cabd72590d633f3540e3d2b555
-./service/mfs type=file uname=root gname=wheel mode=0755 size=144468 sha256=56913fe6bde78fd94a2845b35549288db5124cb036f11a2f7c617df626c0f03e
-./service/mib type=file uname=root gname=wheel mode=0755 size=122324 sha256=6aaee9c5596a40832c6abb8903b8761f2e92776c6a2d055a887737c8a6022e06
-./service/pfs type=file uname=root gname=wheel mode=0755 size=82655 sha256=4942261e6f5fe1042846cb63026c4fe0762329998ba4a457be06226ff8fcd888
-./service/pm type=file uname=root gname=wheel mode=0755 size=114147 sha256=94a4295dc1d50e7d45bf8be0c223e6b3dbd823870c8ad24b8bdb5f223174b8f9
-./service/procfs type=file uname=root gname=wheel mode=0755 size=115287 sha256=a7f240412588c843eaa098905d647344432bd829b7d8155129aa5fb16626a9a0
-./service/pty type=file uname=root gname=wheel mode=0755 size=95026 sha256=abb5d6bf1a5c41e7dab13b3e7f9426eddcb9f86d24f6bff8e7d1a101aee29333
-./service/ptyfs type=file uname=root gname=wheel mode=0755 size=86305 sha256=5657872e5bf9c281a42f30a3a1ac8c9e31b78042ba2bea62586b0d89a5715fd1
-./service/random type=file uname=root gname=wheel mode=0755 size=113326 sha256=8d897b0c7040f1315e4f7fcb6501f5621728242d9a081dddd08882e1ce8267f4
-./service/readclock.drv type=file uname=root gname=wheel mode=0755 size=93584 sha256=5add1df313bf76e7e1b86126a7c68f43b7cf361aa2238d87de782170bcdc98c8
-./service/rs type=file uname=root gname=wheel mode=0755 size=151846 sha256=2e9e96f0a54439a88d918bf4fcf2eea03ed2c4a217b6290f43496a17e7c445ff
-./service/sched type=file uname=root gname=wheel mode=0755 size=69221 sha256=1106b78f8a90ddad61dd2917352381a79a8730b98c628cf99e4908f0df82ae05
-./service/tty type=file uname=root gname=wheel mode=0755 size=91604 sha256=de4a83f6b3758709df8f8fb094da0fa0abb1d3894f01481787e13b126d0c4845
-./service/uds type=file uname=root gname=wheel mode=0755 size=132368 sha256=98a0cb501cb99dba9c5c46251a2db0b9ca19c6afe4130d52d9640d5dfc3ffd46
-./service/usb_hub type=file uname=root gname=wheel mode=0755 size=101881 sha256=b8b63a893357c20365258a62c7682910f1b463fea3f2e6d01a7e9b2f4bce0137
-./service/usb_storage type=file uname=root gname=wheel mode=0755 size=127550 sha256=3180ea1142977d5093360957c0f12e3f8bf4aafe2a256346507a50128623dd7f
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250269 sha256=9cb3f3e63ee31de33c1a9a6251e5b84cfe0ddb4d7737a6fb3e676d64586d25a0
-./service/virtio_blk_mmio type=file uname=root gname=wheel mode=0755 size=109898 sha256=90f40063f917cefc8f470d65a07b96e0f2773767f0c0bfdea65ccd9070f5a6f3
-./service/vm type=file uname=root gname=wheel mode=0755 size=210589 sha256=c2977d08b33f961fe1deba0b84e4013f1ce8032d7ba0a12fbcbcb9492455de00
-./service/vnd type=file uname=root gname=wheel mode=0755 size=87062 sha256=aa75df8995b9eca9b45e49c68b6d0465e7b9bc6b88ab5e6b1f31d945d176ff32
+./service/devman type=file uname=root gname=wheel mode=0755 size=105536 sha256=702c3118ca4a2fb963479108ece3734101e2be071daa9c3c9411495a1b4a8dde
+./service/ds type=file uname=root gname=wheel mode=0755 size=106774 sha256=391e63eed5ae4ef10c298ac32e8ab455d1b7de7cc640b10ce4a272c5b2724e6d
+./service/ext2 type=file uname=root gname=wheel mode=0755 size=154165 sha256=5c2d96e1bfdb205559d848734ff689ea95e7a058addaafff0f344cb25c9d1128
+./service/hello type=file uname=root gname=wheel mode=0755 size=73604 sha256=191f2c2bd81ad3633c314e490085594cc36d19b806a95db3fe750f0c74f8d868
+./service/input type=file uname=root gname=wheel mode=0755 size=77866 sha256=35f6b5430b3b55262b3d72933f08f883b6d45c9065b87f38f00671fa8bf9ae95
+./service/ipc type=file uname=root gname=wheel mode=0755 size=86473 sha256=bfee82314da740441a54ea71d8cc2fee41e6a1f0718aa5c1494f14d3dd5dd797
+./service/is type=file uname=root gname=wheel mode=0755 size=81013 sha256=5f981f8d0ef8f272842650d4a7b11b5d283ed89ac453d16d3209e4a5596ef88c
+./service/isofs type=file uname=root gname=wheel mode=0755 size=155331 sha256=1812ec7b3e475fa6fddff70c99fff618971e20b16728d55bc121f61b88b70c0f
+./service/log type=file uname=root gname=wheel mode=0755 size=79134 sha256=f3dce7464784f5b398398afd32cee2b087f116486ea7fb90e81bc59aa0401ebf
+./service/lwip type=file uname=root gname=wheel mode=0755 size=428641 sha256=6f2b764f94db0eab91a3e6d2d5901040c134914c51658d1578ef1f517dcc1102
+./service/memory type=file uname=root gname=wheel mode=0755 size=4574822 sha256=4e02bdffc2a3b24e12f9c22a8ad88bba037640e854edb95e067fc2f24a1c91f4
+./service/mfs type=file uname=root gname=wheel mode=0755 size=144468 sha256=528850734abe836b277c616259d34ffa5b7e95e8a4bd4b925085da950d6a5978
+./service/mib type=file uname=root gname=wheel mode=0755 size=122324 sha256=0508aa57903c61aeab461c50e8e21e63d3b59361e747b45bf59d3e4278e4e0be
+./service/pfs type=file uname=root gname=wheel mode=0755 size=82655 sha256=7b1791e10b4bc50891d85d9a2acce7df84c94503de0ee256e415f30d8af111e2
+./service/pm type=file uname=root gname=wheel mode=0755 size=114147 sha256=62ef48121874cac6866505a42b8cf961a2602954052e9cd6336659c47238fde0
+./service/procfs type=file uname=root gname=wheel mode=0755 size=115287 sha256=2d35b3a6121fa17723332a029ce4d410f477b03a1f7f7f3380369acce3a7121b
+./service/pty type=file uname=root gname=wheel mode=0755 size=95026 sha256=ea07d81706483e3b18b46ae35abe07b10070db2f212f85c370e0a024a260c65e
+./service/ptyfs type=file uname=root gname=wheel mode=0755 size=86305 sha256=6635d8d86b53bcae54014948df740363de55cd8d64fc5e1111f204932d89e65d
+./service/random type=file uname=root gname=wheel mode=0755 size=113326 sha256=703277b86b81420e3e5ce07bd2adf1ce147218726205a9acd74f1993225ded15
+./service/readclock.drv type=file uname=root gname=wheel mode=0755 size=93584 sha256=5791445b6ba0a9db863af4b204e5a5f37e9537095be727fbca3711cb7175b19f
+./service/rs type=file uname=root gname=wheel mode=0755 size=152765 sha256=05f3b666071b26ddb07f1c0c066b6aed54b838dad571a9fdfd74442c8c867a39
+./service/sched type=file uname=root gname=wheel mode=0755 size=69221 sha256=e3c7d19ea994b119adae8dd47e2fe77899fdbf4a0db8d456f3430d5208edc714
+./service/tty type=file uname=root gname=wheel mode=0755 size=91604 sha256=af0668a40bd6eaabe419f25b023c31aa6027a675a238ee021fb9b5ff19db2826
+./service/uds type=file uname=root gname=wheel mode=0755 size=132368 sha256=f5001e7c994a2f9f6edb4d64be5316fbb5b31f4f81d2095c7b3d5bc2ed202ceb
+./service/usb_hub type=file uname=root gname=wheel mode=0755 size=101881 sha256=090ebfbd8665a78bea15fb4d0c23a4b1bd9f1d00272e9ab08ae6ef4e799137f3
+./service/usb_storage type=file uname=root gname=wheel mode=0755 size=127550 sha256=bce8b4b620baab30c5068a6d1fbaeecec16188705c45388051fc909455e72375
+./service/vfs type=file uname=root gname=wheel mode=0755 size=250360 sha256=43f07423a3a6e1ce1b3994b382ce8d8e2eaa9a8c27bef274e4e8614d7f4f452b
+./service/virtio_blk_mmio type=file uname=root gname=wheel mode=0755 size=109898 sha256=8c6fa8e89ac538bb339669543ff0a25838e78e2f6abe94accfaee1af974c410f
+./service/vm type=file uname=root gname=wheel mode=0755 size=210589 sha256=f773500ac8789132c1ea421f92d908f35f46e94f02163678f7a2bf7d07b13267
+./service/vnd type=file uname=root gname=wheel mode=0755 size=87094 sha256=d92624e6c08ebf2ac4c21c5d18485e4a90c4bf21d2e1cd8bc0d022d8a9181a87
 ./sys type=dir uname=root gname=wheel mode=0755
 ./tmp type=dir uname=root gname=wheel mode=01777
 ./usr type=dir uname=root gname=wheel mode=0755
@@ -845,307 +797,307 @@
 ./usr/bin type=dir uname=root gname=wheel mode=0755
 ./usr/bin/DESCRIBE type=file uname=root gname=wheel mode=0755 size=5197 sha256=e3ea37b364b2c42058c9bacb52efa2d452bcb2839e25bad17e4d2ee1873be109
 ./usr/bin/MAKEDEV type=file uname=root gname=wheel mode=0755 size=12218 sha256=62a3b07da0703bc671c78375f88158851223c6f633c8f4236d0afc76351e9841
-./usr/bin/apropos type=file uname=root gname=wheel mode=0755 size=336071 sha256=593f4c80bac0dd09709ed4c128d336311eac0be9784eb127a275721c3aeb5b3f
-./usr/bin/arpaname type=file uname=root gname=wheel mode=0755 size=185798 sha256=5d87d8d4e4c630b57d6b8b81d5b1f50ec4d069c90aa120164d9c39a1c69c3c59
-./usr/bin/asa type=file uname=root gname=wheel mode=0755 size=187725 sha256=ac4116cd25fd0ff24de89fb6a1b2debab4238d2e040662d0c7868c41fab13745
-./usr/bin/at type=file uname=root gname=wheel mode=04755 size=200684 sha256=59455ddbb88eeacd2df84598c704291bba977d1e093ee359d5e4cc3c37fcabba
-./usr/bin/atnormalize type=file uname=root gname=wheel mode=0755 size=185921 sha256=a8d1eaa47cbd0fc70dc2ea0f8011c6394e22ca7f3d4c04511fd2b8fcf6d642d2
-./usr/bin/autopart type=file uname=root gname=wheel mode=0755 size=335954 sha256=b7950dc2ff9de86c248b8d2c0b9a27d44df7d8434a71db4cf27f86f327a36773
-./usr/bin/awk type=file uname=root gname=wheel mode=0755 size=479717 sha256=2c987594e2444125b205853b1c6e8d11c2b1dc4ddafe3b258963507fcd3129b7
-./usr/bin/backup type=file uname=root gname=wheel mode=0755 size=202609 sha256=88f7226fdb292bdae3f8abe82cd540f575c296917615a759863de6405b08e7ba
-./usr/bin/banner type=file uname=root gname=wheel mode=0755 size=187215 sha256=d90675257b1249a65b541853ec172b785765677e2e9dd3af0960b095bd93917a
-./usr/bin/basename type=file uname=root gname=wheel mode=0755 size=208086 sha256=57590fd9be83025aaf21af6bab6d5f685fd5b88fffb3b2bf8a0a828028a9600b
-./usr/bin/bdes type=file uname=root gname=wheel mode=0755 size=245584 sha256=275e524fb5f8cc63b8d1aaf52630ee455fd28ab3896d82594c176b2b271f602a
+./usr/bin/apropos type=file uname=root gname=wheel mode=0755 size=336071 sha256=0cb3545415e1c14bebf986aad96729544f620ce31562b08803f2e0239a9a6874
+./usr/bin/arpaname type=file uname=root gname=wheel mode=0755 size=185798 sha256=8866492d72e157bbf87e534b8d898cae47a541b7446c580dee3966b8c91a9c2b
+./usr/bin/asa type=file uname=root gname=wheel mode=0755 size=187725 sha256=ce94445a8db79b87987dc454e45421e7212a83fd616f1bbee2e04af456658dd7
+./usr/bin/at type=file uname=root gname=wheel mode=04755 size=200684 sha256=5a0e084347daf25f52b602b69683e5c0c0db8d5dc6c5b33c027d5186c02f7896
+./usr/bin/atnormalize type=file uname=root gname=wheel mode=0755 size=185921 sha256=5d92a90c80349526525ac039168365567cd2e4cb09581652dbda149c288010df
+./usr/bin/autopart type=file uname=root gname=wheel mode=0755 size=335954 sha256=ab99b1cf4af9a6fa6f7d47763420365a58be7b221e4616867e4722c8dda0f876
+./usr/bin/awk type=file uname=root gname=wheel mode=0755 size=479717 sha256=33db2af4b40aba0226dc0db951022a50d07bdcbcef6a6ce808b9e474efed18c5
+./usr/bin/backup type=file uname=root gname=wheel mode=0755 size=202609 sha256=0a1d2c912e303f0f66ccdf104b5942f8879df21be18c8aad55d3c4aaf70378c7
+./usr/bin/banner type=file uname=root gname=wheel mode=0755 size=187215 sha256=f3976009709381de4e76dfd42b04e22b545b487b876048f7be6532ecd62accbd
+./usr/bin/basename type=file uname=root gname=wheel mode=0755 size=208086 sha256=0c2d1cd075b04e137019ab6012a2b0a6250de812d21f53469d6f35664c70b529
+./usr/bin/bdes type=file uname=root gname=wheel mode=0755 size=245288 sha256=c9c0bd8065f0b8543f487e2ff6f94ca9b5166aa296ba616105a84cf6b7cf21d1
 ./usr/bin/bsdtar type=link mode=0755 link=/bin/tar
-./usr/bin/bsfilt type=file uname=root gname=wheel mode=0755 size=186500 sha256=3371e34e4f2946ee74b4cb887887992f8f7b7c37e4f0b89c08eddd80badc64c3
-./usr/bin/bunzip2 type=file uname=root gname=wheel mode=0755 size=280132 sha256=96910163382fb21b646b714a65649e776334dc6a4e23f3b23eb637b821e312f4
-./usr/bin/bzcat type=file uname=root gname=wheel mode=0755 size=280132 sha256=96910163382fb21b646b714a65649e776334dc6a4e23f3b23eb637b821e312f4
-./usr/bin/bzip2 type=file uname=root gname=wheel mode=0755 size=280132 sha256=96910163382fb21b646b714a65649e776334dc6a4e23f3b23eb637b821e312f4
-./usr/bin/bzip2recover type=file uname=root gname=wheel mode=0755 size=195741 sha256=2b11f538633a32bbdf4be951850cba0d7d8d0e6de047074a9f7f4fb511868c2d
-./usr/bin/cal type=file uname=root gname=wheel mode=0755 size=294815 sha256=621dc099dee5bbb9ee183b5dd03bb70864aa91dedac8865f9c5a465ac69a09ed
-./usr/bin/calendar type=file uname=root gname=wheel mode=0755 size=340452 sha256=ff78fd913b90aaa9bcbe387fd6b4c3ae964fc82b541e1cb8dfb8ab9a38075036
-./usr/bin/cawf type=file uname=root gname=wheel mode=0755 size=243053 sha256=6a3b41cf39933720a9d1961edbb0578682d24cf3469cdaab40b825ade49a5883
-./usr/bin/cdprobe type=file uname=root gname=wheel mode=0755 size=185940 sha256=1989bfc982f851f975c517ab9ac5ce7bbc9821f86cbd545fc9231c14675fb62a
-./usr/bin/checknr type=file uname=root gname=wheel mode=0755 size=202395 sha256=732cc1a0d5c6e205f1a4aa85a0a31fdd08500e598c32abc346b9c98cc6b54e3c
-./usr/bin/chfn type=file uname=root gname=wheel mode=04555 size=354948 sha256=703df700f7c5c5e7623b9d16d3ce2cb478499fdde1df861dd1173cfc7385992b
+./usr/bin/bsfilt type=file uname=root gname=wheel mode=0755 size=186500 sha256=dc10337f8033f48c17dedcd7f17bfe92d414199789e913c81969db68c1fc4275
+./usr/bin/bunzip2 type=file uname=root gname=wheel mode=0755 size=280132 sha256=ecd47bf987aad80670fb4fba0174e3122ce491bc14f979098efefe23eb32d1e3
+./usr/bin/bzcat type=file uname=root gname=wheel mode=0755 size=280132 sha256=ecd47bf987aad80670fb4fba0174e3122ce491bc14f979098efefe23eb32d1e3
+./usr/bin/bzip2 type=file uname=root gname=wheel mode=0755 size=280132 sha256=ecd47bf987aad80670fb4fba0174e3122ce491bc14f979098efefe23eb32d1e3
+./usr/bin/bzip2recover type=file uname=root gname=wheel mode=0755 size=195741 sha256=7b99ac3f3ed985dbbdde519209bdcb8eeb7a54d08d3d1eb949b07ca119406383
+./usr/bin/cal type=file uname=root gname=wheel mode=0755 size=294815 sha256=5522514e03d5fe8eb723c0954e19634c2842a4753b8630a8700d72cb91ee94e3
+./usr/bin/calendar type=file uname=root gname=wheel mode=0755 size=340452 sha256=a6eca5d82516ea7cd23e3d7bfc2b76dac0daee71e43e2989bcbf8c82e1e4ebc0
+./usr/bin/cawf type=file uname=root gname=wheel mode=0755 size=243053 sha256=21cc7d1818dc7b1d0ae69ee1336731a53236433e9cf0abb7c9111722af71a33f
+./usr/bin/cdprobe type=file uname=root gname=wheel mode=0755 size=185940 sha256=2ba07bc3bd8a53e7645fd72ef28055d3cdab446718561829a038119fc03a4fe3
+./usr/bin/checknr type=file uname=root gname=wheel mode=0755 size=202395 sha256=c53afb56b42e336d5f83947885eecf573edee35e6cae90b2c6caee54d89d7c94
+./usr/bin/chfn type=file uname=root gname=wheel mode=04555 size=354948 sha256=8de30a421d6f35252a397e94a983f74da56379792dfef2e142b404dc9ef46d10
 ./usr/bin/chgrp type=link mode=0755 link=/sbin/chown
-./usr/bin/chpass type=file uname=root gname=wheel mode=04555 size=354948 sha256=703df700f7c5c5e7623b9d16d3ce2cb478499fdde1df861dd1173cfc7385992b
-./usr/bin/chsh type=file uname=root gname=wheel mode=04555 size=354948 sha256=703df700f7c5c5e7623b9d16d3ce2cb478499fdde1df861dd1173cfc7385992b
-./usr/bin/cksum type=file uname=root gname=wheel mode=0755 size=273380 sha256=2004e886016082a28865dca8401fc31142a647e408ad8d28efeb55a5ca4927b7
-./usr/bin/cleantmp type=file uname=root gname=wheel mode=0755 size=196274 sha256=d9afd101cc461b163f044b29835f9004a0286b649e32129da648469e6fb1d7e7
+./usr/bin/chpass type=file uname=root gname=wheel mode=04555 size=354948 sha256=8de30a421d6f35252a397e94a983f74da56379792dfef2e142b404dc9ef46d10
+./usr/bin/chsh type=file uname=root gname=wheel mode=04555 size=354948 sha256=8de30a421d6f35252a397e94a983f74da56379792dfef2e142b404dc9ef46d10
+./usr/bin/cksum type=file uname=root gname=wheel mode=0755 size=273380 sha256=ca511d96a4c981aa6c71b41c186ad41a4d62e0d00fee40970980a6c57704836c
+./usr/bin/cleantmp type=file uname=root gname=wheel mode=0755 size=196274 sha256=83b50f3b52ec8df5e2d8e60d6d436188021cf10ed11619e0f5172a3b00b30843
 ./usr/bin/clear type=file uname=root gname=wheel mode=0755 size=1922 sha256=4a3c7afa874e1e4878a57bf2c8b43c531d6bb061fa48ce8f6bb876d211f2aded
-./usr/bin/cmp type=file uname=root gname=wheel mode=0755 size=215152 sha256=e678c130d9cf356e8b5c5200ef43b061c31785f230f603feacfb5f41bd4ce139
-./usr/bin/col type=file uname=root gname=wheel mode=0755 size=196962 sha256=442089b8c61b740989eaed107d78f8dc211550a2bb26a3f951246a57c1ca617d
-./usr/bin/colcrt type=file uname=root gname=wheel mode=0755 size=195300 sha256=a945732159076d63402080b9eef3cf33df212a07efa5caea5fca466d86fee323
-./usr/bin/colrm type=file uname=root gname=wheel mode=0755 size=195975 sha256=d92e26db2d62e2d7c1f63a1dae930c45614e6762ca60c8d1b09574deee2e5f82
-./usr/bin/column type=file uname=root gname=wheel mode=0755 size=200914 sha256=b6b92d91d8d9663f427858b1d0786708473594a7eefb51a11e1059a3a0cbfb7b
-./usr/bin/comm type=file uname=root gname=wheel mode=0755 size=211158 sha256=402bb1913fc71750f041b8ce6a56b8cd53e9212098a40b14ec60235da3582af1
-./usr/bin/compress type=file uname=root gname=wheel mode=0755 size=199178 sha256=0036f569aa75dd96d309ffac1d2cd3664c3c6bd03ab49bb851622066223f4a28
+./usr/bin/cmp type=file uname=root gname=wheel mode=0755 size=215194 sha256=54228b4f56a5bc6ba3704fb8b2dbc7d686d103b7b6daa5ec78a1e7f0049accb4
+./usr/bin/col type=file uname=root gname=wheel mode=0755 size=196962 sha256=15c9682c2f83a36b0b95728c328cefbb29374767fd65f48d271b619f0593b7c5
+./usr/bin/colcrt type=file uname=root gname=wheel mode=0755 size=195300 sha256=70ec32f465d6a03aa39223bbab076846bd57cb274bfc30516b5eb1969b097f7f
+./usr/bin/colrm type=file uname=root gname=wheel mode=0755 size=188111 sha256=8f73d7ac8e02b1c8ca5af7bed6f323a7d517807bec7c59512da3e0fa2fe2dc60
+./usr/bin/column type=file uname=root gname=wheel mode=0755 size=200914 sha256=c5cce7f59c72130e49f465bf62bc492cb1372e5ab5964061e2c773aebebed135
+./usr/bin/comm type=file uname=root gname=wheel mode=0755 size=211158 sha256=29884ce187f07361879f6aa4e69f1c6b2d16e2d773089e57e6fe8df5039608ff
+./usr/bin/compress type=file uname=root gname=wheel mode=0755 size=199178 sha256=14775152c943c77f3b75cb8a5b62c6c72da4d4e6d48780dcec35653b2a33422f
 ./usr/bin/cpio type=link mode=0755 link=/bin/cpio
-./usr/bin/crc type=file uname=root gname=wheel mode=0755 size=187144 sha256=d1392979f9534e91c7af19737c155dd6515bb192b2b1ae41ff3a610e6fb126d8
-./usr/bin/cron type=file uname=root gname=wheel mode=0755 size=349424 sha256=613c695e6ba278e78c202be2e391f04f994da8a6b6ca8f95bc930384d1ee3326
-./usr/bin/crontab type=file uname=root gname=wheel mode=04755 size=326224 sha256=204c3a7dfd39e6530b17943476f49026d19c18eb3f6bf6defb829fd4e201611a
-./usr/bin/csplit type=file uname=root gname=wheel mode=0755 size=266874 sha256=6d1fbff1ccf3a646ca3cc43c2f3dece1b6d6af12b5a4bb9c7ddd6e21682fe976
-./usr/bin/ctags type=file uname=root gname=wheel mode=0755 size=209197 sha256=b2fda30999785962c1ecf239cad89b158db32579e3b4260eee7c58e69dd06c2b
-./usr/bin/cut type=file uname=root gname=wheel mode=0755 size=224221 sha256=355a6e9e97f2ae55708ce3523295d80a471453bf78408085b634df7b2339e0d8
-./usr/bin/delv type=file uname=root gname=wheel mode=0755 size=3970197 sha256=a47f86a8c3da2e381a948e7e1090c4be9784d23ef192c9d7915dfd4d1ca6452a
-./usr/bin/deroff type=file uname=root gname=wheel mode=0755 size=224886 sha256=ee4b6aeeea09f62879f7d13cad0260de3fac698ca9b43ee06e296b9770ed3645
-./usr/bin/devmand type=file uname=root gname=wheel mode=0755 size=261564 sha256=a903d400132244f261847a7331f48c232322c532eb95e0150170afc8b3a56af9
-./usr/bin/devsize type=file uname=root gname=wheel mode=0755 size=185903 sha256=d37951901979665ad948f202c609c9a8eac09e128a50f50521de20329c5731f8
-./usr/bin/dhrystone type=file uname=root gname=wheel mode=0755 size=187009 sha256=715df4cbebf96c2f6cd607e6589c74f037f10e5b68fcac5effcf5fbadc3bf444
-./usr/bin/diff type=file uname=root gname=wheel mode=0755 size=279084 sha256=a6eb5ee7f38e86c3236aeb0ef49a5d9cb285aa46e8c06bbe9605eb2c081a1907
-./usr/bin/dig type=file uname=root gname=wheel mode=0755 size=3994254 sha256=e4bbb35b941f1db0145c8eabb15ec5d0dfbddcc4bb5863d492f9ee54793ccb68
-./usr/bin/dirname type=file uname=root gname=wheel mode=0755 size=207920 sha256=5651110794e8f4780222b59a473d95806a892ecdf76ebe7579b5b2c4c2585466
-./usr/bin/dosdir type=file uname=root gname=wheel mode=0755 size=199832 sha256=231fe852c02219a20d52b46bac015c41897303c8ee2dbcc422f0a2e84da46154
-./usr/bin/dosread type=file uname=root gname=wheel mode=0755 size=199832 sha256=231fe852c02219a20d52b46bac015c41897303c8ee2dbcc422f0a2e84da46154
-./usr/bin/doswrite type=file uname=root gname=wheel mode=0755 size=199832 sha256=231fe852c02219a20d52b46bac015c41897303c8ee2dbcc422f0a2e84da46154
-./usr/bin/du type=file uname=root gname=wheel mode=0755 size=205799 sha256=e6215abcdddad79ec974333fdda3ab6e5d47ce75fcdec7db939b06b9d61cd797
-./usr/bin/egrep type=file uname=root gname=wheel mode=0755 size=332958 sha256=29dc592b0c98054f596042f83c0aad8d9b1501c652c1456b5149aa9b7e2e21f8
-./usr/bin/eject type=file uname=root gname=wheel mode=0755 size=185876 sha256=8a1c08faba6be8f0b00be94d22597c7578570cdb9a5ffd21ba4f7fa8315e4d8f
-./usr/bin/env type=file uname=root gname=wheel mode=0755 size=211188 sha256=226462ba4232d028650c04ed5c67f4c75a5345b1fbd7fc7d61f5872de4077f1d
-./usr/bin/ex type=file uname=root gname=wheel mode=0755 size=999951 sha256=153d0583956229b00819fb1b6643c942137c8d8f27a15b39b01dc7ee06cd0d94
-./usr/bin/expand type=file uname=root gname=wheel mode=0755 size=189935 sha256=d67223b426a59800967390a3010825cf99c56482230ec4301e386b3ddaecdfcc
+./usr/bin/crc type=file uname=root gname=wheel mode=0755 size=187144 sha256=b9078181a82cfb1e366bb82f3d4fa2c30297e8b250224548a56e5b6a21bd35da
+./usr/bin/cron type=file uname=root gname=wheel mode=0755 size=349424 sha256=b7e471b102eaa3d725dcb9628ae40ec05b5d45c0f63a3332ee8f24186d932e1d
+./usr/bin/crontab type=file uname=root gname=wheel mode=04755 size=326224 sha256=e7dc9f4a8a5ffa842827c22c0707325019175739087e452cb6bde5352c2527f9
+./usr/bin/csplit type=file uname=root gname=wheel mode=0755 size=266874 sha256=1fbb48f47eee4523c99f5dd5e24f4b0be05e40b43504d1415a31173d4fbc727e
+./usr/bin/ctags type=file uname=root gname=wheel mode=0755 size=209197 sha256=3b709d54670d09703052789d0f47d866bd20b43ad35b680788d12d0def01d01e
+./usr/bin/cut type=file uname=root gname=wheel mode=0755 size=224221 sha256=fa20b7dffb488922799fbf4d6d78141b8182b87f2476886c700c2b8329fb4076
+./usr/bin/delv type=file uname=root gname=wheel mode=0755 size=3970197 sha256=be534949594eebe7da979c5e8846e4d9c45c91dfe4448f26f172c8965dc14981
+./usr/bin/deroff type=file uname=root gname=wheel mode=0755 size=224886 sha256=edb55099c5538295ccd0b200075f42e6d0d5adfd73077d08cc831dcc0615f7e9
+./usr/bin/devmand type=file uname=root gname=wheel mode=0755 size=261564 sha256=8bf8419196b293e08eff3ec046640f197414254846c1cdc4aef254d8247e2c27
+./usr/bin/devsize type=file uname=root gname=wheel mode=0755 size=185903 sha256=849819069815ffd7fe69e8b557a16428b4c62e6ed90351b6b6bcf3887521137c
+./usr/bin/dhrystone type=file uname=root gname=wheel mode=0755 size=187009 sha256=658a60346b00c2ff6d2e61bf916fab60540ed5b37037d6ecc29a82140b30c0b9
+./usr/bin/diff type=file uname=root gname=wheel mode=0755 size=279084 sha256=84f8afe1ad29c40e8504a7d3e4d54a20e13c4225af16ea1697485cd6a49a4edb
+./usr/bin/dig type=file uname=root gname=wheel mode=0755 size=3994254 sha256=dc6fac03ad6b207e8e8e4c262bbc8f9d445a10554f14344a36f4ce4285b2d316
+./usr/bin/dirname type=file uname=root gname=wheel mode=0755 size=207920 sha256=1b713d8c4a0c5b7e8957a25710bc0037871a33c6e9ea36f1d9b92f2af1322d06
+./usr/bin/dosdir type=file uname=root gname=wheel mode=0755 size=199832 sha256=2bd52ec20e95e889946dd93c4eb3ea1e65b9326fa94a3758843ddae6ae5d0f4e
+./usr/bin/dosread type=file uname=root gname=wheel mode=0755 size=199832 sha256=2bd52ec20e95e889946dd93c4eb3ea1e65b9326fa94a3758843ddae6ae5d0f4e
+./usr/bin/doswrite type=file uname=root gname=wheel mode=0755 size=199832 sha256=2bd52ec20e95e889946dd93c4eb3ea1e65b9326fa94a3758843ddae6ae5d0f4e
+./usr/bin/du type=file uname=root gname=wheel mode=0755 size=205799 sha256=927d05c806d76f6a491c4b65671cfa2272f9614aa0ce00fb3039f29ebbdb67ac
+./usr/bin/egrep type=file uname=root gname=wheel mode=0755 size=332958 sha256=c7e6c267f17e9a8a04f6359caa10fd5afac300197dc4ec105d6d45a3f36e690c
+./usr/bin/eject type=file uname=root gname=wheel mode=0755 size=185876 sha256=c477363a9fe4f741895808164e294a6b53c9ffbdcfa369c610d9d5e54b690398
+./usr/bin/env type=file uname=root gname=wheel mode=0755 size=211188 sha256=7e563ccfce89a32ba6cd93368daaa635ee0a12d26dd2019baf2f7a7ae4e1150c
+./usr/bin/ex type=file uname=root gname=wheel mode=0755 size=999951 sha256=9bf37ed1587c01dca5a59ddbba15c357dd3dac2e72c66d1e95ee849dd61dc5ef
+./usr/bin/expand type=file uname=root gname=wheel mode=0755 size=189935 sha256=a87092c951577202b3d49f39499a0370a54a0eaf5205aef65d82680922de075b
 ./usr/bin/false type=file uname=root gname=wheel mode=0755 size=18 sha256=15f691df40a93a556e642f825b35b9d40da2e3f7161168ed61955ce5c563afad
-./usr/bin/fdisk type=file uname=root gname=wheel mode=0755 size=238599 sha256=aed6c1305f49b9980e585447120b3fc561c0267fea6a3f6f4f272187f9f611cb
-./usr/bin/fetch type=file uname=root gname=wheel mode=0755 size=2203125 sha256=4e66ac468a617a864be0c7d1d0c1ea1b12dd0a03b730a68738a13f9fb3fe4877
-./usr/bin/fgrep type=file uname=root gname=wheel mode=0755 size=332958 sha256=29dc592b0c98054f596042f83c0aad8d9b1501c652c1456b5149aa9b7e2e21f8
-./usr/bin/file type=file uname=root gname=wheel mode=0755 size=436176 sha256=e4323ceb912d85fbc6e080b54877755c0f46e372f3f627c25c49ad0787a5286e
-./usr/bin/find type=file uname=root gname=wheel mode=0755 size=442445 sha256=8e3680fe47b37bb2b9f98d3bb7293947937853e1e22c78c61c3010b043ab1cdd
-./usr/bin/finger type=file uname=root gname=wheel mode=0755 size=504606 sha256=af8da37926f13515f3698bd75e0d818d2659c55dfe65138d20ae41a4712a96df
-./usr/bin/fix type=file uname=root gname=wheel mode=0755 size=187601 sha256=bfc1be874d77336b916d755bbb93ae37afb96beb68caa848c2e9e4cd92300c15
-./usr/bin/flex type=file uname=root gname=wheel mode=0755 size=616003 sha256=dbb784ede0c750dff7888ce201eb6441dbfb322d75662a0e1404d144c099c5f1
-./usr/bin/flex++ type=file uname=root gname=wheel mode=0755 size=616003 sha256=dbb784ede0c750dff7888ce201eb6441dbfb322d75662a0e1404d144c099c5f1
-./usr/bin/flock type=file uname=root gname=wheel mode=0755 size=217629 sha256=b98be3dff31d5e8fb27f5b107baea052fd385eddca3172d11794535488a0e48e
-./usr/bin/fmt type=file uname=root gname=wheel mode=0755 size=220856 sha256=ec564ce2b3bd6e51a68d0d66acca2ae9ca74a6c395d55569fc2b7cc9d95f0a2e
-./usr/bin/fold type=file uname=root gname=wheel mode=0755 size=220368 sha256=112cf82d928d299dc02d3d4ed12590799fd65bbfa0b1c17e9daedfb0202d9402
-./usr/bin/format type=file uname=root gname=wheel mode=0755 size=240010 sha256=d4d16d9cfa0aaf6fe1eec5133bf1bae16d57364ad70bca9acfdb29f5e711e641
-./usr/bin/fpr type=file uname=root gname=wheel mode=0755 size=188414 sha256=ff58336d094d4cad098385de09689cccf7d75504f01fcc68bb57efdaa11472ab
-./usr/bin/from type=file uname=root gname=wheel mode=0755 size=308749 sha256=67d553756bb25e997b14f049e6c3daa86962c3377f11b027d9f0ee6543d81890
-./usr/bin/fsplit type=file uname=root gname=wheel mode=0755 size=193441 sha256=77182f41e260a50c5761d61c25faa5e5ee59c38b141482743ba70ab6091fbbf7
-./usr/bin/ftp type=file uname=root gname=wheel mode=0755 size=2555331 sha256=9daf1d99153ff70d1ac9bb49a1a8ddc17d1d8547a168d19e7103c9e5aa6f3b1e
-./usr/bin/gcov-pull type=file uname=root gname=wheel mode=0755 size=186383 sha256=5e016951b7b6ff55a95e28c849b1b3cd4957ba9a72241d8b5f4dd11873bd2bf4
+./usr/bin/fdisk type=file uname=root gname=wheel mode=0755 size=238599 sha256=601a31f64fb87cb1bd531f5aab259fcd7c5e9e3638109c8a0b68a06f0cab91d8
+./usr/bin/fetch type=file uname=root gname=wheel mode=0755 size=2203125 sha256=9fbf5aae08e618257b9393464a6b9278a0700a458044038efd004892b8003bb6
+./usr/bin/fgrep type=file uname=root gname=wheel mode=0755 size=332958 sha256=c7e6c267f17e9a8a04f6359caa10fd5afac300197dc4ec105d6d45a3f36e690c
+./usr/bin/file type=file uname=root gname=wheel mode=0755 size=436176 sha256=7842a4859372de4d1c66c9c486c403f89f054375edf18b8a2eb24fd261a5b0ef
+./usr/bin/find type=file uname=root gname=wheel mode=0755 size=442445 sha256=9919cab4d03b263ddfc5c43d4a7a5ce329917c4adc0a52c9648215446b030ad9
+./usr/bin/finger type=file uname=root gname=wheel mode=0755 size=504606 sha256=1703f538fa559a6be9780e73215d529f06b7ef1babdde1d17d0b19d5af6ee440
+./usr/bin/fix type=file uname=root gname=wheel mode=0755 size=187601 sha256=06f3a27c3e8679ebebc615580c18656ce87baf046d85b951755c66290bc966b3
+./usr/bin/flex type=file uname=root gname=wheel mode=0755 size=616003 sha256=cd4d70e7806dc9440639c6d3dae47c93c93cf31486e570ee0b201468575251da
+./usr/bin/flex++ type=file uname=root gname=wheel mode=0755 size=616003 sha256=cd4d70e7806dc9440639c6d3dae47c93c93cf31486e570ee0b201468575251da
+./usr/bin/flock type=file uname=root gname=wheel mode=0755 size=217629 sha256=5fcd16efce0b2093169724758575f82654b7b45379227b2f3d1338ab0dc45087
+./usr/bin/fmt type=file uname=root gname=wheel mode=0755 size=220856 sha256=069ba1b6338c3054f5ba8894e8af057d65acd40e2f6e975267d3f64511206ea4
+./usr/bin/fold type=file uname=root gname=wheel mode=0755 size=220368 sha256=66c0cae230301cac72599cdcb3b28d80cfccd2913b14405d7a02054d609038ab
+./usr/bin/format type=file uname=root gname=wheel mode=0755 size=240010 sha256=6d2c5cbb152d1eaa255f3c1b134511da5b9d0a1e2abb96cd58f5a1fc1d10d66f
+./usr/bin/fpr type=file uname=root gname=wheel mode=0755 size=188414 sha256=3de1860d0b98892d736d78ac0b8bb33a1908245b603aa39230ff6fe7ec3de6e2
+./usr/bin/from type=file uname=root gname=wheel mode=0755 size=308749 sha256=c44afd8695b9b9f23f1ca0ab982029636ac56e28f5b75b6786cfe44d2d48aab2
+./usr/bin/fsplit type=file uname=root gname=wheel mode=0755 size=193441 sha256=e5f10b887f4d6c9fe5eae1f6f1e42c1d2f3469a96b9a1ead5ab2aa2352c69995
+./usr/bin/ftp type=file uname=root gname=wheel mode=0755 size=2555331 sha256=d2a2c358249f8aeaddef7b3923a030969f81a419362111efd0b4587201dc69f2
+./usr/bin/gcov-pull type=file uname=root gname=wheel mode=0755 size=186383 sha256=b6db0a2ff2098e5dccfc36f43b21127d43852ecd6080eb013611b2274ecf85b6
 ./usr/bin/genassym type=file uname=root gname=wheel mode=0755 size=5011 sha256=2b16f6070509c6fec5c049657ca50b1a1a239e08aa28b473fe7bb9504f878391
-./usr/bin/gencat type=file uname=root gname=wheel mode=0755 size=194536 sha256=981e68f9634a21389f56639ee18ac856bf704a276b1e088bb0d42189ae9784f0
-./usr/bin/getcap type=file uname=root gname=wheel mode=0755 size=513526 sha256=4921a44b6c0158a9b4454db7b3669459decff22639612298e1ad4ad9ddaf310a
-./usr/bin/getent type=file uname=root gname=wheel mode=0755 size=513526 sha256=4921a44b6c0158a9b4454db7b3669459decff22639612298e1ad4ad9ddaf310a
-./usr/bin/getopt type=file uname=root gname=wheel mode=0755 size=186361 sha256=5b796e8d17988594660ff6e69fe02994b0453eaa13bf9da1c10eab55f524ce52
-./usr/bin/grep type=file uname=root gname=wheel mode=0755 size=332958 sha256=29dc592b0c98054f596042f83c0aad8d9b1501c652c1456b5149aa9b7e2e21f8
-./usr/bin/groups type=file uname=root gname=wheel mode=0755 size=328194 sha256=30291d459a44274899216bcf32dae3dd5b3a5d037909e091e72519b1e679daa0
-./usr/bin/gunzip type=file uname=root gname=wheel mode=0755 size=442444 sha256=1b969df6c1cb58c89fd324ee2cb721f97c69b8970f54a3d7603a87b4f68384c3
-./usr/bin/gzcat type=file uname=root gname=wheel mode=0755 size=442444 sha256=1b969df6c1cb58c89fd324ee2cb721f97c69b8970f54a3d7603a87b4f68384c3
+./usr/bin/gencat type=file uname=root gname=wheel mode=0755 size=194536 sha256=328c0fb8277274a2800cdff520befce2feaa3b8192d678e57587237c93ecb217
+./usr/bin/getcap type=file uname=root gname=wheel mode=0755 size=513526 sha256=a7e788288a3ea67d8467df9bcdc02e624ebbfb1e4df8fa13e48fc59c253dd727
+./usr/bin/getent type=file uname=root gname=wheel mode=0755 size=513526 sha256=a7e788288a3ea67d8467df9bcdc02e624ebbfb1e4df8fa13e48fc59c253dd727
+./usr/bin/getopt type=file uname=root gname=wheel mode=0755 size=186361 sha256=77241c9c43da0663e0097acd3d1167c9462ee128a74d0ddb2b40d8f1b2cfa897
+./usr/bin/grep type=file uname=root gname=wheel mode=0755 size=332958 sha256=c7e6c267f17e9a8a04f6359caa10fd5afac300197dc4ec105d6d45a3f36e690c
+./usr/bin/groups type=file uname=root gname=wheel mode=0755 size=328194 sha256=c0a68db9da561e755f9af47eaca72187390ed5382ed776d0278841dcfc6a2495
+./usr/bin/gunzip type=file uname=root gname=wheel mode=0755 size=442444 sha256=bc35406bb79368733b3a9f1525cc0c26aada875ee56b531e6e1ec088f07fa843
+./usr/bin/gzcat type=file uname=root gname=wheel mode=0755 size=442444 sha256=bc35406bb79368733b3a9f1525cc0c26aada875ee56b531e6e1ec088f07fa843
 ./usr/bin/gzexe type=file uname=root gname=wheel mode=0755 size=4009 sha256=3b4792c6f8ae46b21bb2b293ebe54f8ed8f17125eda18fd7b7e2e50625f07d07
-./usr/bin/gzip type=file uname=root gname=wheel mode=0755 size=442444 sha256=1b969df6c1cb58c89fd324ee2cb721f97c69b8970f54a3d7603a87b4f68384c3
-./usr/bin/head type=file uname=root gname=wheel mode=0755 size=212138 sha256=a15e0a3067ca0518be5a7d7da2369dbb69efd58428dc47940ff6ae0cadc04889
-./usr/bin/hexdump type=file uname=root gname=wheel mode=0755 size=240581 sha256=23625d9fabffeb8003f2cde90791b66a2bef56c25549d75d1d2666f5aff041b7
-./usr/bin/host type=file uname=root gname=wheel mode=0755 size=3980028 sha256=e87b7714395338e9eb76096a03532f69ab7a4e8980bb457cc83314c74f2d2d64
-./usr/bin/id type=file uname=root gname=wheel mode=0755 size=328194 sha256=30291d459a44274899216bcf32dae3dd5b3a5d037909e091e72519b1e679daa0
-./usr/bin/ifdef type=file uname=root gname=wheel mode=0755 size=196183 sha256=316e7e65b166614f195ffc7742237ea7d502b60d965a64cb108de62f29fa1cc6
-./usr/bin/indent type=file uname=root gname=wheel mode=0755 size=288013 sha256=511553a6f37ab90d5f75c7d3aef9c0c6190b7cb9f8990da0f9d5bdc5cb49463d
-./usr/bin/info type=file uname=root gname=wheel mode=0755 size=586155 sha256=b20ba6734fbe1e3562eaf54178de61d4413956f3f515f45d1c48928b4d734c31
-./usr/bin/infocmp type=file uname=root gname=wheel mode=0755 size=262031 sha256=1f7e4b3f3ca80a5faa2c73a1dfef3fc30e0561a86d821028bbd4d6376c5dc70d
-./usr/bin/infokey type=file uname=root gname=wheel mode=0755 size=228169 sha256=f9f3f45b24ff16544f2a42b990b00f247325aa8a4d54d17750b7bd6b739563f0
-./usr/bin/install type=file uname=root gname=wheel mode=0755 size=410177 sha256=93fa9f9707455049a53066d85e6cf89a721a26fcf02eddb034bbb842654391c0
-./usr/bin/install-info type=file uname=root gname=wheel mode=0755 size=238606 sha256=220ac5684649a867934cdb6ff0049a3f4eb5c73b43b693a7cd3a604c626971b1
-./usr/bin/ipcrm type=file uname=root gname=wheel mode=0755 size=196763 sha256=34f0ca6fbd983f3d53163dbc5a72126d1eb7a7a65aa2c9742fa72b4e2887f048
-./usr/bin/ipcs type=file uname=root gname=wheel mode=0755 size=330940 sha256=ae82a16bce2bbd2c03e0df6d5148b7d556cb0bc6b07c2a1e69a0a041615be10e
-./usr/bin/isodir type=file uname=root gname=wheel mode=0755 size=191891 sha256=ad754ebc82b7d71df12db080eec1d165a23f0229e6d5aad08c8aeb47cf9a90be
-./usr/bin/isoinfo type=file uname=root gname=wheel mode=0755 size=191891 sha256=ad754ebc82b7d71df12db080eec1d165a23f0229e6d5aad08c8aeb47cf9a90be
-./usr/bin/isoread type=file uname=root gname=wheel mode=0755 size=191891 sha256=ad754ebc82b7d71df12db080eec1d165a23f0229e6d5aad08c8aeb47cf9a90be
-./usr/bin/join type=file uname=root gname=wheel mode=0755 size=196742 sha256=53fdec692e04619481c99d7a9611455dbe79a333ac90303da353f58370f15037
-./usr/bin/jot type=file uname=root gname=wheel mode=0755 size=229829 sha256=80c67928feb45e9375ab8d0aac73b7bbcdc77a0729b11d5ca4b2bd4520d4366b
-./usr/bin/lam type=file uname=root gname=wheel mode=0755 size=189103 sha256=1927e3890c3a7a76fd7f3c74f0366ca3f6bef6aaa44ae8855c94e28d5d0fc663
-./usr/bin/last type=file uname=root gname=wheel mode=0755 size=375019 sha256=fbbae6b006e8d53bc741c1bfefb6c4a7457bdc4107be82bfe3a89d57bed869c1
-./usr/bin/ldd type=file uname=root gname=wheel mode=0755 size=228991 sha256=fd2dcb4b563295c11714b68d9d5ef1a8cd380dc932d5b7295b9075736a5e7a15
-./usr/bin/leave type=file uname=root gname=wheel mode=0755 size=188009 sha256=ccf5c72983cdcaa62801584b82cbfd6689a7b1d8be5d1b58a0c7e9a2b684753e
-./usr/bin/less type=file uname=root gname=wheel mode=0755 size=481337 sha256=2322b588b3aed383b5ff9bae186e0657fb597ccdd2d1a5027a1e137d1abfef47
-./usr/bin/lessecho type=file uname=root gname=wheel mode=0755 size=186482 sha256=bab8a5540ea6e2bc8929bae4a0da66c83a62c06e7c793058252a5b965f25473c
-./usr/bin/lesskey type=file uname=root gname=wheel mode=0755 size=194626 sha256=db8c1a6587aabf8ee07aa20cd9ebaf87c7729857273f2319faeb2ff816e4277e
-./usr/bin/lex type=file uname=root gname=wheel mode=0755 size=616003 sha256=dbb784ede0c750dff7888ce201eb6441dbfb322d75662a0e1404d144c099c5f1
-./usr/bin/loadfont type=file uname=root gname=wheel mode=0755 size=183912 sha256=b21bee4f09146bf2beeb8d74bce5585dd700cfdaa73c06204e4a6b66f88f3e0a
-./usr/bin/loadramdisk type=file uname=root gname=wheel mode=0755 size=184071 sha256=1d857c33ba25c6e8b52ffb750585499bf4c15350cd6776ec8fcea95071c8df75
-./usr/bin/locale type=file uname=root gname=wheel mode=0755 size=224856 sha256=7db4ed8a84c47eb15a2025b82ff6389f09e3071ead1fdcc3a2a91cd837170318
-./usr/bin/lock type=file uname=root gname=wheel mode=04555 size=368427 sha256=23a1c7076c872fa5e58122971a77c6963eb88e0ce66b465f29ed1fe5a7453ee0
-./usr/bin/logger type=file uname=root gname=wheel mode=0755 size=316252 sha256=cd3b1ed6c2d10018eb0a066a47bce8adc9e4c7bcfda30a33946f53c447f853d5
-./usr/bin/login type=file uname=root gname=wheel mode=04555 size=558764 sha256=c2ff0774b74315f3cd46cd2d841778792626d914f6a8f128a4ce7ae6db583e70
-./usr/bin/logname type=file uname=root gname=wheel mode=0755 size=335501 sha256=588a964634aaa269e30ed5feeca5fe001e091f081c08b684055c2706c2b98859
-./usr/bin/look type=file uname=root gname=wheel mode=0755 size=188172 sha256=df4261ef4a73756c42f1a4f02e9945cc71d7447c4380319bbcc39a180ec442d3
+./usr/bin/gzip type=file uname=root gname=wheel mode=0755 size=442444 sha256=bc35406bb79368733b3a9f1525cc0c26aada875ee56b531e6e1ec088f07fa843
+./usr/bin/head type=file uname=root gname=wheel mode=0755 size=212138 sha256=8a45644449d15f29f0124904db8fa28eabeda392f08a84a5c7957c5d688620a2
+./usr/bin/hexdump type=file uname=root gname=wheel mode=0755 size=240581 sha256=4785c219e59ee7ff44f9af1a82be913064014eba0638aa93fc7aaaa541b2dee3
+./usr/bin/host type=file uname=root gname=wheel mode=0755 size=3980028 sha256=84bc2d75f05c20ab5826f79e4772d741d2406f22b4337cdb3323c483f0af0162
+./usr/bin/id type=file uname=root gname=wheel mode=0755 size=328194 sha256=c0a68db9da561e755f9af47eaca72187390ed5382ed776d0278841dcfc6a2495
+./usr/bin/ifdef type=file uname=root gname=wheel mode=0755 size=196183 sha256=2f5ff6d8d4e513848878ed78ed28c9806ef2ca19dc44a747ac2654fe7a5bf42f
+./usr/bin/indent type=file uname=root gname=wheel mode=0755 size=288013 sha256=5830b2e4203986d8064aed0fc34c0f87d56f63da1eeb4bea342d6a53ff3365aa
+./usr/bin/info type=file uname=root gname=wheel mode=0755 size=586155 sha256=bc59dd88c94313d2cd1e9e7c3442cf6d94dd95f01c7b201b9ed6dc5e2f18f943
+./usr/bin/infocmp type=file uname=root gname=wheel mode=0755 size=262031 sha256=6c07d79abda79c5b0c2085674aaf9e952786d341dfffeb5f5ec176e1e0dc8ff7
+./usr/bin/infokey type=file uname=root gname=wheel mode=0755 size=228169 sha256=2ad8f670babc3dc189996b8d1a615dcabdbcbc7e71ec714f455861eec08530ea
+./usr/bin/install type=file uname=root gname=wheel mode=0755 size=410177 sha256=c276cab1ceda2a273583f0e21851a7246cdafb9de82977e7febdaf71fa90a9cc
+./usr/bin/install-info type=file uname=root gname=wheel mode=0755 size=238606 sha256=15ee4682d4d057cad24c06a50bb2f2a56f65aca2e5ca09110832478db4111856
+./usr/bin/ipcrm type=file uname=root gname=wheel mode=0755 size=196763 sha256=337dd6750e6af3f8991c1af0dd1ef7188252ef886032e128fa4fbed40aad3745
+./usr/bin/ipcs type=file uname=root gname=wheel mode=0755 size=330940 sha256=c39e18174ca384fa2f95f2ba451bdc3ec9003ae2d83c9b87eb3086c0f8678fd3
+./usr/bin/isodir type=file uname=root gname=wheel mode=0755 size=191891 sha256=6b3db892f9c9cfd92df634c8a12b19f96472837589d5a09e99a993fe41251c4c
+./usr/bin/isoinfo type=file uname=root gname=wheel mode=0755 size=191891 sha256=6b3db892f9c9cfd92df634c8a12b19f96472837589d5a09e99a993fe41251c4c
+./usr/bin/isoread type=file uname=root gname=wheel mode=0755 size=191891 sha256=6b3db892f9c9cfd92df634c8a12b19f96472837589d5a09e99a993fe41251c4c
+./usr/bin/join type=file uname=root gname=wheel mode=0755 size=196742 sha256=a2ddba708b587e52f56bcee9357f9b11f6738f077edbf73f64281af774d95bbd
+./usr/bin/jot type=file uname=root gname=wheel mode=0755 size=229829 sha256=c4e0b4233ecee1efba86c79b5c7c4e135845cf83c9603d64356592f56dc0ead5
+./usr/bin/lam type=file uname=root gname=wheel mode=0755 size=189103 sha256=e18edc7f80d16abda504d85bd445f2186e0015728cfc28efbbe4284ee11cfb06
+./usr/bin/last type=file uname=root gname=wheel mode=0755 size=375019 sha256=965873b5835f25be5872309ed0dce48330aca8065ce16eb31b8cc5020904ad40
+./usr/bin/ldd type=file uname=root gname=wheel mode=0755 size=228991 sha256=ce4f171516cf7fcd923790bcbfbf9b6cb5437943dc8e547506a7d49157232dda
+./usr/bin/leave type=file uname=root gname=wheel mode=0755 size=188009 sha256=06e287e6daa15e04ccf8a0dd45d2b06b2cbe1e4be1193e6baf089961e8dd0ce6
+./usr/bin/less type=file uname=root gname=wheel mode=0755 size=481337 sha256=5de5ab697231c2afbbfc23ba596d78ad18ca4e087e8b32108b7dbf052fd8d703
+./usr/bin/lessecho type=file uname=root gname=wheel mode=0755 size=186482 sha256=a563e7e79f17320c08c7b481071089d73767735a6b73ef0ad6365474c1a1e3e0
+./usr/bin/lesskey type=file uname=root gname=wheel mode=0755 size=194626 sha256=c3a0a851a693d556231d587f8be6f86bbb745a81019608637e1c0656e7d59c04
+./usr/bin/lex type=file uname=root gname=wheel mode=0755 size=616003 sha256=cd4d70e7806dc9440639c6d3dae47c93c93cf31486e570ee0b201468575251da
+./usr/bin/loadfont type=file uname=root gname=wheel mode=0755 size=183912 sha256=fe7f52a8d78398490cf416cfb2b668412800c0e6687430abdcf18eed80f06850
+./usr/bin/loadramdisk type=file uname=root gname=wheel mode=0755 size=184071 sha256=c80c562b83cce6cb8269e1b644627c01ec0696cf6078bdebec0e7adce4f99a99
+./usr/bin/locale type=file uname=root gname=wheel mode=0755 size=224856 sha256=2ed64dad592bf455d9c1486f73f63940dd30d51535fd83fdd888037b602767ea
+./usr/bin/lock type=file uname=root gname=wheel mode=04555 size=368427 sha256=20b42e69a4723945fdbf69fb78065258bb832ea0e7a08687aa702ace53b8d3e3
+./usr/bin/logger type=file uname=root gname=wheel mode=0755 size=316252 sha256=0bb89c27581b16e3452dba0f944e30f3a20a06915310f5c616a7f64c32641cea
+./usr/bin/login type=file uname=root gname=wheel mode=04555 size=558764 sha256=10c5fe956c4eba8f6fe4b01f646f924247d4388f6894026535a141ec8fd88fcf
+./usr/bin/logname type=file uname=root gname=wheel mode=0755 size=335501 sha256=a4850bc76cb491f114eb8daecb6c1b4fe60c1f070a2dff447c9ee833a6c51a1c
+./usr/bin/look type=file uname=root gname=wheel mode=0755 size=188172 sha256=4d34118f28579bac6d8db4e6adc8e290cc272b470ebae9d92efa9ad8b9b19022
 ./usr/bin/lorder type=file uname=root gname=wheel mode=0755 size=3946 sha256=5e1f71b47b1dcadc99a978265e0d7ce1761f6660c223c6736c796283a6cc5c50
-./usr/bin/lp type=file uname=root gname=wheel mode=0755 size=197930 sha256=17b16a3d21aa3922e8d7a501d9ef30346e61d5740b74a4516b8af4a346deafb2
-./usr/bin/lpd type=file uname=daemon gname=wheel mode=04755 size=274161 sha256=20def3c7485452973ea85c8911937e8b3f66052cef489e12d02a37181533a55f
+./usr/bin/lp type=file uname=root gname=wheel mode=0755 size=197930 sha256=20fa3fff53315fb872dcd4ff7203c5c4b8ff870f0e356e24a19662356028ca3e
+./usr/bin/lpd type=file uname=daemon gname=wheel mode=04755 size=274161 sha256=17bfdb6a66227482199259178ead4ac8e6cddafbf01c57ec973f87c6f318d7b6
 ./usr/bin/lspci type=file uname=root gname=wheel mode=0755 size=134 sha256=9a1b3469a326268b1ce4106063f55da2137d4545c9b1bf4393b5afb8dad76bc1
-./usr/bin/lua type=file uname=root gname=wheel mode=0755 size=915048 sha256=29432ac932e93a7d9fd8b449e1ae0d3e00bab911d5b7340b170122613189c01c
-./usr/bin/luac type=file uname=root gname=wheel mode=0755 size=368543 sha256=448443e3d7fc8a5f5fd61fadfbffa1171401820752e79e6d1329557df978d1be
-./usr/bin/lzcat type=file uname=root gname=wheel mode=0755 size=418127 sha256=0eadfbf617677dc6b4f53874a45fc3dba802342fa821a3a258d57d1cec7dd8c4
-./usr/bin/lzma type=file uname=root gname=wheel mode=0755 size=418127 sha256=0eadfbf617677dc6b4f53874a45fc3dba802342fa821a3a258d57d1cec7dd8c4
-./usr/bin/lzmainfo type=file uname=root gname=wheel mode=0755 size=260133 sha256=cfc363877dde5663184e1750ea2028bb6dadb92c3170a2f3e4ad794d4b0ced40
-./usr/bin/m4 type=file uname=root gname=wheel mode=0755 size=302450 sha256=7d0b247310d97c448740f138558d263ee24ee7b6790cc8019630b2ab345877a1
+./usr/bin/lua type=file uname=root gname=wheel mode=0755 size=915048 sha256=0e541eed0c29375e9e02c45ee778c5a2d8eb710b17d5b5298daaa095c6f4e055
+./usr/bin/luac type=file uname=root gname=wheel mode=0755 size=368543 sha256=5e3b82767c0e5320719032c90b2ae44689ef77a4def497d2d7b433217bca4f23
+./usr/bin/lzcat type=file uname=root gname=wheel mode=0755 size=418127 sha256=2d78094c313f469f05b3d27b1791c9f60338de8e811ef101d3db4d47d5e05a0d
+./usr/bin/lzma type=file uname=root gname=wheel mode=0755 size=418127 sha256=2d78094c313f469f05b3d27b1791c9f60338de8e811ef101d3db4d47d5e05a0d
+./usr/bin/lzmainfo type=file uname=root gname=wheel mode=0755 size=260133 sha256=59e6f67786469e6acb42191d848093aa13b81939b724e52ee7457e68b4595944
+./usr/bin/m4 type=file uname=root gname=wheel mode=0755 size=302450 sha256=48b6b3ff520222b6559101e89edb8ee3bc22f672cc7d677a31fa59c8f7a0a0ce
 ./usr/bin/machine type=file uname=root gname=wheel mode=0755 size=33 sha256=19dd1bf6320b254a4517ba6e2380529d5d3a73ff8835581072ee41e90a7ac0fd
-./usr/bin/mail type=file uname=root gname=wheel mode=04755 size=327233 sha256=d3d9f10b07c8bcb2e2fa60b19673bac0484753dbfd578a88667aaede55df79dc
-./usr/bin/make type=file uname=root gname=wheel mode=0755 size=472709 sha256=2a02bd1f8aa7078a3d8b1307e0d7a48e311987016a84504930979cf3550cc59a
-./usr/bin/makeinfo type=file uname=root gname=wheel mode=0755 size=629409 sha256=2e310273ba17c153606ef475e6f5aefdde112c30eb93305637e0a71c6caf184d
-./usr/bin/man type=file uname=root gname=wheel mode=0755 size=365342 sha256=5624016e3092366b8f2011c4b1c970db19675d6307d862e21afa2b1b84a6fa76
-./usr/bin/mandoc type=file uname=root gname=wheel mode=0755 size=542723 sha256=b3abf6bf90b7f3032e0859b62a1e5a28e590afd986c35b3dc59c6579631a769f
-./usr/bin/md2 type=file uname=root gname=wheel mode=0755 size=273380 sha256=2004e886016082a28865dca8401fc31142a647e408ad8d28efeb55a5ca4927b7
-./usr/bin/md4 type=file uname=root gname=wheel mode=0755 size=273380 sha256=2004e886016082a28865dca8401fc31142a647e408ad8d28efeb55a5ca4927b7
-./usr/bin/md5 type=file uname=root gname=wheel mode=0755 size=273380 sha256=2004e886016082a28865dca8401fc31142a647e408ad8d28efeb55a5ca4927b7
-./usr/bin/menuc type=file uname=root gname=wheel mode=0755 size=226290 sha256=da8761531bd1967d41ab03ad9f9deda9d57c190b98da7685a32801f9979edfe7
-./usr/bin/mesg type=file uname=root gname=wheel mode=0755 size=208352 sha256=19573f200b70ec016da9dbc38a365ab0f8535b6cc3f4161420a832d52937663a
-./usr/bin/mined type=file uname=root gname=wheel mode=0755 size=288539 sha256=0131b39825cb7dbc83d0438a4171f28bb4ab407d305c517cbb6097013998d34f
-./usr/bin/ministat type=file uname=root gname=wheel mode=0755 size=237957 sha256=34b32289816920b25849d77ab40cd8cc054a39e4ea33d45815ec2f26b8276819
-./usr/bin/mkcsmapper type=file uname=root gname=wheel mode=0755 size=219943 sha256=76737cce53da75d246c0675428ecbdf12623f70493388b94069b6e6ef9e56ba0
-./usr/bin/mkdep type=file uname=root gname=wheel mode=0755 size=240391 sha256=be111be2bbccf0967ef92fa8c7a0a3f75a93e3e4efbe2b9cbc287de8a327d1c0
-./usr/bin/mkesdb type=file uname=root gname=wheel mode=0755 size=211561 sha256=11c2d3b2aaf0e3c7dcfab876954d97c49417f3c18c365acbba74c7eb4dc8dd5a
-./usr/bin/mkfifo type=file uname=root gname=wheel mode=0755 size=211824 sha256=ea93a44b3e6b87017f0cb12cd8d7ed1863efa1035c11a90122c8803d957c1803
-./usr/bin/mklocale type=file uname=root gname=wheel mode=0755 size=234273 sha256=7155986c9724bd4b0f8004be88d298ef1412d8900aa2f9bdd98d2e2520af536a
-./usr/bin/mkstr type=file uname=root gname=wheel mode=0755 size=192211 sha256=550b571112c82be8c52362981ff92a9ffba2c3c8708c682459cb35547a6ad43e
-./usr/bin/mktemp type=file uname=root gname=wheel mode=0755 size=201731 sha256=a43eae7dda005e8519f269f3d2959bda32189c50e74d6ce9e66bf4cb829044fa
-./usr/bin/more type=file uname=root gname=wheel mode=0755 size=481337 sha256=2322b588b3aed383b5ff9bae186e0657fb597ccdd2d1a5027a1e137d1abfef47
-./usr/bin/msgc type=file uname=root gname=wheel mode=0755 size=208817 sha256=3a196379ac7b4a23e1cf1b0dcfe01bb2aac82ec3e8a5e719614c9f27b6935bc2
-./usr/bin/mt type=file uname=root gname=wheel mode=0755 size=187156 sha256=4becd1b1af1decbcb1f922428a8a51b243f064463cc7cf3f180f3fbf739e4b97
-./usr/bin/mtop type=file uname=root gname=wheel mode=0755 size=519533 sha256=6abcfdfaf6ab037c67a62e08434681c201092aa2889a6d769f9817578815fe9d
-./usr/bin/nbperf type=file uname=root gname=wheel mode=0755 size=237178 sha256=ee3e8d875e9e618ff83eaa29c5a0a301d820708973b63fc0ec997e519990447c
-./usr/bin/netpgp type=file uname=root gname=wheel mode=0755 size=1975294 sha256=b09c7029ff10d91cad3b6025a70e79557bd026701b72d319a2b0a258d25a808a
-./usr/bin/netpgpkeys type=file uname=root gname=wheel mode=0755 size=1973393 sha256=b6de3b6b337b9648f51c8f4f9dbde88b800f75c7b52621fe7f9e93c40f714fec
-./usr/bin/netpgpverify type=file uname=root gname=wheel mode=0755 size=742747 sha256=ba5e8664f8da13572f7f45ee91d1c9920a36764b08e496dd6253e02aca7dfde7
-./usr/bin/netstat type=file uname=root gname=wheel mode=0755 size=539534 sha256=6696c5538a85ae77c7f4f8f7d10db92ec0343c2959330581b896f00227f243a6
-./usr/bin/newgrp type=file uname=root gname=wheel mode=04555 size=367440 sha256=e13190522ef3ed967bce4da91e66a8860e4b769a327cd0404175285af24357e3
-./usr/bin/nice type=file uname=root gname=wheel mode=0755 size=213615 sha256=7b9bc575e4524177c95c7251369ca8bd5daebe481d4fd61016bb0cafc0c96464
-./usr/bin/nl type=file uname=root gname=wheel mode=0755 size=248313 sha256=19c41c8e6a0dc0ea657054d30f87b09fa3e3123523cc5d1ba4b4de188f321673
-./usr/bin/nohup type=file uname=root gname=wheel mode=0755 size=195848 sha256=6ab5ab3cfda510e8718ffaa580cb133c92f6681fcc7b37f409f783ad8e0687e7
-./usr/bin/nroff type=file uname=root gname=wheel mode=0755 size=243053 sha256=6a3b41cf39933720a9d1961edbb0578682d24cf3469cdaab40b825ade49a5883
-./usr/bin/nslookup type=file uname=root gname=wheel mode=0755 size=3981601 sha256=ef30b8dc46306fed628b6ffd0de4db6dd6d64a46a51ffb5b437a8d09b9bed687
-./usr/bin/nsupdate type=file uname=root gname=wheel mode=0755 size=3948376 sha256=1801365ee9ea3fc2310190f6a0f316ee72d6fe8926d1fdfbc242884632f717b7
-./usr/bin/od type=file uname=root gname=wheel mode=0755 size=240581 sha256=23625d9fabffeb8003f2cde90791b66a2bef56c25549d75d1d2666f5aff041b7
-./usr/bin/openssl type=file uname=root gname=wheel mode=0755 size=2885389 sha256=911e2948fbdb469507bf6c39bc82b0b42a8715920c39678476ff4f9e56a771fd
-./usr/bin/page type=file uname=root gname=wheel mode=0755 size=481337 sha256=2322b588b3aed383b5ff9bae186e0657fb597ccdd2d1a5027a1e137d1abfef47
+./usr/bin/mail type=file uname=root gname=wheel mode=04755 size=327233 sha256=3bbd7979d2338e4a28b32988fe37ebefa1bbf12b316e624cfd1ca1fe3ef873a6
+./usr/bin/make type=file uname=root gname=wheel mode=0755 size=472709 sha256=c6fde6cd35bf6c760a6765ed4b782f12f96afdf9f3b36fde174313413e148c7c
+./usr/bin/makeinfo type=file uname=root gname=wheel mode=0755 size=629409 sha256=99d2ad088785cd8469f6943c5927befa071ff8ac4b9eefb3a4ab38c911af525a
+./usr/bin/man type=file uname=root gname=wheel mode=0755 size=365342 sha256=fd615decaa37f2f79be6ba1b0fd9bf369e63fbe9eb6f9bb04c19cfe5a4b34986
+./usr/bin/mandoc type=file uname=root gname=wheel mode=0755 size=542723 sha256=687ca800782d9a6b5b2eae9f52d00f46bf0dd1ffc0758b6c9df9061cb52aabf7
+./usr/bin/md2 type=file uname=root gname=wheel mode=0755 size=273380 sha256=ca511d96a4c981aa6c71b41c186ad41a4d62e0d00fee40970980a6c57704836c
+./usr/bin/md4 type=file uname=root gname=wheel mode=0755 size=273380 sha256=ca511d96a4c981aa6c71b41c186ad41a4d62e0d00fee40970980a6c57704836c
+./usr/bin/md5 type=file uname=root gname=wheel mode=0755 size=273380 sha256=ca511d96a4c981aa6c71b41c186ad41a4d62e0d00fee40970980a6c57704836c
+./usr/bin/menuc type=file uname=root gname=wheel mode=0755 size=226290 sha256=cc07138ed307b64858443597ac6ba3d1bb6637910be288bab22952f563dc124e
+./usr/bin/mesg type=file uname=root gname=wheel mode=0755 size=208352 sha256=65aeac1d1f2c6af7287b68c7ad8d78eaef31c9911a334dd9b1e7539defb219f2
+./usr/bin/mined type=file uname=root gname=wheel mode=0755 size=288539 sha256=88d76f9549ae3b0c9937fa3f6c7f555e780739a422bb70f4f9008e8a6ad4437c
+./usr/bin/ministat type=file uname=root gname=wheel mode=0755 size=237957 sha256=4ff8fcd90c5b3c988ee56919d264710437f29e77fef84e2186f9daa17b84ab13
+./usr/bin/mkcsmapper type=file uname=root gname=wheel mode=0755 size=219943 sha256=5f1976cb33e85b0ecd0b6e454ee62ee0bd1119ced7b71a7eb5c404cca31547e0
+./usr/bin/mkdep type=file uname=root gname=wheel mode=0755 size=240391 sha256=bbc83eea8007fe92d72bf75cd7707227f8fb1684cf852e1cc49ed561dbaeccfd
+./usr/bin/mkesdb type=file uname=root gname=wheel mode=0755 size=211561 sha256=247f39c025340abf0799094e2b0c9e7b852be4fef5bf254207c06766cf759b4c
+./usr/bin/mkfifo type=file uname=root gname=wheel mode=0755 size=211824 sha256=4cb543c2213fbaddd0c00d4da2667e12dae139f59c27bb3969f7f3fb30b38f43
+./usr/bin/mklocale type=file uname=root gname=wheel mode=0755 size=234273 sha256=31254ee5f82e141e2f49e52b1865a22b0993bc22a2058e2fe71e9ee98428713b
+./usr/bin/mkstr type=file uname=root gname=wheel mode=0755 size=192211 sha256=f1b3b8d1b521bbb00c52918c13affe14da312fe32dad27513b9a00b7403da747
+./usr/bin/mktemp type=file uname=root gname=wheel mode=0755 size=201731 sha256=2e91cba8ad9fd72dc75fb4f218f64ef166de254c0f21ba446b5a48b3921b2d10
+./usr/bin/more type=file uname=root gname=wheel mode=0755 size=481337 sha256=5de5ab697231c2afbbfc23ba596d78ad18ca4e087e8b32108b7dbf052fd8d703
+./usr/bin/msgc type=file uname=root gname=wheel mode=0755 size=208817 sha256=8626d80a9e295df87a97e6b99b09d480d6cd6eb7f3ac45f0a58d950dc7089345
+./usr/bin/mt type=file uname=root gname=wheel mode=0755 size=187156 sha256=042d992e67084316266ece0cdf8ed5883773aad0cccbb6b5a056e7d3c06ea351
+./usr/bin/mtop type=file uname=root gname=wheel mode=0755 size=519533 sha256=2e8be4a876cb1e73ccbb0147eab07f631b3e00a021bf80f4ba187f8b965e83de
+./usr/bin/nbperf type=file uname=root gname=wheel mode=0755 size=237178 sha256=12a5cbee7aeeca866def7ef172832d4a53bab215eacf2a7684d9d1ab840c5f24
+./usr/bin/netpgp type=file uname=root gname=wheel mode=0755 size=1975294 sha256=948b08708c01a855b081b3eac6feed79d6ed5c53d8f72caa26243b6f60b3968f
+./usr/bin/netpgpkeys type=file uname=root gname=wheel mode=0755 size=1973393 sha256=35170867941ed0f72e6f547608b1f13904fb7a3efb69c2a119a5c525c2f30ce4
+./usr/bin/netpgpverify type=file uname=root gname=wheel mode=0755 size=742747 sha256=1dc4fbc61b774da9a3aa6bf91055a61dabb91f25003ccc42e9528b15f8dbdebb
+./usr/bin/netstat type=file uname=root gname=wheel mode=0755 size=539534 sha256=3e72f19980a95c3f63bc4ba58b7b44352825cfa83b05e27d142a915ab919f82f
+./usr/bin/newgrp type=file uname=root gname=wheel mode=04555 size=367440 sha256=da28b3d3eaad99ca5ae33734ddd07cc01abf9fd124d85bd55219b63fc65300b4
+./usr/bin/nice type=file uname=root gname=wheel mode=0755 size=213615 sha256=d4cdd16fbd61d4d1b5e9287a57b7dc8a4929f5335c23eaa92a417f9961bb7f3b
+./usr/bin/nl type=file uname=root gname=wheel mode=0755 size=248313 sha256=e199dd11a19b23c4f74f5f906954134bf04f138c0d16de68071c02fe5b4a5c1b
+./usr/bin/nohup type=file uname=root gname=wheel mode=0755 size=195848 sha256=49435b8c0f51c34f73ca414a3783fb3fddab081e1ce8c41d1b1c0dc0b948bc93
+./usr/bin/nroff type=file uname=root gname=wheel mode=0755 size=243053 sha256=21cc7d1818dc7b1d0ae69ee1336731a53236433e9cf0abb7c9111722af71a33f
+./usr/bin/nslookup type=file uname=root gname=wheel mode=0755 size=3981601 sha256=b65f11d066ac7d21cf6c34e6214e194fa5959a02099d241668a55666b4c85aba
+./usr/bin/nsupdate type=file uname=root gname=wheel mode=0755 size=3948376 sha256=e9dab812ae92a111c620dca710cc1f09fd5d21997c35f0b2ba684bd9d5b54e84
+./usr/bin/od type=file uname=root gname=wheel mode=0755 size=240581 sha256=4785c219e59ee7ff44f9af1a82be913064014eba0638aa93fc7aaaa541b2dee3
+./usr/bin/openssl type=file uname=root gname=wheel mode=0755 size=2885389 sha256=f2ef84d75fa724a4575f0101b79b54db3f170f3b70aae9e7d45110eddd6ce779
+./usr/bin/page type=file uname=root gname=wheel mode=0755 size=481337 sha256=5de5ab697231c2afbbfc23ba596d78ad18ca4e087e8b32108b7dbf052fd8d703
 ./usr/bin/pagesize type=file uname=root gname=wheel mode=0755 size=1984 sha256=925e621bfd300ebe85bb6755eebad62e687e9277422b736532a05fb914afbc3e
-./usr/bin/part type=file uname=root gname=wheel mode=0755 size=291182 sha256=8c40b03431a2127a1f7b5ec597fb9a8a4ee477cd50e1aadbefb2983d75ab77a0
-./usr/bin/partition type=file uname=root gname=wheel mode=0755 size=195702 sha256=31c1eadf733fa9ca7e56ced811993e0381ad1affb78b3a01704605a5be03389a
-./usr/bin/passwd type=file uname=root gname=wheel mode=04555 size=388085 sha256=fae1c52a785697f50b38db20222ed59af9adb130815590182fd1a18a63a11d22
-./usr/bin/paste type=file uname=root gname=wheel mode=0755 size=191894 sha256=ccc3aac334b0248b13f355a6a30d4bf0e5c442fd08718dc5bef9b42c1d39f58f
-./usr/bin/patch type=file uname=root gname=wheel mode=0755 size=274240 sha256=4638e051e9e213bdb21fdc0ccb905cf1ed5b176e824f7b6ddbf21ef94e904ebb
-./usr/bin/pathchk type=file uname=root gname=wheel mode=0755 size=187435 sha256=69fba9227edd4b07829e6cf9b4c46c24e00deb3588b0b2d8aaff690ac8c5b3b4
+./usr/bin/part type=file uname=root gname=wheel mode=0755 size=291182 sha256=aff09fe4cde7d55822ede29cca85082184e7c8f6ddb8dcf9e11d588317422a5e
+./usr/bin/partition type=file uname=root gname=wheel mode=0755 size=195702 sha256=ad4034583b07abbebedc78e002a68a4dd97cd995630d3c6009e1d3dfe445c469
+./usr/bin/passwd type=file uname=root gname=wheel mode=04555 size=388085 sha256=0d9c0208e9b1850ef118b46cf4d46b71abb4d5883f8521d7f97774cfccb89ddd
+./usr/bin/paste type=file uname=root gname=wheel mode=0755 size=197270 sha256=8129fed8270cc9510733bbe43653d1d06df36ef17a0157d05aee25dcf4c7ff87
+./usr/bin/patch type=file uname=root gname=wheel mode=0755 size=274240 sha256=bc9b86064a71aaa24ca683812524dc7b6ebaef2c6c6d29fe1041040c8a3e0b4b
+./usr/bin/pathchk type=file uname=root gname=wheel mode=0755 size=187435 sha256=6e9aa2d59fef742747210f8435dae2aa98a210f6b73ab417c27bf7f1dde75942
 ./usr/bin/pcap-config type=file uname=root gname=wheel mode=0755 size=1774 sha256=76beb50a73263985601b736836c6a04a58cb86286d7fea31665a6c152636a154
 ./usr/bin/pkgin_all type=file uname=root gname=wheel mode=0755 size=243 sha256=6beb07bae6e262d7901e7d59c22d7a717fa27a1a3fbbfeeda7a9c915ff1fbabc
 ./usr/bin/pkgin_cd type=file uname=root gname=wheel mode=0755 size=800 sha256=3f885fb9a077dc95d91ce1507915e71993b21fc7eba9eb1fec1b90ded4f34a71
 ./usr/bin/pkgin_sets type=file uname=root gname=wheel mode=0755 size=737 sha256=49ca1356bb812aa9ec3abefaf168b719fab9194218671cbd6ab2e4c02c942220
-./usr/bin/playwave type=file uname=root gname=wheel mode=0755 size=186421 sha256=c49bc5d5579e3c2acf5f1096b30dbcde2b98c46f1469f4e01e05da0ba41f9b8e
-./usr/bin/pr type=file uname=root gname=wheel mode=0755 size=222855 sha256=7efe679f24b800169ec95b2d2a12a90ff078f0426c114b55920f4be916ed24d4
-./usr/bin/prep type=file uname=root gname=wheel mode=0755 size=187623 sha256=55072a6e0ba6d87046e72c3ec87fd42ee0d423efaac5b5cc32a3d00f574cf1a4
-./usr/bin/printenv type=file uname=root gname=wheel mode=0755 size=186631 sha256=7fdbb6f14d311bebf09812a00278da8dce3c806a031cbc5a35bf44996acd5221
-./usr/bin/printf type=file uname=root gname=wheel mode=0755 size=236687 sha256=27fccf93b582a6a85fabda467ac5d24f5f155513040ac1b23bea6eefac207ae3
-./usr/bin/profile type=file uname=root gname=wheel mode=0755 size=226564 sha256=cc461244647fab704857e8386c1e945184ea6730659a900f63eef045b8071d58
-./usr/bin/progressbar type=file uname=root gname=wheel mode=0755 size=186829 sha256=4b0e85b6dacf17489f8334eec8a9e9d7d46c619836425826d7ea637418c25af2
-./usr/bin/pwhash type=file uname=root gname=wheel mode=0755 size=296457 sha256=407fe3665d25ac7c102b55c964e550ced5b17f5d1ed3d4cbc2efbc87bf9d91dd
-./usr/bin/ramdisk type=file uname=root gname=wheel mode=0755 size=186072 sha256=e0160c53440a822335b97cafe4d3245f32d4ae7c4c43ac9a5992ef773ee41ba5
-./usr/bin/rawspeed type=file uname=root gname=wheel mode=0755 size=195396 sha256=943f1e4b28dac43d4bc6a50670fae56f7390795858f23493d7e88b45a1e0ba69
-./usr/bin/readlink type=file uname=root gname=wheel mode=0755 size=369865 sha256=796dda5e7747f347f8850da31faa39d5c2ad4ba94fa710ef4b60c3dbf8258bf0
-./usr/bin/recwave type=file uname=root gname=wheel mode=0755 size=187475 sha256=707fecc6f46be43e21955607a7a73784f345692d1546c45fdb52ef80ebdf8ef6
-./usr/bin/remsync type=file uname=root gname=wheel mode=0755 size=214158 sha256=c7f73bc8c1f17f6ac413af34a4ecb96b8a640fe539b860bb0233f5f401691bc7
-./usr/bin/renice type=file uname=root gname=wheel mode=0755 size=307343 sha256=f25e5402a280d5f8cfc408b57488161f83b6ccf617821e3a0ad75d9432a2392a
-./usr/bin/repartition type=file uname=root gname=wheel mode=0755 size=192922 sha256=8db3a45d422c543d4494433559dbc4f29aea90b011d2cb5635ae03d6892d57b1
-./usr/bin/restore type=file uname=root gname=wheel mode=0755 size=202609 sha256=88f7226fdb292bdae3f8abe82cd540f575c296917615a759863de6405b08e7ba
-./usr/bin/rev type=file uname=root gname=wheel mode=0755 size=210376 sha256=1f2fe1d3d70f6e2850c7a1b5f13768bfc3d393bb507a4ac052867f929f9aaf20
-./usr/bin/rmd160 type=file uname=root gname=wheel mode=0755 size=273380 sha256=2004e886016082a28865dca8401fc31142a647e408ad8d28efeb55a5ca4927b7
+./usr/bin/playwave type=file uname=root gname=wheel mode=0755 size=186421 sha256=a91629d103133c388f96fa04152804232574e86914bdfaffa9c7799496a29f9c
+./usr/bin/pr type=file uname=root gname=wheel mode=0755 size=222855 sha256=f494d72d4072cce1257f80cf2fcd454eff6e4c8f2dec08b469cbe6453756d509
+./usr/bin/prep type=file uname=root gname=wheel mode=0755 size=187623 sha256=158c211794c34642daf9b3e7268e50ec88e20da3a9848e8de9cdc29597ec9d41
+./usr/bin/printenv type=file uname=root gname=wheel mode=0755 size=186631 sha256=8006edd85c63fb30c1d794a0dda4cf8dc616f36d290403428dd858220d28c5bb
+./usr/bin/printf type=file uname=root gname=wheel mode=0755 size=236687 sha256=e8bed5fb640a262fe3118a039646b917245b3eea3769fff77ab6bf58c5049c52
+./usr/bin/profile type=file uname=root gname=wheel mode=0755 size=226564 sha256=6dfd26a43c8050700b145a74346d362dc4e54489b615ea4d75e6f01b12eb0491
+./usr/bin/progressbar type=file uname=root gname=wheel mode=0755 size=186829 sha256=b5ee70d57bfbff8d2983795cba804ef75478c15c6b25cf32a776218be1fdfb27
+./usr/bin/pwhash type=file uname=root gname=wheel mode=0755 size=296457 sha256=c7db949f047c8435d00a6dd4b25c509d9c7097c7aa4d343ef67e13158804795c
+./usr/bin/ramdisk type=file uname=root gname=wheel mode=0755 size=186072 sha256=95f8548ba3d9c6cf559a4a68a28bf22e22f29d4e157afeb6a9e4562b7a3ec34b
+./usr/bin/rawspeed type=file uname=root gname=wheel mode=0755 size=195396 sha256=df238e56b7b4cbde8695acf91907f8f7765c98ee8b3b2dd3a3fa0986fb7df08c
+./usr/bin/readlink type=file uname=root gname=wheel mode=0755 size=369865 sha256=30b2851478f905b0ebc869663634256d08fdcd117295749ed6c9eb7be09259bf
+./usr/bin/recwave type=file uname=root gname=wheel mode=0755 size=187475 sha256=194a65e9ec3edbf01d9a89447cadf77bbe095d966dbd352c74a44d27048a76ce
+./usr/bin/remsync type=file uname=root gname=wheel mode=0755 size=214158 sha256=396695989f4cd28008dcaa9964e71bd5b52c2fa26cb7811a07aff462adf6d4bc
+./usr/bin/renice type=file uname=root gname=wheel mode=0755 size=307343 sha256=b02e094057ded6bbea44d83e264833b20dad5ce8ce3d4112a9ec16674a2ade77
+./usr/bin/repartition type=file uname=root gname=wheel mode=0755 size=192922 sha256=87ad2813df52b8d4247bb2118edde660b9e5d570dd136f85d90789dee8f14e78
+./usr/bin/restore type=file uname=root gname=wheel mode=0755 size=202609 sha256=0a1d2c912e303f0f66ccdf104b5942f8879df21be18c8aad55d3c4aaf70378c7
+./usr/bin/rev type=file uname=root gname=wheel mode=0755 size=210376 sha256=988300280482a5fb60ef51420e9cd30fb880ec34869b8f027e23559993c8a169
+./usr/bin/rmd160 type=file uname=root gname=wheel mode=0755 size=273380 sha256=ca511d96a4c981aa6c71b41c186ad41a4d62e0d00fee40970980a6c57704836c
 ./usr/bin/rotate type=file uname=root gname=wheel mode=0755 size=429 sha256=0f155bddb8ef34686bbad1c4e3e6c9061813336194f70ca04fec7a62b0727271
-./usr/bin/rsh type=file uname=root gname=wheel mode=0755 size=481734 sha256=b337d500ac57bc3bf73dba2b8b18fc508a22550f102cc2b22aba516592b7ab43
-./usr/bin/rz type=file uname=root gname=wheel mode=0755 size=270114 sha256=3ff196f736838095783788e572d21c6afb1f02cce89f82da484074cabcde4520
-./usr/bin/screendump type=file uname=root gname=wheel mode=0755 size=186186 sha256=6feaa4cd3097af2a108473d4de62c035996120db03933c80354e5175e3ec7bfd
-./usr/bin/sdiff type=file uname=root gname=wheel mode=0755 size=226312 sha256=7d975eee18a1eac698ac6cf2584abe19d3493a447d72bec1e1e1fc900c82524f
-./usr/bin/sed type=file uname=root gname=wheel mode=0755 size=286539 sha256=455a33c43f5f285876b7f432c3b77c583c0333d3127867f8ebfc33ba1a9d9fea
-./usr/bin/seq type=file uname=root gname=wheel mode=0755 size=211501 sha256=5296b0f7c332b01c56462129691c7d487c8bb2f6fc8c18b6a93a5cc1de99ad28
-./usr/bin/sha1 type=file uname=root gname=wheel mode=0755 size=273380 sha256=2004e886016082a28865dca8401fc31142a647e408ad8d28efeb55a5ca4927b7
+./usr/bin/rsh type=file uname=root gname=wheel mode=0755 size=481734 sha256=e7347e2567ff9cfba0ec6397b565dbd14cb3e3b9669a66a2aed0f1309d751369
+./usr/bin/rz type=file uname=root gname=wheel mode=0755 size=270114 sha256=a633855ba4943c9a8d06384259d2e5406f608281cfda5e92ac7dd3d5da64f198
+./usr/bin/screendump type=file uname=root gname=wheel mode=0755 size=186186 sha256=b4c8c6cb0781401b27118be852a6bb8168de18d8a222d9d92517a7e66ee65c80
+./usr/bin/sdiff type=file uname=root gname=wheel mode=0755 size=226312 sha256=5f23549f2a16393665e4170aaefd04a33e4c8a9a621dbabe5631c32139fd2f70
+./usr/bin/sed type=file uname=root gname=wheel mode=0755 size=286539 sha256=81f8c55ae5f87377bba3f5d5eeb2daddccc2c5ea98b9c6ea7295e66dc75c73de
+./usr/bin/seq type=file uname=root gname=wheel mode=0755 size=211501 sha256=6b680ae0fca23369987b5ad40b0b1b87498efc4a7b44b58ff19edea7638f6355
+./usr/bin/sha1 type=file uname=root gname=wheel mode=0755 size=273380 sha256=ca511d96a4c981aa6c71b41c186ad41a4d62e0d00fee40970980a6c57704836c
 ./usr/bin/shar type=file uname=root gname=wheel mode=0755 size=2285 sha256=8822176195a697052d3a3550da413deb96fcbd91f7f9830081fa01bd14ddaf56
-./usr/bin/shlock type=file uname=root gname=wheel mode=0755 size=188950 sha256=0443277015236d413ec7d5b8cb2236c0dddfbd24b5540805d25cf0bd3cb60362
-./usr/bin/shuffle type=file uname=root gname=wheel mode=0755 size=210909 sha256=2640749d328f39ad326d2e5d657efaf9626cde9df27fa895aac4280070bcf166
-./usr/bin/slip type=file uname=root gname=wheel mode=0755 size=194859 sha256=75d28b920549c9db76124df2881ae3f0e597998da0e7f5d5e6cc9948149d2be7
-./usr/bin/soelim type=file uname=root gname=wheel mode=0755 size=196327 sha256=2c590e82103f9f94622053e841a734a0638b98bebad0d6e80104bf56d489cd9c
-./usr/bin/sort type=file uname=root gname=wheel mode=0755 size=286953 sha256=61da2c80620779ebf4183c6b929a81397ff955e2bc637e53132951ec250440bd
+./usr/bin/shlock type=file uname=root gname=wheel mode=0755 size=188950 sha256=a86b56e4881564f6adca46ec4739d5be9bec20d25849521f4017596a85f6ffe4
+./usr/bin/shuffle type=file uname=root gname=wheel mode=0755 size=210909 sha256=f650ff5a71bbc570b80f39b6e5a238e385c6572b35112e3c494b381e3c0818f1
+./usr/bin/slip type=file uname=root gname=wheel mode=0755 size=194859 sha256=9376c5abd9592b13ce7d231e3b4c0ec6c0fee8a3035b88fc80aa3aa80c82bebb
+./usr/bin/soelim type=file uname=root gname=wheel mode=0755 size=196327 sha256=c5427847e14bc02dc0b734f77c37a5eb706e7fdbe1a069fd920970ef3868e528
+./usr/bin/sort type=file uname=root gname=wheel mode=0755 size=286953 sha256=10a925e3b177a64714ed712310309926c3a35e516f63f862a5e69a40d9d3fe0a
 ./usr/bin/spell type=file uname=root gname=wheel mode=0755 size=436 sha256=a3a269b826f99bdc492928bd7b6041cb08ecbc20010745dfd847769fa0930c0f
-./usr/bin/split type=file uname=root gname=wheel mode=0755 size=196644 sha256=1a8a9dfcaf1a19a34433a89305692836a9f22414b934e8463b6df835e07c0759
-./usr/bin/sprofalyze type=file uname=root gname=wheel mode=0755 size=242926 sha256=89a292fd7b345606c74218701db40592a294545bd93799ba568dbdefd212c96f
-./usr/bin/sprofdiff type=file uname=root gname=wheel mode=0755 size=241707 sha256=5fb0a2dc3cd533554ae198fce089c0cd6db3e3dbb2b8df2202c97840a5c8adab
-./usr/bin/sqlite3 type=file uname=root gname=wheel mode=0755 size=1338512 sha256=68f1ca3dea1747860e2ff396f717f36c5e37d8222aa3ee9662f4945cdaadf46e
+./usr/bin/split type=file uname=root gname=wheel mode=0755 size=196644 sha256=96484aecfa4bb2062f84117a80474c302e7f5ee48c48b4c3371967b5a9fbfbfd
+./usr/bin/sprofalyze type=file uname=root gname=wheel mode=0755 size=242926 sha256=0db1bb71d0e523b6c4afb78f551bcb3f466f86810e8a6245790455f5d5d3ef0a
+./usr/bin/sprofdiff type=file uname=root gname=wheel mode=0755 size=241707 sha256=6a6c0a9ea805d38b5de23ec11dc48eb36b78ac360d0583f2cbf320dd2eb59fc0
+./usr/bin/sqlite3 type=file uname=root gname=wheel mode=0755 size=1338512 sha256=c97ee152062f5e03a8ad91ad1535d15446e16af3818c236c5c74230615d3667d
 ./usr/bin/srccrc type=file uname=root gname=wheel mode=0755 size=442 sha256=771aef73269ebcf55c092993f6cd5bd4e6e41f86262ed708299b5ab0714d6589
-./usr/bin/stat type=file uname=root gname=wheel mode=0755 size=369865 sha256=796dda5e7747f347f8850da31faa39d5c2ad4ba94fa710ef4b60c3dbf8258bf0
-./usr/bin/su type=file uname=root gname=wheel mode=04555 size=419278 sha256=ee2b61f8e3dc3ece855f00893487c5bdb9b3b7d143798435d63cdd35970bd922
-./usr/bin/sum type=file uname=root gname=wheel mode=0755 size=273380 sha256=2004e886016082a28865dca8401fc31142a647e408ad8d28efeb55a5ca4927b7
-./usr/bin/svrctl type=file uname=root gname=wheel mode=0755 size=186072 sha256=5bb900672919ef3d930f1bb1138c711a08894e2c0516602e5a5c99b8003f48f1
-./usr/bin/swifi type=file uname=root gname=wheel mode=0755 size=325905 sha256=57185b13ae0c3c6011c485608cf4b1aed730875431326ca16c97313e30285c76
-./usr/bin/synctree type=file uname=root gname=wheel mode=0755 size=231039 sha256=a1fe4322a305e488a336011ad5e02fffbae94716d860cabddbbc77d302f3b0de
-./usr/bin/sz type=file uname=root gname=wheel mode=0755 size=238505 sha256=0d22cbecd8c18fb71d307ba7d6d78ddd1d878d18a335b790312ca4f34f3a96c9
-./usr/bin/tail type=file uname=root gname=wheel mode=0755 size=199072 sha256=6101a76e205d1c6d3f104aad7a3682ef3caea4d95673913be923b9b108ec7de4
+./usr/bin/stat type=file uname=root gname=wheel mode=0755 size=369865 sha256=30b2851478f905b0ebc869663634256d08fdcd117295749ed6c9eb7be09259bf
+./usr/bin/su type=file uname=root gname=wheel mode=04555 size=419278 sha256=73328cb689b9e9807ce4913a5421b555cbd87d9d9d42c35c8d5736981d627878
+./usr/bin/sum type=file uname=root gname=wheel mode=0755 size=273380 sha256=ca511d96a4c981aa6c71b41c186ad41a4d62e0d00fee40970980a6c57704836c
+./usr/bin/svrctl type=file uname=root gname=wheel mode=0755 size=186072 sha256=febbb75d024f993d519707ecd467b231096bb04e203408c6eb0828ba781ae1d3
+./usr/bin/swifi type=file uname=root gname=wheel mode=0755 size=325905 sha256=e9e985c18a1d73193a20778a1097da6d2ce4a161964a9c9536dd414bcc901db7
+./usr/bin/synctree type=file uname=root gname=wheel mode=0755 size=231039 sha256=f5c0202e9a199b9222eb0a194c90727b5930e78e4d6d417bf74dd6b1b85f73a7
+./usr/bin/sz type=file uname=root gname=wheel mode=0755 size=238505 sha256=eb37cd26b5f322978b7a2df5c46daefa676b7525e987e25b9f20ba7c3cb41d3a
+./usr/bin/tail type=file uname=root gname=wheel mode=0755 size=199072 sha256=691b1686bad7018aba835cfaa3a2f79bac649f15197af396950339283bc379ec
 ./usr/bin/tar type=link mode=0755 link=/bin/tar
-./usr/bin/tee type=file uname=root gname=wheel mode=0755 size=208137 sha256=30eb0f167ae77d9537be326a435e3bb26f03ccb7e7acbc3d311066382711a993
-./usr/bin/telnet type=file uname=root gname=wheel mode=0755 size=650829 sha256=5c1365a23388b3c9baef97392bbf04ede6487f9c955fa56a3a13cd3fc10b75b6
-./usr/bin/term type=file uname=root gname=wheel mode=0755 size=195115 sha256=c531203a7140a4220a786839cf76cfdf59fdc41b5cba5392c900780820d04f3a
-./usr/bin/termcap type=file uname=root gname=wheel mode=0755 size=248239 sha256=739f49629d0f0654c8af1dd0d17591df70224516c9114c0de4b9e07d2699f465
+./usr/bin/tee type=file uname=root gname=wheel mode=0755 size=208137 sha256=1c3ca7961f7a5cfd4fb8edabe6ae85a216027921cd16f28d8931617451595ae7
+./usr/bin/telnet type=file uname=root gname=wheel mode=0755 size=657493 sha256=a47e4dc8bd95cfcae0d333441b21a9e283a8221520f542efb710271e1557d3e2
+./usr/bin/term type=file uname=root gname=wheel mode=0755 size=195115 sha256=11df9603b0504fb6a95fa86e5f569e20bc7f078402e43cf43b7de41836287915
+./usr/bin/termcap type=file uname=root gname=wheel mode=0755 size=248239 sha256=88aca9a41337694a60aa1a9d884ecab20fc4992b72094cc3cb9999e5a538d9d2
 ./usr/bin/texi2dvi type=file uname=root gname=wheel mode=0755 size=28390 sha256=681680522fe87ecd50c7ed9479e77d4c570f7b5fbba5c69def06602f5cee42a9
-./usr/bin/texindex type=file uname=root gname=wheel mode=0755 size=219118 sha256=3a619b6ebb0e9a9fe78d1e53b65555c8a23a1c83a181ec5ec1b03eee15951a16
-./usr/bin/tget type=file uname=root gname=wheel mode=0755 size=246622 sha256=9756d2a24b768eea9a0c319a76f6e4fbc05c612d69ea8dd94f2e7c2d1007c28f
-./usr/bin/tic type=file uname=root gname=wheel mode=0755 size=240151 sha256=31dce5b67bebd4c11b923c29bd7f59e1906fa82917f19a41fcbd51d09bb41371
-./usr/bin/time type=file uname=root gname=wheel mode=0755 size=216185 sha256=bc87bac326b63104a68239aca9bbc4bf224455ee1d2cb4b6ff8e19fafb802c5c
-./usr/bin/tmux type=file uname=root gname=wheel mode=0755 size=1185178 sha256=fd33d827b0d5252a65c77b05023dbcd59840dc3dea9651f1aa12942980341d93
-./usr/bin/top type=file uname=root gname=wheel mode=0755 size=499576 sha256=11379ec0df4c7912539f29a4f2f25c147be8cf47642ca7bbdca6265f8f7636ad
-./usr/bin/toproto type=file uname=root gname=wheel mode=0755 size=228447 sha256=81f46783a0c31e5372a60e3f66db46ba9fc5e280422179abc35f34c7a47bf020
-./usr/bin/touch type=file uname=root gname=wheel mode=0755 size=230600 sha256=005b795510a964e4ea5a1bba48b1173afea7dfc384909af10096cb622be87445
-./usr/bin/tput type=file uname=root gname=wheel mode=0755 size=252470 sha256=8969372ae3f4028172ea419e6eb51c9792b2af227ef0a017235ab7198a7e53b0
-./usr/bin/tr type=file uname=root gname=wheel mode=0755 size=193137 sha256=97c26ae94da14a380918f9381372998cea1b5d4d9d754273154a58607ee8129d
-./usr/bin/trace type=file uname=root gname=wheel mode=0755 size=330353 sha256=2d6256cc3832c945da1d0cedd198a6b259a71cc6f2877ebfe8147581806784b9
+./usr/bin/texindex type=file uname=root gname=wheel mode=0755 size=219118 sha256=68377513a62cfc2b54dcdf556901edc7c3053c87dd066723abe0824b013788de
+./usr/bin/tget type=file uname=root gname=wheel mode=0755 size=246622 sha256=89cdc2622501c5ca9ec9efcd512d3446767216c4082933ccca6a81d3190749d9
+./usr/bin/tic type=file uname=root gname=wheel mode=0755 size=240151 sha256=dc685b49af2ebab6aa9fcc18340b81a7fd8bbd31c9654e313f1f631488cbba48
+./usr/bin/time type=file uname=root gname=wheel mode=0755 size=216185 sha256=c94cdab95964d4c8eb5d632ded871e0509209a388d0aa144472d69307ebb6edd
+./usr/bin/tmux type=file uname=root gname=wheel mode=0755 size=1185178 sha256=c11040d3a4819bd0d11f9f3d912f512d5d4f026d6b30e59d329113574ce57f1e
+./usr/bin/top type=file uname=root gname=wheel mode=0755 size=499576 sha256=1e62a5ca1ed5688fc40f7ee700cd1de31126f0f090ecd0c514872f93e817cf09
+./usr/bin/toproto type=file uname=root gname=wheel mode=0755 size=228447 sha256=46bbdc74ddd72029e565c7b05b86965148d7743a4347aa18d3d1b3a373329e9f
+./usr/bin/touch type=file uname=root gname=wheel mode=0755 size=230600 sha256=135c38af82b02ed269cfa7c464fcf5edfcc45aa9dcc059e1895e35728ce7bbd1
+./usr/bin/tput type=file uname=root gname=wheel mode=0755 size=252470 sha256=c4b7b98d2ef63d2d084164ef639ec23e305708f43e600fb097d8135d523b1014
+./usr/bin/tr type=file uname=root gname=wheel mode=0755 size=193137 sha256=8e1e8b9db0c3c9734fa9f37439474f1b25d9d65d0b02982f9a5c46a7e5799dd1
+./usr/bin/trace type=file uname=root gname=wheel mode=0755 size=330353 sha256=f6279b6982d08ec5dc8d01042dfba2d8c9a3f4a850b6053387c0541c372c1c18
 ./usr/bin/true type=file uname=root gname=wheel mode=0755 size=18 sha256=a25e77caa0e16d25d7475cf5e9a161717d26a3935f2119c99550957168a8f6a7
-./usr/bin/truncate type=file uname=root gname=wheel mode=0755 size=186531 sha256=c73d123a4fd14a39ed9dee8d266d3b7ca85510b9416229cfedf22b571eb38798
-./usr/bin/tsort type=file uname=root gname=wheel mode=0755 size=269770 sha256=6cfb1366f0433cc7ce6601bdd50bbdf7acfd86a68b8a0c1776737f5385d900f9
-./usr/bin/tty type=file uname=root gname=wheel mode=0755 size=205610 sha256=de2d5390d632dcb0b4edc416a2005b9624228aed082df454d48b1bb526839d50
-./usr/bin/ul type=file uname=root gname=wheel mode=0755 size=255368 sha256=364906d041b2a4e9f6a6866d54da435feb0d024784945546ff925db2f588a696
-./usr/bin/uname type=file uname=root gname=wheel mode=0755 size=208288 sha256=dd304a1b4b8895e6f8df7ad207e95bb7a32145fb0a899d645825c61f7a985afc
-./usr/bin/uncompress type=file uname=root gname=wheel mode=0755 size=199178 sha256=0036f569aa75dd96d309ffac1d2cd3664c3c6bd03ab49bb851622066223f4a28
-./usr/bin/unexpand type=file uname=root gname=wheel mode=0755 size=199944 sha256=f7c08a4e114f72f0db872d26c02116bfee763b4ef4f0406c790347a6d0fd80b6
-./usr/bin/unifdef type=file uname=root gname=wheel mode=0755 size=221486 sha256=db2629f29b5ef7e0d4d17296be1789c2924445d8d00365b39cf972840984d120
+./usr/bin/truncate type=file uname=root gname=wheel mode=0755 size=186531 sha256=e51d69c27e5758ec00817be63f5c99c7abd55ee85d2e7f20669b08b428213cc9
+./usr/bin/tsort type=file uname=root gname=wheel mode=0755 size=269770 sha256=d703e8384294d7583097b99f895880e4c62b58a41c37a6682b8330e18039859d
+./usr/bin/tty type=file uname=root gname=wheel mode=0755 size=205610 sha256=9fd019145a54d60d7c4dc4017bbf4ad34613a9dcd2d291f9fad2c21532e60566
+./usr/bin/ul type=file uname=root gname=wheel mode=0755 size=255368 sha256=a172d3fc316b1a9b147cffdf6d925fc206c63f5a0cc1534edcfa9daae999c74f
+./usr/bin/uname type=file uname=root gname=wheel mode=0755 size=208288 sha256=9254fdaaf37c8c804ec315b67aea7ba37baf201531636f724cdb68402da7d3a5
+./usr/bin/uncompress type=file uname=root gname=wheel mode=0755 size=199178 sha256=14775152c943c77f3b75cb8a5b62c6c72da4d4e6d48780dcec35653b2a33422f
+./usr/bin/unexpand type=file uname=root gname=wheel mode=0755 size=199944 sha256=df742fb301c9ec80075716df9ecfa99c46744028772bc017f8858ee3c8b49f4a
+./usr/bin/unifdef type=file uname=root gname=wheel mode=0755 size=221486 sha256=3ab31a6559107df5c50c67507b38c585706e6bdc736e0fc002d38ee94cb0cc20
 ./usr/bin/unifdefall type=file uname=root gname=wheel mode=0755 size=869 sha256=412c1eb23f752a2d17e8043b581f98437ecff2247fe91065891d532cf4b9fb2b
-./usr/bin/uniq type=file uname=root gname=wheel mode=0755 size=192413 sha256=1599f56cb5ea39e77badfa593d67138ab09dd4eab8054f00a8c36ca7bba0210a
-./usr/bin/units type=file uname=root gname=wheel mode=0755 size=218008 sha256=f75bfd23f1be14e12c506ffa6e25c2bb2f1743f8b52d2f772f4747bb3644936f
-./usr/bin/unlzma type=file uname=root gname=wheel mode=0755 size=418127 sha256=0eadfbf617677dc6b4f53874a45fc3dba802342fa821a3a258d57d1cec7dd8c4
-./usr/bin/unvis type=file uname=root gname=wheel mode=0755 size=196577 sha256=6c519f32a812559e2c5613d1f46cb64f812ba87622853ecbbcde5b128531fe1b
-./usr/bin/unxz type=file uname=root gname=wheel mode=0755 size=418127 sha256=0eadfbf617677dc6b4f53874a45fc3dba802342fa821a3a258d57d1cec7dd8c4
-./usr/bin/unzip type=file uname=root gname=wheel mode=0755 size=285172 sha256=dddec88777514c2511410c9e5a0c08b32c0ab16e9e4b0f286d39d4321febbb11
-./usr/bin/update type=file uname=root gname=wheel mode=0755 size=185914 sha256=c570e47210e35a1c35484c96371f596b4c6fbb6374cddfad5b4e9e09cf41e591
-./usr/bin/uptime type=file uname=root gname=wheel mode=0755 size=472272 sha256=3c3c2fc9c841d2f766bf247f54efadfe7d4d8eb300cf9bb72515cceb1f6925c7
-./usr/bin/users type=file uname=root gname=wheel mode=0755 size=289474 sha256=4cf899d8efba21bfead76b94875815f20e685ec6657f5fdc73ac79b16b774dcd
-./usr/bin/uudecode type=file uname=root gname=wheel mode=0755 size=336132 sha256=2712b043ac9b01577ee02a5351dbe26567fb37b0cf3e982cd05231637aa830c7
-./usr/bin/uuencode type=file uname=root gname=wheel mode=0755 size=214087 sha256=b1a4f20d4cd1cacf3aeca788fdf4aa5ee7b3754095a037ef6773dc3c844e8eb9
-./usr/bin/uuidgen type=file uname=root gname=wheel mode=0755 size=196495 sha256=06ba6922ab63319525ec3a3e7a6a39392aac6f0935eca546153106fcf079dd3b
+./usr/bin/uniq type=file uname=root gname=wheel mode=0755 size=192413 sha256=cc36b07fbd0cceee04e548e453ad4508abcb4e31b58c642a86ce324278bd5e5d
+./usr/bin/units type=file uname=root gname=wheel mode=0755 size=218008 sha256=7b9d234e53fe8201958995459c51b4e79a7cc0ac0d140fd6089ed70fa5dc1ab3
+./usr/bin/unlzma type=file uname=root gname=wheel mode=0755 size=418127 sha256=2d78094c313f469f05b3d27b1791c9f60338de8e811ef101d3db4d47d5e05a0d
+./usr/bin/unvis type=file uname=root gname=wheel mode=0755 size=196577 sha256=0c14b46d951d5163bde05948491b8d9cf337e2eba951f41dda3c71bedc3c5719
+./usr/bin/unxz type=file uname=root gname=wheel mode=0755 size=418127 sha256=2d78094c313f469f05b3d27b1791c9f60338de8e811ef101d3db4d47d5e05a0d
+./usr/bin/unzip type=file uname=root gname=wheel mode=0755 size=285172 sha256=c524d15c3295c829c99a328658137ce34442a731378c9f0da1f87e1e91c4153b
+./usr/bin/update type=file uname=root gname=wheel mode=0755 size=185914 sha256=11a3db16cf1d4461313f15947f2a1d19b940c7989b2913c3adc94afc33e1130b
+./usr/bin/uptime type=file uname=root gname=wheel mode=0755 size=472272 sha256=d7ea9301459a99c501617d71bff72fcf061371ef64f90a0bc79444f58d96b05b
+./usr/bin/users type=file uname=root gname=wheel mode=0755 size=289474 sha256=d603270e3d4b63edf4dbd8e872e2cd7d06ef168a5eac1339e509b51fc444dc2f
+./usr/bin/uudecode type=file uname=root gname=wheel mode=0755 size=336132 sha256=1888ee5514f0446149139b2229a56e03bda224557de8d03c472b3cc9d9753120
+./usr/bin/uuencode type=file uname=root gname=wheel mode=0755 size=214087 sha256=96e93f7743381cf0197aa08bdfe748bd1763439bd488205b2748ae646bc74cc6
+./usr/bin/uuidgen type=file uname=root gname=wheel mode=0755 size=196495 sha256=34e79b14cd4182e607755d059b67aa50794d60f4b5b281b785097f3ea2c9e0c4
 ./usr/bin/version type=file uname=root gname=wheel mode=0755 size=27 sha256=8c0fbb4d29fc5c03147ec5b1162ccee83ca080c88d6553fcbc73cfca408ae4b1
-./usr/bin/vi type=file uname=root gname=wheel mode=0755 size=999951 sha256=153d0583956229b00819fb1b6643c942137c8d8f27a15b39b01dc7ee06cd0d94
-./usr/bin/view type=file uname=root gname=wheel mode=0755 size=999951 sha256=153d0583956229b00819fb1b6643c942137c8d8f27a15b39b01dc7ee06cd0d94
-./usr/bin/vis type=file uname=root gname=wheel mode=0755 size=204644 sha256=f1a6991d4448c2daa17554f1cc7be99a88cf29e43942abd000f9bd51354f6d22
-./usr/bin/vol type=file uname=root gname=wheel mode=0755 size=195168 sha256=6faf37b6e1c9810ba81a0c185a74b391a257102fe5cd9fce1efc506f31daca20
-./usr/bin/w type=file uname=root gname=wheel mode=0755 size=472272 sha256=3c3c2fc9c841d2f766bf247f54efadfe7d4d8eb300cf9bb72515cceb1f6925c7
-./usr/bin/wall type=file uname=root gname=tty mode=02555 size=376419 sha256=de0cd381636a3645d03ed7d784ab589d251557645dab87a8cb6af863fffc7407
-./usr/bin/wc type=file uname=root gname=wheel mode=0755 size=215338 sha256=6419911703f73ae54c98ae7a26e8379c61f884d24fa7e76c94009ce4ae3b56d6
-./usr/bin/what type=file uname=root gname=wheel mode=0755 size=216269 sha256=47b5f353ec722c311c1cd8d11d79c164250d9eceeaeb52cf503af3a774bd848e
-./usr/bin/whatis type=file uname=root gname=wheel mode=0755 size=336550 sha256=5d4ef958c7cb74365e56bae6321278d1047e1cfa028a67b7e46ece2b74c58ae3
-./usr/bin/whereis type=file uname=root gname=wheel mode=0755 size=187931 sha256=a9c11985c6bbba7371d808912ad568a7b9bf5be45098e9d921d52780ae504b36
-./usr/bin/which type=file uname=root gname=wheel mode=0755 size=187931 sha256=a9c11985c6bbba7371d808912ad568a7b9bf5be45098e9d921d52780ae504b36
-./usr/bin/who type=file uname=root gname=wheel mode=0755 size=379756 sha256=fad769da6a1349710e34e003e67c9d73c0b805a53add2067bcacafc77e05997b
-./usr/bin/whoami type=file uname=root gname=wheel mode=0755 size=328194 sha256=30291d459a44274899216bcf32dae3dd5b3a5d037909e091e72519b1e679daa0
-./usr/bin/whois type=file uname=root gname=wheel mode=0755 size=351973 sha256=ddc1a7fad408e9319c38bb90810b76c4e57ff057d760649f6da0d96014bfa867
+./usr/bin/vi type=file uname=root gname=wheel mode=0755 size=999951 sha256=9bf37ed1587c01dca5a59ddbba15c357dd3dac2e72c66d1e95ee849dd61dc5ef
+./usr/bin/view type=file uname=root gname=wheel mode=0755 size=999951 sha256=9bf37ed1587c01dca5a59ddbba15c357dd3dac2e72c66d1e95ee849dd61dc5ef
+./usr/bin/vis type=file uname=root gname=wheel mode=0755 size=204644 sha256=e4611f38a33490df0373bbfccfac3dbfabffdeadf962d37b79b17622ac8f32b1
+./usr/bin/vol type=file uname=root gname=wheel mode=0755 size=195168 sha256=6802568a9268c86a283b5464190ac8da5e1d60c1935008bd1c976af6745ec643
+./usr/bin/w type=file uname=root gname=wheel mode=0755 size=472272 sha256=d7ea9301459a99c501617d71bff72fcf061371ef64f90a0bc79444f58d96b05b
+./usr/bin/wall type=file uname=root gname=tty mode=02555 size=376419 sha256=e037e4dea51fa45ba4b32b26ccb4542a6fc5a867e28c7b90930e7bd715604963
+./usr/bin/wc type=file uname=root gname=wheel mode=0755 size=215338 sha256=cc0698f8de64526a6b001958784f43d03a47a67b72ee331f6dde0daf8a6b7465
+./usr/bin/what type=file uname=root gname=wheel mode=0755 size=216269 sha256=f1b4e1209570d882142f8376266c4ba97b041433dbf1f275541bfee3717cdf6b
+./usr/bin/whatis type=file uname=root gname=wheel mode=0755 size=336550 sha256=ec42ef1a02c4d2c9917aa7ccfd15008a0783f6fe3a5092395ab72b8212decea2
+./usr/bin/whereis type=file uname=root gname=wheel mode=0755 size=187931 sha256=c19a8b08b35f82d5614a9952e203aab99fe1724571495fd714286af05f9f9db1
+./usr/bin/which type=file uname=root gname=wheel mode=0755 size=187931 sha256=c19a8b08b35f82d5614a9952e203aab99fe1724571495fd714286af05f9f9db1
+./usr/bin/who type=file uname=root gname=wheel mode=0755 size=379756 sha256=fd067ce1bfccffa3a9660f33a1112a863e903baec1770fde9873de6cf028172f
+./usr/bin/whoami type=file uname=root gname=wheel mode=0755 size=328194 sha256=c0a68db9da561e755f9af47eaca72187390ed5382ed776d0278841dcfc6a2495
+./usr/bin/whois type=file uname=root gname=wheel mode=0755 size=351973 sha256=2c8fe5667805b89bf601dfcafbb4bff8828a8cfaa412f23a74c92dd4228bc0d0
 ./usr/bin/worldstone type=file uname=root gname=wheel mode=0755 size=1441 sha256=7b785192c58e564cd5eaa3cb1a5d5e1600ae18168010b6de01a795c42a495562
-./usr/bin/write type=file uname=root gname=tty mode=02555 size=376913 sha256=2b8f62c55a7a4bcffa09b6f98bb826d673c305718b8de93b6f22d4d8b9cb1c50
-./usr/bin/writeisofs type=file uname=root gname=wheel mode=0755 size=207796 sha256=8e1761d6adeafc8b9ac276f3ddd6da62dfaad97e4b34527a989ff0095992a450
-./usr/bin/xargs type=file uname=root gname=wheel mode=0755 size=258006 sha256=2976f3fef4ab63e20b94b240236f144ae497db95617683b7dce8e8ae98166846
-./usr/bin/xmlwf type=file uname=root gname=wheel mode=0755 size=353519 sha256=3a202cd4f06e71915f73e6f365796740126ef587da9f12147caacf55d0f11420
-./usr/bin/xstr type=file uname=root gname=wheel mode=0755 size=210247 sha256=112e80147355e838352292170535da7b907da1ee33b16504a92baedbc449f19a
-./usr/bin/xz type=file uname=root gname=wheel mode=0755 size=418127 sha256=0eadfbf617677dc6b4f53874a45fc3dba802342fa821a3a258d57d1cec7dd8c4
-./usr/bin/xzcat type=file uname=root gname=wheel mode=0755 size=418127 sha256=0eadfbf617677dc6b4f53874a45fc3dba802342fa821a3a258d57d1cec7dd8c4
-./usr/bin/yacc type=file uname=root gname=wheel mode=0755 size=318095 sha256=2f41c1d833a4d3f8b8d473054e44f00421cfc56037ac854a7627d36eb4345c5d
-./usr/bin/yes type=file uname=root gname=wheel mode=0755 size=185893 sha256=9be5dd757ff6c070967b6f3b00c65268877a93fb79809478fee7db6ac087bc7c
-./usr/bin/zcat type=file uname=root gname=wheel mode=0755 size=442444 sha256=1b969df6c1cb58c89fd324ee2cb721f97c69b8970f54a3d7603a87b4f68384c3
+./usr/bin/write type=file uname=root gname=tty mode=02555 size=376913 sha256=eb151ed6f771acf41d6641c46ad8ade0f192eeebb3d563823e8aaa82ba529d14
+./usr/bin/writeisofs type=file uname=root gname=wheel mode=0755 size=207796 sha256=1f115eac755b2b646bbe4d0f484636cc4a1096224907afce7a05de9f0edd964c
+./usr/bin/xargs type=file uname=root gname=wheel mode=0755 size=258006 sha256=46ecf46bbf8a0c1365271f787a8f40d1ea55d50ac9242c35efadf5e9debc58f2
+./usr/bin/xmlwf type=file uname=root gname=wheel mode=0755 size=353519 sha256=8821827cd1a78556a305bec549969a55c52cbdfce856520af0ca143e1c949275
+./usr/bin/xstr type=file uname=root gname=wheel mode=0755 size=210247 sha256=6c9bf2ad3a967821f5188a9aa98869b7534bbc77fe60c75b3b232608a5cf554b
+./usr/bin/xz type=file uname=root gname=wheel mode=0755 size=418127 sha256=2d78094c313f469f05b3d27b1791c9f60338de8e811ef101d3db4d47d5e05a0d
+./usr/bin/xzcat type=file uname=root gname=wheel mode=0755 size=418127 sha256=2d78094c313f469f05b3d27b1791c9f60338de8e811ef101d3db4d47d5e05a0d
+./usr/bin/yacc type=file uname=root gname=wheel mode=0755 size=318095 sha256=7bde43ee69405ea2341ff381e58e4fafeaa6c72201c1d6e9064fa1c49082bee3
+./usr/bin/yes type=file uname=root gname=wheel mode=0755 size=185893 sha256=c0c765673a2e2374a9e38f0e158fb63ce50121a346df2b14ce63e98e175c0ed9
+./usr/bin/zcat type=file uname=root gname=wheel mode=0755 size=442444 sha256=bc35406bb79368733b3a9f1525cc0c26aada875ee56b531e6e1ec088f07fa843
 ./usr/bin/zcmp type=file uname=root gname=wheel mode=0755 size=3186 sha256=ac97babbdf12481532fbbd1c7dae59284c14569bf2e29f1c102ee11339c0707c
 ./usr/bin/zdiff type=file uname=root gname=wheel mode=0755 size=3186 sha256=ac97babbdf12481532fbbd1c7dae59284c14569bf2e29f1c102ee11339c0707c
-./usr/bin/zegrep type=file uname=root gname=wheel mode=0755 size=332958 sha256=29dc592b0c98054f596042f83c0aad8d9b1501c652c1456b5149aa9b7e2e21f8
-./usr/bin/zfgrep type=file uname=root gname=wheel mode=0755 size=332958 sha256=29dc592b0c98054f596042f83c0aad8d9b1501c652c1456b5149aa9b7e2e21f8
+./usr/bin/zegrep type=file uname=root gname=wheel mode=0755 size=332958 sha256=c7e6c267f17e9a8a04f6359caa10fd5afac300197dc4ec105d6d45a3f36e690c
+./usr/bin/zfgrep type=file uname=root gname=wheel mode=0755 size=332958 sha256=c7e6c267f17e9a8a04f6359caa10fd5afac300197dc4ec105d6d45a3f36e690c
 ./usr/bin/zforce type=file uname=root gname=wheel mode=0755 size=1377 sha256=68c506fff5bc127ee2b9200b29f0727bf0c5915a4a04a1eff379b80af55f1844
-./usr/bin/zgrep type=file uname=root gname=wheel mode=0755 size=332958 sha256=29dc592b0c98054f596042f83c0aad8d9b1501c652c1456b5149aa9b7e2e21f8
+./usr/bin/zgrep type=file uname=root gname=wheel mode=0755 size=332958 sha256=c7e6c267f17e9a8a04f6359caa10fd5afac300197dc4ec105d6d45a3f36e690c
 ./usr/bin/zless type=file uname=root gname=wheel mode=0755 size=2003 sha256=35630f31c3143143d6ea2c185702b7a3a2b7d9a478d2b106c0b0d70795968b38
 ./usr/bin/zmore type=file uname=root gname=wheel mode=0755 size=2003 sha256=35630f31c3143143d6ea2c185702b7a3a2b7d9a478d2b106c0b0d70795968b38
 ./usr/bin/znew type=file uname=root gname=wheel mode=0755 size=3293 sha256=b15499a935a5334c2150630b1edf4453b119e5a3f64bb87f6c53e232e085c3fd
@@ -1153,33 +1105,33 @@
 ./usr/etc/daily type=file uname=root gname=wheel mode=0755 size=1687 sha256=affb221b3d0d6b0f601f38b818d922bfd1189d81e3bfc13c6ecef85f6b1fb9b4
 ./usr/etc/rc type=file uname=root gname=wheel mode=0755 size=13294 sha256=87f42b1854332cd81db979fe88f764dd039151b84e83c144921ef7b2d1ae03eb
 ./usr/games type=dir uname=root gname=wheel mode=0755
-./usr/games/adventure type=file uname=root gname=wheel mode=0755 size=302466 sha256=72d8a8748f11b88ec31d19a37fb24ac3b8932cde7162311568af67832a82976b
-./usr/games/arithmetic type=file uname=root gname=wheel mode=0755 size=198126 sha256=c2581002ba05958d40dcd245d8cdfc8f27404f1047182f317c0dee2b923560b0
-./usr/games/banner type=file uname=root gname=wheel mode=0755 size=204678 sha256=1dcbc16dc99a1478a494d1d13fb4aaaec85a75526ffc32474a30859607dc06a4
-./usr/games/bcd type=file uname=root gname=wheel mode=0755 size=186791 sha256=3808c870bf4e1b1b3dda50e6ca89c6283000d22d45b2b4e5aa93e50ad7277b9b
-./usr/games/caesar type=file uname=root gname=wheel mode=0755 size=201063 sha256=48e9aebe8e66f4c553cc015ab7f5bc91458e5a83b3ad09bbf96bde05d957b66b
-./usr/games/colorbars type=file uname=root gname=wheel mode=0755 size=357897 sha256=00d209bf0d8095ed0294668854c036e7056a401d73b3f0ba97d56229df528302
-./usr/games/factor type=file uname=root gname=wheel mode=0755 size=1359365 sha256=9e07143e4f8a3dd8d1ffdc26b7798d0111a69c25e1b4717b548bfe043ebaf1e6
-./usr/games/fish type=file uname=root gname=wheel mode=0755 size=199237 sha256=2c7778b88a70076e5e6e6649364c4dd8829d53f14b11eb8bcc06034966095bde
-./usr/games/fortune type=file uname=root gname=wheel mode=0755 size=241778 sha256=e52530d4a9772221092cf2934bbd79398cab5ec6d5d9f269769d4e5900c84c1c
-./usr/games/monop type=file uname=root gname=wheel mode=0755 size=240767 sha256=2ffec7550e291cc5e0f992bc97b9dc40811adecca0ae7feee58211cf3a2dba4e
-./usr/games/morse type=file uname=root gname=wheel mode=0755 size=188837 sha256=d2da69d95f3961f5aeb8a5ab4f46cda305212956622ccf1e7ae20c34ddde5b49
-./usr/games/number type=file uname=root gname=wheel mode=0755 size=189819 sha256=f42044dd23a225f7b0212fc8b14daff125523b76f2cbf226c37faffa7deff1e3
-./usr/games/pig type=file uname=root gname=wheel mode=0755 size=186924 sha256=7ca3e36ceea681a5b678462df8c24c98ac7ae268c93803d17b7fdee20e460ae3
-./usr/games/ppt type=file uname=root gname=wheel mode=0755 size=195870 sha256=b204265e35172908ee25bf18a3fd7fb2b5336c9e20a1d2c395b7a7fe14105104
-./usr/games/primes type=file uname=root gname=wheel mode=0755 size=271129 sha256=88a7cad10cfab520790e7c3c6912755a58a96a4bfe1d8f4278020f49a969690f
-./usr/games/rain type=file uname=root gname=wheel mode=0755 size=363802 sha256=c9cf7e16ca2287ef0b7bd42e01b4ffc624c886688816893ca7446b7fb7d9cb50
-./usr/games/random type=file uname=root gname=wheel mode=0755 size=209812 sha256=ecfa02d569f74da300431e2964b014ec0f48b8006e0ce3f7641ba45dea7999f0
-./usr/games/rogue type=file uname=root gname=games mode=02555 size=607698 sha256=1e63e56aa461caf0433a07050b60a4e0891f66ca2b91665cf8d50e5bf4336a2c
+./usr/games/adventure type=file uname=root gname=wheel mode=0755 size=302466 sha256=894def75a50ecf852b80e2eb83d09c0242a95e6df5c41bdd4b27b6de3c7d63e0
+./usr/games/arithmetic type=file uname=root gname=wheel mode=0755 size=198126 sha256=4bcd2a6eb81fe22bdab8b877a4a5cdca1c6d5595a030c738226f98e72fc7fc79
+./usr/games/banner type=file uname=root gname=wheel mode=0755 size=204678 sha256=a0cea9c31e27a4fc0a64eda735256273b51509a18da28ec455beaf7ddb6f1e19
+./usr/games/bcd type=file uname=root gname=wheel mode=0755 size=186791 sha256=5a02f3acc9dd39dcd709f296ee376ed0f4ce301e895aa49c8f3e87dd5840bc2c
+./usr/games/caesar type=file uname=root gname=wheel mode=0755 size=201063 sha256=220ae364ac5f1c86e735edc497cd218cd9e1203dc759e63cee5ea08ba4df1bca
+./usr/games/colorbars type=file uname=root gname=wheel mode=0755 size=357897 sha256=1ea68de40a2c00aa770b1fd3e28c874ff0082f005a28b022361214daab538e8f
+./usr/games/factor type=file uname=root gname=wheel mode=0755 size=1359365 sha256=736e55ad938d784ac0f2c37d2aebe78dd0ddb998f1ece4e5a8aff899fb78767d
+./usr/games/fish type=file uname=root gname=wheel mode=0755 size=199237 sha256=467f6c2ad78bc0eb879135b53c41ed7ab65bf2562046d6781b2bec1cafb9716f
+./usr/games/fortune type=file uname=root gname=wheel mode=0755 size=241778 sha256=dcd3c50012b4d611e4e4638935ad5cda93fa48b87d20752150739b52641737f0
+./usr/games/monop type=file uname=root gname=wheel mode=0755 size=240767 sha256=eb7ee8444ab11e76c5d29771c54eb3f2b8bcbbd101ce52f348c1b9e93ab8bf6d
+./usr/games/morse type=file uname=root gname=wheel mode=0755 size=188837 sha256=56aac625358fa8afb00339d921d561df2255e55d893c8ffe7e3cee9c1be31f10
+./usr/games/number type=file uname=root gname=wheel mode=0755 size=189819 sha256=68592a1ffc7b1f4d0b65a0c789c8f84f8c8f1564704a283f5b6761f0ba382aaa
+./usr/games/pig type=file uname=root gname=wheel mode=0755 size=186924 sha256=7f367734bd4f62b97e766826775d43705007b6f70cdb08191e58963401140f2e
+./usr/games/ppt type=file uname=root gname=wheel mode=0755 size=195870 sha256=1538f9432ff7b690a486ccfdd44b34181dbd97347910b4bb4606a9bd60e4bb9d
+./usr/games/primes type=file uname=root gname=wheel mode=0755 size=271129 sha256=9278aa31e65617122db16fb0ed4eebdc749c1ad3acb2a7a64062d9afd41f6583
+./usr/games/rain type=file uname=root gname=wheel mode=0755 size=363802 sha256=6ca12c14f58fcf1b5e39bb368fecd78777fdfcfaf81d5c6dfd27fc2b640e8c81
+./usr/games/random type=file uname=root gname=wheel mode=0755 size=209812 sha256=e5b032b7202426b9add5ac796fb03671f071096159a21751eaf9e78abbb57036
+./usr/games/rogue type=file uname=root gname=games mode=02555 size=607698 sha256=26c9a4ba6d6873aa5836cdee27e80312925baabf89aafc2790ac7b65792b1496
 ./usr/games/rot13 type=file uname=root gname=wheel mode=0755 size=1961 sha256=834238da7ef2dd83cb89f4a1d71954d7bc2ebf13f6a4e51d78f955e6ca0c42d5
-./usr/games/snake type=file uname=root gname=games mode=02555 size=502761 sha256=10b6cc5c61afe67a857acf8b1b1b9b6e938d891322ca790cc2d659ff8640a72d
-./usr/games/snscore type=file uname=root gname=wheel mode=0755 size=305896 sha256=ff43e1df407924f0ea4fbbfca73eb2642035c5f236984ce1335cb5be551b2dd3
-./usr/games/strfile type=file uname=root gname=wheel mode=0755 size=198198 sha256=ca19b8587176dde8169ec36aa9d6c38ae71dd6d6f36a44d6ce8fac0831288117
-./usr/games/tetris type=file uname=root gname=games mode=02555 size=390874 sha256=6b230c2f4aa53756b88fdaa0c4fe9e64988beab896b9fbff2d351c1e566ce204
-./usr/games/unstr type=file uname=root gname=wheel mode=0755 size=189631 sha256=988fee7ea7a3f0ea78107b41a958b311de1a90465532e062d8918d2d7c41b0ad
+./usr/games/snake type=file uname=root gname=games mode=02555 size=502761 sha256=06592ff2a623cb3f0a6b9b70d804c8022bb8f0bc70d298667ef87257537a36ae
+./usr/games/snscore type=file uname=root gname=wheel mode=0755 size=305896 sha256=c7c16110f8d242bbab64f0c84a149f1ba0cbbb7a2e084c0efd6583d9d642b841
+./usr/games/strfile type=file uname=root gname=wheel mode=0755 size=198198 sha256=91e807e5924975f77023f53f40002f727cfa994087c9c35d1a0bdf97933bd6f4
+./usr/games/tetris type=file uname=root gname=games mode=02555 size=390874 sha256=8194e4486c607c048957d702548391df42de74a0003b9df38d9c761428d74206
+./usr/games/unstr type=file uname=root gname=wheel mode=0755 size=189631 sha256=173c776ba9bd3e8452a4c8d30e38c88226b17d3e98d432a74ab8807f53997167
 ./usr/games/wargames type=file uname=root gname=wheel mode=0755 size=2153 sha256=63a8253f9388695804e5d301ccf0d56ba7e062820fae15c478b9f530747dd15b
-./usr/games/worm type=file uname=root gname=wheel mode=0755 size=366601 sha256=f41aac751552987eb0593dad72f2a7ca3828a69f7ed235bce8c05fae90955cff
-./usr/games/worms type=file uname=root gname=wheel mode=0755 size=358067 sha256=26617a3b9a88b8d14b9bcd7c833e9f4f1bb306e0aac84aa017780c1a73a9c91b
+./usr/games/worm type=file uname=root gname=wheel mode=0755 size=366601 sha256=763a283c36e8962d4c41201258607c68602693b861f0ce14dc0d8d8f9a865a73
+./usr/games/worms type=file uname=root gname=wheel mode=0755 size=358067 sha256=0a186a03ada01a5f2a10e555933b9636b51d3ee931c0913ee7d6936d2c7d0fa4
 ./usr/games/wtf type=file uname=root gname=wheel mode=0755 size=1789 sha256=b7f8ff5de32189b401de31b578675516fdd49da98e5561924ef8ed2092e1e420
 ./usr/games/hide type=dir uname=root gname=games mode=0750
 ./usr/include type=dir uname=root gname=wheel mode=0755
@@ -2001,7 +1953,7 @@
 ./usr/include/riscv/vmparam.h type=file uname=root gname=wheel mode=0644 size=1229 sha256=e362fd449fc54507d977c0fb7d418048d344353addcdb968a3a4daf9afc42aa0
 ./usr/include/riscv/wchar_limits.h type=file uname=root gname=wheel mode=0644 size=2647 sha256=83d4f4cee42669791e27000bbd2c3fa8bc0f21ccf3df3f255b39bab12917ec8b
 ./usr/include/riscv64 type=dir uname=root gname=wheel mode=0755
-./usr/include/riscv64/archconst.h type=file uname=root gname=wheel mode=0644 size=495 sha256=65f31a68d87db7525049550931cb4102126af177b33d8007ae4a9fb4ca351b61
+./usr/include/riscv64/archconst.h type=file uname=root gname=wheel mode=0644 size=261 sha256=d0be09028da725a76ddb37cc9a893e48b46e14eb1936998e5c774a434d636a4c
 ./usr/include/riscv64/archtypes.h type=file uname=root gname=wheel mode=0644 size=1662 sha256=deff951e6082b28d43ad7601193f672d0bc57b48c57c71430fd89281205cc289
 ./usr/include/riscv64/cpu.h type=file uname=root gname=wheel mode=0644 size=510 sha256=651f72fb60d38b6d9c0cb801472c2eaf4374a9ae474688cb2cc39d00875fd340
 ./usr/include/riscv64/diskparm.h type=file uname=root gname=wheel mode=0644 size=458 sha256=40488abd844b4e6ff11c1694e8646cf28c59c47255904253892b578acb55b261
@@ -2312,90 +2264,41 @@
 ./usr/include/uvm/uvm_swap.h type=file uname=root gname=wheel mode=0644 size=2271 sha256=7a0f875b65225d9e60fe3650dac65dbe56e456aeb45f39cc4a6636733b2662dc
 ./usr/lib type=dir uname=root gname=wheel mode=0755
 ./usr/lib/crontab type=file uname=root gname=wheel mode=0755 size=34 sha256=947c5d815d828121e6ccd72fd2ad6a1dc27a4088ec3ccead6ac1cdac0943f94d
-./usr/lib/crt0.o type=file uname=root gname=wheel mode=0644 size=5112 sha256=6f7cfb1ed9d4b63309d27da7a6b3a4628d3c00641e7c6da5b09d5935f03b8572
-./usr/lib/crtbegin.o type=file uname=root gname=wheel mode=0644 size=3512 sha256=4d2b227da2a9fc4f5acd23b426c066889394be07c52278f92a108c30571edc04
-./usr/lib/crtend.o type=file uname=root gname=wheel mode=0644 size=1094 sha256=6c08ca936f9ca2624f6d71e9a807dbf520b2355ae4e4b32250d8eea4694fac6d
 ./usr/lib/crti.o type=file uname=root gname=wheel mode=0644 size=1057 sha256=93d1641cda41b248feb4c29c7ae905ece7f40453bdca35afc3c71f256459b005
-./usr/lib/crtn.o type=file uname=root gname=wheel mode=0644 size=657 sha256=718d8bf20aa01f6af8522aa967a6dd4e96a90f3ae371e51573c8d967f7a030df
-./usr/lib/gcrt0.o type=file uname=root gname=wheel mode=0644 size=5552 sha256=841eeba6d23527071c32d3c4e1801187ee52e689c7749f12a77ea930884433f2
-./usr/lib/libarchive.a type=file uname=root gname=wheel mode=0644 size=877490 sha256=eb83d64289075f8fddec6b534e17e973fa4c9f18c4c8c731530e2f2562f77878
-./usr/lib/libasyn.a type=file uname=root gname=wheel mode=0644 size=21830 sha256=d6ad2442c8c302cd76d3217be607134b98a1155d6dcbf818c9c7046f4dd14602
 ./usr/lib/libaudiodriver.a type=file uname=root gname=wheel mode=0644 size=35428 sha256=6520b762bc98db888dc3a7e8158d6ef8e6d2472921ccc309f7cb7980e72066a9
 ./usr/lib/libbdev.a type=file uname=root gname=wheel mode=0644 size=51788 sha256=54f46040331346064300a3e3baa7c50a023dce25b9e5b501a9c17069868d2491
-./usr/lib/libbind9.a type=file uname=root gname=wheel mode=0644 size=150558 sha256=0ae5325f51d67eb8ee5d3a9126968ee1fcb66e89f0e9a1a7c985c8c241845fa6
-./usr/lib/libblacklist.a type=file uname=root gname=wheel mode=0644 size=18958 sha256=2cb3ef8119a4db64f747bc5321df346c5c4f9c2470aa9ede0898852f947908e1
 ./usr/lib/libblockdriver.a type=file uname=root gname=wheel mode=0644 size=64472 sha256=8d64f54122acc562fe9a388b1523b3b70c8ccb2adc98d513e0cbd22790e7ca32
-./usr/lib/libbz2.a type=file uname=root gname=wheel mode=0644 size=170590 sha256=fc7b25c58d2158db2a78e094abe7b0e09cb2cabf79ecfd8e3acfa0aba9abda5e
 ./usr/lib/libc++.a type=file uname=root gname=wheel mode=0644 size=3292802 sha256=c78e5f4e42587fb8e57e51d3f933ac1377c8aa83818ff8118025348ff3268e05
-./usr/lib/libc.a type=file uname=root gname=wheel mode=0644 size=4722474 sha256=666cd11dcd68776325e0cf253e4cdead8827f12764b33cbde6787728c11709e1
+./usr/lib/libc.a type=file uname=root gname=wheel mode=0644 size=4720644 sha256=40de11deca0d0256611cb6ea36228bc1e472dc4e80ee4fe10922083dc5efeed9
 ./usr/lib/libchardriver.a type=file uname=root gname=wheel mode=0644 size=18112 sha256=dfefb48bb80f5cfc7aeb8a4be90dda80728d734e734f44d5abbdf079d8f48ccc
-./usr/lib/libcrypt.a type=file uname=root gname=wheel mode=0644 size=58512 sha256=8a2697e0ddf453d4c78630f08e5f0708050a8924705b9dd54c4d10b60507ee2b
 ./usr/lib/libcrypto.a type=file uname=root gname=wheel mode=0644 size=6737844 sha256=2dd2aceca40bd5e812d75ba58aa8c5f26793374ecef62fdf2582965cc380754d
-./usr/lib/libcurses.a type=file uname=root gname=wheel mode=0644 size=604044 sha256=474a5a1be6940408368d99ec7c17135bdda846429045ec1d79956b97c0288bbe
-./usr/lib/libddekit.a type=file uname=root gname=wheel mode=0644 size=112610 sha256=990aac4f57d413c16fdfd07c3dccac09e675045a396cf0363121cc9b4516f14c
+./usr/lib/libddekit.a type=file uname=root gname=wheel mode=0644 size=112654 sha256=c585f64cdc7aafcb12dc4c1800823c03c3bf7b10dc1e15c2dd7a4567c0db1d61
 ./usr/lib/libddekit_usb_client.a type=file uname=root gname=wheel mode=0644 size=7020 sha256=435fadf8fdd19275a34aa046443e1db9e3db470964e0f43e9970a6a13cdc1140
 ./usr/lib/libddekit_usb_server.a type=file uname=root gname=wheel mode=0644 size=16160 sha256=1220c472eb973848dde146cbb0d017e93bf093452959339214163f903569f128
-./usr/lib/libdes.a type=file uname=root gname=wheel mode=0644 size=130158 sha256=2c92962ef1d9f3203b4b4735372b3b87b8e532a640dc4f3eafdcfdaacf410060
 ./usr/lib/libdevman.a type=file uname=root gname=wheel mode=0644 size=22356 sha256=ac39a09983cc82b2796075117ac8c54594a85c292a7faf952074792b236dc4c7
-./usr/lib/libdns.a type=file uname=root gname=wheel mode=0644 size=7378138 sha256=46461da616e7ce39df506cf25f587798727cb8f9b4163a3c0fee3b7d51f7b3ae
 ./usr/lib/libedit.a type=file uname=root gname=wheel mode=0644 size=540146 sha256=e23eb4ccd60b4708993ad0441a4069f3f00ba59c6b76be945e58e72d7e7cd21d
 ./usr/lib/libelf.a type=file uname=root gname=wheel mode=0644 size=369580 sha256=de7cc3cc98379f795f05559354d81b835165a0173fd1db9a05806c90b60a4da4
-./usr/lib/libevent.a type=file uname=root gname=wheel mode=0644 size=821904 sha256=6a5aa430da99cdf94416f7003ff0c311c1b0abf8ed2652cb923fbb56ce95a8bd
-./usr/lib/libevent_openssl.a type=file uname=root gname=wheel mode=0644 size=49260 sha256=9a61d62d6f631f796ff6a2a1276ff3f888612a284164aac7025b2f6eefa1dd12
 ./usr/lib/libexec.a type=file uname=root gname=wheel mode=0644 size=18208 sha256=485da831944feb9c213b224bf4acdb78197917cd98d574d4b130343adc3cc36d
-./usr/lib/libexecinfo.a type=file uname=root gname=wheel mode=0644 size=21222 sha256=1883b6830865196c711020c183582318b72d5fa3bac7519c9948ddf8f1569323
-./usr/lib/libexpat.a type=file uname=root gname=wheel mode=0644 size=734808 sha256=357025942a7449b50e1cac84cf8c103aabc450e9e6cc1fddee4ac652b88dd245
 ./usr/lib/libfetch.a type=file uname=root gname=wheel mode=0644 size=185720 sha256=cb82fea3ba063b7a837b4fe873f5c46120ec2875b3b09eff03b2be8909bd3b42
-./usr/lib/libfl.a type=file uname=root gname=wheel mode=0644 size=3324 sha256=cc4bf334f376a70b2fb9a74269fb8d966ec2b17b9b291711bcb84ec43130a6f4
-./usr/lib/libform.a type=file uname=root gname=wheel mode=0644 size=184608 sha256=f13070c03bf1773ec00382beb010b0e523cc784b6ae16887b6dbfc554d8b58c8
 ./usr/lib/libfsdriver.a type=file uname=root gname=wheel mode=0644 size=48640 sha256=85dc1c6f0755a286ce92c6f5da4b1652ef812c8086fd28000534d4cb559e52b8
-./usr/lib/libgcc.a type=file uname=root gname=wheel mode=0644 size=264172 sha256=fd6bba49edc296479e22c88a0fac188a73257d2cffc9362b36f7a5c1abc230de
-./usr/lib/libgcov.a type=file uname=root gname=wheel mode=0644 size=70916 sha256=8ad5030b9124f4465ad1b968059a268b8bd0b00f753eb39337a4360f002cca7e
 ./usr/lib/libinputdriver.a type=file uname=root gname=wheel mode=0644 size=8040 sha256=2d425cc570d21ca3a746d992288e6051585f2b729bae870e90fa51d109b668b4
-./usr/lib/libintl.a type=file uname=root gname=wheel mode=0644 size=99032 sha256=db44524bd0865337c8e030192c30a4e7d7eb980d02128b12c1339ad319ea1b67
-./usr/lib/libirs.a type=file uname=root gname=wheel mode=0644 size=52676 sha256=6ccd16ebaf9ec49ff773fbc0c4dca4e7fa61b323bee652a363e7b3889fffe421
-./usr/lib/libisc.a type=file uname=root gname=wheel mode=0644 size=1534350 sha256=5e35fe3ddb0e362ec4d18f7751b37e30d43133682d9c54edf33a80b1e2062ca3
-./usr/lib/libisccc.a type=file uname=root gname=wheel mode=0644 size=105028 sha256=837d5f52b32ec3dec815dabae15b450bb4176b758b2a14b84fe9969171c9683d
-./usr/lib/libisccfg.a type=file uname=root gname=wheel mode=0644 size=322028 sha256=5cb35b6be9b231d6d4c09e6b3d921b01c7e45c1433fedc25f064546a34532efb
-./usr/lib/libkvm.a type=file uname=root gname=wheel mode=0644 size=78728 sha256=6582ce50a1463299eece5147c2d479a2a87443ad28c964e0ba8e508ce049ac98
-./usr/lib/libl.a type=file uname=root gname=wheel mode=0644 size=3324 sha256=cc4bf334f376a70b2fb9a74269fb8d966ec2b17b9b291711bcb84ec43130a6f4
-./usr/lib/liblua.a type=file uname=root gname=wheel mode=0644 size=800326 sha256=1deb62fd38fd2abfdb57e0ee5ee03e71fc22ec835c57a2181454c2b5f1b1c9ad
 ./usr/lib/liblwip.a type=file uname=root gname=wheel mode=0644 size=485974 sha256=2cd8efeb7fe6dcc3b3360b7ff0e19f43da387c568caba965d6621679b6edaa7d
-./usr/lib/liblwres.a type=file uname=root gname=wheel mode=0644 size=237248 sha256=875e8ded0695e01908f36c37b2409c14efe7c8282aa148bb817781f233beefaa
-./usr/lib/liblzma.a type=file uname=root gname=wheel mode=0644 size=433182 sha256=20f6d3f02c10e981cb5dff079daf91822dcf30afc5a9b5db5fc1166549c4848d
-./usr/lib/libm.a type=file uname=root gname=wheel mode=0644 size=983226 sha256=0bb8ea383eef753e190a6dedb03c3e717dab16592226c82d3139f5be679573e1
 ./usr/lib/libmagic.a type=file uname=root gname=wheel mode=0644 size=461936 sha256=a4a7c1f79013dca2508b8faeadcc04c8e007b09e5716db62f833899794b2a17e
-./usr/lib/libmenu.a type=file uname=root gname=wheel mode=0644 size=69512 sha256=aa0b0b917add6645c565e238048c649f3b943abc57ee98501d36fc1dc7367bda
-./usr/lib/libminc.a type=file uname=root gname=wheel mode=0644 size=558594 sha256=f3bf1d6a3dd97dae916e34ba266f2b636a2219e03b036072e81dcc1b9dfdc129
+./usr/lib/libminc.a type=file uname=root gname=wheel mode=0644 size=558506 sha256=d3ab77a49db9fc593f09f41427638cd06c4aeda6cc8010956cfbac3989c7f48f
 ./usr/lib/libminixfs.a type=file uname=root gname=wheel mode=0644 size=74484 sha256=a63d400591dbddcb34bb9e94f2d60988b06446676ce423295480cb0f6098b8d4
-./usr/lib/libmj.a type=file uname=root gname=wheel mode=0644 size=42306 sha256=23bbedebfcf73bd8c2b3f203e38a12aabfd123bea5ddadbb2d8d0beeea87ac62
 ./usr/lib/libmthread.a type=file uname=root gname=wheel mode=0644 size=75488 sha256=114ed19960470fd65b79a04514fb8acde84dd66daa4e62aa862db65fc3d2e504
 ./usr/lib/libnetdriver.a type=file uname=root gname=wheel mode=0644 size=51078 sha256=43c8dcc86889ed47a97007cf739783a900ee67b2696f5ccc0bdbaef64dd8fc63
-./usr/lib/libnetpgp.a type=file uname=root gname=wheel mode=0644 size=848476 sha256=fd182951a418fd6745f5912d1dfeff3f199dc4066444d05239ee47d229ba38a8
-./usr/lib/libnetpgpverify.a type=file uname=root gname=wheel mode=0644 size=533838 sha256=1530aa2d88d33d20589d815eb59efa57fdbad1972c1dc42adbc2aab5ed46f5a9
 ./usr/lib/libpcap.a type=file uname=root gname=wheel mode=0644 size=752124 sha256=d7647dacdd5c8e8063188173ba6bb83b7031edf50502c32c661cb5e8ff33f830
-./usr/lib/libpci.a type=file uname=root gname=wheel mode=0644 size=425650 sha256=894957433010cde517ea53254a3abcd1728b433249f7b102fceb7dd2978af268
-./usr/lib/libprop.a type=file uname=root gname=wheel mode=0644 size=226184 sha256=a0d91836b91117ff29de585953a38d164403106df73213c59732c11c3016f75a
 ./usr/lib/libpuffs.a type=file uname=root gname=wheel mode=0644 size=152770 sha256=92dbcb71654915a5ffc6280af077bb8084f3a34b22ece0186042bb96d9024410
-./usr/lib/librefuse.a type=file uname=root gname=wheel mode=0644 size=47082 sha256=b7e47dae716fcbfadcb35feb572877c72fd837c8256564ec5b30f89536f40344
-./usr/lib/librmt.a type=file uname=root gname=wheel mode=0644 size=22458 sha256=e3ef0af642a7254d27bd6993c9c1f50e868b702fec97beb2f061cb922ed4e1f3
-./usr/lib/libsaslc.a type=file uname=root gname=wheel mode=0644 size=154712 sha256=0c7b7460766b57be8fb927998cb173b597229d525b283d1c94c5c6948544b2f6
 ./usr/lib/libsffs.a type=file uname=root gname=wheel mode=0644 size=80052 sha256=79a73779c57ba4a020a774f6e4e0353c2089dea660fdb9d1c98c24e0295c735b
 ./usr/lib/libsockdriver.a type=file uname=root gname=wheel mode=0644 size=35316 sha256=5c9ea796467d692601b9789b180f9e21b59a1b1befded075d5c84b7019146ee0
 ./usr/lib/libsockevent.a type=file uname=root gname=wheel mode=0644 size=77476 sha256=caefae6a9fe81e75ed13eed9f7e30270451ff5fa8bfe6cea3279f4e76935895d
-./usr/lib/libsqlite3.a type=file uname=root gname=wheel mode=0644 size=2264542 sha256=be480ed7a53933ebb4b15e3612b9923a536c4cf1a0685c4a292476013aeacc3e
-./usr/lib/libssl.a type=file uname=root gname=wheel mode=0644 size=1277890 sha256=d424ca303f0a90ecd0355a5aaac9681af1d6111552b9a7824e70a807990f10ff
 ./usr/lib/libsys.a type=file uname=root gname=wheel mode=0644 size=336440 sha256=33d243f2388062cfb82f01d2ec2afcb9fdced3f88049e4e9309cfc0264cbcd54
-./usr/lib/libtermcap.a type=link mode=0755 link=libterminfo.a
 ./usr/lib/libterminfo.a type=file uname=root gname=wheel mode=0644 size=153278 sha256=baec6f13266b043226c0d4ba023328a06adf9c5880b85ff4de689327c4341dfa
-./usr/lib/libtermlib.a type=link mode=0755 link=libterminfo.a
 ./usr/lib/libtimers.a type=file uname=root gname=wheel mode=0644 size=6292 sha256=3f27d2d63496dc977861bdd790565354f10ab04840e07d8718e332a88a715d65
 ./usr/lib/libusb.a type=file uname=root gname=wheel mode=0644 size=9354 sha256=7fcde705287f22bfd6c18f71435bff02887278490a966317a3320caf80d6728c
 ./usr/lib/libutil.a type=file uname=root gname=wheel mode=0644 size=294772 sha256=42aa2070580a7fe74997d8d666cac46da35568bc0667aa9502dbafabadf62ed0
-./usr/lib/libvirtio_mmio.a type=file uname=root gname=wheel mode=0644 size=15136 sha256=6db90ac75f1fd50d3dadcc20b45674fa5eb3ff2a9a143dca4df4d778393e038f
 ./usr/lib/libvtreefs.a type=file uname=root gname=wheel mode=0644 size=92350 sha256=7129e28f408594d07f22df7d127ef954ffe7287b480a5c547489b8d422c2efcb
-./usr/lib/libwrap.a type=file uname=root gname=wheel mode=0644 size=103184 sha256=af135433aa21497e5eb9403547d8e9314c92bce2d817b4b6c56eab1a4a47541b
-./usr/lib/libz.a type=file uname=root gname=wheel mode=0644 size=198612 sha256=4e83649dcb3c94b5728a0b75648119f76ba2b302b39fd1be19e748fd23e560ea
 ./usr/lib/bc type=dir uname=root gname=wheel mode=0755
 ./usr/lib/cawf type=dir uname=root gname=wheel mode=0755
 ./usr/lib/cawf/common type=file uname=root gname=wheel mode=0644 size=189 sha256=433ab6694dde7b6daf9c0ed3eba52d10765566c53c7f033af1c592f5aa08a823
@@ -2416,29 +2319,6 @@
 ./usr/lib/fonts/koi8-u.fnt type=file uname=root gname=wheel mode=0755 size=4096 sha256=53b7dfe4576b65f395001c5eb4b1a9197d4d5d018a968112fa9130633f3af010
 ./usr/lib/fonts/polish.fnt type=file uname=root gname=wheel mode=0755 size=4096 sha256=0ddf37a846e3cc54744878e269b8daaee3ccc92c41973d4955f8b564cfdef421
 ./usr/lib/i18n type=dir uname=root gname=wheel mode=0755
-./usr/lib/i18n/libBIG5.a type=file uname=root gname=wheel mode=0644 size=49572 sha256=1b0f62caecd7e1c22848d75cd04d3e0932100df9bd22c8f6967e8c72b829161b
-./usr/lib/i18n/libDECHanyu.a type=file uname=root gname=wheel mode=0644 size=25544 sha256=c6a3218c8da86d18c626dbd087672f6dfc54b5a720322244fd3eacd19129dbef
-./usr/lib/i18n/libEUC.a type=file uname=root gname=wheel mode=0644 size=26908 sha256=3ac99930ebd71f1bc5ab4025dd9387f8e0a6c0a19a0f7640186382ad689db618
-./usr/lib/i18n/libEUCTW.a type=file uname=root gname=wheel mode=0644 size=24300 sha256=bf7578d52331886beed0189a2e0bbe637719e23e7b937287e9d6b149cd9056ea
-./usr/lib/i18n/libGBK2K.a type=file uname=root gname=wheel mode=0644 size=27244 sha256=6227bc239c20f2d5f18d03dbf610da1e06fceeb9d0f33f2f5b64786e1d61cc60
-./usr/lib/i18n/libHZ.a type=file uname=root gname=wheel mode=0644 size=59748 sha256=11ac9be780d568550c6853ff8e28a8061243e74d4e87aa59858d70553d7a869d
-./usr/lib/i18n/libISO2022.a type=file uname=root gname=wheel mode=0644 size=67818 sha256=caa0263581f1fc411db5480f4da595c53061889d7e41b5636c23ca4bc4ec7e24
-./usr/lib/i18n/libJOHAB.a type=file uname=root gname=wheel mode=0644 size=25476 sha256=0445ae1264d99f3ca7b6e381d32e65d45bf5127fb3a8af71aaf0369012aefd6b
-./usr/lib/i18n/libMSKanji.a type=file uname=root gname=wheel mode=0644 size=26730 sha256=1aab85cedc41851f8257a5b612c57c5354b3d16a44517a7ea74c4e7b4a063e90
-./usr/lib/i18n/libUES.a type=file uname=root gname=wheel mode=0644 size=28268 sha256=74eaf913f6050a6580f6a30a908dcc559daf17a2304c9b5021c9d463e56901c3
-./usr/lib/i18n/libUTF1632.a type=file uname=root gname=wheel mode=0644 size=15636 sha256=54c98578d4f575232763808e0a687b4fe213957d69b920c7c6df87ca9214e272
-./usr/lib/i18n/libUTF7.a type=file uname=root gname=wheel mode=0644 size=31688 sha256=64c5a75b899e94401f40daa789077b6166626fa5981df94db7e14a0f49a6e54d
-./usr/lib/i18n/libUTF8.a type=file uname=root gname=wheel mode=0644 size=27096 sha256=08facef6ac41ba5467a3ff4feb716304b016094572b02184627f254792f2d3b5
-./usr/lib/i18n/libVIQR.a type=file uname=root gname=wheel mode=0644 size=40656 sha256=585a3c93f91455d8abc358150215742a6a0cd661f4cf4d3062aba5a70b271c6a
-./usr/lib/i18n/libZW.a type=file uname=root gname=wheel mode=0644 size=29368 sha256=ec6ae9732ae12f10b99dcb79aa67f0b0bc48f5688a55c89c3cb71c6d252bcd65
-./usr/lib/i18n/libiconv_none.a type=file uname=root gname=wheel mode=0644 size=4060 sha256=8409e5be2d4400f928194c2c05f46be400208216149690f0ec35ad422b0c792d
-./usr/lib/i18n/libiconv_std.a type=file uname=root gname=wheel mode=0644 size=14312 sha256=f80b3bae789fb0d34121813af09029e85d1bbc8f205cef55623098530f57a1ce
-./usr/lib/i18n/libmapper_646.a type=file uname=root gname=wheel mode=0644 size=10278 sha256=aa3003bb38ad4e755746da398eaf4142dbdafc3312d87a61672188a193812812
-./usr/lib/i18n/libmapper_none.a type=file uname=root gname=wheel mode=0644 size=3512 sha256=0808248342214777acfd1ef7a1ec63f685f2d2c43eceab1510c58c42263925c1
-./usr/lib/i18n/libmapper_parallel.a type=file uname=root gname=wheel mode=0644 size=8526 sha256=2df609b6afc28086c3e7f6643e6ac7da451770cb14f9d10e6a2aae324b977ed8
-./usr/lib/i18n/libmapper_serial.a type=file uname=root gname=wheel mode=0644 size=8526 sha256=2df609b6afc28086c3e7f6643e6ac7da451770cb14f9d10e6a2aae324b977ed8
-./usr/lib/i18n/libmapper_std.a type=file uname=root gname=wheel mode=0644 size=11782 sha256=5221f0a5ee47b335db6c9626f92b9f5ee35279993770fe86bebeb51d4b3b9cf8
-./usr/lib/i18n/libmapper_zone.a type=file uname=root gname=wheel mode=0644 size=9904 sha256=e5e0a77d4338eba4cca2ab53be3af2974495189497b47b11ca85cdb64374bfc0
 ./usr/lib/keymaps type=dir uname=root gname=wheel mode=0755
 ./usr/lib/keymaps/abnt2.map type=file uname=root gname=wheel mode=0644 size=2788 sha256=3f9e0a8c5a5d2ab20a49e980ea1e79c53bfcba4f40ba908849fe729867e6ff75
 ./usr/lib/keymaps/colemak.map type=file uname=root gname=wheel mode=0644 size=2788 sha256=e6851f54ffd15f1856f8189e043fe750c9a0d3dceef23bd004bffd5c45398c7f
@@ -2492,14 +2372,14 @@
 ./usr/libdata/debug/usr/tests/minix-posix/rmibtest type=dir uname=root gname=wheel mode=0755
 ./usr/libexec type=dir uname=root gname=wheel mode=0755
 ./usr/libexec/blacklistd-helper type=file uname=root gname=wheel mode=0755 size=456 sha256=6dbd0dc375bbff269e8c78169728bdec785150b1c83daef26dd938c4c1a642da
-./usr/libexec/bozohttpd type=file uname=root gname=wheel mode=0755 size=2508439 sha256=bcdbb7821c26032c522556fc834c48f978b7051d1af794017be5cdea6238ac98
-./usr/libexec/fingerd type=file uname=root gname=wheel mode=0755 size=352091 sha256=5cc4f18371b0ffd2c2391c6f981753683d0513879eb8ea51e9dc627e4fae35ec
-./usr/libexec/ftpd type=file uname=root gname=wheel mode=0755 size=701935 sha256=77dce0d25cf59b97b67ba649b9623cca8087be53f0ed533f511c70b72668f22c
-./usr/libexec/getty type=file uname=root gname=wheel mode=0755 size=430100 sha256=a858b2af4fe5ef518680b8a39b5fbe92a4ee75a5d05e9dc01d8292114516a6d4
-./usr/libexec/httpd type=file uname=root gname=wheel mode=0755 size=2508439 sha256=bcdbb7821c26032c522556fc834c48f978b7051d1af794017be5cdea6238ac98
-./usr/libexec/makewhatis type=file uname=root gname=wheel mode=0755 size=453280 sha256=e4595278fea2477eacd11f48147e04679842c533a6a79149edbcd5da9c880e02
-./usr/libexec/rshd type=file uname=root gname=wheel mode=0755 size=505434 sha256=a6c883e670cc3cc0db2cdae82abe86d1812dbf9c7cae8f658de248bc87a94cdf
-./usr/libexec/telnetd type=file uname=root gname=wheel mode=0755 size=564452 sha256=f3007fbe0a8fbd5f66685590e20666df4768120a093db2fb1e4fa2b940b32278
+./usr/libexec/bozohttpd type=file uname=root gname=wheel mode=0755 size=2508439 sha256=e69d48ed9c3760aaf65ff9a4ee89142d88098a88e77b5daaf927024ad65ed44a
+./usr/libexec/fingerd type=file uname=root gname=wheel mode=0755 size=352091 sha256=afc2770d9972d58118208addd56a4863a3e1cca964e0e11b8c1ce9defef6aa7e
+./usr/libexec/ftpd type=file uname=root gname=wheel mode=0755 size=701935 sha256=14b47e0a1738711149348003d9e06f0058cf3bd8e8fa11cfb6bb02c4dd1b9bfa
+./usr/libexec/getty type=file uname=root gname=wheel mode=0755 size=430100 sha256=139b04507a3d036632b0df1306cc2ceb0d84629950d02fd30428677341c1563b
+./usr/libexec/httpd type=file uname=root gname=wheel mode=0755 size=2508439 sha256=e69d48ed9c3760aaf65ff9a4ee89142d88098a88e77b5daaf927024ad65ed44a
+./usr/libexec/makewhatis type=file uname=root gname=wheel mode=0755 size=453280 sha256=1cce3cbcace075d4e094f675e8a2aaa056042e091205df33c5245551f5ab2073
+./usr/libexec/rshd type=file uname=root gname=wheel mode=0755 size=505434 sha256=6b52e3443e7dd924ec7cb59b332758db5cd4cdb04b021316e947db3c884ccc78
+./usr/libexec/telnetd type=file uname=root gname=wheel mode=0755 size=564452 sha256=f89757a5e1c42d9d0956fc797bd52e39dcc9c124e7ed460713bfaf422d326225
 ./usr/libexec/virecover type=file uname=root gname=wheel mode=0755 size=1192 sha256=7883a3f4a60365a7d15e71dc540dab5dfb77716ae0b2d3b5616914f2273a0b65
 ./usr/log type=dir uname=root gname=wheel mode=0755
 ./usr/log/messages type=file uname=root gname=wheel mode=0644 size=0 tags=etc_pkg
@@ -5998,72 +5878,80 @@
 ./usr/preserve type=dir uname=root gname=wheel mode=0755
 ./usr/run type=dir uname=root gname=wheel mode=0755
 ./usr/sbin type=dir uname=root gname=wheel mode=0755
-./usr/sbin/arp type=file uname=root gname=wheel mode=0755 size=354493 sha256=88c302c57ff3de5036477ad6831503792b75374bc644dd2a8f23d519c9ee617a
-./usr/sbin/btrace type=file uname=root gname=wheel mode=0755 size=186909 sha256=e3b62e4f51831c7cee1921df84c7a6b9f98ae07da6bdac97235b82b75e96edea
+./usr/sbin/arp type=file uname=root gname=wheel mode=0755 size=361461 sha256=e8b216c99d26599c3eae7cfea24e93ea74507e614ebf473af216687b8090d882
+./usr/sbin/audit-packages type=file uname=root gname=wheel mode=0755 size=2683 sha256=73e47bccf9d02b477198540163432624897a17746e9892cbb509dc1b384823ac
+./usr/sbin/bpm type=file uname=root gname=wheel mode=0755 size=6200 sha256=4a664b41b745a714cac6fd1718b615ba4dba5524985ceb625a51dfb839b1564c
+./usr/sbin/btrace type=file uname=root gname=wheel mode=0755 size=186909 sha256=2772cfc8922d3eba3dfa2bcc327515c59458aa7584ecc99c0fea250494157764
 ./usr/sbin/chown type=link mode=0755 link=/sbin/chown
-./usr/sbin/chroot type=file uname=root gname=wheel mode=0755 size=328894 sha256=0c8b9a985e1cbe4316c133a058c31331c73fa97a9b0c3ddf5225c5189597456a
-./usr/sbin/ddns-confgen type=file uname=root gname=wheel mode=0755 size=3895114 sha256=f9fa8133a424cc9bc8c9868f1c62b2b3aa704b61605c4f3b52103cc09544b0e1
-./usr/sbin/dev_mkdb type=file uname=root gname=wheel mode=0755 size=291958 sha256=a7ccb2cc780bdbae38cc1e342602999166fd5179950ba812b74948af356f8370
-./usr/sbin/dhcpd type=file uname=root gname=wheel mode=0755 size=4593362 sha256=531f55155edfe6b21ecad0736a2607e46175cf9d39e8145461ae0e3b5d861d64
-./usr/sbin/dhcrelay type=file uname=root gname=wheel mode=0755 size=4262459 sha256=7b0cc76ddbe75aad8f55ec2d347ba7e4fc79df5d57f8c21d9999dfd0c9bc629e
-./usr/sbin/diskctl type=file uname=root gname=wheel mode=0755 size=186439 sha256=95bb9c469c2f10a1be2190952da507b7c1e84663e3580c7df811ec11cf16c419
-./usr/sbin/dnssec-dsfromkey type=file uname=root gname=wheel mode=0755 size=3838520 sha256=12479ab21c0eb00bdd19287ec682720479d9e897a8a62b6aa88926cdbe1cbb87
-./usr/sbin/dnssec-importkey type=file uname=root gname=wheel mode=0755 size=3838472 sha256=b218e4cd94975e940fa385bcbc0e390f267a6b8c54e065d295ab154ff686d77e
-./usr/sbin/dnssec-keyfromlabel type=file uname=root gname=wheel mode=0755 size=3838086 sha256=5723bece59350e7943169808af0a38963972280461fe57a219b22f0c6b6aa682
-./usr/sbin/dnssec-keygen type=file uname=root gname=wheel mode=0755 size=3846371 sha256=850556a2417561894eca37578f726a3219a147ced3d433cc30e09249afd85d5d
-./usr/sbin/dnssec-revoke type=file uname=root gname=wheel mode=0755 size=3830789 sha256=a4c5f6afa59708fe6ab15a0144673621aeb556eab9f267f566a7d71d804686de
-./usr/sbin/dnssec-settime type=file uname=root gname=wheel mode=0755 size=3838196 sha256=cbb5974c011c080272796c8c0b9a82795f5340c270184e5fc7eb59f54ab9ed0a
-./usr/sbin/dnssec-signzone type=file uname=root gname=wheel mode=0755 size=3883980 sha256=687875c95548828759f59dd51baf93e82dd73d8bf4680bdc109a9d8fa4ecd2df
-./usr/sbin/dnssec-verify type=file uname=root gname=wheel mode=0755 size=3830841 sha256=1ed226be3d7de0d7d8be1a2afa6fa1c8fd18201f87d530a811a8e8184f935fc1
-./usr/sbin/fbdctl type=file uname=root gname=wheel mode=0755 size=195754 sha256=6ad4a3765e204decd47f2113c8abe0e81d9ed668c59ae09d3ee89a0fbfa96c2a
-./usr/sbin/group type=file uname=root gname=wheel mode=0755 size=478414 sha256=0c9bebcfe85aae0bb31377e376808d362f105fc73f96fe52c82e89dd12e08cb7
-./usr/sbin/groupadd type=file uname=root gname=wheel mode=0755 size=478414 sha256=0c9bebcfe85aae0bb31377e376808d362f105fc73f96fe52c82e89dd12e08cb7
-./usr/sbin/groupdel type=file uname=root gname=wheel mode=0755 size=478414 sha256=0c9bebcfe85aae0bb31377e376808d362f105fc73f96fe52c82e89dd12e08cb7
-./usr/sbin/groupinfo type=file uname=root gname=wheel mode=0755 size=478414 sha256=0c9bebcfe85aae0bb31377e376808d362f105fc73f96fe52c82e89dd12e08cb7
-./usr/sbin/groupmod type=file uname=root gname=wheel mode=0755 size=478414 sha256=0c9bebcfe85aae0bb31377e376808d362f105fc73f96fe52c82e89dd12e08cb7
-./usr/sbin/i2cscan type=file uname=root gname=wheel mode=0755 size=186971 sha256=00b357d92e9f1e3af7b596c348ef1ee8db3c615e0be65c11b14d8fe6f47c61ba
-./usr/sbin/inetd type=file uname=root gname=wheel mode=0755 size=544372 sha256=1e655410ea3c9057446c7bf64a7ab1555290f75b42e004ec2a4901f2964a8aee
-./usr/sbin/installboot_nbsd type=file uname=root gname=wheel mode=0755 size=213502 sha256=60d45c9b40561fae746953a739f304567229444429dc75c06fdea359dba17098
-./usr/sbin/kernel type=file uname=root gname=wheel mode=0755 size=196927 sha256=41d2c4191a547f97df6dde9db19c5984474a08d454673c066604d21416a77334
-./usr/sbin/link type=file uname=root gname=wheel mode=0755 size=206766 sha256=887671a6ba4306e1868dee351f214079ee39fff25f8a0ee95dd0f1396ac6a900
-./usr/sbin/lwresd type=file uname=root gname=wheel mode=0755 size=4683199 sha256=fa796954904e68a29a6a84b8488f9a32113ab38fa887a5ee2fcbceadcd21b0d8
-./usr/sbin/makefs type=file uname=root gname=wheel mode=0755 size=651894 sha256=b6125bc33a8f763be71b6036d8b937c902bdd02471ba6aead3213b75926106f7
-./usr/sbin/mkfs.mfsv3 type=file uname=root gname=wheel mode=0755 size=250563 sha256=1112a49b0953b4b50bde5efd2cb03ec05d1570227dbaa204ba94fadb0c6c9551
-./usr/sbin/mkproto type=file uname=root gname=wheel mode=0755 size=234268 sha256=eb5a431f5bdc07172cbf8e5cefdc3bf72f33bc641de1d40c182a4a6e2238e69c
-./usr/sbin/mtree type=file uname=root gname=wheel mode=0755 size=460949 sha256=24b5351f167541428c8e2b30bad6786b6f53b0d58938da2bc2989ff8c8b01fe4
-./usr/sbin/named type=file uname=root gname=wheel mode=0755 size=4683199 sha256=fa796954904e68a29a6a84b8488f9a32113ab38fa887a5ee2fcbceadcd21b0d8
-./usr/sbin/named-checkconf type=file uname=root gname=wheel mode=0755 size=3946403 sha256=4d61a27fe833af922676e47ce3f028928897003dd94a8c40ae69a579e17ffd00
-./usr/sbin/named-checkzone type=file uname=root gname=wheel mode=0755 size=3821468 sha256=24dc6078517fe9617efd98e9d92e29772c75d924abebea3acfb5201b5f217389
+./usr/sbin/chroot type=file uname=root gname=wheel mode=0755 size=328894 sha256=4b76d4050fead9f458e25408f0701c24e62676e4055b0b95b8a8429f924addac
+./usr/sbin/ddns-confgen type=file uname=root gname=wheel mode=0755 size=3895114 sha256=cf0afe732c6d5e439b3d844cb919da759d2ea15ae7881bd3e7c148fa5e4f1ee5
+./usr/sbin/dev_mkdb type=file uname=root gname=wheel mode=0755 size=291958 sha256=67fbffa9a4bc6ba0baa6b25cf5c69ba012cd8320f68933d26b92ed875af74024
+./usr/sbin/dhcpd type=file uname=root gname=wheel mode=0755 size=4593362 sha256=c4425a942eec3703d28f640e1ba7fa471aeade4e8afadbb06771c69e9b2758b2
+./usr/sbin/dhcrelay type=file uname=root gname=wheel mode=0755 size=4262459 sha256=75991d74f62b94a39c6e78879aaaa28c1bad5074a7f92da34ebdac9c18cf3e3f
+./usr/sbin/diskctl type=file uname=root gname=wheel mode=0755 size=186439 sha256=f345eb8e4cc4c4656fed8f0d6d03a732f69d92524da9bb66b82b6b45eb9114fc
+./usr/sbin/dnssec-dsfromkey type=file uname=root gname=wheel mode=0755 size=3838520 sha256=6d707a1d3eec9f18cf6a5cb3fb363ec13762dbe50d0a8596f3b6509094874a93
+./usr/sbin/dnssec-importkey type=file uname=root gname=wheel mode=0755 size=3838472 sha256=91b566c3ed4030d48f401ffcae8a38b35941837e0607e27174d88b36025f98a3
+./usr/sbin/dnssec-keyfromlabel type=file uname=root gname=wheel mode=0755 size=3838086 sha256=9318f7b10922d17e0446faf57f306bc88251aa303f4f4e5903e0baecf799f431
+./usr/sbin/dnssec-keygen type=file uname=root gname=wheel mode=0755 size=3846371 sha256=8860cf228c0e24b048f883a27994682c98e01dfd5fe7b253f64d085017014e6e
+./usr/sbin/dnssec-revoke type=file uname=root gname=wheel mode=0755 size=3830789 sha256=567ccb635940947af4ee74acdb60b2a34d67a06a02ee381106c0f99bf3410cbc
+./usr/sbin/dnssec-settime type=file uname=root gname=wheel mode=0755 size=3838196 sha256=6a1e3485d08152f81de27396c8b63d4c2eb0ed314103b3c54b46a28df04d4d54
+./usr/sbin/dnssec-signzone type=file uname=root gname=wheel mode=0755 size=3883980 sha256=f839436b2b41ad3537788204a4b4a42ba22d35183c3477598b220d9bc31f20fd
+./usr/sbin/dnssec-verify type=file uname=root gname=wheel mode=0755 size=3830841 sha256=4b492764d7d49c97dade4857ea56fd173e3abff18ad1b526cb957c0e895ea46f
+./usr/sbin/download-vulnerability-list type=file uname=root gname=wheel mode=0755 size=616 sha256=a6f56a61918912379c321aab11b2147a322b429c0568c308647c761bce6d8b55
+./usr/sbin/fbdctl type=file uname=root gname=wheel mode=0755 size=195754 sha256=0415b69f0d83ec68f0e23bf12bde54f585d7ef3f8c7de1f908b9f63b0389a637
+./usr/sbin/group type=file uname=root gname=wheel mode=0755 size=478414 sha256=4a1163069e06cec9d0388c762bb37d5b30ac42c2f3d05620198818946bcec2eb
+./usr/sbin/groupadd type=file uname=root gname=wheel mode=0755 size=478414 sha256=4a1163069e06cec9d0388c762bb37d5b30ac42c2f3d05620198818946bcec2eb
+./usr/sbin/groupdel type=file uname=root gname=wheel mode=0755 size=478414 sha256=4a1163069e06cec9d0388c762bb37d5b30ac42c2f3d05620198818946bcec2eb
+./usr/sbin/groupinfo type=file uname=root gname=wheel mode=0755 size=478414 sha256=4a1163069e06cec9d0388c762bb37d5b30ac42c2f3d05620198818946bcec2eb
+./usr/sbin/groupmod type=file uname=root gname=wheel mode=0755 size=478414 sha256=4a1163069e06cec9d0388c762bb37d5b30ac42c2f3d05620198818946bcec2eb
+./usr/sbin/i2cscan type=file uname=root gname=wheel mode=0755 size=186971 sha256=ecd37d3c0ae7ed7bdbbd7239c3158b8953b8a5d2a27341cfa0076f751ea44746
+./usr/sbin/inetd type=file uname=root gname=wheel mode=0755 size=544372 sha256=bf5ab8d8308777b454057736d4e3463e887ebc19a280670d21f09b47bd2720b5
+./usr/sbin/installboot_nbsd type=file uname=root gname=wheel mode=0755 size=213502 sha256=c43f8a9a1c7c1ccda3d67ce61a2e07b4427ce8415ecb22906a176ab40ede2906
+./usr/sbin/kernel type=file uname=root gname=wheel mode=0755 size=201057 sha256=96f5a7f4b03278ca66cb2cbd0b1925320120ef37c5091ccc3b52ed77ce316bda
+./usr/sbin/link type=file uname=root gname=wheel mode=0755 size=206766 sha256=568c90be1b3f9aa2b3353783b38bbb4bafe9324f5ca36bd03ed12bd2c4e072b3
+./usr/sbin/lwresd type=file uname=root gname=wheel mode=0755 size=4683199 sha256=4f26650458c988546a987e7e9473f7363b0cc3ff047c8d402b6e7655f1b728a4
+./usr/sbin/makefs type=file uname=root gname=wheel mode=0755 size=651894 sha256=74bf558b8dce85beb1056ceafa9a7a6d295bdf7fb504f352f63ab92bfad7a9d3
+./usr/sbin/mkfs.mfsv3 type=file uname=root gname=wheel mode=0755 size=250563 sha256=8134496357742c94342ebb75b185f50e6fe414142cf1ff00934a9e7c8543603f
+./usr/sbin/mkproto type=file uname=root gname=wheel mode=0755 size=234268 sha256=9582e1ef7a1adf32abdaa062791731678546892f07d5d6cc3037b679352dd773
+./usr/sbin/mtree type=file uname=root gname=wheel mode=0755 size=460949 sha256=6fdace090ca74e444313c6108cc975b2560c82de777c0a8be5540817f8b58898
+./usr/sbin/named type=file uname=root gname=wheel mode=0755 size=4683199 sha256=4f26650458c988546a987e7e9473f7363b0cc3ff047c8d402b6e7655f1b728a4
+./usr/sbin/named-checkconf type=file uname=root gname=wheel mode=0755 size=3946403 sha256=b0fe6baefee1aaff7b578ee416e2f81e7f41750f732f550498c04945424a27d3
+./usr/sbin/named-checkzone type=file uname=root gname=wheel mode=0755 size=3821468 sha256=356ea3be844645894cc0ee5317065721c6324e5cea1bd1ae9851e88a9c197ded
 ./usr/sbin/named-compilezone type=link mode=0755 link=/usr/sbin/named-checkzone
-./usr/sbin/named-journalprint type=file uname=root gname=wheel mode=0755 size=3802179 sha256=1ac35cd3e3a846e08b65cc9298ca4c70d8129be1300453685bc01442368f37c6
-./usr/sbin/ndp type=file uname=root gname=wheel mode=0755 size=401432 sha256=70e9b600676ae6218bb7e2bc0de4d0f1160b540bb3895508d65db0d6b2727d4e
+./usr/sbin/named-journalprint type=file uname=root gname=wheel mode=0755 size=3802179 sha256=619c1df7abd568d4d9b1526e02d6ea6a2d69962fa191b250dd61d36716e19000
+./usr/sbin/ndp type=file uname=root gname=wheel mode=0755 size=401432 sha256=4eefd0f05f92f3139d77847437a000eb90dd9175a373d64d031def43aafb1f2e
 ./usr/sbin/newfs_mfs type=link mode=0755 link=/usr/sbin/mkfs.mfsv3
-./usr/sbin/nsec3hash type=file uname=root gname=wheel mode=0755 size=691578 sha256=10cf743c58f2a88e8fa92e3df44e4059f9c88c5f7dd2ffed34eb21b767a1c4fc
-./usr/sbin/omshell type=file uname=root gname=wheel mode=0755 size=4261011 sha256=d546cd6ecab356b1a72e1e4c9a275e7cb086655e398284317b837ddba1d20003
+./usr/sbin/nsec3hash type=file uname=root gname=wheel mode=0755 size=691578 sha256=50761f5765991368dffcf28344a8a4cb141c438b12886b898444d1654e95fc83
+./usr/sbin/omshell type=file uname=root gname=wheel mode=0755 size=4261011 sha256=1ef221bc0a4f04c57fd7962caf551ec74bf8fc6c772f3010f82c6fa27c97b676
+./usr/sbin/pkg_add type=file uname=root gname=wheel mode=0755 size=2747452 sha256=8acdb50dd3867d60032358d61eb619721833e710f94240b0d7793a193d9f1463
+./usr/sbin/pkg_admin type=file uname=root gname=wheel mode=0755 size=2715372 sha256=d836144c2db0a9b950206e14a0540df39c5ef5eed3c495a67c6a7aea0fc4f739
+./usr/sbin/pkg_create type=file uname=root gname=wheel mode=0755 size=2541268 sha256=c8164b2e01cc75ee76cc8f8e3e7efa83b3310d9ab2bb4a4b330a61c6b9ae09cb
+./usr/sbin/pkg_delete type=file uname=root gname=wheel mode=0755 size=2251588 sha256=67ec54da3ad561980932a1b86b9d80daf0015c3a8c9c3473a24cf48ec299c933
+./usr/sbin/pkg_info type=file uname=root gname=wheel mode=0755 size=2691311 sha256=083d6a82ab3b11c2bc4eeafcc65cb983809860d4db477fec981ba89cc336acc8
 ./usr/sbin/postinstall type=file uname=root gname=wheel mode=0755 size=57986 sha256=5f82da1d4357553ad5146875d945409fbfe157c285bdb217b2e08a4a607d1740
-./usr/sbin/pwd_mkdb type=file uname=root gname=wheel mode=0755 size=327220 sha256=4b58f5f19bc51825667bdf3ae8999a91972d3efd48c9fb29d7537a03ccd08100
-./usr/sbin/rdate type=file uname=root gname=wheel mode=0755 size=351647 sha256=99ca2a995a938c48bb30bf183108d23ecf2beeba6be98ffa68dd3aadac5b3351
-./usr/sbin/rndc type=file uname=root gname=wheel mode=0755 size=846440 sha256=59b4927d3b29b614782951fb5117f9bd66ace723358bc2b8f86d3ed540dfb185
-./usr/sbin/rndc-confgen type=file uname=root gname=wheel mode=0755 size=3895144 sha256=57cddc771435515cdc67381f955d647f73a1fdfa072bd1eb7329f298429dd0a0
-./usr/sbin/rtadvd type=file uname=root gname=wheel mode=0755 size=504902 sha256=464f3ef59aea279b9d3e1ad1d521133f1f13301555cd06fbfc5aecc9a42c1439
+./usr/sbin/pwd_mkdb type=file uname=root gname=wheel mode=0755 size=327220 sha256=199b832f30ff9edaabe62ee95c4a6185ad6a9314c1e52b49e919f4dc03a785c0
+./usr/sbin/rdate type=file uname=root gname=wheel mode=0755 size=351647 sha256=8fef12f8921683dd12fe40dbb5730f24b0f34e7bf306d749ccb03e3b9df71427
+./usr/sbin/rndc type=file uname=root gname=wheel mode=0755 size=846440 sha256=3b99f2f421742de8c9750def3c6a8a6b991de248ae67b8fbcb07cce34bc2e40d
+./usr/sbin/rndc-confgen type=file uname=root gname=wheel mode=0755 size=3895144 sha256=26e309112784bf679f232890e6f055ca524a316fd23b2695280228170645dfef
+./usr/sbin/rtadvd type=file uname=root gname=wheel mode=0755 size=504902 sha256=07da1728a2e8bf42894faca1053871e810b8626b89d793edc23837f9d02d4e82
 ./usr/sbin/service type=file uname=root gname=wheel mode=0755 size=4034 sha256=f4b3d22ca456d944d0f2622bab4bf084f956c21edc9afdfca53d576fadae5808
-./usr/sbin/services_mkdb type=file uname=root gname=wheel mode=0755 size=289215 sha256=a0ea2dc53b846082a1fae8b2e1111eea0598f6fca26108ec7fae445a9973f9c0
-./usr/sbin/syslogd type=file uname=root gname=wheel mode=0755 size=2459188 sha256=266a21f64f548138c4bd959383b574c40c2604cdf6de7b003e998093607046db
-./usr/sbin/tcpdump type=file uname=root gname=wheel mode=0755 size=3036013 sha256=987b5998b76d2ab558893e3c74a2f5726c9b7176721f8adc227658e26f4f4091
-./usr/sbin/traceroute type=file uname=root gname=wheel mode=04555 size=415122 sha256=0e51905a9a03f5252f58e83db092d3a8bd36d59ab09ff93af61946e8c0409222
-./usr/sbin/traceroute6 type=file uname=root gname=wheel mode=04555 size=414848 sha256=321e6a47009f99c42af904976067be73b071e9259ee58b172bf0f3bef05def93
-./usr/sbin/unlink type=file uname=root gname=wheel mode=0755 size=206674 sha256=9041cc470db15f88ffc97ad36467045b666b1deea70dc997eef41380689f7844
+./usr/sbin/services_mkdb type=file uname=root gname=wheel mode=0755 size=289215 sha256=351cae85efb16040669cb1212c48d627c9f752eeab7420e7b79670cfd8598c34
+./usr/sbin/syslogd type=file uname=root gname=wheel mode=0755 size=2459188 sha256=7c9d31cc35223e1ee9158c270a878a57d01c201a675bf6ce3e67291058fd41ae
+./usr/sbin/tcpdump type=file uname=root gname=wheel mode=0755 size=3036013 sha256=6669a9551d8df4877ce3a4b06743bbfbd7ffab9e1afe98228874f4cb1f37a983
+./usr/sbin/traceroute type=file uname=root gname=wheel mode=04555 size=415122 sha256=9cd1696e18264301c344ab15d30fa201377067ef788600a6c76776bf4084c599
+./usr/sbin/traceroute6 type=file uname=root gname=wheel mode=04555 size=414848 sha256=02e3d90b356a48f6c0f4510d65e3851ab83ffc6f5324d1d07fbcbed0e7487fd4
+./usr/sbin/unlink type=file uname=root gname=wheel mode=0755 size=206674 sha256=7a67cc3922488ac44e85751be605730fef72f5d1b4f47fece8a1cf9771880650
 ./usr/sbin/update_asr type=file uname=root gname=wheel mode=0755 size=4328 sha256=02727b12c252736f46ad2a9725bcf2ed3cee40431f977ea569f5d89e1f35811e
-./usr/sbin/user type=file uname=root gname=wheel mode=0755 size=478414 sha256=0c9bebcfe85aae0bb31377e376808d362f105fc73f96fe52c82e89dd12e08cb7
-./usr/sbin/useradd type=file uname=root gname=wheel mode=0755 size=478414 sha256=0c9bebcfe85aae0bb31377e376808d362f105fc73f96fe52c82e89dd12e08cb7
-./usr/sbin/userdel type=file uname=root gname=wheel mode=0755 size=478414 sha256=0c9bebcfe85aae0bb31377e376808d362f105fc73f96fe52c82e89dd12e08cb7
-./usr/sbin/userinfo type=file uname=root gname=wheel mode=0755 size=478414 sha256=0c9bebcfe85aae0bb31377e376808d362f105fc73f96fe52c82e89dd12e08cb7
-./usr/sbin/usermod type=file uname=root gname=wheel mode=0755 size=478414 sha256=0c9bebcfe85aae0bb31377e376808d362f105fc73f96fe52c82e89dd12e08cb7
-./usr/sbin/vipw type=file uname=root gname=wheel mode=0755 size=245918 sha256=35b81d744ae3389d697a23e55d187aa1c5b64fd84d8993f4fc8ec8e1e0b32f3c
-./usr/sbin/vnconfig type=file uname=root gname=wheel mode=0755 size=219811 sha256=a76bd183f53981c18bb159078f6f9445f3aa26651f05d0abd33106419cfd774b
-./usr/sbin/vndconfig type=file uname=root gname=wheel mode=0755 size=219811 sha256=a76bd183f53981c18bb159078f6f9445f3aa26651f05d0abd33106419cfd774b
-./usr/sbin/zdump type=file uname=root gname=wheel mode=0755 size=196293 sha256=6286d7495c94f6568a55174c49ab167a554e3714d946bbf34d0f673f559490fb
-./usr/sbin/zic type=file uname=root gname=wheel mode=0755 size=261759 sha256=2f21f466572076867b7ac6b427765b0df352dae6311de7ebcd564dc0d7999600
+./usr/sbin/user type=file uname=root gname=wheel mode=0755 size=478414 sha256=4a1163069e06cec9d0388c762bb37d5b30ac42c2f3d05620198818946bcec2eb
+./usr/sbin/useradd type=file uname=root gname=wheel mode=0755 size=478414 sha256=4a1163069e06cec9d0388c762bb37d5b30ac42c2f3d05620198818946bcec2eb
+./usr/sbin/userdel type=file uname=root gname=wheel mode=0755 size=478414 sha256=4a1163069e06cec9d0388c762bb37d5b30ac42c2f3d05620198818946bcec2eb
+./usr/sbin/userinfo type=file uname=root gname=wheel mode=0755 size=478414 sha256=4a1163069e06cec9d0388c762bb37d5b30ac42c2f3d05620198818946bcec2eb
+./usr/sbin/usermod type=file uname=root gname=wheel mode=0755 size=478414 sha256=4a1163069e06cec9d0388c762bb37d5b30ac42c2f3d05620198818946bcec2eb
+./usr/sbin/vipw type=file uname=root gname=wheel mode=0755 size=245918 sha256=138e4ba9283ac3a1e954f19a068372305b4577704ec2ecda879bf3c83697c99f
+./usr/sbin/vnconfig type=file uname=root gname=wheel mode=0755 size=219811 sha256=784a1d5bef72eeb3a226e0f4f5c30df8c17e01a0d19f2acbd27a21b80e07f1ef
+./usr/sbin/vndconfig type=file uname=root gname=wheel mode=0755 size=219811 sha256=784a1d5bef72eeb3a226e0f4f5c30df8c17e01a0d19f2acbd27a21b80e07f1ef
+./usr/sbin/zdump type=file uname=root gname=wheel mode=0755 size=196293 sha256=788864eacf1bf9f8e81c7cbf2d04d43e527922cb01db19b73de013927c7cc2fc
+./usr/sbin/zic type=file uname=root gname=wheel mode=0755 size=261759 sha256=ab1480ff16c8ca942b84bdf58d6c6f877b79a92c8eacdd4331a51f0b8ddd8494
 ./usr/service type=dir uname=root gname=wheel mode=0755
 ./usr/service/asr type=dir uname=root gname=wheel mode=0755
 ./usr/share type=dir uname=root gname=wheel mode=0755
@@ -9610,19 +9498,49 @@
 ./usr/include/evbriscv64 type=dir uname=root gname=wheel mode=0755
 ./usr/include/evbriscv64/cpu.h type=link mode=0755 link=../riscv64/cpu.h
 ./usr/include/evbriscv64 type=dir uname=root gname=wheel mode=0755
+./usr/lib/libterminfo.a type=file uname=root gname=wheel mode=0644 size=153278 time=1771247761.0 sha256=baec6f13266b043226c0d4ba023328a06adf9c5880b85ff4de689327c4341dfa
 ./usr/man/man3/current_field.3 type=file uname=root gname=wheel mode=0644 size=3683 sha256=8b3f98a41b4e78de867ef8b0c1f7c767285b0f96ac9c529f9eca89a6844c97c8
+./usr/man/man3/dup_field.3 type=file uname=root gname=wheel mode=0644 size=3348 sha256=7eb435f61335620a4bd33265c3af8848669c56fe2ca6e2d7dc73c375a1d21c14
 ./usr/man/man3/data_ahead.3 type=file uname=root gname=wheel mode=0644 size=2461 sha256=a352fbc3dfab01cae5784a8e5f6c945fc0c9cc6138633edec24b1f6d20bba91d
 ./usr/man/man3/dynamic_field_info.3 type=file uname=root gname=wheel mode=0644 size=3061 sha256=0dd8328f92e1fa7752f967da8c28bc249b71667708172808156315282cfda73d
-./usr/man/man3/dup_field.3 type=file uname=root gname=wheel mode=0644 size=3348 sha256=7eb435f61335620a4bd33265c3af8848669c56fe2ca6e2d7dc73c375a1d21c14
+./usr/libexec/getty type=file uname=root gname=wheel mode=0755 size=430100 time=1771247768.0 sha256=139b04507a3d036632b0df1306cc2ceb0d84629950d02fd30428677341c1563b
 ./usr/man/man1/jobs.1 type=file uname=root gname=wheel mode=0644 size=69775 sha256=4f1ae3e26e7f75cd0cd32f7e0579a1fc2d652d74a920c0ccd4442ea12d3befc6
+./usr/games/colorbars type=file uname=root gname=wheel mode=0755 size=357897 time=1771247768.0 sha256=1ea68de40a2c00aa770b1fd3e28c874ff0082f005a28b022361214daab538e8f
+./usr/bin/info type=file uname=root gname=wheel mode=0755 size=586155 time=1771247768.0 sha256=bc59dd88c94313d2cd1e9e7c3442cf6d94dd95f01c7b201b9ed6dc5e2f18f943
+./usr/libexec/telnetd type=file uname=root gname=wheel mode=0755 size=564452 time=1771247769.0 sha256=f89757a5e1c42d9d0956fc797bd52e39dcc9c124e7ed460713bfaf422d326225
+./usr/bin/cal type=file uname=root gname=wheel mode=0755 size=294815 time=1771247769.0 sha256=5522514e03d5fe8eb723c0954e19634c2842a4753b8630a8700d72cb91ee94e3
+./usr/games/rain type=file uname=root gname=wheel mode=0755 size=363802 time=1771247769.0 sha256=6ca12c14f58fcf1b5e39bb368fecd78777fdfcfaf81d5c6dfd27fc2b640e8c81
+./usr/games/rogue type=file uname=root gname=games mode=02555 size=607698 time=1771247770.0 sha256=26c9a4ba6d6873aa5836cdee27e80312925baabf89aafc2790ac7b65792b1496
+./usr/games/snake type=file uname=root gname=games mode=02555 size=502761 time=1771247770.0 sha256=06592ff2a623cb3f0a6b9b70d804c8022bb8f0bc70d298667ef87257537a36ae
+./usr/bin/nslookup type=file uname=root gname=wheel mode=0755 size=3981601 time=1771247771.0 sha256=b65f11d066ac7d21cf6c34e6214e194fa5959a02099d241668a55666b4c85aba
+./usr/games/tetris type=file uname=root gname=games mode=02555 size=390874 time=1771247770.0 sha256=8194e4486c607c048957d702548391df42de74a0003b9df38d9c761428d74206
+./bin/sh type=file uname=root gname=wheel mode=0755 size=781855 time=1771247770.0 sha256=b1438ae21097f1f747f5e40e4b20a90e6a20a998b3651770287e645d037f0644
+./usr/games/worm type=file uname=root gname=wheel mode=0755 size=366601 time=1771247770.0 sha256=763a283c36e8962d4c41201258607c68602693b861f0ce14dc0d8d8f9a865a73
+./usr/bin/nsupdate type=file uname=root gname=wheel mode=0755 size=3948376 time=1771247772.0 sha256=e9dab812ae92a111c620dca710cc1f09fd5d21997c35f0b2ba684bd9d5b54e84
+./usr/games/worms type=file uname=root gname=wheel mode=0755 size=358067 time=1771247770.0 sha256=0a186a03ada01a5f2a10e555933b9636b51d3ee931c0913ee7d6936d2c7d0fa4
+./usr/share/misc/magic.mgc type=file uname=root gname=wheel mode=0644 size=3042216 time=1771247771.0 sha256=893344a8663cd0ff14c9ed06873fd1238d08e50b40c8191037a7908cb351cd50
+./usr/bin/ftp type=file uname=root gname=wheel mode=0755 size=2555331 time=1771247771.0 sha256=d2a2c358249f8aeaddef7b3923a030969f81a419362111efd0b4587201dc69f2
+./usr/bin/lua type=file uname=root gname=wheel mode=0755 size=915048 time=1771247772.0 sha256=0e541eed0c29375e9e02c45ee778c5a2d8eb710b17d5b5298daaa095c6f4e055
+./usr/bin/infocmp type=file uname=root gname=wheel mode=0755 size=262031 time=1771247772.0 sha256=6c07d79abda79c5b0c2085674aaf9e952786d341dfffeb5f5ec176e1e0dc8ff7
+./usr/bin/top type=file uname=root gname=wheel mode=0755 size=499576 time=1771247772.0 sha256=1e62a5ca1ed5688fc40f7ee700cd1de31126f0f090ecd0c514872f93e817cf09
+./usr/bin/tmux type=file uname=root gname=wheel mode=0755 size=1185178 time=1771247772.0 sha256=c11040d3a4819bd0d11f9f3d912f512d5d4f026d6b30e59d329113574ce57f1e
+./usr/bin/vi type=file uname=root gname=wheel mode=0755 size=999951 time=1771247772.0 sha256=9bf37ed1587c01dca5a59ddbba15c357dd3dac2e72c66d1e95ee849dd61dc5ef
+./usr/bin/ex type=file uname=root gname=wheel mode=0755 size=999951 sha256=9bf37ed1587c01dca5a59ddbba15c357dd3dac2e72c66d1e95ee849dd61dc5ef
+./usr/bin/view type=file uname=root gname=wheel mode=0755 size=999951 sha256=9bf37ed1587c01dca5a59ddbba15c357dd3dac2e72c66d1e95ee849dd61dc5ef
+./usr/bin/tic type=file uname=root gname=wheel mode=0755 size=240151 time=1771247773.0 sha256=dc685b49af2ebab6aa9fcc18340b81a7fd8bbd31c9654e313f1f631488cbba48
+./usr/bin/telnet type=file uname=root gname=wheel mode=0755 size=657493 time=1771247773.0 sha256=a47e4dc8bd95cfcae0d333441b21a9e283a8221520f542efb710271e1557d3e2
+./usr/bin/tput type=file uname=root gname=wheel mode=0755 size=252470 time=1771247773.0 sha256=c4b7b98d2ef63d2d084164ef639ec23e305708f43e600fb097d8135d523b1014
+./usr/bin/ul type=file uname=root gname=wheel mode=0755 size=255368 time=1771247773.0 sha256=a172d3fc316b1a9b147cffdf6d925fc206c63f5a0cc1534edcfa9daae999c74f
 ./usr/share/zoneinfo/iso3166.tab type=file uname=root gname=wheel mode=0644 size=4494 time=1769777068.0 sha256=5725517fe56959a5715443464fabc3adb1f4db379cd2f734f51d64d4df8c8d22
 ./usr/share/zoneinfo/leapseconds type=file uname=root gname=wheel mode=0644 size=2236 time=1769777068.0 sha256=e1a5fe300321656206c9dbcebf5a739b29d5b801b39b135e1820822523827d33
 ./usr/share/zoneinfo/zone1970.tab type=file uname=root gname=wheel mode=0644 size=18644 time=1769777068.0 sha256=6495f0b6e9780b4d462eba16c046f1f9909990b6e8d80a4f4204e1026f455567
 ./usr/share/zoneinfo/zone.tab type=file uname=root gname=wheel mode=0644 size=20091 time=1769777068.0 sha256=19b55ed9fb6e4bbca1885907d854821063e7422e19a946bc42dcd2a502633756
-./usr/sbin/kernel type=file uname=root gname=wheel mode=0755 size=196927 time=1771212710.0 sha256=41d2c4191a547f97df6dde9db19c5984474a08d454673c066604d21416a77334
-./service/memory type=file uname=root gname=wheel mode=0755 size=4574822 time=1771212712.0 sha256=ff707f846e6006d058a9416e21744bc4af85084211b418f083a9d9ce0c33b6ec
+./usr/sbin/kernel type=file uname=root gname=wheel mode=0755 size=201057 time=1771247774.0 sha256=96f5a7f4b03278ca66cb2cbd0b1925320120ef37c5091ccc3b52ed77ce316bda
+./usr/bin/mined type=file uname=root gname=wheel mode=0755 size=288539 time=1771247774.0 sha256=88d76f9549ae3b0c9937fa3f6c7f555e780739a422bb70f4f9008e8a6ad4437c
+./usr/bin/mtop type=file uname=root gname=wheel mode=0755 size=519533 time=1771247774.0 sha256=2e8be4a876cb1e73ccbb0147eab07f631b3e00a021bf80f4ba187f8b965e83de
+./service/memory type=file uname=root gname=wheel mode=0755 size=4574822 time=1771247775.0 sha256=29b2dbce176f27d87c7bcf62c6cf9c53639fd61ee1eeeead29e23a88d340bb53
 ./usr/share/info/dir type=file mode=0644 uname=root gname=wheel
-./etc/release type=file uname=root gname=wheel mode=0444 size=3893 time=1771212719.0 sha256=1656289b598c592f8d78cf3f306a6356b44aa73b48acb3ee0f56d520a731f5ef tags=etc_pkg
+./etc/release type=file uname=root gname=wheel mode=0444 size=3966 time=1771247781.0 sha256=eb93ddb3767f19cf3347e11abbf10c10d9138a0d3c91bfe2df6232bebb082ae0 tags=etc_pkg
 ./dev/ram type=block uname=root gname=kmem mode=600 device=native,1,0
 ./dev/mem type=char uname=root gname=kmem mode=640 device=native,1,1
 ./dev/kmem type=char uname=root gname=kmem mode=640 device=native,1,2
@@ -10184,19 +10102,19 @@
 ./usr/lib/fonts//koi8-u.fnt type=file uname=root gname=wheel mode=0755 size=4096 time=1769777061.0 sha256=53b7dfe4576b65f395001c5eb4b1a9197d4d5d018a968112fa9130633f3af010
 ./usr/lib/fonts//polish.fnt type=file uname=root gname=wheel mode=0755 size=4096 time=1769777061.0 sha256=0ddf37a846e3cc54744878e269b8daaee3ccc92c41973d4955f8b564cfdef421
 ./boot/minix/.temp type=dir mode=0755
-./boot/minix/.temp/mod01_ds type=file mode=0755 size=106774 time=1771209180.0 sha256=a6a7576ab9a43388ff88680efd3262f249e5b94ce472c6720d17d20177e2734c
-./boot/minix/.temp/mod02_rs type=file mode=0755 size=151846 time=1771209192.0 sha256=2e9e96f0a54439a88d918bf4fcf2eea03ed2c4a217b6290f43496a17e7c445ff
-./boot/minix/.temp/mod03_pm type=file mode=0755 size=114147 time=1771209187.0 sha256=94a4295dc1d50e7d45bf8be0c223e6b3dbd823870c8ad24b8bdb5f223174b8f9
-./boot/minix/.temp/mod04_sched type=file mode=0755 size=69221 time=1771209193.0 sha256=1106b78f8a90ddad61dd2917352381a79a8730b98c628cf99e4908f0df82ae05
-./boot/minix/.temp/mod05_vfs type=file mode=0755 size=250269 time=1771209205.0 sha256=9cb3f3e63ee31de33c1a9a6251e5b84cfe0ddb4d7737a6fb3e676d64586d25a0
-./boot/minix/.temp/mod06_memory type=file mode=0755 size=4574822 time=1771212712.0 sha256=ff707f846e6006d058a9416e21744bc4af85084211b418f083a9d9ce0c33b6ec
-./boot/minix/.temp/mod07_tty type=file mode=0755 size=91604 time=1771209245.0 sha256=de4a83f6b3758709df8f8fb094da0fa0abb1d3894f01481787e13b126d0c4845
-./boot/minix/.temp/mod08_mib type=file mode=0755 size=122324 time=1771209183.0 sha256=6aaee9c5596a40832c6abb8903b8761f2e92776c6a2d055a887737c8a6022e06
-./boot/minix/.temp/mod09_vm type=file mode=0755 size=210589 time=1771209213.0 sha256=c2977d08b33f961fe1deba0b84e4013f1ce8032d7ba0a12fbcbcb9492455de00
-./boot/minix/.temp/mod10_pfs type=file mode=0755 size=82655 time=1771209131.0 sha256=4942261e6f5fe1042846cb63026c4fe0762329998ba4a457be06226ff8fcd888
-./boot/minix/.temp/mod11_mfs type=file mode=0755 size=144468 time=1771209131.0 sha256=56913fe6bde78fd94a2845b35549288db5124cb036f11a2f7c617df626c0f03e
-./boot/minix/.temp/mod12_init type=file mode=0755 size=402739 time=1771205275.0 sha256=0e4388bfd1aae56977f849d98c48f2353104f42afc786709d9a659f31f21eb2e
-./boot/minix/.temp//kernel type=file mode=0755 size=196927 time=1771212710.0 sha256=41d2c4191a547f97df6dde9db19c5984474a08d454673c066604d21416a77334
+./boot/minix/.temp/mod01_ds type=file mode=0755 size=106774 time=1771245798.0 sha256=391e63eed5ae4ef10c298ac32e8ab455d1b7de7cc640b10ce4a272c5b2724e6d
+./boot/minix/.temp/mod02_rs type=file mode=0755 size=152765 time=1771245807.0 sha256=05f3b666071b26ddb07f1c0c066b6aed54b838dad571a9fdfd74442c8c867a39
+./boot/minix/.temp/mod03_pm type=file mode=0755 size=114147 time=1771245805.0 sha256=62ef48121874cac6866505a42b8cf961a2602954052e9cd6336659c47238fde0
+./boot/minix/.temp/mod04_sched type=file mode=0755 size=69221 time=1771245804.0 sha256=e3c7d19ea994b119adae8dd47e2fe77899fdbf4a0db8d456f3430d5208edc714
+./boot/minix/.temp/mod05_vfs type=file mode=0755 size=250360 time=1771245818.0 sha256=43f07423a3a6e1ce1b3994b382ce8d8e2eaa9a8c27bef274e4e8614d7f4f452b
+./boot/minix/.temp/mod06_memory type=file mode=0755 size=4574822 time=1771247775.0 sha256=29b2dbce176f27d87c7bcf62c6cf9c53639fd61ee1eeeead29e23a88d340bb53
+./boot/minix/.temp/mod07_tty type=file mode=0755 size=91604 time=1771245821.0 sha256=af0668a40bd6eaabe419f25b023c31aa6027a675a238ee021fb9b5ff19db2826
+./boot/minix/.temp/mod08_mib type=file mode=0755 size=122324 time=1771245802.0 sha256=0508aa57903c61aeab461c50e8e21e63d3b59361e747b45bf59d3e4278e4e0be
+./boot/minix/.temp/mod09_vm type=file mode=0755 size=210589 time=1771245817.0 sha256=f773500ac8789132c1ea421f92d908f35f46e94f02163678f7a2bf7d07b13267
+./boot/minix/.temp/mod10_pfs type=file mode=0755 size=82655 time=1771245796.0 sha256=7b1791e10b4bc50891d85d9a2acce7df84c94503de0ee256e415f30d8af111e2
+./boot/minix/.temp/mod11_mfs type=file mode=0755 size=144468 time=1771245796.0 sha256=528850734abe836b277c616259d34ffa5b7e95e8a4bd4b925085da950d6a5978
+./boot/minix/.temp/mod12_init type=file mode=0755 size=402739 time=1771245755.0 sha256=0545c10a6d66f1d63e408471ad1905203373e17dc5e6e40a3d49f4fa1777b5ae
+./boot/minix/.temp//kernel type=file mode=0755 size=201057 time=1771247774.0 sha256=96f5a7f4b03278ca66cb2cbd0b1925320120ef37c5091ccc3b52ed77ce316bda
 . type=dir uname=root gname=wheel mode=0755
 ./bin type=dir uname=root gname=wheel mode=0755
 ./boot type=dir uname=root gname=wheel mode=0755
@@ -12063,23 +11981,3 @@
 ./usr/lib/fonts//koi8-r.fnt type=file uname=root gname=wheel mode=0755 size=9728 time=1769777061.0 sha256=d5deb54e9f3923378a63b2b8740fcc979e93a96a291060580ad73925fdd98d23
 ./usr/lib/fonts//koi8-u.fnt type=file uname=root gname=wheel mode=0755 size=4096 time=1769777061.0 sha256=53b7dfe4576b65f395001c5eb4b1a9197d4d5d018a968112fa9130633f3af010
 ./usr/lib/fonts//polish.fnt type=file uname=root gname=wheel mode=0755 size=4096 time=1769777061.0 sha256=0ddf37a846e3cc54744878e269b8daaee3ccc92c41973d4955f8b564cfdef421
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250269 time=1771214649.0 sha256=77c1b7e7ded042fd1335218709268ef61b924efcad5721a9cef2983d9c8a60a4
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250269 time=1771214827.0 sha256=ff1d5ad2648c4faabd58f1423ae32db2f46b0a5736ddc8b57323c106d691a8e4
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250269 time=1771215222.0 sha256=b552141272b5e2848cae219ab250a1934332f626d05c4029e1992b3fb1cba969
-./usr/lib/libsys.a type=file uname=root gname=wheel mode=0644 size=383202 time=1771215412.0 sha256=9824001ced1b97ea87cb00ec53bd59ab20dbeaa1675f5a5d1477ac5cf75a2a86
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250269 time=1771215436.0 sha256=4d9bca199fc98a12e9f80b5af42e41fd25f80a237d333545ac8ef404e88c5b5e
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250269 time=1771215687.0 sha256=b47bbf216d84450192ee356265f2374cdb1178ba5c0f7e0dbcfe5ae2b09feaa4
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250269 time=1771216246.0 sha256=610d252624b8795ce8398d69951797b4b23235298515c8cd8eda5f7d0ac264cd
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250338 time=1771216374.0 sha256=8cc9baca5e4225a1ce3f99b7c0fd6a8f1bb27b14e4870b130d54c28395d8c414
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250277 time=1771216444.0 sha256=2e57eb555cb847889d89bb1fef053dbe2d5826919fb70d4c9487d34aae40c8e3
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250285 time=1771216674.0 sha256=eb7e7ff33f10c2cd2b6f4abf369600c9c3460528d1d9f27c68f137fefe15087b
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250285 time=1771216843.0 sha256=b51a36f155d7a732492abde9be2a8fc080eb4986e030a28c96a4a8cc5b3f7a9f
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250285 time=1771217069.0 sha256=4d31a7639da678ead2d9751633f6ee63fa3873fd003a98ca04d4e2ae45613e99
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250293 time=1771217303.0 sha256=c2e9c0b8016b901f0b07ef14cf52e83f11b283b8fe0ec75643fb2b76eea7d3ec
-./service/vfs type=file uname=root gname=wheel mode=0755 size=250717 time=1771217813.0 sha256=388f181274ca98292a0c42a1edef61dd025282f3fc1e275c9ad23eba3a1b8098
-./service/pfs type=file uname=root gname=wheel mode=0755 size=82751 time=1771221691.0 sha256=9cb890d520af8fd87ab4e166ac4ae480dc550af501884aeacb37a4fb78af6fa2
-./service/mfs type=file uname=root gname=wheel mode=0755 size=144468 time=1771221703.0 sha256=bae5bc1ebbc6c6c2bc43ae442dce081a1ad122f4aef3c788b2ec1bb6c3da2159
-./service/vm type=file uname=root gname=wheel mode=0755 size=206268 time=1771221904.0 sha256=175c988e1c7a7ca54b99646ecd769dd69782bb8c147a4d909df49a9b3d1a25d3
-./service/rs type=file uname=root gname=wheel mode=0755 size=152933 time=1771229438.0 sha256=c9a2de416170370051c773a8da75651f282f0ebd54949a88ca12abfc321b3bb9
-./service/rs type=file uname=root gname=wheel mode=0755 size=152949 time=1771229520.0 sha256=f0c120d74543e7aae3707a86bee482e0057ac80234bc55e1119ef176c562bebb
-./service/rs type=file uname=root gname=wheel mode=0755 size=152853 time=1771229610.0 sha256=c53d0c738e82bb7a2aa2297b134153f8fbf0d4e8726ead410c101db03c51b531

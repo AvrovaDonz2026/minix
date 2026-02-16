@@ -24,7 +24,7 @@
 libiberty_topdir = /home/donz/minix/tools/gcc/../../external/gpl3/gcc/dist/libiberty/..
 srcdir = /home/donz/minix/tools/gcc/../../external/gpl3/gcc/dist/libiberty
 
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 
 exec_prefix = ${prefix}
 bindir = ${exec_prefix}/bin
@@ -43,7 +43,7 @@ MULTISUBDIR =
 MULTIDO = true
 MULTICLEAN = true
 
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c -p -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
 mkinstalldirs = $(SHELL) $(libiberty_topdir)/mkinstalldirs
@@ -54,11 +54,11 @@ OUTPUT_OPTION = -o $@
 AR = ar
 AR_FLAGS = rc
 
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 CFLAGS = -O -fcommon
 CPPFLAGS = -DNETBSD_TOOLS -DTARGET_SYSTEM_ROOT=0  -DTARGET_SYSTEM_ROOT_RELOCATABLE
 RANLIB = ranlib
-MAKEINFO = /home/donz/minix/obj.intrgcc/tooldir/bin/nbmakeinfo
+MAKEINFO = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmakeinfo
 PERL = perl
 
 PICFLAG = -fpic
@@ -68,7 +68,7 @@ MAKEOVERRIDES =
 TARGETLIB = ./libiberty.a
 TESTLIB = ./testlib.a
 
-LIBOBJS =  ${LIBOBJDIR}./setproctitle$U.o
+LIBOBJS =  ${LIBOBJDIR}./setproctitle$U.o ${LIBOBJDIR}./strncmp$U.o
 
 # A configuration can specify extra .o files that should be included,
 # even if they are in libc. (Perhaps the libc version is buggy.)

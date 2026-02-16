@@ -13,7 +13,7 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 
 
 VPATH = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/gas
@@ -139,13 +139,13 @@ AR = ar
 AUTOCONF = ${SHELL} /home/donz/minix/external/gpl3/binutils/dist/missing --run autoconf
 AUTOHEADER = ${SHELL} /home/donz/minix/external/gpl3/binutils/dist/missing --run autoheader
 AUTOMAKE = ${SHELL} /home/donz/minix/external/gpl3/binutils/dist/missing --run automake-1.11
-AWK = /home/donz/minix/obj.intrgcc/tooldir/bin/nbawk
+AWK = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk
 CATALOGS = 
 CATOBJEXT = 
-CC = cc -Wno-implicit-int -Wno-implicit-function-declaration
+CC = cc
 CCDEPMODE = depmode=none
 CFLAGS = -O -fcommon
-CPP = cc -Wno-implicit-int -Wno-implicit-function-declaration -E
+CPP = cc -E
 CPPFLAGS = 
 CYGPATH_W = echo
 DATADIRNAME = 
@@ -164,7 +164,7 @@ GENCAT =
 GMSGFMT = /usr/bin/msgfmt
 GREP = /usr/bin/grep
 INCINTL = 
-INSTALL = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -c -p -r
+INSTALL = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -c  -r
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
@@ -172,7 +172,7 @@ INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 INSTOBJEXT = 
 LD = ld -m elf_x86_64
 LDFLAGS =  
-LEX = `if [ -f ../flex/flex ] ; then echo ../flex/flex ; else echo /home/donz/minix/obj.intrgcc/tooldir/bin/nblex ; fi`
+LEX = `if [ -f ../flex/flex ] ; then echo ../flex/flex ; else echo /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nblex ; fi`
 LEXLIB = -lfl
 LEX_OUTPUT_ROOT = lex.yy
 LIBINTL = 
@@ -185,8 +185,8 @@ LIPO =
 LN_S = ln -s
 LTLIBOBJS = 
 MAINT = #
-MAKEINFO = /home/donz/minix/obj.intrgcc/tooldir/bin/nbmakeinfo
-MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+MAKEINFO = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmakeinfo
+MKDIR_P = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 MKINSTALLDIRS = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/gas/../mkinstalldirs
 MSGFMT = /usr/bin/msgfmt
 MSGMERGE = /usr/bin/msgmerge
@@ -209,14 +209,14 @@ PATH_SEPARATOR = :
 POSUB = 
 RANLIB = ranlib
 SED = /usr/bin/sed
-SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake
+SET_MAKE = MAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake
 SHELL = /usr/bin/sh
 STRIP = strip
 USE_NLS = no
 VERSION = 2.23.2
 WARN_CFLAGS = -W -Wall -Wstrict-prototypes -Wmissing-prototypes -Wshadow
 XGETTEXT = /usr/bin/xgettext
-YACC = `if [ -f ../bison/bison ] ; then echo ../bison/bison -y -L../bison/bison ; else echo /home/donz/minix/obj.intrgcc/tooldir/bin/nbyacc ; fi`
+YACC = `if [ -f ../bison/bison ] ; then echo ../bison/bison -y -L../bison/bison ; else echo /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbyacc ; fi`
 YFLAGS = 
 abs_builddir = /home/donz/minix/obj.intrgcc/tools/binutils/build/gas
 abs_srcdir = /home/donz/minix/tools/binutils/../../external/gpl3/binutils/dist/gas
@@ -259,11 +259,11 @@ libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
 localstatedir = ${prefix}/var
 mandir = ${datarootdir}/man
-mkdir_p = /home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d -p
+mkdir_p = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d -p
 obj_format = elf
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/donz/minix/obj.intrgcc/tooldir
+prefix = /home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64
 program_transform_name = s,^,riscv64-elf32-minix-,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin

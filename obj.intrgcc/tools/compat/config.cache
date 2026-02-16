@@ -14,7 +14,7 @@
 ac_cv_c_bigendian=${ac_cv_c_bigendian='no'}
 ac_cv_c_compiler_gnu=${ac_cv_c_compiler_gnu='yes'}
 ac_cv_env_CC_set='set'
-ac_cv_env_CC_value='cc -Wno-implicit-int -Wno-implicit-function-declaration'
+ac_cv_env_CC_value='cc'
 ac_cv_env_CFLAGS_set='set'
 ac_cv_env_CFLAGS_value='-O -fcommon'
 ac_cv_env_CPPFLAGS_set=''
@@ -165,7 +165,7 @@ ac_cv_header_resolv_h=${ac_cv_header_resolv_h='yes'}
 ac_cv_header_rpc_types_h=${ac_cv_header_rpc_types_h='no'}
 ac_cv_header_signal_h=${ac_cv_header_signal_h='yes'}
 ac_cv_header_stdarg_h=${ac_cv_header_stdarg_h='yes'}
-ac_cv_header_stdc=${ac_cv_header_stdc='yes'}
+ac_cv_header_stdc=${ac_cv_header_stdc='no'}
 ac_cv_header_stddef_h=${ac_cv_header_stddef_h='yes'}
 ac_cv_header_stdint_h=${ac_cv_header_stdint_h='yes'}
 ac_cv_header_stdio_h=${ac_cv_header_stdio_h='yes'}
@@ -210,8 +210,8 @@ ac_cv_member_struct_statvfs_f_iosize=${ac_cv_member_struct_statvfs_f_iosize='no'
 ac_cv_member_struct_tm_tm_gmtoff=${ac_cv_member_struct_tm_tm_gmtoff='yes'}
 ac_cv_objext=${ac_cv_objext='o'}
 ac_cv_path_BSHELL=${ac_cv_path_BSHELL='/usr/bin/sh'}
-ac_cv_prog_CPP=${ac_cv_prog_CPP='cc -Wno-implicit-int -Wno-implicit-function-declaration -E'}
-ac_cv_prog_ac_ct_CC=${ac_cv_prog_ac_ct_CC='cc -Wno-implicit-int -Wno-implicit-function-declaration'}
+ac_cv_prog_CPP=${ac_cv_prog_CPP='cc -E'}
+ac_cv_prog_ac_ct_CC=${ac_cv_prog_ac_ct_CC='cc'}
 ac_cv_prog_cc_g=${ac_cv_prog_cc_g='yes'}
 ac_cv_search_regfree=${ac_cv_search_regfree='none required'}
 ac_cv_type_id_t=${ac_cv_type_id_t='yes'}

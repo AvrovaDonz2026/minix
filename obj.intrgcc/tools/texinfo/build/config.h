@@ -100,7 +100,7 @@
 #define HAVE_GETTEXT 1
 
 /* Define to 1 if you have the `gettimeofday' function. */
-/* #undef HAVE_GETTIMEOFDAY */
+#define HAVE_GETTIMEOFDAY 1
 
 /* Define to 1 if you have the `getuid' function. */
 #define HAVE_GETUID 1
@@ -373,7 +373,7 @@
 /* #undef STAT_MACROS_BROKEN */
 
 /* Define to 1 if you have the ANSI C header files. */
-#define STDC_HEADERS 1
+/* #undef STDC_HEADERS */
 
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 /* #undef TM_IN_SYS_TIME */
@@ -401,14 +401,14 @@
 #endif
 
 /* Define to rpl_mkstemp if the replacement function should be used. */
-/* #undef mkstemp */
+#define mkstemp rpl_mkstemp
 
 /* Define to `long' if <sys/types.h> does not define. */
 /* #undef off_t */
 
 /* Define as the type of the result of subtracting two pointers, if the system
    doesn't define it. */
-/* #undef ptrdiff_t */
+#define ptrdiff_t long
 
 /* Define to empty if the C compiler doesn't support this keyword. */
 /* #undef signed */

@@ -19,10 +19,10 @@
 
 # Invoke as, ld or nm from the build tree.
 
-ORIGINAL_AS_FOR_TARGET="/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/as"
-ORIGINAL_LD_FOR_TARGET="/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/ld"
-ORIGINAL_PLUGIN_LD_FOR_TARGET="/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/ld"
-ORIGINAL_NM_FOR_TARGET="/home/donz/minix/obj.intrgcc/tooldir/riscv64-elf32-minix/bin/nm"
+ORIGINAL_AS_FOR_TARGET="/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/as"
+ORIGINAL_LD_FOR_TARGET="/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/ld"
+ORIGINAL_PLUGIN_LD_FOR_TARGET="/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/ld"
+ORIGINAL_NM_FOR_TARGET="/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/nm"
 exeext=
 fast_install=needless
 objdir=.libs

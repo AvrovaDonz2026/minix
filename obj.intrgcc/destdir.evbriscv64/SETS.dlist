@@ -1,5 +1,4 @@
 .
-./audit-packages
 ./bin
 ./bin/[
 ./bin/cat
@@ -63,10 +62,8 @@
 ./boot/minix/.temp/mod11_mfs
 ./boot/minix/.temp/mod12_init
 ./boot/minix_default
-./bpm
 ./dev
 ./dev/pts
-./download-vulnerability-list
 ./etc
 ./etc/X11
 ./etc/X11/ctwm
@@ -226,11 +223,6 @@
 ./libexec/resolvconf/named
 ./libexec/resolvconf/unbound
 ./mnt
-./pkg_add
-./pkg_admin
-./pkg_create
-./pkg_delete
-./pkg_info
 ./proc
 ./root
 ./root/.cshrc
@@ -1880,6 +1872,8 @@
 ./usr/lib/libform.a
 ./usr/lib/libfsdriver.a
 ./usr/lib/libgcc.a
+./usr/lib/libgcc_eh.a
+./usr/lib/libgcc_s.a
 ./usr/lib/libgcov.a
 ./usr/lib/libinputdriver.a
 ./usr/lib/libintl.a
@@ -5464,6 +5458,8 @@
 ./usr/run
 ./usr/sbin
 ./usr/sbin/arp
+./usr/sbin/audit-packages
+./usr/sbin/bpm
 ./usr/sbin/btrace
 ./usr/sbin/chown
 ./usr/sbin/chroot
@@ -5480,6 +5476,7 @@
 ./usr/sbin/dnssec-settime
 ./usr/sbin/dnssec-signzone
 ./usr/sbin/dnssec-verify
+./usr/sbin/download-vulnerability-list
 ./usr/sbin/fbdctl
 ./usr/sbin/group
 ./usr/sbin/groupadd
@@ -5505,6 +5502,11 @@
 ./usr/sbin/newfs_mfs
 ./usr/sbin/nsec3hash
 ./usr/sbin/omshell
+./usr/sbin/pkg_add
+./usr/sbin/pkg_admin
+./usr/sbin/pkg_create
+./usr/sbin/pkg_delete
+./usr/sbin/pkg_info
 ./usr/sbin/postinstall
 ./usr/sbin/pwd_mkdb
 ./usr/sbin/rdate

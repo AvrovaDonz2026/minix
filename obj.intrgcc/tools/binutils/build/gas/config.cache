@@ -16,7 +16,7 @@ ac_cv_c_bigendian=${ac_cv_c_bigendian='no'}
 ac_cv_c_compiler_gnu=${ac_cv_c_compiler_gnu='yes'}
 ac_cv_c_inline=${ac_cv_c_inline='inline'}
 ac_cv_env_CC_set='set'
-ac_cv_env_CC_value='cc -Wno-implicit-int -Wno-implicit-function-declaration'
+ac_cv_env_CC_value='cc'
 ac_cv_env_CFLAGS_set='set'
 ac_cv_env_CFLAGS_value='-O -fcommon'
 ac_cv_env_CPPFLAGS_set='set'
@@ -28,7 +28,7 @@ ac_cv_env_LDFLAGS_value=' '
 ac_cv_env_LIBS_set=''
 ac_cv_env_LIBS_value=''
 ac_cv_env_YACC_set='set'
-ac_cv_env_YACC_value='/home/donz/minix/obj.intrgcc/tooldir/bin/nbyacc'
+ac_cv_env_YACC_value='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbyacc'
 ac_cv_env_YFLAGS_set=''
 ac_cv_env_YFLAGS_value=''
 ac_cv_env_build_alias_set='set'
@@ -77,21 +77,21 @@ ac_cv_path_MSGFMT=${ac_cv_path_MSGFMT='/usr/bin/msgfmt'}
 ac_cv_path_MSGMERGE=${ac_cv_path_MSGMERGE='/usr/bin/msgmerge'}
 ac_cv_path_SED=${ac_cv_path_SED='/usr/bin/sed'}
 ac_cv_path_XGETTEXT=${ac_cv_path_XGETTEXT='/usr/bin/xgettext'}
-ac_cv_path_mkdir=${ac_cv_path_mkdir='/home/donz/minix/obj.intrgcc/tooldir/bin/riscv64-elf32-minix-install -d'}
+ac_cv_path_mkdir=${ac_cv_path_mkdir='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-install -d'}
 ac_cv_prog_AR=${ac_cv_prog_AR='ar'}
-ac_cv_prog_AWK=${ac_cv_prog_AWK='/home/donz/minix/obj.intrgcc/tooldir/bin/nbawk'}
-ac_cv_prog_CC=${ac_cv_prog_CC='cc -Wno-implicit-int -Wno-implicit-function-declaration'}
-ac_cv_prog_CPP=${ac_cv_prog_CPP='cc -Wno-implicit-int -Wno-implicit-function-declaration -E'}
-ac_cv_prog_LEX=${ac_cv_prog_LEX='/home/donz/minix/obj.intrgcc/tooldir/bin/nblex'}
+ac_cv_prog_AWK=${ac_cv_prog_AWK='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbawk'}
+ac_cv_prog_CC=${ac_cv_prog_CC='cc'}
+ac_cv_prog_CPP=${ac_cv_prog_CPP='cc -E'}
+ac_cv_prog_LEX=${ac_cv_prog_LEX='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nblex'}
 ac_cv_prog_OBJDUMP=${ac_cv_prog_OBJDUMP='objdump'}
 ac_cv_prog_RANLIB=${ac_cv_prog_RANLIB='ranlib'}
-ac_cv_prog_YACC=${ac_cv_prog_YACC='/home/donz/minix/obj.intrgcc/tooldir/bin/nbyacc'}
+ac_cv_prog_YACC=${ac_cv_prog_YACC='/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbyacc'}
 ac_cv_prog_ac_ct_STRIP=${ac_cv_prog_ac_ct_STRIP='strip'}
 ac_cv_prog_cc_c89=${ac_cv_prog_cc_c89=''}
 ac_cv_prog_cc_g=${ac_cv_prog_cc_g='yes'}
 ac_cv_prog_lex_root=${ac_cv_prog_lex_root='lex.yy'}
 ac_cv_prog_lex_yytext_pointer=${ac_cv_prog_lex_yytext_pointer='yes'}
-ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_bin_nbmake_set=${ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_bin_nbmake_set='no'}
+ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_Linux_6_12_63pdeb13_amd64_x86_64_bin_nbmake_set=${ac_cv_prog_make__home_donz_minix_obj_intrgcc_tooldir_Linux_6_12_63pdeb13_amd64_x86_64_bin_nbmake_set='no'}
 ac_cv_safe_to_define___extensions__=${ac_cv_safe_to_define___extensions__='yes'}
 ac_cv_search_strerror=${ac_cv_search_strerror='none required'}
 ac_cv_search_zlibVersion=${ac_cv_search_zlibVersion='-lz'}
@@ -101,7 +101,7 @@ ac_cv_target=${ac_cv_target='riscv-ucb-minix'}
 ac_cv_working_alloca_h=${ac_cv_working_alloca_h='yes'}
 am_cv_CC_dependencies_compiler_type=${am_cv_CC_dependencies_compiler_type='none'}
 am_cv_val_LC_MESSAGES=${am_cv_val_LC_MESSAGES='yes'}
-gas_cv_assert_ok=${gas_cv_assert_ok='yes'}
+gas_cv_assert_ok=${gas_cv_assert_ok='no'}
 gas_cv_decl_getopt_unistd_h=${gas_cv_decl_getopt_unistd_h='yes'}
 gas_cv_decl_needed_environ=${gas_cv_decl_needed_environ='no'}
 gas_cv_decl_needed_errno=${gas_cv_decl_needed_errno='no'}
@@ -114,6 +114,7 @@ gas_cv_have_sys_stat_type_member_st_mtim_tv_nsec=${gas_cv_have_sys_stat_type_mem
 gas_cv_have_sys_stat_type_member_st_mtim_tv_sec=${gas_cv_have_sys_stat_type_member_st_mtim_tv_sec='yes'}
 gas_cv_have_time_type_member_tm_gmtoff=${gas_cv_have_time_type_member_tm_gmtoff='yes'}
 gcc_cv_header_string=${gcc_cv_header_string='yes'}
+lt_cv_archive_cmds_need_lc=${lt_cv_archive_cmds_need_lc='no'}
 lt_cv_deplibs_check_method=${lt_cv_deplibs_check_method='pass_all'}
 lt_cv_file_magic_cmd=${lt_cv_file_magic_cmd='$MAGIC_CMD'}
 lt_cv_file_magic_test_file=${lt_cv_file_magic_test_file=''}

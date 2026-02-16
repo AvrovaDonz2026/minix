@@ -6,7 +6,7 @@
              DESTDIR = '/home/donz/minix/obj.intrgcc/destdir.evbriscv64'
           DISTRIBVER = '3.4.0'
   EXTERNAL_TOOLCHAIN = (undefined)
-            HAVE_GCC = '5'
+            HAVE_GCC = (undefined)
             HAVE_GDB = '79'
            HAVE_LLVM = 'no'
             HAVE_PCC = (undefined)
@@ -17,7 +17,7 @@
           KERNSRCDIR = (undefined)
              MACHINE = 'evbriscv64'
         MACHINE_ARCH = 'riscv64'
-                MAKE = '/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake'
+                MAKE = '/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake'
             MAKECONF = '/etc/mk.conf'
            MAKEFLAGS = ' -d e -m /home/donz/minix/share/mk -j 8 .MAKE.LEVEL.ENV=MAKELEVEL HOST_OSTYPE=Linux-6.12.63+deb13-amd64-x86_64 MKOBJDIRS=yes NOPOSTINSTALL=1 _SRC_TOP_=/home/donz/minix _SRC_TOP_OBJ_=/home/donz/minix/obj.intrgcc _THISDIR_='
           MAKEOBJDIR = '/home/donz/minix/obj.intrgcc/obj.intrgcc'
@@ -37,7 +37,7 @@
                MKDOC = 'yes'
             MKDTRACE = 'no'
        MKDYNAMICROOT = 'no'
-               MKGCC = 'yes'
+               MKGCC = 'no'
            MKGCCCMDS = 'no'
                MKGDB = 'no'
             MKHESIOD = 'no'
@@ -85,7 +85,7 @@
           RELEASEDIR = '/home/donz/minix/obj.intrgcc/releasedir'
    RELEASEMACHINEDIR = 'evbriscv64-el'
    TOOLCHAIN_MISSING = 'no'
-             TOOLDIR = '/home/donz/minix/obj.intrgcc/tooldir'
+             TOOLDIR = '/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64'
           USE_HESIOD = 'no'
            USE_INET6 = 'yes'
         USE_JEMALLOC = 'yes'

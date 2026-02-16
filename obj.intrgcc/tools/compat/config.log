@@ -38,16 +38,16 @@ configure:951: PATH=".;."; conftest.sh
 /home/donz/minix/tools/compat/configure: 952: conftest.sh: not found
 configure:954: $? = 127
 configure:1014: checking for gcc
-configure:1037: result: cc -Wno-implicit-int -Wno-implicit-function-declaration
+configure:1037: result: cc
 configure:1265: checking for C compiler version
-configure:1268: cc -Wno-implicit-int -Wno-implicit-function-declaration --version </dev/null >&5
+configure:1268: cc --version </dev/null >&5
 cc (Debian 14.2.0-19) 14.2.0
 Copyright (C) 2024 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 configure:1271: $? = 0
-configure:1273: cc -Wno-implicit-int -Wno-implicit-function-declaration -v </dev/null >&5
+configure:1273: cc -v </dev/null >&5
 Using built-in specs.
 COLLECT_GCC=cc
 COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-linux-gnu/14/lto-wrapper
@@ -59,13 +59,13 @@ Thread model: posix
 Supported LTO compression algorithms: zlib zstd
 gcc version 14.2.0 (Debian 14.2.0-19) 
 configure:1276: $? = 0
-configure:1278: cc -Wno-implicit-int -Wno-implicit-function-declaration -V </dev/null >&5
+configure:1278: cc -V </dev/null >&5
 cc: error: unrecognized command-line option '-V'
 cc: fatal error: no input files
 compilation terminated.
 configure:1281: $? = 1
 configure:1301: checking for C compiler default output
-configure:1304: cc -Wno-implicit-int -Wno-implicit-function-declaration -O -fcommon   conftest.c  >&5
+configure:1304: cc -O -fcommon   conftest.c  >&5
 configure:1307: $? = 0
 configure:1336: result: a.out
 configure:1341: checking whether the C compiler works
@@ -75,26 +75,26 @@ configure:1365: result: yes
 configure:1372: checking whether we are cross compiling
 configure:1374: result: no
 configure:1377: checking for executable suffix
-configure:1379: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c  >&5
+configure:1379: cc -o conftest -O -fcommon   conftest.c  >&5
 configure:1382: $? = 0
 configure:1404: result: 
 configure:1410: checking for object suffix
-configure:1428: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:1428: cc -c -O -fcommon  conftest.c >&5
 configure:1431: $? = 0
 configure:1450: result: o
 configure:1454: checking whether we are using the GNU C compiler
-configure:1475: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:1475: cc -c -O -fcommon  conftest.c >&5
 configure:1478: $? = 0
 configure:1481: test -s conftest.o
 configure:1484: $? = 0
 configure:1496: result: yes
-configure:1502: checking whether cc -Wno-implicit-int -Wno-implicit-function-declaration accepts -g
-configure:1520: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -g  conftest.c >&5
+configure:1502: checking whether cc accepts -g
+configure:1520: cc -c -g  conftest.c >&5
 configure:1523: $? = 0
 configure:1526: test -s conftest.o
 configure:1529: $? = 0
 configure:1539: result: yes
-configure:1566: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:1566: cc -c -O -fcommon  conftest.c >&5
 conftest.c:2:3: error: unknown type name 'choke'
     2 |   choke me
       |   ^~~~~
@@ -105,9 +105,9 @@ configure: failed program was:
   choke me
 #endif
 configure:1672: checking how to run the C preprocessor
-configure:1698: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:1698: cc -E  conftest.c
 configure:1704: $? = 0
-configure:1731: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:1731: cc -E  conftest.c
 configure:1728:10: fatal error: ac_nonexistent.h: No such file or directory
 compilation terminated.
 configure:1737: $? = 1
@@ -115,10 +115,10 @@ configure: failed program was:
 #line 1727 "configure"
 #include "confdefs.h"
 #include <ac_nonexistent.h>
-configure:1774: result: cc -Wno-implicit-int -Wno-implicit-function-declaration -E
-configure:1789: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:1774: result: cc -E
+configure:1789: cc -E  conftest.c
 configure:1795: $? = 0
-configure:1822: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:1822: cc -E  conftest.c
 configure:1819:10: fatal error: ac_nonexistent.h: No such file or directory
 compilation terminated.
 configure:1828: $? = 1
@@ -131,11 +131,11 @@ configure:1895: result: no
 configure:1902: checking for sh
 configure:1930: result: /usr/bin/sh
 configure:1947: checking whether byte ordering is bigendian
-configure:1972: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:1972: cc -c -O -fcommon  conftest.c >&5
 configure:1975: $? = 0
 configure:1978: test -s conftest.o
 configure:1981: $? = 0
-configure:2002: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:2002: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:1993:2: error: unknown type name 'not'; did you mean 'ino_t'?
 configure:1993:10: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'endian'
@@ -158,136 +158,160 @@ main ()
 }
 configure:2069: result: no
 configure:2079: checking for ANSI C header files
-configure:2093: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2093: cc -E  conftest.c
 configure:2099: $? = 0
-configure:2186: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c  >&5
+configure:2186: cc -o conftest -O -fcommon   conftest.c  >&5
 configure: In function 'main':
-configure:2178:7: warning: incompatible implicit declaration of built-in function 'exit' [-Wbuiltin-declaration-mismatch]
+configure:2178:7: error: implicit declaration of function 'exit' [-Wimplicit-function-declaration]
 configure:2162:1: note: include '<stdlib.h>' or provide a declaration of 'exit'
+configure:2178:7: warning: incompatible implicit declaration of built-in function 'exit' [-Wbuiltin-declaration-mismatch]
+configure:2178:7: note: include '<stdlib.h>' or provide a declaration of 'exit'
 configure:2179:3: warning: incompatible implicit declaration of built-in function 'exit' [-Wbuiltin-declaration-mismatch]
 configure:2179:3: note: include '<stdlib.h>' or provide a declaration of 'exit'
-configure:2189: $? = 0
-configure:2191: ./conftest
-configure:2194: $? = 0
-configure:2207: result: yes
+configure:2189: $? = 1
+configure: program exited with status 1
+configure: failed program was:
+#line 2160 "configure"
+#include "confdefs.h"
+#include <ctype.h>
+#if ((' ' & 0x0FF) == 0x020)
+# define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
+# define TOUPPER(c) (ISLOWER(c) ? 'A' + ((c) - 'a') : (c))
+#else
+# define ISLOWER(c) (('a' <= (c) && (c) <= 'i')                      || ('j' <= (c) && (c) <= 'r')                      || ('s' <= (c) && (c) <= 'z'))
+# define TOUPPER(c) (ISLOWER(c) ? ((c) | 0x40) : (c))
+#endif
+
+#define XOR(e, f) (((e) && !(f)) || (!(e) && (f)))
+int
+main ()
+{
+  int i;
+  for (i = 0; i < 256; i++)
+    if (XOR (islower (i), ISLOWER (i))
+        || toupper (i) != TOUPPER (i))
+      exit(2);
+  exit (0);
+}
+configure:2207: result: no
 configure:2220: checking for zlib.h
-configure:2230: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2230: cc -E  conftest.c
 configure:2236: $? = 0
 configure:2255: result: yes
 configure:2265: checking for gzdopen in -lz
-configure:2292: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz   >&5
+configure:2292: cc -o conftest -O -fcommon   conftest.c -lz   >&5
 configure:2295: $? = 0
 configure:2298: test -s conftest
 configure:2301: $? = 0
 configure:2312: result: yes
 configure:2338: checking for sys/ioctl.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for sys/mman.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for sys/param.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for sys/socket.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for sys/stat.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for sys/time.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for sys/types.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for sys/utsname.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for sys/wait.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for assert.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for ctype.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for errno.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for fcntl.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for grp.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for limits.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for locale.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for netdb.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for pwd.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for signal.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for stdarg.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for stdio.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for stdlib.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for string.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for termios.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2338: checking for unistd.h
-configure:2348: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2348: cc -E  conftest.c
 configure:2354: $? = 0
 configure:2373: result: yes
 configure:2392: checking for dirent.h that defines DIR
-configure:2413: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:2413: cc -c -O -fcommon  conftest.c >&5
 configure:2416: $? = 0
 configure:2419: test -s conftest.o
 configure:2422: $? = 0
 configure:2432: result: yes
 configure:2445: checking for opendir in -ldir
-configure:2472: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -ldir  -lz  >&5
+configure:2472: cc -o conftest -O -fcommon   conftest.c -ldir  -lz  >&5
 /usr/bin/ld: cannot find -ldir: No such file or directory
 collect2: error: ld returned 1 exit status
 configure:2475: $? = 1
@@ -311,15 +335,15 @@ opendir ();
 }
 configure:2492: result: no
 configure:2558: checking for sys/mtio.h
-configure:2568: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2568: cc -E  conftest.c
 configure:2574: $? = 0
 configure:2593: result: yes
 configure:2558: checking for sys/sysmacros.h
-configure:2568: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2568: cc -E  conftest.c
 configure:2574: $? = 0
 configure:2593: result: yes
 configure:2558: checking for sys/syslimits.h
-configure:2568: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2568: cc -E  conftest.c
 configure:2565:10: fatal error: sys/syslimits.h: No such file or directory
 compilation terminated.
 configure:2574: $? = 1
@@ -329,31 +353,31 @@ configure: failed program was:
 #include <sys/syslimits.h>
 configure:2593: result: no
 configure:2558: checking for getopt.h
-configure:2568: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2568: cc -E  conftest.c
 configure:2574: $? = 0
 configure:2593: result: yes
 configure:2558: checking for features.h
-configure:2568: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2568: cc -E  conftest.c
 configure:2574: $? = 0
 configure:2593: result: yes
 configure:2558: checking for malloc.h
-configure:2568: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2568: cc -E  conftest.c
 configure:2574: $? = 0
 configure:2593: result: yes
 configure:2558: checking for sys/poll.h
-configure:2568: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2568: cc -E  conftest.c
 configure:2574: $? = 0
 configure:2593: result: yes
 configure:2558: checking for pthread.h
-configure:2568: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2568: cc -E  conftest.c
 configure:2574: $? = 0
 configure:2593: result: yes
 configure:2558: checking for stddef.h
-configure:2568: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2568: cc -E  conftest.c
 configure:2574: $? = 0
 configure:2593: result: yes
 configure:2558: checking for rpc/types.h
-configure:2568: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2568: cc -E  conftest.c
 configure:2565:10: fatal error: rpc/types.h: No such file or directory
 compilation terminated.
 configure:2574: $? = 1
@@ -363,7 +387,7 @@ configure: failed program was:
 #include <rpc/types.h>
 configure:2593: result: no
 configure:2608: checking for sys/bswap.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2615:10: fatal error: sys/bswap.h: No such file or directory
 compilation terminated.
 configure:2624: $? = 1
@@ -373,7 +397,7 @@ configure: failed program was:
 #include <sys/bswap.h>
 configure:2643: result: no
 configure:2608: checking for machine/bswap.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2615:10: fatal error: machine/bswap.h: No such file or directory
 compilation terminated.
 configure:2624: $? = 1
@@ -383,11 +407,11 @@ configure: failed program was:
 #include <machine/bswap.h>
 configure:2643: result: no
 configure:2608: checking for sys/cdefs.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2624: $? = 0
 configure:2643: result: yes
 configure:2608: checking for machine/endian.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2615:10: fatal error: machine/endian.h: No such file or directory
 compilation terminated.
 configure:2624: $? = 1
@@ -397,7 +421,7 @@ configure: failed program was:
 #include <machine/endian.h>
 configure:2643: result: no
 configure:2608: checking for sys/endian.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2615:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:2624: $? = 1
@@ -407,7 +431,7 @@ configure: failed program was:
 #include <sys/endian.h>
 configure:2643: result: no
 configure:2608: checking for sys/featuretest.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2615:10: fatal error: sys/featuretest.h: No such file or directory
 compilation terminated.
 configure:2624: $? = 1
@@ -417,27 +441,27 @@ configure: failed program was:
 #include <sys/featuretest.h>
 configure:2643: result: no
 configure:2608: checking for err.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2624: $? = 0
 configure:2643: result: yes
 configure:2608: checking for inttypes.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2624: $? = 0
 configure:2643: result: yes
 configure:2608: checking for libgen.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2624: $? = 0
 configure:2643: result: yes
 configure:2608: checking for paths.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2624: $? = 0
 configure:2643: result: yes
 configure:2608: checking for stdint.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2624: $? = 0
 configure:2643: result: yes
 configure:2608: checking for util.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2615:10: fatal error: util.h: No such file or directory
 compilation terminated.
 configure:2624: $? = 1
@@ -447,17 +471,17 @@ configure: failed program was:
 #include <util.h>
 configure:2643: result: no
 configure:2608: checking for resolv.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2624: $? = 0
 configure:2643: result: yes
 configure:2608: checking for arpa/nameser.h
-configure:2618: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2618: cc -E  conftest.c
 configure:2624: $? = 0
 configure:2643: result: yes
 configure:2658: checking for rpc/types.h
 configure:2693: result: no
 configure:2658: checking for netconfig.h
-configure:2668: cc -Wno-implicit-int -Wno-implicit-function-declaration -E  conftest.c
+configure:2668: cc -E  conftest.c
 configure:2665:10: fatal error: netconfig.h: No such file or directory
 compilation terminated.
 configure:2674: $? = 1
@@ -475,13 +499,13 @@ configure:2750: result: yes
 configure:2719: checking for string.h
 configure:2750: result: yes
 configure:2719: checking for memory.h
-configure:2731: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:2731: cc -c -O -fcommon  conftest.c >&5
 configure:2734: $? = 0
 configure:2737: test -s conftest.o
 configure:2740: $? = 0
 configure:2750: result: yes
 configure:2719: checking for strings.h
-configure:2731: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:2731: cc -c -O -fcommon  conftest.c >&5
 configure:2734: $? = 0
 configure:2737: test -s conftest.o
 configure:2740: $? = 0
@@ -493,109 +517,109 @@ configure:2750: result: yes
 configure:2719: checking for unistd.h
 configure:2750: result: yes
 configure:2760: checking for size_t
-configure:2781: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:2781: cc -c -O -fcommon  conftest.c >&5
 configure:2784: $? = 0
 configure:2787: test -s conftest.o
 configure:2790: $? = 0
 configure:2800: result: yes
 configure:2812: checking for id_t
-configure:2833: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:2833: cc -c -O -fcommon  conftest.c >&5
 configure:2836: $? = 0
 configure:2839: test -s conftest.o
 configure:2842: $? = 0
 configure:2852: result: yes
 configure:2861: checking for long long
-configure:2882: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:2882: cc -c -O -fcommon  conftest.c >&5
 configure:2885: $? = 0
 configure:2888: test -s conftest.o
 configure:2891: $? = 0
 configure:2901: result: yes
 configure:2910: checking for u_long
-configure:2931: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:2931: cc -c -O -fcommon  conftest.c >&5
 configure:2934: $? = 0
 configure:2937: test -s conftest.o
 configure:2940: $? = 0
 configure:2950: result: yes
 configure:2959: checking for u_char
-configure:2980: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:2980: cc -c -O -fcommon  conftest.c >&5
 configure:2983: $? = 0
 configure:2986: test -s conftest.o
 configure:2989: $? = 0
 configure:2999: result: yes
 configure:3008: checking for u_short
-configure:3029: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3029: cc -c -O -fcommon  conftest.c >&5
 configure:3032: $? = 0
 configure:3035: test -s conftest.o
 configure:3038: $? = 0
 configure:3048: result: yes
 configure:3057: checking for u_int
-configure:3078: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3078: cc -c -O -fcommon  conftest.c >&5
 configure:3081: $? = 0
 configure:3084: test -s conftest.o
 configure:3087: $? = 0
 configure:3097: result: yes
 configure:3106: checking for u_quad_t
-configure:3127: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3127: cc -c -O -fcommon  conftest.c >&5
 configure:3130: $? = 0
 configure:3133: test -s conftest.o
 configure:3136: $? = 0
 configure:3146: result: yes
 configure:3156: checking for socklen_t
-configure:3182: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3182: cc -c -O -fcommon  conftest.c >&5
 configure:3185: $? = 0
 configure:3188: test -s conftest.o
 configure:3191: $? = 0
 configure:3201: result: yes
 configure:3211: checking for uint8_t
-configure:3232: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3232: cc -c -O -fcommon  conftest.c >&5
 configure:3235: $? = 0
 configure:3238: test -s conftest.o
 configure:3241: $? = 0
 configure:3251: result: yes
 configure:3313: checking for u_int8_t
-configure:3334: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3334: cc -c -O -fcommon  conftest.c >&5
 configure:3337: $? = 0
 configure:3340: test -s conftest.o
 configure:3343: $? = 0
 configure:3353: result: yes
 configure:3415: checking for uint16_t
-configure:3436: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3436: cc -c -O -fcommon  conftest.c >&5
 configure:3439: $? = 0
 configure:3442: test -s conftest.o
 configure:3445: $? = 0
 configure:3455: result: yes
 configure:3517: checking for u_int16_t
-configure:3538: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3538: cc -c -O -fcommon  conftest.c >&5
 configure:3541: $? = 0
 configure:3544: test -s conftest.o
 configure:3547: $? = 0
 configure:3557: result: yes
 configure:3619: checking for uint32_t
-configure:3640: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3640: cc -c -O -fcommon  conftest.c >&5
 configure:3643: $? = 0
 configure:3646: test -s conftest.o
 configure:3649: $? = 0
 configure:3659: result: yes
 configure:3721: checking for u_int32_t
-configure:3742: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3742: cc -c -O -fcommon  conftest.c >&5
 configure:3745: $? = 0
 configure:3748: test -s conftest.o
 configure:3751: $? = 0
 configure:3761: result: yes
 configure:3823: checking for uint64_t
-configure:3844: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3844: cc -c -O -fcommon  conftest.c >&5
 configure:3847: $? = 0
 configure:3850: test -s conftest.o
 configure:3853: $? = 0
 configure:3863: result: yes
 configure:3925: checking for u_int64_t
-configure:3946: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:3946: cc -c -O -fcommon  conftest.c >&5
 configure:3949: $? = 0
 configure:3952: test -s conftest.o
 configure:3955: $? = 0
 configure:3965: result: yes
 configure:4028: checking for DIR.dd_fd
-configure:4050: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4050: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4041:12: error: storage size of 'ac_aggr' isn't known
 configure:4053: $? = 1
@@ -616,7 +640,7 @@ return 0;
 }
 configure:4069: result: no
 configure:4078: checking for DIR.__dd_fd
-configure:4100: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4100: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4091:12: error: storage size of 'ac_aggr' isn't known
 configure:4103: $? = 1
@@ -637,7 +661,7 @@ return 0;
 }
 configure:4119: result: no
 configure:4128: checking for struct dirent.d_namlen
-configure:4150: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4150: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4142:13: error: 'struct dirent' has no member named 'd_namlen'; did you mean 'd_name'?
 configure:4153: $? = 1
@@ -658,7 +682,7 @@ return 0;
 }
 configure:4169: result: no
 configure:4179: checking for struct stat.st_flags
-configure:4200: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4200: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4192:12: error: 'struct stat' has no member named 'st_flags'
 configure:4203: $? = 1
@@ -678,7 +702,7 @@ return 0;
 }
 configure:4219: result: no
 configure:4228: checking for struct stat.st_gen
-configure:4249: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4249: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4241:13: error: 'struct stat' has no member named 'st_gen'; did you mean 'st_dev'?
 configure:4252: $? = 1
@@ -698,7 +722,7 @@ return 0;
 }
 configure:4268: result: no
 configure:4277: checking for struct stat.st_birthtime
-configure:4298: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4298: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4290:12: error: 'struct stat' has no member named 'st_birthtime'
 configure:4301: $? = 1
@@ -718,7 +742,7 @@ return 0;
 }
 configure:4317: result: no
 configure:4326: checking for struct stat.st_birthtimensec
-configure:4347: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4347: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4339:12: error: 'struct stat' has no member named 'st_birthtimensec'
 configure:4350: $? = 1
@@ -738,7 +762,7 @@ return 0;
 }
 configure:4366: result: no
 configure:4375: checking for struct stat.st_atim
-configure:4396: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4396: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4388:5: error: used struct type value where scalar is required
 configure:4399: $? = 1
@@ -758,7 +782,7 @@ return 0;
 }
 configure:4415: result: no
 configure:4424: checking for struct stat.st_mtimensec
-configure:4445: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4445: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4437:12: error: 'struct stat' has no member named 'st_mtimensec'
 configure:4448: $? = 1
@@ -778,7 +802,7 @@ return 0;
 }
 configure:4464: result: no
 configure:4474: checking for struct statvfs.f_iosize
-configure:4495: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4495: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4487:13: error: 'struct statvfs' has no member named 'f_iosize'; did you mean 'f_bsize'?
 configure:4498: $? = 1
@@ -798,13 +822,13 @@ return 0;
 }
 configure:4514: result: no
 configure:4524: checking for struct tm.tm_gmtoff
-configure:4545: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4545: cc -c -O -fcommon  conftest.c >&5
 configure:4548: $? = 0
 configure:4551: test -s conftest.o
 configure:4554: $? = 0
 configure:4564: result: yes
 configure:4575: checking whether optind is declared
-configure:4603: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4603: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4594:13: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
 configure:4606: $? = 0
@@ -812,7 +836,7 @@ configure:4609: test -s conftest.o
 configure:4612: $? = 0
 configure:4622: result: yes
 configure:4636: checking whether optreset is declared
-configure:4664: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4664: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4655:22: error: 'optreset' undeclared (first use in this function)
 configure:4655:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -840,7 +864,7 @@ main ()
 }
 configure:4683: result: no
 configure:4698: checking whether sys_signame is declared
-configure:4720: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:4720: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:4711:22: error: 'sys_signame' undeclared (first use in this function)
 configure:4711:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -862,32 +886,32 @@ main ()
 }
 configure:4739: result: no
 configure:4757: checking for working alloca.h
-configure:4775: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:4775: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:4778: $? = 0
 configure:4781: test -s conftest
 configure:4784: $? = 0
 configure:4794: result: yes
 configure:4804: checking for alloca
-configure:4842: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:4842: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:4845: $? = 0
 configure:4848: test -s conftest
 configure:4851: $? = 0
 configure:4861: result: yes
 configure:5054: checking for atoll
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for asprintf
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for asnprintf
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc4AOFaX.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccf6ozrl.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `asnprintf'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -923,14 +947,14 @@ f = asnprintf;
 }
 configure:5110: result: no
 configure:5054: checking for basename
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for devname
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccrczUMj.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccsaAFyb.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `devname'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -966,26 +990,26 @@ f = devname;
 }
 configure:5110: result: no
 configure:5054: checking for dirfd
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for dirname
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for dprintf
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for esetfunc
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc9xhuIw.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/cc724VVz.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `esetfunc'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1021,8 +1045,8 @@ f = esetfunc;
 }
 configure:5110: result: no
 configure:5054: checking for fgetln
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccdodbms.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccT6e9YM.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `fgetln'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1058,14 +1082,14 @@ f = fgetln;
 }
 configure:5110: result: no
 configure:5054: checking for flock
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for fpurge
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc0qL2hn.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccRe3ilV.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `fpurge'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1101,38 +1125,38 @@ f = fpurge;
 }
 configure:5110: result: no
 configure:5054: checking for __fpurge
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for futimes
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for getline
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for getopt
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for getopt_long
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for group_from_gid
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccv9AKF6.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccagsGtI.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `group_from_gid'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1168,8 +1192,8 @@ f = group_from_gid;
 }
 configure:5110: result: no
 configure:5054: checking for gid_from_group
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccE3aVSG.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccRDu8nB.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `gid_from_group'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1205,8 +1229,8 @@ f = gid_from_group;
 }
 configure:5110: result: no
 configure:5054: checking for heapsort
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccOxPOV7.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccDyN2yo.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `heapsort'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1242,7 +1266,7 @@ f = heapsort;
 }
 configure:5110: result: no
 configure:5054: checking for isblank
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5070:6: warning: conflicting types for built-in function 'isblank'; expected 'int(int)' [-Wbuiltin-declaration-mismatch]
 configure:5064:1: note: 'isblank' is declared in header '<ctype.h>'
 configure:5094: $? = 0
@@ -1250,8 +1274,8 @@ configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for issetugid
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc3Ja37X.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccvPgYU5.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `issetugid'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1287,8 +1311,8 @@ f = issetugid;
 }
 configure:5110: result: no
 configure:5054: checking for lchflags
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccPbVJ7k.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccrj6dXy.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `lchflags'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1324,57 +1348,57 @@ f = lchflags;
 }
 configure:5110: result: no
 configure:5054: checking for lchmod
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for lchown
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for lutimes
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for mkstemp
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for mkdtemp
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for poll
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for pread
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for putc_unlocked
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5070:6: warning: conflicting types for built-in function 'putc_unlocked'; expected 'int(int,  void *)' [-Wbuiltin-declaration-mismatch]
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for pwcache_userdb
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cccILnDo.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccEEdcEz.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `pwcache_userdb'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1410,8 +1434,8 @@ f = pwcache_userdb;
 }
 configure:5110: result: no
 configure:5054: checking for pwcache_groupdb
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccWyD6PC.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/cc20de0K.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `pwcache_groupdb'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1447,14 +1471,14 @@ f = pwcache_groupdb;
 }
 configure:5110: result: no
 configure:5054: checking for pwrite
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for raise_default_signal
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccDGoDiH.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/cc565MiQ.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `raise_default_signal'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1490,14 +1514,14 @@ f = raise_default_signal;
 }
 configure:5110: result: no
 configure:5054: checking for random
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for reallocarr
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccitbxZ9.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccxeLZaZ.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `reallocarr'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1533,14 +1557,14 @@ f = reallocarr;
 }
 configure:5110: result: no
 configure:5054: checking for setenv
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for setgroupent
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccsizXDL.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/cc7K5Q3M.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `setgroupent'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1576,8 +1600,8 @@ f = setgroupent;
 }
 configure:5110: result: no
 configure:5054: checking for setprogname
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc9lhAXy.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccje0LrD.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `setprogname'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1613,8 +1637,8 @@ f = setprogname;
 }
 configure:5110: result: no
 configure:5054: checking for setpassent
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cck4EOwC.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/cc4mXhbs.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `setpassent'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1650,8 +1674,8 @@ f = setpassent;
 }
 configure:5110: result: no
 configure:5054: checking for snprintb_m
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cc2E16Vx.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/cc8FC76B.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `snprintb_m'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1687,7 +1711,7 @@ f = snprintb_m;
 }
 configure:5110: result: no
 configure:5054: checking for snprintf
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5070:6: warning: conflicting types for built-in function 'snprintf'; expected 'int(char *, long unsigned int,  const char *, ...)' [-Wbuiltin-declaration-mismatch]
 configure:5064:1: note: 'snprintf' is declared in header '<stdio.h>'
 configure:5094: $? = 0
@@ -1695,20 +1719,20 @@ configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for strlcat
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for strlcpy
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for strmode
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccZejXaQ.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccu1dKlP.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `strmode'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1744,28 +1768,28 @@ f = strmode;
 }
 configure:5110: result: no
 configure:5054: checking for strndup
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5070:6: warning: conflicting types for built-in function 'strndup'; expected 'char *(const char *, long unsigned int)' [-Wbuiltin-declaration-mismatch]
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for strnlen
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5070:6: warning: conflicting types for built-in function 'strnlen'; expected 'long unsigned int(const char *, long unsigned int)' [-Wbuiltin-declaration-mismatch]
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for strsep
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for strsuftoll
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccyHzGdX.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccN9xPaM.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `strsuftoll'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1801,8 +1825,8 @@ f = strsuftoll;
 }
 configure:5110: result: no
 configure:5054: checking for strtoi
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccUdJojQ.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccICXxKA.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `strtoi'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1838,14 +1862,14 @@ f = strtoi;
 }
 configure:5110: result: no
 configure:5054: checking for strtoll
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for strtou
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccvWMaTe.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccL5uxum.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `strtou'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1881,8 +1905,8 @@ f = strtou;
 }
 configure:5110: result: no
 configure:5054: checking for user_from_uid
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cciHcYZH.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/cch3n8fg.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `user_from_uid'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1918,8 +1942,8 @@ f = user_from_uid;
 }
 configure:5110: result: no
 configure:5054: checking for uid_from_user
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/cceUK1cH.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccUW4JvV.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `uid_from_user'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1955,14 +1979,14 @@ f = uid_from_user;
 }
 configure:5110: result: no
 configure:5054: checking for vasprintf
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5094: $? = 0
 configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5054: checking for vasnprintf
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
-/usr/bin/ld: /tmp/ccK95iha.o: in function `main':
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
+/usr/bin/ld: /tmp/ccsQZ3vh.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `vasnprintf'
 collect2: error: ld returned 1 exit status
 configure:5094: $? = 1
@@ -1998,7 +2022,7 @@ f = vasnprintf;
 }
 configure:5110: result: no
 configure:5054: checking for vsnprintf
-configure:5091: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:5091: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:5070:6: warning: conflicting types for built-in function 'vsnprintf'; expected 'int(char *, long unsigned int,  const char *, __va_list_tag *)' [-Wbuiltin-declaration-mismatch]
 configure:5064:1: note: 'vsnprintf' is declared in header '<stdio.h>'
 configure:5094: $? = 0
@@ -2006,7 +2030,7 @@ configure:5097: test -s conftest
 configure:5100: $? = 0
 configure:5110: result: yes
 configure:5120: checking whether user_from_uid is declared
-configure:5143: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5143: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5134:22: error: 'user_from_uid' undeclared (first use in this function)
 configure:5134:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2029,7 +2053,7 @@ main ()
 }
 configure:5162: result: no
 configure:5176: checking whether uid_from_user is declared
-configure:5199: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5199: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5190:22: error: 'uid_from_user' undeclared (first use in this function)
 configure:5190:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2052,7 +2076,7 @@ main ()
 }
 configure:5218: result: no
 configure:5232: checking whether pwcache_userdb is declared
-configure:5255: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5255: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5246:22: error: 'pwcache_userdb' undeclared (first use in this function)
 configure:5246:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2075,7 +2099,7 @@ main ()
 }
 configure:5274: result: no
 configure:5289: checking whether group_from_gid is declared
-configure:5312: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5312: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5303:22: error: 'group_from_gid' undeclared (first use in this function)
 configure:5303:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2098,7 +2122,7 @@ main ()
 }
 configure:5331: result: no
 configure:5345: checking whether gid_from_group is declared
-configure:5368: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5368: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5359:22: error: 'gid_from_group' undeclared (first use in this function)
 configure:5359:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2121,7 +2145,7 @@ main ()
 }
 configure:5387: result: no
 configure:5401: checking whether pwcache_groupdb is declared
-configure:5424: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5424: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5415:22: error: 'pwcache_groupdb' undeclared (first use in this function)
 configure:5415:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2144,19 +2168,19 @@ main ()
 }
 configure:5443: result: no
 configure:5458: checking whether strndup is declared
-configure:5480: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5480: cc -c -O -fcommon  conftest.c >&5
 configure:5483: $? = 0
 configure:5486: test -s conftest.o
 configure:5489: $? = 0
 configure:5499: result: yes
 configure:5513: checking whether strnlen is declared
-configure:5535: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5535: cc -c -O -fcommon  conftest.c >&5
 configure:5538: $? = 0
 configure:5541: test -s conftest.o
 configure:5544: $? = 0
 configure:5554: result: yes
 configure:5569: checking whether strsuftoll is declared
-configure:5591: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5591: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5582:22: error: 'strsuftoll' undeclared (first use in this function); did you mean 'strtoll'?
 configure:5582:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2178,7 +2202,7 @@ main ()
 }
 configure:5610: result: no
 configure:5625: checking whether lchflags is declared
-configure:5649: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5649: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5640:22: error: 'lchflags' undeclared (first use in this function)
 configure:5640:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2202,19 +2226,19 @@ main ()
 }
 configure:5668: result: no
 configure:5682: checking whether lchmod is declared
-configure:5706: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5706: cc -c -O -fcommon  conftest.c >&5
 configure:5709: $? = 0
 configure:5712: test -s conftest.o
 configure:5715: $? = 0
 configure:5725: result: yes
 configure:5739: checking whether lchown is declared
-configure:5763: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5763: cc -c -O -fcommon  conftest.c >&5
 configure:5766: $? = 0
 configure:5769: test -s conftest.o
 configure:5772: $? = 0
 configure:5782: result: yes
 configure:5797: checking whether errc is declared
-configure:5822: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5822: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5813:22: error: 'errc' undeclared (first use in this function); did you mean 'errx'?
 configure:5813:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2239,7 +2263,7 @@ main ()
 }
 configure:5841: result: no
 configure:5855: checking whether verrc is declared
-configure:5880: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5880: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5871:22: error: 'verrc' undeclared (first use in this function); did you mean 'verrx'?
 configure:5871:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2264,7 +2288,7 @@ main ()
 }
 configure:5899: result: no
 configure:5913: checking whether warnc is declared
-configure:5938: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5938: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5929:22: error: 'warnc' undeclared (first use in this function); did you mean 'warnx'?
 configure:5929:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2289,7 +2313,7 @@ main ()
 }
 configure:5957: result: no
 configure:5971: checking whether vwarnc is declared
-configure:5996: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:5996: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:5987:22: error: 'vwarnc' undeclared (first use in this function); did you mean 'vwarnx'?
 configure:5987:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2314,79 +2338,79 @@ main ()
 }
 configure:6015: result: no
 configure:6030: checking whether htobe16 is declared
-configure:6052: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6052: cc -c -O -fcommon  conftest.c >&5
 configure:6055: $? = 0
 configure:6058: test -s conftest.o
 configure:6061: $? = 0
 configure:6071: result: yes
 configure:6085: checking whether htobe32 is declared
-configure:6107: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6107: cc -c -O -fcommon  conftest.c >&5
 configure:6110: $? = 0
 configure:6113: test -s conftest.o
 configure:6116: $? = 0
 configure:6126: result: yes
 configure:6140: checking whether htobe64 is declared
-configure:6162: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6162: cc -c -O -fcommon  conftest.c >&5
 configure:6165: $? = 0
 configure:6168: test -s conftest.o
 configure:6171: $? = 0
 configure:6181: result: yes
 configure:6195: checking whether htole16 is declared
-configure:6217: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6217: cc -c -O -fcommon  conftest.c >&5
 configure:6220: $? = 0
 configure:6223: test -s conftest.o
 configure:6226: $? = 0
 configure:6236: result: yes
 configure:6250: checking whether htole32 is declared
-configure:6272: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6272: cc -c -O -fcommon  conftest.c >&5
 configure:6275: $? = 0
 configure:6278: test -s conftest.o
 configure:6281: $? = 0
 configure:6291: result: yes
 configure:6305: checking whether htole64 is declared
-configure:6327: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6327: cc -c -O -fcommon  conftest.c >&5
 configure:6330: $? = 0
 configure:6333: test -s conftest.o
 configure:6336: $? = 0
 configure:6346: result: yes
 configure:6360: checking whether be16toh is declared
-configure:6382: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6382: cc -c -O -fcommon  conftest.c >&5
 configure:6385: $? = 0
 configure:6388: test -s conftest.o
 configure:6391: $? = 0
 configure:6401: result: yes
 configure:6415: checking whether be32toh is declared
-configure:6437: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6437: cc -c -O -fcommon  conftest.c >&5
 configure:6440: $? = 0
 configure:6443: test -s conftest.o
 configure:6446: $? = 0
 configure:6456: result: yes
 configure:6470: checking whether be64toh is declared
-configure:6492: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6492: cc -c -O -fcommon  conftest.c >&5
 configure:6495: $? = 0
 configure:6498: test -s conftest.o
 configure:6501: $? = 0
 configure:6511: result: yes
 configure:6525: checking whether le16toh is declared
-configure:6547: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6547: cc -c -O -fcommon  conftest.c >&5
 configure:6550: $? = 0
 configure:6553: test -s conftest.o
 configure:6556: $? = 0
 configure:6566: result: yes
 configure:6580: checking whether le32toh is declared
-configure:6602: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6602: cc -c -O -fcommon  conftest.c >&5
 configure:6605: $? = 0
 configure:6608: test -s conftest.o
 configure:6611: $? = 0
 configure:6621: result: yes
 configure:6635: checking whether le64toh is declared
-configure:6657: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6657: cc -c -O -fcommon  conftest.c >&5
 configure:6660: $? = 0
 configure:6663: test -s conftest.o
 configure:6666: $? = 0
 configure:6676: result: yes
 configure:6691: checking whether bswap16 is declared
-configure:6713: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6713: cc -c -O -fcommon  conftest.c >&5
 configure:6698:10: fatal error: machine/bswap.h: No such file or directory
 compilation terminated.
 configure:6716: $? = 1
@@ -2407,7 +2431,7 @@ main ()
 }
 configure:6732: result: no
 configure:6746: checking whether bswap32 is declared
-configure:6768: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6768: cc -c -O -fcommon  conftest.c >&5
 configure:6753:10: fatal error: machine/bswap.h: No such file or directory
 compilation terminated.
 configure:6771: $? = 1
@@ -2428,7 +2452,7 @@ main ()
 }
 configure:6787: result: no
 configure:6801: checking whether bswap64 is declared
-configure:6823: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6823: cc -c -O -fcommon  conftest.c >&5
 configure:6808:10: fatal error: machine/bswap.h: No such file or directory
 compilation terminated.
 configure:6826: $? = 1
@@ -2449,7 +2473,7 @@ main ()
 }
 configure:6842: result: no
 configure:6857: checking whether be16enc is declared
-configure:6879: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6879: cc -c -O -fcommon  conftest.c >&5
 configure:6864:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:6882: $? = 1
@@ -2470,7 +2494,7 @@ main ()
 }
 configure:6898: result: no
 configure:6912: checking whether le16enc is declared
-configure:6934: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6934: cc -c -O -fcommon  conftest.c >&5
 configure:6919:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:6937: $? = 1
@@ -2491,7 +2515,7 @@ main ()
 }
 configure:6953: result: no
 configure:6967: checking whether be16dec is declared
-configure:6989: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:6989: cc -c -O -fcommon  conftest.c >&5
 configure:6974:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:6992: $? = 1
@@ -2512,7 +2536,7 @@ main ()
 }
 configure:7008: result: no
 configure:7022: checking whether le16dec is declared
-configure:7044: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7044: cc -c -O -fcommon  conftest.c >&5
 configure:7029:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:7047: $? = 1
@@ -2533,7 +2557,7 @@ main ()
 }
 configure:7063: result: no
 configure:7077: checking whether be32enc is declared
-configure:7099: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7099: cc -c -O -fcommon  conftest.c >&5
 configure:7084:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:7102: $? = 1
@@ -2554,7 +2578,7 @@ main ()
 }
 configure:7118: result: no
 configure:7132: checking whether le32enc is declared
-configure:7154: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7154: cc -c -O -fcommon  conftest.c >&5
 configure:7139:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:7157: $? = 1
@@ -2575,7 +2599,7 @@ main ()
 }
 configure:7173: result: no
 configure:7187: checking whether be32dec is declared
-configure:7209: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7209: cc -c -O -fcommon  conftest.c >&5
 configure:7194:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:7212: $? = 1
@@ -2596,7 +2620,7 @@ main ()
 }
 configure:7228: result: no
 configure:7242: checking whether le32dec is declared
-configure:7264: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7264: cc -c -O -fcommon  conftest.c >&5
 configure:7249:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:7267: $? = 1
@@ -2617,7 +2641,7 @@ main ()
 }
 configure:7283: result: no
 configure:7297: checking whether be64enc is declared
-configure:7319: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7319: cc -c -O -fcommon  conftest.c >&5
 configure:7304:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:7322: $? = 1
@@ -2638,7 +2662,7 @@ main ()
 }
 configure:7338: result: no
 configure:7352: checking whether le64enc is declared
-configure:7374: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7374: cc -c -O -fcommon  conftest.c >&5
 configure:7359:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:7377: $? = 1
@@ -2659,7 +2683,7 @@ main ()
 }
 configure:7393: result: no
 configure:7407: checking whether be64dec is declared
-configure:7429: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7429: cc -c -O -fcommon  conftest.c >&5
 configure:7414:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:7432: $? = 1
@@ -2680,7 +2704,7 @@ main ()
 }
 configure:7448: result: no
 configure:7462: checking whether le64dec is declared
-configure:7484: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7484: cc -c -O -fcommon  conftest.c >&5
 configure:7469:10: fatal error: sys/endian.h: No such file or directory
 compilation terminated.
 configure:7487: $? = 1
@@ -2701,13 +2725,13 @@ main ()
 }
 configure:7503: result: no
 configure:7518: checking whether fstatvfs is declared
-configure:7540: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7540: cc -c -O -fcommon  conftest.c >&5
 configure:7543: $? = 0
 configure:7546: test -s conftest.o
 configure:7549: $? = 0
 configure:7559: result: yes
 configure:7574: checking whether setgroupent is declared
-configure:7599: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7599: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:7590:22: error: 'setgroupent' undeclared (first use in this function); did you mean 'setgroups'?
 configure:7590:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2732,7 +2756,7 @@ main ()
 }
 configure:7618: result: no
 configure:7632: checking whether setpassent is declared
-configure:7657: cc -Wno-implicit-int -Wno-implicit-function-declaration -c -O -fcommon  conftest.c >&5
+configure:7657: cc -c -O -fcommon  conftest.c >&5
 configure: In function 'main':
 configure:7648:22: error: 'setpassent' undeclared (first use in this function); did you mean 'setpwent'?
 configure:7648:22: note: each undeclared identifier is reported only once for each function it appears in
@@ -2757,7 +2781,7 @@ main ()
 }
 configure:7676: result: no
 configure:7694: checking for regfree in -lregex
-configure:7721: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lregex  -lz  >&5
+configure:7721: cc -o conftest -O -fcommon   conftest.c -lregex  -lz  >&5
 /usr/bin/ld: cannot find -lregex: No such file or directory
 collect2: error: ld returned 1 exit status
 configure:7724: $? = 1
@@ -2781,20 +2805,20 @@ regfree ();
 }
 configure:7741: result: no
 configure:7752: checking for library containing regfree
-configure:7779: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lz  >&5
+configure:7779: cc -o conftest -O -fcommon   conftest.c -lz  >&5
 configure:7782: $? = 0
 configure:7785: test -s conftest
 configure:7788: $? = 0
 configure:7841: result: none required
 configure:7848: checking for clock_gettime in -lrt
-configure:7875: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lrt  -lz  >&5
+configure:7875: cc -o conftest -O -fcommon   conftest.c -lrt  -lz  >&5
 configure:7878: $? = 0
 configure:7881: test -s conftest
 configure:7884: $? = 0
 configure:7895: result: yes
 configure:7909: checking for fparseln
-configure:7946: cc -Wno-implicit-int -Wno-implicit-function-declaration -o conftest -O -fcommon   conftest.c -lrt -lz  >&5
-/usr/bin/ld: /tmp/cckBdTbd.o: in function `main':
+configure:7946: cc -o conftest -O -fcommon   conftest.c -lrt -lz  >&5
+/usr/bin/ld: /tmp/cc1yrQu2.o: in function `main':
 conftest.c:(.text+0x3): undefined reference to `fparseln'
 collect2: error: ld returned 1 exit status
 configure:7949: $? = 1
@@ -2853,7 +2877,7 @@ config.status:8641: creating nbtool_config.h
 ac_cv_c_bigendian='no'
 ac_cv_c_compiler_gnu='yes'
 ac_cv_env_CC_set='set'
-ac_cv_env_CC_value='cc -Wno-implicit-int -Wno-implicit-function-declaration'
+ac_cv_env_CC_value='cc'
 ac_cv_env_CFLAGS_set='set'
 ac_cv_env_CFLAGS_value='-O -fcommon'
 ac_cv_env_CPPFLAGS_set=''
@@ -3004,7 +3028,7 @@ ac_cv_header_resolv_h='yes'
 ac_cv_header_rpc_types_h='no'
 ac_cv_header_signal_h='yes'
 ac_cv_header_stdarg_h='yes'
-ac_cv_header_stdc='yes'
+ac_cv_header_stdc='no'
 ac_cv_header_stddef_h='yes'
 ac_cv_header_stdint_h='yes'
 ac_cv_header_stdio_h='yes'
@@ -3049,8 +3073,8 @@ ac_cv_member_struct_statvfs_f_iosize='no'
 ac_cv_member_struct_tm_tm_gmtoff='yes'
 ac_cv_objext='o'
 ac_cv_path_BSHELL='/usr/bin/sh'
-ac_cv_prog_CPP='cc -Wno-implicit-int -Wno-implicit-function-declaration -E'
-ac_cv_prog_ac_ct_CC='cc -Wno-implicit-int -Wno-implicit-function-declaration'
+ac_cv_prog_CPP='cc -E'
+ac_cv_prog_ac_ct_CC='cc'
 ac_cv_prog_cc_g='yes'
 ac_cv_search_regfree='none required'
 ac_cv_type_id_t='yes'
@@ -3077,7 +3101,6 @@ ac_cv_working_alloca_h='yes'
 ## ------------ ##
 
 #define PATH_BSHELL "/usr/bin/sh"
-#define STDC_HEADERS 1
 #define HAVE_LIBZ 1
 #define HAVE_SYS_IOCTL_H 1
 #define HAVE_SYS_MMAN_H 1

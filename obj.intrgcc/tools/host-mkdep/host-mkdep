@@ -236,7 +236,7 @@ else
 		file=${file%.*}
 		set_objlist $file
 
-		( (cc -Wno-implicit-int -Wno-implicit-function-declaration -E "$@" $f; echo $? >&3) | mawk '
+		( (cc -E "$@" $f; echo $? >&3) | mawk '
 			/^#/ {
 				# Be as tolerant as possible.
 				sub(/^#(line)? [ 0-9]*\"?/, "")

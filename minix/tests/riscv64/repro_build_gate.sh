@@ -12,7 +12,6 @@ MINIX_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SMOKE_GATE="$SCRIPT_DIR/multi_smoke_gate.sh"
 
 OBJDIR="${OBJDIR:-obj.repro}"
-JOBS="${JOBS:-$(nproc)}"
 SMOKE_ROUNDS=2
 SKIP_TOOLS=0
 SKIP_DISTRIBUTION=0
@@ -20,13 +19,42 @@ WITHOUT_DISK=0
 SMOKE_TIMEOUT=140
 DISK_IMAGE=""
 
+detect_jobs() {
+    local jobs
+
+    if command -v nproc >/dev/null 2>&1; then
+        jobs="$(nproc 2>/dev/null || true)"
+        if [ -n "$jobs" ]; then
+            echo "$jobs"
+            return
+        fi
+    fi
+    if command -v getconf >/dev/null 2>&1; then
+        jobs="$(getconf _NPROCESSORS_ONLN 2>/dev/null || true)"
+        if [ -n "$jobs" ]; then
+            echo "$jobs"
+            return
+        fi
+    fi
+    if command -v sysctl >/dev/null 2>&1; then
+        jobs="$(sysctl -n hw.ncpu 2>/dev/null || true)"
+        if [ -n "$jobs" ]; then
+            echo "$jobs"
+            return
+        fi
+    fi
+    echo 1
+}
+
+JOBS="${JOBS:-$(detect_jobs)}"
+
 usage() {
     cat <<EOF
 Usage: $0 [options]
 
 Options:
   --objdir NAME                 Isolated objdir (default: obj.repro)
-  --jobs N                      Parallel jobs for distribution (default: nproc)
+  --jobs N                      Parallel jobs for distribution (default: auto-detect)
   --smoke-rounds N              Multi-run smoke rounds (default: 2)
   --smoke-timeout SEC           Per-run smoke timeout (default: 140)
   --skip-tools                  Skip build.sh tools
@@ -62,6 +90,63 @@ if ! git ls-files --error-unmatch external/gpl3/binutils/patches/0011-riscv-rela
     echo "tracked binutils relax compatibility patch is missing from git index" >&2
     exit 1
 fi
+
+find_riscv_tooldir() {
+    local d
+
+    for d in "$MINIX_ROOT/$OBJDIR"/tooldir.*; do
+        if [ -x "$d/bin/riscv64-elf32-minix-readelf" ]; then
+            echo "$d"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+run_relax_compat_probe() {
+    local tooldir readelf ld relax_archive tmp_out
+
+    if ! tooldir="$(find_riscv_tooldir)"; then
+        echo "[WARN] relax probe skipped: tooldir not found under $OBJDIR"
+        return 0
+    fi
+
+    readelf="$tooldir/bin/riscv64-elf32-minix-readelf"
+    ld="$tooldir/riscv64-elf32-minix/bin/ld"
+    if [ ! -x "$ld" ]; then
+        ld="$tooldir/bin/riscv64-elf32-minix-ld"
+    fi
+
+    if [ ! -x "$readelf" ] || [ ! -x "$ld" ]; then
+        echo "[WARN] relax probe skipped: readelf/ld not found in $tooldir"
+        return 0
+    fi
+
+    relax_archive=""
+    for archive in "$DESTDIR"/usr/lib/*.a; do
+        if "$readelf" -r "$archive" 2>/dev/null | grep -q "R_RISCV_RELAX"; then
+            relax_archive="$archive"
+            break
+        fi
+    done
+
+    if [ -z "$relax_archive" ]; then
+        echo "[WARN] relax probe skipped: no R_RISCV_RELAX relocation found in $DESTDIR/usr/lib/*.a"
+        return 0
+    fi
+
+    tmp_out="$(mktemp "${TMPDIR:-/tmp}/minix-relax-probe.XXXXXX.o")"
+    if "$ld" -r "$relax_archive" -o "$tmp_out" >/dev/null 2>&1; then
+        echo "[INFO] relax probe passed: ld accepts archive with R_RISCV_RELAX ($relax_archive)"
+        rm -f "$tmp_out"
+        return 0
+    fi
+
+    rm -f "$tmp_out"
+    echo "[FAIL] relax probe failed: linker rejected archive with R_RISCV_RELAX ($relax_archive)" >&2
+    return 1
+}
 
 COMMON_BUILD_FLAGS=(
   -V AVAILABLE_COMPILER=gcc
@@ -122,6 +207,8 @@ if [ ! -f "$KERNEL" ]; then
     echo "kernel missing: $KERNEL" >&2
     exit 1
 fi
+
+run_relax_compat_probe
 
 SMOKE_ARGS=(
   --kernel "$KERNEL"

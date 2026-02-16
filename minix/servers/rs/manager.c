@@ -182,43 +182,50 @@ int init_state_data(endpoint_t src_e, int prepare_state,
   ipc_filter_el_t (*ipcf_els_buff)[IPCF_MAX_ELEMENTS];
   size_t ipcf_els_buff_size;
 
+  s = OK;
+  ipcf_els_buff = NULL;
   dst_rs_state_data->size = 0;
   dst_rs_state_data->eval_addr = NULL;
   dst_rs_state_data->eval_len = 0;
+  dst_rs_state_data->eval_gid = GRANT_INVALID;
   dst_rs_state_data->ipcf_els = NULL;
   dst_rs_state_data->ipcf_els_size  = 0;
+  dst_rs_state_data->ipcf_els_gid = GRANT_INVALID;
   if(src_rs_state_data->size != sizeof(struct rs_state_data)) {
-      return E2BIG;
+      s = E2BIG;
+      goto cleanup;
   }
 
   /* Initialize eval expression. */
   if(prepare_state == SEF_LU_STATE_EVAL) {
       if(src_rs_state_data->eval_len == 0 || !src_rs_state_data->eval_addr) {
-          return EINVAL;
+          s = EINVAL;
+          goto cleanup;
       }
       dst_rs_state_data->eval_addr = malloc(src_rs_state_data->eval_len+1);
       dst_rs_state_data->eval_len = src_rs_state_data->eval_len;
       if(!dst_rs_state_data->eval_addr) {
-          return ENOMEM;
+          s = ENOMEM;
+          goto cleanup;
       }
       s = sys_datacopy(src_e, (vir_bytes) src_rs_state_data->eval_addr,
           SELF, (vir_bytes) dst_rs_state_data->eval_addr,
           dst_rs_state_data->eval_len);
       if(s != OK) {
-          return s;
+          goto cleanup;
       }
       *((char*)dst_rs_state_data->eval_addr + dst_rs_state_data->eval_len) = '\0';
-      dst_rs_state_data->size = src_rs_state_data->size;
   }
 
   /* Initialize ipc filters. */
   if(src_rs_state_data->ipcf_els_size % rs_ipc_filter_size) {
-      return E2BIG;
+      s = E2BIG;
+      goto cleanup;
   }
   rs_ipc_filter_els = src_rs_state_data->ipcf_els;
   num_ipc_filters = src_rs_state_data->ipcf_els_size / rs_ipc_filter_size;
   if(!rs_ipc_filter_els) {
-      return OK;
+      goto done;
   }
 
   ipcf_els_buff_size = sizeof(ipc_filter_el_t)*IPCF_MAX_ELEMENTS*num_ipc_filters;
@@ -227,14 +234,15 @@ int init_state_data(endpoint_t src_e, int prepare_state,
   }
   ipcf_els_buff = malloc(ipcf_els_buff_size);
   if(!ipcf_els_buff) {
-      return ENOMEM;
+      s = ENOMEM;
+      goto cleanup;
   }
   memset(ipcf_els_buff, 0, ipcf_els_buff_size);
   for(i=0;i<num_ipc_filters;i++) {
       s = sys_datacopy(src_e, (vir_bytes) rs_ipc_filter_els[i],
           SELF, (vir_bytes) rs_ipc_filter, rs_ipc_filter_size);
       if(s != OK) {
-          return s;
+          goto cleanup;
       }
       for(j=0;j<IPCF_MAX_ELEMENTS && rs_ipc_filter[j].flags;j++) {
           endpoint_t m_source = 0;
@@ -260,7 +268,8 @@ int init_state_data(endpoint_t src_e, int prepare_state,
                       errno=0;
                       m_source = strtol(rs_ipc_filter[j].m_label, &buff, 10);
                       if(errno || strcmp(buff, "")) {
-                            return ESRCH;
+                            s = ESRCH;
+                            goto cleanup;
                       }
                   }
               }
@@ -276,11 +285,33 @@ int init_state_data(endpoint_t src_e, int prepare_state,
       ipcf_els_buff[i][0].m_source = RS_PROC_NR;
       ipcf_els_buff[i][0].m_type = VM_RS_UPDATE;
   }
-  dst_rs_state_data->size = src_rs_state_data->size;
   dst_rs_state_data->ipcf_els = ipcf_els_buff;
+  ipcf_els_buff = NULL;
   dst_rs_state_data->ipcf_els_size = ipcf_els_buff_size;
 
+done:
+  dst_rs_state_data->size = src_rs_state_data->size;
   return OK;
+
+cleanup:
+  if(ipcf_els_buff) {
+      free(ipcf_els_buff);
+  }
+  if(dst_rs_state_data->ipcf_els) {
+      free(dst_rs_state_data->ipcf_els);
+      dst_rs_state_data->ipcf_els = NULL;
+  }
+  if(dst_rs_state_data->eval_addr) {
+      free(dst_rs_state_data->eval_addr);
+      dst_rs_state_data->eval_addr = NULL;
+  }
+  dst_rs_state_data->size = 0;
+  dst_rs_state_data->eval_len = 0;
+  dst_rs_state_data->eval_gid = GRANT_INVALID;
+  dst_rs_state_data->ipcf_els_size = 0;
+  dst_rs_state_data->ipcf_els_gid = GRANT_INVALID;
+
+  return s;
 }
 
 /*===========================================================================*

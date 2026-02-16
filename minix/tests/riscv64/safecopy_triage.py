@@ -21,19 +21,67 @@ FATAL_RE = re.compile(
 SAFECOPY_RE = re.compile(r"safecopy|do_safecopy", re.IGNORECASE)
 SHELL_RE = re.compile(r'MINIX 3\.4\.0|exec path="/bin/sh"|^# ', re.MULTILINE)
 
-# Known non-fatal startup fallback patterns observed in current riscv64 bring-up.
-KNOWN_NOISE_RE = [
-    re.compile(r"err=0xfffffffffffffc1c"),
-    re.compile(r"err -996"),
-    re.compile(r"err=0xfffffffffffffff2"),
-    re.compile(r"err -14"),
-]
-
 
 @dataclass
 class LogLine:
     no: int
     text: str
+
+
+@dataclass(frozen=True)
+class NoiseSignature:
+    name: str
+    pattern: re.Pattern[str]
+
+
+# Known non-fatal fallback contexts observed in current riscv64 bring-up.
+# Matching requires both error code and request context (caller + direction).
+KNOWN_NOISE_SIGNATURES = [
+    NoiseSignature(
+        name="boot-copy retry: ds/vfs caller with gid=1 pull",
+        pattern=re.compile(
+            r"rv64: kcall safecopy err=0xfffffffffffffc1c "
+            r"caller=(?:ds|vfs)/0x[0-9a-f]+ from_to=0x2 gid=0x1",
+            re.IGNORECASE,
+        ),
+    ),
+    NoiseSignature(
+        name="boot-copy retry follow-up: do_safecopy_from err -996",
+        pattern=re.compile(
+            r"do_safecopy_from: err -996 caller=(?:1|6)\b.*from_to=2\b.*gid=1",
+            re.IGNORECASE,
+        ),
+    ),
+    NoiseSignature(
+        name="fs write fallback: mfs/procfs push with err=EFAULT",
+        pattern=re.compile(
+            r"rv64: kcall safecopy err=0xfffffffffffffff2 "
+            r"caller=(?:mfs|procfs)/0x[0-9a-f]+ from_to=0x1",
+            re.IGNORECASE,
+        ),
+    ),
+    NoiseSignature(
+        name="fs/procfs write fallback follow-up: do_safecopy_to err -14/-996",
+        pattern=re.compile(
+            r"do_safecopy_to: err -(?:14|996) caller=(?:10|65550)\b.*from_to=1",
+            re.IGNORECASE,
+        ),
+    ),
+    NoiseSignature(
+        name="procfs copy fallback detail: safecopy err -996 caller=65550",
+        pattern=re.compile(
+            r"safecopy: err -996 caller=65550\b.*grantee=65550\b.*access=0x2",
+            re.IGNORECASE,
+        ),
+    ),
+]
+
+
+def match_noise_signature(text: str) -> str | None:
+    for signature in KNOWN_NOISE_SIGNATURES:
+        if signature.pattern.search(text):
+            return signature.name
+    return None
 
 
 def find_first(lines: list[LogLine], pattern: re.Pattern[str]) -> LogLine | None:
@@ -73,6 +121,7 @@ def classify(
         "classification": "",
         "first_safecopy_line": first_safecopy.no if first_safecopy else None,
         "first_safecopy_text": first_safecopy.text if first_safecopy else None,
+        "first_safecopy_signature": None,
         "safecopy_total": safecopy_total,
         "safecopy_pre_shell": safecopy_pre_shell,
         "shell_line": shell_line_no,
@@ -91,9 +140,13 @@ def classify(
         result["reasons"].append("no safecopy errors found")
         return result, 0
 
-    if not any(rx.search(first_safecopy.text) for rx in KNOWN_NOISE_RE):
+    signature_name = match_noise_signature(first_safecopy.text)
+    result["first_safecopy_signature"] = signature_name
+    if signature_name is None:
         result["classification"] = "potential_consistency_issue"
-        result["reasons"].append("first safecopy error is not a known recoverable pattern")
+        result["reasons"].append(
+            "first safecopy error is not in allowlisted (err+caller+direction) contexts"
+        )
         return result, 2
 
     if safecopy_total > max_total_safecopy:
@@ -117,7 +170,7 @@ def classify(
         return result, 2
 
     result["classification"] = "acceptable_noise"
-    result["reasons"].append("known recoverable safecopy fallback pattern")
+    result["reasons"].append(f"known recoverable safecopy context: {signature_name}")
     return result, 0
 
 
@@ -148,6 +201,8 @@ def main() -> int:
         print(f"first_safecopy_line: {result['first_safecopy_line']}")
         print(f"safecopy_total: {result['safecopy_total']}")
         print(f"safecopy_pre_shell: {result['safecopy_pre_shell']}")
+        if result["first_safecopy_signature"]:
+            print(f"first_safecopy_signature: {result['first_safecopy_signature']}")
         if result["reasons"]:
             print("reasons:")
             for reason in result["reasons"]:

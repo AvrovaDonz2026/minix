@@ -7,7 +7,7 @@ Copyright (c) 1982, 1986, 1989, 1991, 1993
     The Regents of the University of California.  All rights reserved.
 
 Build information:
-          Build date   Mon Feb 16 02:34:48 UTC 2026
+          Build date   Mon Feb 16 03:31:59 UTC 2026
             Built by   donz@morphius
 
 Build settings:
@@ -33,7 +33,7 @@ Build settings:
         MACHINE_ARCH = 'riscv64'
                 MAKE = '/home/donz/minix/obj.intrgcc/tooldir/bin/nbmake'
             MAKECONF = '/etc/mk.conf'
-           MAKEFLAGS = ' -d e -m /home/donz/minix/share/mk -j 1 -J 15,16 .MAKE.LEVEL.ENV=MAKELEVEL HOST_OSTYPE=Linux-6.12.63+deb13-amd64-x86_64 MKOBJDIRS=yes NOPOSTINSTALL=1 USETOOLS=yes _SRC_TOP_=/home/donz/minix _SRC_TOP_OBJ_=/home/donz/minix/obj.intrgcc _THISDIR_=etc/'
+           MAKEFLAGS = ' -d e -m /home/donz/minix/share/mk -j 8 -J 15,16 .MAKE.LEVEL.ENV=MAKELEVEL HOST_OSTYPE=Linux-6.12.63+deb13-amd64-x86_64 MKOBJDIRS=yes NOPOSTINSTALL=1 USETOOLS=yes _SRC_TOP_=/home/donz/minix _SRC_TOP_OBJ_=/home/donz/minix/obj.intrgcc _THISDIR_=etc/'
           MAKEOBJDIR = '/home/donz/minix/obj.intrgcc/obj.intrgcc/etc'
     MAKEOBJDIRPREFIX = (undefined)
          MAKEVERBOSE = '2'

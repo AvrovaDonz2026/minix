@@ -62,7 +62,7 @@
 ./boot/minix/.temp/mod03_pm type=file mode=0755 size=114147 sha256=94a4295dc1d50e7d45bf8be0c223e6b3dbd823870c8ad24b8bdb5f223174b8f9
 ./boot/minix/.temp/mod04_sched type=file mode=0755 size=69221 sha256=1106b78f8a90ddad61dd2917352381a79a8730b98c628cf99e4908f0df82ae05
 ./boot/minix/.temp/mod05_vfs type=file mode=0755 size=250269 sha256=9cb3f3e63ee31de33c1a9a6251e5b84cfe0ddb4d7737a6fb3e676d64586d25a0
-./boot/minix/.temp/mod06_memory type=file mode=0755 size=4574822 sha256=70127490e29fcbef784dd15bd72ee862f06e14cabd72590d633f3540e3d2b555
+./boot/minix/.temp/mod06_memory type=file mode=0755 size=4574822 sha256=ff707f846e6006d058a9416e21744bc4af85084211b418f083a9d9ce0c33b6ec
 ./boot/minix/.temp/mod07_tty type=file mode=0755 size=91604 sha256=de4a83f6b3758709df8f8fb094da0fa0abb1d3894f01481787e13b126d0c4845
 ./boot/minix/.temp/mod08_mib type=file mode=0755 size=122324 sha256=6aaee9c5596a40832c6abb8903b8761f2e92776c6a2d055a887737c8a6022e06
 ./boot/minix/.temp/mod09_vm type=file mode=0755 size=210589 sha256=c2977d08b33f961fe1deba0b84e4013f1ce8032d7ba0a12fbcbcb9492455de00
@@ -641,7 +641,7 @@
 ./etc/rc.minix type=file uname=root gname=wheel mode=0644 size=5255 sha256=4cbac10f5809b825b17e3d596e9a5fda9ec0152d457ca1d0b3b518b094eab2ce
 ./etc/rc.shutdown type=file uname=root gname=wheel mode=0644 size=1593 sha256=4c02d0bc1a9f70cf2d2d91d4e6ca84f625520cf260fb2e88049bb0f3ab4a1f87
 ./etc/rc.subr type=file uname=root gname=wheel mode=0644 size=32170 sha256=01981ab0f25100ffe2cb0e902bee1174a84f118f5329718cdd1f381236a0be1b
-./etc/release type=file uname=root gname=wheel mode=0444 size=3893 sha256=671d0fa28c8d78b737a7326e6ae5321cfe78023a549923b3bf0234bc0b2d63a3 tags=etc_pkg
+./etc/release type=file uname=root gname=wheel mode=0444 size=3893 sha256=1656289b598c592f8d78cf3f306a6356b44aa73b48acb3ee0f56d520a731f5ef tags=etc_pkg
 ./etc/rs.lwip type=file uname=root gname=wheel mode=0644 size=2572 sha256=1d2ec3ce06d0de6d52c0ad400cb6b9428fc92df156c347745750c7190cfbef4a
 ./etc/rs.single type=file uname=root gname=wheel mode=0644 size=232 sha256=0d124fd2e51b119326dfb7bf6a7e6cd96b4c187fd0e70db7f69b8bb04db37edf
 ./etc/services type=file uname=root gname=wheel mode=0644 size=3268990 sha256=bc6cffd02f96cf380421590d502f71bbe7950649a5fc48861c0976ec4ce116e8
@@ -816,7 +816,7 @@
 ./service/isofs type=file uname=root gname=wheel mode=0755 size=155331 sha256=f2ee81e602ea93a1087137293710c39be23ccd3784401f2d3d2f02a6c10c38ba
 ./service/log type=file uname=root gname=wheel mode=0755 size=79134 sha256=374acc034df1f636ff1b92d14ce53f83c740c2d151918e8390eb5cea0158a098
 ./service/lwip type=file uname=root gname=wheel mode=0755 size=428641 sha256=5f51237d35bd8a579e609de96444cda194806574da22fff281001c242012ce36
-./service/memory type=file uname=root gname=wheel mode=0755 size=4574822 sha256=70127490e29fcbef784dd15bd72ee862f06e14cabd72590d633f3540e3d2b555
+./service/memory type=file uname=root gname=wheel mode=0755 size=4574822 sha256=ff707f846e6006d058a9416e21744bc4af85084211b418f083a9d9ce0c33b6ec
 ./service/mfs type=file uname=root gname=wheel mode=0755 size=144468 sha256=56913fe6bde78fd94a2845b35549288db5124cb036f11a2f7c617df626c0f03e
 ./service/mib type=file uname=root gname=wheel mode=0755 size=122324 sha256=6aaee9c5596a40832c6abb8903b8761f2e92776c6a2d055a887737c8a6022e06
 ./service/pfs type=file uname=root gname=wheel mode=0755 size=82655 sha256=4942261e6f5fe1042846cb63026c4fe0762329998ba4a457be06226ff8fcd888

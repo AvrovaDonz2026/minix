@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-02-16  
-**Version / 版本**: 1.19
+**Version / 版本**: 1.20
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -15,23 +15,28 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 
 ## Repair Priority / 修复优先级（从重到轻）
 
-- P0 / 最高优先（已闭环，2026-02-16，smoke-validated）:
-  1) `[DONE]` `#22` RS `free_slot()` endpoint unset 时越界写 `rproc_ptr[]`
-  2) `[DONE]` `#21` RS endpoint 校验接受 task slot，导致 `rproc_ptr[]` 越界访问
-  3) `[DONE]` `#20` RS `do_upd_ready()` 异常消息路径空指针解引用
-  4) `[DONE]` `#18` RS `do_init_ready()` / `catch_boot_init_ready()` 异常路径空指针解引用
-  5) `[DONE]` `#23` RISC-V `vm_memset` 无故障恢复，可能把可恢复故障升级为 kernel panic
+- P0 / 最高优先（含新发现）:
+  1) `#27` VFS magic-grant 失败路径缺少 revoke，可能累积 grant 资源泄漏
+  2) `[DONE]` `#22` RS `free_slot()` endpoint unset 时越界写 `rproc_ptr[]`
+  3) `[DONE]` `#21` RS endpoint 校验接受 task slot，导致 `rproc_ptr[]` 越界访问
+  4) `[DONE]` `#20` RS `do_upd_ready()` 异常消息路径空指针解引用
+  5) `[DONE]` `#18` RS `do_init_ready()` / `catch_boot_init_ready()` 异常路径空指针解引用
+  6) `[DONE]` `#23` RISC-V `vm_memset` 无故障恢复，可能把可恢复故障升级为 kernel panic
 - P1 / 高优先（高概率影响功能正确性）:
   1) `#16` VFS 服务端点“先写后验”可能弱化代际校验
   2) `#17` 启动期 safecopy 噪声错误闭环（定位根因并降噪）
   3) `A3` 含盘场景 `minix-service`/`virtio_blk_mmio` SIGSEGV
   4) `#25` 内建 GCC 不支持 `-mabi=lp64d`，阻断部分 GCC-only 增量构建
   5) `#26` RS `do_up`/`do_update` 失败路径未回收 slot 资源，`RSS_COPY` 可触发可重复内存泄漏
+  6) `#28` RS `init_state_data` 在多个错误出口缺少内存回收
+  7) `#29` safecopy 首错分类规则过宽，存在门禁假阴性风险
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
   3) `#13` `phys_copy` fault handler 注册缺失
   4) `#14` DT 多段内存/保留区解析补齐
+  5) `#30` multi-smoke 默认复用磁盘镜像，削弱跨次可复现性
+  6) `#31` smoke/repro 门禁对退出语义与宿主可移植性校验不足
 - P3 / 低优先（可维护性与技术债）:
   1) `#19` kernel/VM/RS 无条件调试日志收敛
   2) `#11` `minimal_kernel` RISC-V 适配
@@ -149,7 +154,10 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 
 ## Critical / 严重
 
-- None confirmed in current workspace; former Critical #1 moved to Fixed. / 当前工作区未确认有严重问题，原 Critical #1 已移至 Fixed。
+- Newly confirmed: `#27` (VFS grant leak on early `EINVAL` error paths).  
+  新确认：`#27`（VFS 在 `EINVAL` 早退路径可能泄漏 grant）。  
+  Detailed evidence and fix suggestions are documented in issue entry `#27` below.  
+  详细证据与修复建议见下方 `#27` 条目。
 
 ## Major / 重要
 
@@ -461,6 +469,57 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - Clear `r_exec` ownership deterministically on all post-`init_slot()` failure branches (including duplicate checks).
   - Add a regression test that issues repeated failing `RSS_COPY` requests and asserts no net RS memory growth.
 
+### 27) VFS magic-grant error paths can leak grants on early `EINVAL` returns / VFS magic grant 错误路径在 `EINVAL` 早退时可能泄漏 grant
+- Evidence / 证据:
+  - `req_getdents_actual()` creates a magic/direct grant at
+    `minix/servers/vfs/request.c:343-347` but returns `EINVAL` at
+    `minix/servers/vfs/request.c:359-361` without revoking it.
+  - `req_readwrite_actual()` creates a magic grant at
+    `minix/servers/vfs/request.c:902-905` but returns `EINVAL` at
+    `minix/servers/vfs/request.c:912-913` without revoking it.
+- Impact / 影响:
+  - Repeated large-offset requests on 32-bit-off_t filesystems can accumulate
+    unreleased grants and eventually exhaust grant resources.
+  - 这属于可积累资源泄漏，可能在长时运行下放大为系统级不稳定。
+- Suggested fix / 修复建议:
+  - Reorder checks so offset capability is validated before grant creation, or
+    unify exits with a `revoke-on-error` cleanup path.
+  - Add a regression that repeatedly triggers these `EINVAL` branches and
+    verifies grant-table stability.
+
+### 28) RS `init_state_data()` leaks heap buffers on multiple error exits / RS `init_state_data()` 在多个错误出口泄漏堆内存
+- Evidence / 证据:
+  - `eval_addr` is allocated at `minix/servers/rs/manager.c:199`; if
+    `sys_datacopy` fails at `minix/servers/rs/manager.c:207-209`, the function
+    returns without freeing it.
+  - `ipcf_els_buff` is allocated at `minix/servers/rs/manager.c:228`; failures at
+    `minix/servers/rs/manager.c:236-238` and `minix/servers/rs/manager.c:263-264`
+    return directly without releasing allocated buffers.
+- Impact / 影响:
+  - Failed/aborted update-prepare attempts can cause repeatable RS heap growth.
+  - 会降低 RS 长时间运行可靠性，且在压力场景下可能演变为 `ENOMEM`。
+- Suggested fix / 修复建议:
+  - Introduce a single cleanup label for `init_state_data()` and free all
+    partially allocated state on every non-OK exit.
+  - Add an RS memory-regression test for repeated failing update-prepare calls.
+
+### 29) safecopy first-error triage rules are too broad and may cause false negatives / safecopy 首错分类规则过宽，可能造成假阴性
+- Evidence / 证据:
+  - `KNOWN_NOISE_RE` matches only generic error-code patterns
+    (`minix/tests/riscv64/safecopy_triage.py:25-30`).
+  - Classification accepts `acceptable_noise` if the first line matches those
+    patterns (`minix/tests/riscv64/safecopy_triage.py:94-121`), without
+    constraining caller/path/request context.
+- Impact / 影响:
+  - New regressions with reused error codes (but different fault semantics)
+    may be misclassified as acceptable, weakening gate trustworthiness.
+  - 这会降低 `#17` 的闭环质量，增加“门禁通过但真实回归存在”的风险。
+- Suggested fix / 修复建议:
+  - Tighten classification to `(error code + caller + request context)` instead
+    of error code only.
+  - Treat unknown context combinations as `potential_consistency_issue` by
+    default and require explicit allowlisting.
+
 ## Moderate / 中等
 
 ### 11) Minimal kernel build is not RISC-V-ready / minimal_kernel 未支持 RISC-V
@@ -488,6 +547,42 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - Multi-region or reserved-memory layouts may be ignored, leading to overlaps or wrong sizing. / 多段或保留内存布局可能被忽略，导致覆盖或尺寸错误。
 - Suggested fix / 修复建议:
   - Extend FDT parsing to handle reserved regions and multiple memory ranges, then plumb into `add_memmap`. / 扩展 FDT 解析以处理保留区与多段内存，并接入 `add_memmap`。
+
+### 30) `multi_smoke_gate.sh` reuses a persistent disk image by default, reducing run-to-run reproducibility / `multi_smoke_gate.sh` 默认复用持久磁盘镜像，削弱跨次可复现性
+- Evidence / 证据:
+  - Default disk image path is fixed at `/tmp/minix-smoke-gate.img`:
+    `minix/tests/riscv64/multi_smoke_gate.sh:26`.
+  - The script creates the image only if missing (`minix/tests/riscv64/multi_smoke_gate.sh:95-97`), so subsequent runs reuse prior state.
+- Impact / 影响:
+  - With-disk smoke outcomes can be affected by prior filesystem/device state,
+    making regressions harder to bisect and reproduce.
+  - 带盘冒烟结果可能受历史状态污染，降低门禁信号稳定性。
+- Suggested fix / 修复建议:
+  - Default to per-run fresh disk image (timestamp/tempfile), or add
+    `--fresh-disk` and make it default in gate mode.
+  - Keep explicit opt-in for persistent images only when doing long-running
+    stateful experiments.
+
+### 31) smoke/repro gate scripts under-check runner semantics and host portability / smoke/repro 门禁脚本对执行语义与宿主可移植性校验不足
+- Evidence / 证据:
+  - `multi_smoke_gate.sh` masks QEMU runner status via `timeout ... || true`:
+    `minix/tests/riscv64/multi_smoke_gate.sh:109-110`, so timeout vs abnormal
+    exit are not explicitly distinguished.
+  - `repro_build_gate.sh` uses `nproc` directly for default jobs:
+    `minix/tests/riscv64/repro_build_gate.sh:15` (not portable to non-GNU hosts).
+  - Repro gate currently checks patch tracking (`git ls-files`) at
+    `minix/tests/riscv64/repro_build_gate.sh:61-64`, but lacks a direct
+    behavior probe that verifies relax-compat handling in the produced linker.
+- Impact / 影响:
+  - Some abnormal runs may be under-diagnosed, and host/environment drift can
+    reduce gate consistency across developer machines/CI.
+  - 门禁脚本可移植性不足，且“source-driven”验证仍有行为层盲点。
+- Suggested fix / 修复建议:
+  - Capture and classify timeout exit codes (`124`/`137`) vs other non-zero
+    exits explicitly in smoke logs.
+  - Add `nproc` fallback (`getconf _NPROCESSORS_ONLN` etc.).
+  - Add a minimal linker behavior probe for `R_RISCV_RELAX` compatibility in
+    addition to tracked-patch checks.
 
 ### 17) Repeated safecopy errors during boot are still noisy and unexplained / 启动期重复 safecopy 错误仍有噪声且原因未闭环
 - Evidence / 证据:

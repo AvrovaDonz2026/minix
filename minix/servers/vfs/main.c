@@ -167,6 +167,13 @@ static void handle_work(void (*func)(void))
 
   proc_e = m_in.m_source;
 
+  /*
+   * During boot, PFS/MFS may issue early calls before their vmnt entries are
+   * fully visible. Allow handling those calls with the spare thread.
+   */
+  if (proc_e == PFS_PROC_NR || proc_e == MFS_PROC_NR)
+	use_spare = TRUE;
+
   if (fp->fp_flags & FP_SRV_PROC) {
 	vmp = find_vmnt(proc_e);
 	if (vmp != NULL) {
@@ -182,13 +189,12 @@ static void handle_work(void (*func)(void))
 		}
 		/* A thread is available. Set callback flag. */
 		vmp->m_flags |= VMNT_CALLBACK;
-		if (vmp->m_flags & VMNT_MOUNTING) {
+		if (vmp->m_flags & VMNT_MOUNTING)
 			vmp->m_flags |= VMNT_FORCEROOTBSF;
-		}
-	}
 
-	/* Use the spare thread to handle this request if needed. */
-	use_spare = TRUE;
+		/* File-server callbacks may need the spare thread. */
+		use_spare = TRUE;
+	}
   }
 
   worker_start(fp, func, &m_in, use_spare);
@@ -279,7 +285,7 @@ static void do_work(void)
   unsigned int call_index;
   int error;
 
-  if (fp->fp_pid == PID_FREE) {
+  if (fp->fp_pid == PID_FREE && !(fp->fp_flags & FP_SRV_PROC)) {
 	/* Process vanished before we were able to handle request.
 	 * Replying has no use. Just drop it.
 	 */
@@ -412,6 +418,12 @@ static int sef_cb_init_fresh(int UNUSED(type), sef_init_info_t *info)
   message mess;
   struct rprocpub rprocpub[NR_BOOT_PROCS];
 
+  /*
+   * Avoid boot-time deadlock with RS by replying asynchronously once.
+   * After this first reply, SEF restores the default synchronous behavior.
+   */
+  sef_setcb_init_response(sef_cb_init_response_rs_asyn_once);
+
   self = NULL;
   verbose = 0;
 
@@ -478,6 +490,12 @@ static int sef_cb_init_fresh(int UNUSED(type), sef_init_info_t *info)
 		}
 	}
   }
+
+  /* PFS and MFS may callback before full mount state is in place. */
+  if (isokendpt(PFS_PROC_NR, &i) == OK)
+	fproc[i].fp_flags |= FP_SRV_PROC;
+  if (isokendpt(MFS_PROC_NR, &i) == OK)
+	fproc[i].fp_flags |= FP_SRV_PROC;
 
   /* Initialize locks and initial values for all processes. */
   for (rfp = &fproc[0]; rfp < &fproc[NR_PROCS]; rfp++) {

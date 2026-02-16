@@ -1,25 +1,27 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
-**Date / 日期**: 2026-01-31  
-**Version / 版本**: 1.3  
-**Status / 状态**: Phase 1 in progress — buildable with workarounds, runtime unstable  
-**Progress / 进度**: ~60% (core kernel present; VM/IO issues outstanding)
+**Date / 日期**: 2026-02-16  
+**Version / 版本**: 1.4  
+**Status / 状态**: Phase 1 in progress — buildable, boots to interactive shell, runtime gaps remain  
+**Progress / 进度**: ~70% (boot path stabilized; I/O/SMP issues outstanding)
 
 ## Summary / 摘要
 
 **中文**
 - 构建可通过（需使用绕过项与特定构建变量），详见 `README-RISCV64.md`。
-- QEMU 可启动并进入 shell，但用户态仍不稳定（`minix-service` 启动 virtio_blk_mmio 时 SIGSEGV）。
+- QEMU 启动链路已稳定到可交互 shell（2026-02-16 冒烟：`echo SMOKE_OK` 成功）。
 - 关键风险集中在页表根传参、UART、TLB 刷新与 SBI IPI/fence 路径（见 `issue.md`）。
 - 2026-01-31 已完成 tools + distribution 构建并运行 `run_tests.sh all`。
   用户态编译测试全部通过；内核启动与定时器测试通过；SMP 跳过；virtio 块设备 I/O smoke 失败。
+- 2026-02-16 修复了早期启动中的 PFS/MFS/RS 初始化握手与 ilp32 用户地址上限问题，未再复现 shell 前 SIGSEGV。
 
 **English**
 - Build passes with workaround flags; see `README-RISCV64.md` for exact commands.
-- QEMU reaches a shell prompt, but user space remains unstable (`minix-service` SIGSEGV when starting virtio_blk_mmio).
+- QEMU boot path is now stable to an interactive shell (2026-02-16 smoke: `echo SMOKE_OK` succeeds).
 - Key risks are in page-table root handoff, UART, TLB flush, and SBI IPI/fence paths (see `issue.md`).
 - 2026-01-31: tools + distribution built and `run_tests.sh all` executed.
   User-level compile tests pass; kernel boot + timer pass; SMP skipped; virtio block I/O smoke fails.
+- 2026-02-16: fixed early boot handshake (PFS/MFS/RS) and ilp32 user-address-top issues; no pre-shell SIGSEGV reproduced.
 
 ## Build Status / 构建状态
 
@@ -40,19 +42,19 @@
 ## Runtime Status / 运行状态
 
 **中文**
-- QEMU 可到达 shell 提示符并执行 `sysenv`/`fsck_mfs` 等命令，但仍会出现用户态崩溃。
+- QEMU 可稳定到达 shell 提示符并执行交互命令（`echo SMOKE_OK` 验证通过）。
 - `minix-service -c up /service/virtio_blk_mmio -dev /dev/c0d0` 触发 SIGSEGV（`pc=0x3bb38`, `sp=0xefbffff0`），导致 virtio smoke 失败。
 - SMP 初始化仍标记为跳过（not yet implemented）。
 
 **English**
-- QEMU reaches a shell prompt and can run `sysenv`/`fsck_mfs`, but userland crashes still occur.
+- QEMU now reaches shell prompt stably and accepts interactive commands (`echo SMOKE_OK` verified).
 - `minix-service -c up /service/virtio_blk_mmio -dev /dev/c0d0` triggers SIGSEGV (`pc=0x3bb38`, `sp=0xefbffff0`), causing virtio smoke failure.
 - SMP initialization remains skipped (not yet implemented).
 
 ## Key Issues (Snapshot) / 关键问题（摘要）
 
 **Critical / 严重**
-- None confirmed in current workspace; PTROOT 64-bit fix is in-tree but not revalidated.
+- None newly introduced during 2026-02-16 boot stabilization validation.
 
 **Major / 重要**
 - UART deferred replies, TLB flush after leaf splits, and SBI legacy PA fixes are in-tree but need runtime validation.

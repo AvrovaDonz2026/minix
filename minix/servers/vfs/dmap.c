@@ -201,9 +201,21 @@ int map_service(struct rprocpub *rpub)
 {
 /* Map a new service by storing its device driver properties. */
   int r, slot;
+  int pub_slot;
   struct fproc *rfp;
 
   if (IS_RPUB_BOOT_USR(rpub)) return(OK);
+
+  /*
+   * PM may still have boot-image endpoints while RS publishes updated
+   * generation endpoints for boot services.  Resync the fproc endpoint
+   * slot with RS data before validating the endpoint.
+   */
+  pub_slot = _ENDPOINT_P(rpub->endpoint);
+  if (pub_slot >= 0 && pub_slot < NR_PROCS &&
+      fproc[pub_slot].fp_endpoint != rpub->endpoint) {
+	fproc[pub_slot].fp_endpoint = rpub->endpoint;
+  }
 
   /* Process is a service */
   if (isokendpt(rpub->endpoint, &slot) != OK) {

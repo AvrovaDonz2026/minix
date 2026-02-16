@@ -400,7 +400,8 @@ void mount_pfs(void)
   struct vmnt *vmp;
   struct node_details res;
   unsigned int fs_flags;
-  int r;
+  int r, slot;
+  struct fproc *rfp;
 
   if ((dev = find_free_nonedev()) == NO_DEV)
 	panic("VFS: no nonedev to initialize PFS");
@@ -416,6 +417,12 @@ void mount_pfs(void)
   strlcpy(vmp->m_label, "pfs", LABEL_MAX);
   strlcpy(vmp->m_mount_path, "pipe", PATH_MAX);
   strlcpy(vmp->m_mount_dev, "none", PATH_MAX);
+
+  /* Allow PFS callbacks while initialization keeps regular requests blocked. */
+  if (isokendpt(PFS_PROC_NR, &slot) != OK)
+	panic("VFS: invalid PFS endpoint %d", PFS_PROC_NR);
+  rfp = &fproc[slot];
+  rfp->fp_flags |= FP_SRV_PROC;
 
   /* Ask PFS to acknowledge being mounted. Ignore the returned node details. */
   r = req_readsuper(vmp, "", dev, FALSE, FALSE, &res, &fs_flags);

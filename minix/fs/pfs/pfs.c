@@ -411,6 +411,7 @@ pfs_startup(void)
 	/* Register initialization callbacks. */
 	sef_setcb_init_fresh(pfs_init);
 	sef_setcb_init_restart(SEF_CB_INIT_RESTART_STATEFUL);
+	sef_setcb_init_response(sef_cb_init_response_rs_asyn_once);
 
 	/* Register signal callbacks. */
 	sef_setcb_signal_handler(pfs_signal);

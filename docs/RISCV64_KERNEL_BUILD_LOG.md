@@ -139,3 +139,32 @@ RISCV_ARCH_FLAGS='-march=rv64imafd_zicsr_zifencei -mcmodel=medany' \
 **Notes / 说明**:
 - ccache config: `/home/donz/minix/obj/ccache/ccache.conf`
 - virtio smoke failure: `/sbin/minix-service -c up /service/virtio_blk_mmio -dev /dev/c0d0` crashes (`pc=0x3bb38`, `sp=0xefbffff0`)
+
+### Entry 9 — Boot Path Stabilization + QEMU Smoke (2026-02-16) / 启动路径稳定化 + QEMU 冒烟
+**Workspace / 工作区**: `/home/donz/minix`  
+**Commands / 命令**:
+```bash
+# Rebuild affected MINIX tree using in-tree toolchain
+obj.intrgcc/tooldir/bin/nbmake-evbriscv64 -C minix MKPCI=yes MKCOVERAGE=no dependall
+
+# Non-interactive boot check
+timeout 120 ./minix/scripts/qemu-riscv64.sh \
+  -k obj.intrgcc/minix/kernel/kernel \
+  -B obj.intrgcc/destdir.evbriscv64 > /tmp/qemu-fix20.log 2>&1 || true
+
+# Interactive smoke (manual)
+./minix/scripts/qemu-riscv64.sh \
+  -k obj.intrgcc/minix/kernel/kernel \
+  -B obj.intrgcc/destdir.evbriscv64
+# In guest shell:
+echo SMOKE_OK
+```
+**Key code changes / 关键代码改动**:
+- `minix/include/arch/riscv64/include/archconst.h`: set `USR_DATATOP/USR_STACKTOP` to `0x70000000UL` (keep ilp32 user pointers below sign-extension hazard zone).
+- `minix/fs/pfs/pfs.c`, `minix/fs/mfs/main.c`: set `sef_cb_init_response_rs_asyn_once` for startup init response.
+- `minix/servers/vfs/main.c`, `minix/servers/vfs/mount.c`, `minix/servers/vfs/dmap.c`: boot-time FS callback/service-endpoint handling hardening.
+
+**Results / 结果**:
+- No boot-time `VM: pagefault: SIGSEGV ... bad addr ...` observed in `/tmp/qemu-fix20.log`.
+- Boot passed `VFS: init_root done`, `init: exec /bin/sh /etc/rc`, and reached shell path repeatedly.
+- Interactive QEMU smoke succeeded: shell prompt available and `echo SMOKE_OK` returned `SMOKE_OK`.

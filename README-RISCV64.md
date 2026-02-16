@@ -25,6 +25,7 @@ targeting the QEMU virt platform.
 **中文**
 - 构建：可通过（需使用 workaround 组合，见本文构建命令与 `RISC64-STATUS.md`）
 - 运行：QEMU 可稳定进入 shell，并通过 `echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo` 交互复测
+- `obj.intrgcc` 独立构建链路已跑通：`tools -> distribution -> QEMU`，不再出现 `Boot module not found: ds`
 - 关键风险：含盘 virtio 启动路径待复核、`procfs` safecopy 回退噪声、SMP 未实现、GCC-only 增量链路 ABI 参数兼容性（#25，详见 `issue.md`）
 - 进度估计：约 72%（启动链路与基础用户态已稳定，设备与工具链链路仍待完善）
 - 代码更新（至 2026-01-06 01:00 前）：用户态 gp 初始化（crt0 + gp.c）、exec/ucontext 与
@@ -35,6 +36,8 @@ targeting the QEMU virt platform.
 - Build: passes with workaround flags (see commands below and `RISC64-STATUS.md`)
 - Runtime: QEMU reaches a stable shell prompt and passes interactive retests:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`
+- The isolated `obj.intrgcc` chain is validated end-to-end (`tools -> distribution -> QEMU`);
+  `Boot module not found: ds` is no longer reproduced on this profile.
 - Key risks: with-disk virtio startup path recheck, procfs safecopy fallback noise,
   SMP not implemented, and GCC-only incremental ABI-flag compatibility (#25; see `issue.md`)
 - Progress estimate: ~72% (boot + basic userland path stabilized; device/toolchain work remains)
@@ -304,6 +307,42 @@ cat /proc/meminfo
 - `cat /proc/meminfo`：可返回数据；仍可见一次可恢复 safecopy fallback（已在 `issue.md` #17 跟踪）。  
   `cat /proc/meminfo`: returns data; one recoverable safecopy fallback is still observable (tracked in `issue.md` #17).
 
+#### 5.5 2026-02-16 `obj.intrgcc` 全链路验证 / 2026-02-16 `obj.intrgcc` End-to-End Validation
+
+构建命令 / Build commands:
+```bash
+# 1) tools (isolated objdir)
+MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
+./build.sh -U -m evbriscv64 -O obj.intrgcc \
+  -V AVAILABLE_COMPILER=gcc -V ACTIVE_CC=gcc -V ACTIVE_CPP=gcc -V ACTIVE_CXX=gcc -V ACTIVE_OBJC=gcc \
+  tools
+
+# 2) distribution (same objdir; workaround profile)
+MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
+./build.sh -U -u -j"$(nproc)" -m evbriscv64 -O obj.intrgcc \
+  -V AVAILABLE_COMPILER=gcc -V ACTIVE_CC=gcc -V ACTIVE_CPP=gcc -V ACTIVE_CXX=gcc -V ACTIVE_OBJC=gcc \
+  -V RISCV_ARCH_FLAGS='-march=RV64IMAFD -mcmodel=medany' \
+  -V NOGCCERROR=yes \
+  -V MKPIC=no -V MKPICLIB=no -V MKPICINSTALL=no \
+  -V MKCXX=no -V MKLIBSTDCXX=no -V MKATF=no \
+  -V USE_PCI=no \
+  -V CHECKFLIST_FLAGS='-m -e' \
+  distribution
+```
+
+QEMU 验证命令 / QEMU validation command:
+```bash
+./minix/scripts/qemu-riscv64.sh \
+  -k obj.intrgcc/minix/kernel/kernel \
+  -B obj.intrgcc/destdir.evbriscv64
+```
+
+结果 / Result:
+- 成功进入 shell，且 `ds` 等 boot modules 可正常加载，不再复现 `Boot module not found: ds`。  
+  Shell prompt is reachable and boot modules (`ds` included) load correctly; `Boot module not found: ds` is no longer observed.
+- 该链路可作为“完全自举可重建”（不依赖从 `obj/` 注入）的基线。  
+  This chain is now a practical baseline for fully self-contained rebuilds without injecting artifacts from `obj/`.
+
 ## 已知问题与解决方案 / Known Issues and Workarounds
 
 ### 0. 运行时关键问题（持续跟踪）/ Runtime Key Issues (Ongoing)
@@ -451,7 +490,7 @@ cd minix/tests/riscv64
 
 ## 构建输出 / Build Outputs
 
-1. **交叉编译工具链 / Toolchain**：`obj.intrgcc/tooldir/bin/riscv64-elf32-minix-*`
+1. **交叉编译工具链 / Toolchain**：`obj.intrgcc/tooldir.*/bin/riscv64-elf32-minix-*`
 2. **内核镜像 / Kernel**：`obj.intrgcc/minix/kernel/kernel`
 3. **系统库 / Libraries**：`obj.intrgcc/destdir.evbriscv64/usr/lib/`
 4. **服务器程序 / Servers**：`obj.intrgcc/destdir.evbriscv64/sbin/`
@@ -518,4 +557,4 @@ MINIX 3 is licensed under BSD. See LICENSE in the source tree.
 ---
 
 **最后更新 / Last updated**：2026-02-16  
-**版本 / Version**：1.5
+**版本 / Version**：1.6

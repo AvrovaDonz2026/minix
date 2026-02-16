@@ -10,6 +10,8 @@
 **中文**
 - 构建可通过（GCC + workaround 组合），详见 `README-RISCV64.md`。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
+- 已验证 `obj.intrgcc` 独立链路可完成 `tools -> distribution -> QEMU`，并消除此前
+  `Boot module not found: ds` 的启动报错。
 - 本轮已确认并修复 RV64 用户态 `memset` 递归导致的栈顶 SIGSEGV（见 `issue.md` A3 进展）。
 - #24 已缓解：in-tree binutils 增加 `R_RISCV_RELAX` 兼容补丁，`ld` 不再因 `0x33` 中断链接。
 - 仍有待闭环风险：含盘 virtio 启动链路复核、`procfs` safecopy 回退噪声（#17）、
@@ -19,6 +21,8 @@
 - Build passes with GCC + workaround flags; see `README-RISCV64.md` for exact commands.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
+- The isolated `obj.intrgcc` path now completes `tools -> distribution -> QEMU`, and
+  the previous `Boot module not found: ds` startup failure is no longer reproduced.
 - This cycle confirms and mitigates the RV64 userland `memset` recursion SIGSEGV signature
   (see `issue.md` A3 update).
 - #24 is now mitigated: in-tree binutils has a compatibility patch for `R_RISCV_RELAX`,
@@ -31,6 +35,8 @@
 **中文**
 - 基线命令：使用 GCC、禁用 LLVM/C++、放宽 `checkflist`（见 `README-RISCV64.md`）。
 - 产物：`minix/kernel/obj/kernel` 与 `obj/destdir.evbriscv64`。
+- 已补充 `obj.intrgcc` 自举输出：`obj.intrgcc/minix/kernel/kernel` 与
+  `obj.intrgcc/destdir.evbriscv64` 可直接用于 QEMU。
 - 限制：`CHECKFLIST_FLAGS='-m -e'` 为临时绕过，需在 sets 完整后移除。
 - 工具链进展：in-tree `ld`（NetBSD binutils 2.23.2）已通过补丁兼容
   `R_RISCV_RELAX`（见 `issue.md` #24）。
@@ -39,6 +45,8 @@
 **English**
 - Baseline: GCC, LLVM/C++ disabled, relaxed `checkflist` (see `README-RISCV64.md`).
 - Outputs: `minix/kernel/obj/kernel` and `obj/destdir.evbriscv64`.
+- Added validated self-bootstrap outputs: `obj.intrgcc/minix/kernel/kernel` and
+  `obj.intrgcc/destdir.evbriscv64` are bootable in QEMU.
 - Limitation: `CHECKFLIST_FLAGS='-m -e'` is a temporary workaround until sets are complete.
 - Toolchain update: in-tree `ld` (NetBSD binutils 2.23.2) now accepts `R_RISCV_RELAX`
   via a compatibility patch; see `issue.md` #24.
@@ -50,12 +58,16 @@
 **中文**
 - 启动链路已稳定可进入 `#` 提示符，`init` 与核心服务可完成基本握手。
 - 交互复测通过：`ps -aux` 返回进程列表；`cat /proc/meminfo` 可返回内存信息。
+- 使用 `./minix/scripts/qemu-riscv64.sh -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64`
+  可直接进入 shell，验证 `obj.intrgcc` 轮廓启动可用。
 - `/proc/meminfo` 路径仍可见一次可恢复 safecopy 回退（先失败后重试成功），属于已知噪声问题（#17）。
 - 含盘 virtio 启动链路仍需单独复测后才能确认 A3 全量闭环。
 
 **English**
 - Boot path is stable to the `#` shell prompt; init and core services complete basic startup handshake.
 - Interactive retest passes: `ps -aux` returns process list; `cat /proc/meminfo` returns data.
+- `./minix/scripts/qemu-riscv64.sh -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64`
+  now boots directly to shell, validating the `obj.intrgcc` runtime profile.
 - `/proc/meminfo` still shows one recoverable safecopy fallback (fail-then-retry-success),
   tracked as known noise in #17.
 - With-disk virtio startup path still needs dedicated revalidation to close A3 end-to-end.

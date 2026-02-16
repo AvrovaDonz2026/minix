@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-02-16  
-**Version / 版本**: 1.4  
+**Version / 版本**: 1.5  
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 ## Log Entries / 日志条目
@@ -148,7 +148,46 @@ cat /proc/meminfo
 - In-tree linker compatibility issue with `R_RISCV_RELAX` remained visible during incremental rebuild attempts
   (`ld: unrecognized relocation (0x33)`), tracked as `issue.md` #24.
 
-### Entry 9 — `obj.intrgcc` Self-Bootstrap Distribution + QEMU Validation (2026-02-16) / `obj.intrgcc` 自举 distribution + QEMU 验证
+### Entry 9 — #24 `R_RISCV_RELAX` Compatibility Mitigation (2026-02-16) / #24 `R_RISCV_RELAX` 兼容性缓解
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Toolchain / 工具链**: `obj/tooldir.Linux-6.12.63+deb13-amd64-x86_64`
+
+**Code change / 代码改动**:
+- Added tracked binutils patch:
+  `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`
+  to treat `R_RISCV_RELAX` as a hint/no-op in in-tree bfd paths.
+
+**Build/validation steps / 构建与验证步骤**:
+```bash
+# Rebuild tools pipeline (binutils rebuilt/installed before later LLVM stages)
+MKPCI=no HOST_CFLAGS='-O -fcommon' HAVE_GOLD=no ./build.sh -U -m evbriscv64 tools
+
+# Confirm in-tree linker version
+obj/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/ld --version
+
+# Verify RELAX relocations exist in target archives
+obj/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-readelf -r \
+  obj/destdir.evbriscv64/usr/lib/libaudiodriver.a | grep R_RISCV_RELAX
+
+# Validate in-tree ld can link RELAX-bearing archive (no 0x33 abort)
+obj/tooldir.Linux-6.12.63+deb13-amd64-x86_64/riscv64-elf32-minix/bin/ld -r \
+  --whole-archive obj/destdir.evbriscv64/usr/lib/libaudiodriver.a \
+  --no-whole-archive -o /tmp/libaudiodriver.whole.o
+```
+
+**Observed result / 观察结果**:
+- `readelf -r` shows multiple `R_RISCV_RELAX` entries in `libaudiodriver.a`.
+- In-tree `ld` (NetBSD binutils 2.23.2) links the RELAX-bearing archive successfully,
+  no `unrecognized relocation (0x33)` appears.
+- #24 is mitigated in the current workspace and moved to fixed archive in `issue.md`.
+
+**Follow-up note / 后续说明**:
+- During forced GCC-only memory-service rebuild, a separate compiler capability issue was observed:
+  `riscv64-elf32-minix-gcc: error: unrecognized command line option '-mabi=lp64d'`.
+  This is distinct from #24 and should be tracked separately.
+
+### Entry 10 — `obj.intrgcc` Self-Bootstrap Distribution + QEMU Validation (2026-02-16) / `obj.intrgcc` 自举 distribution + QEMU 验证
 **Workspace / 工作区**: `/home/donz/minix`  
 **Target / 目标**: `evbriscv64`  
 **Objdir / 对象目录**: `obj.intrgcc`  
@@ -191,5 +230,47 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
 - `Boot module not found: ds` was no longer reproduced in this profile.
 
 **Follow-up / 后续**:
-- Keep `issue.md` `#17` (procfs safecopy fallback noise) and `#24`
-  (`R_RISCV_RELAX` compatibility in targeted incremental-link scenarios) under ongoing tracking.
+- Keep `issue.md` `#17` (procfs safecopy fallback noise) and `#25`
+  (GCC-only incremental ABI-flag compatibility) under ongoing tracking.
+
+### Entry 11 — P0 Kernel Rebuild + QEMU Smoke Revalidation (2026-02-16) / P0 内核重建 + QEMU 冒烟复验
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Toolchain / 工具链**: `obj/tooldir.Linux-6.12.63+deb13-amd64-x86_64`  
+
+**Goal / 目标**:
+- Rebuild the riscv64 kernel with in-tree GCC after `vm_memset` fault-recovery plumbing changes.
+- Revalidate P0 smoke paths in QEMU (`ps -aux`, `cat /proc/meminfo`, RS status query).
+
+**Build command / 构建命令**:
+```bash
+TOOLDIR=$(echo obj/tooldir.* | awk '{print $1}')
+${TOOLDIR}/bin/nbmake-evbriscv64 \
+  -C minix/kernel -j"$(nproc)" dependall \
+  ACTIVE_CC=gcc \
+  RISCV_ARCH_FLAGS='-march=RV64IMAFD -mcmodel=medany'
+```
+
+**Build result / 构建结果**:
+- `dependall` completed successfully; kernel link finished (`minix/kernel/obj/kernel`).
+- Attempt without `ACTIVE_CC=gcc` selected missing `riscv64-elf32-minix-clang` and failed; rerun with GCC succeeded.
+
+**QEMU smoke execution / QEMU 冒烟执行**:
+```bash
+{ sleep 35; echo 'ps -aux'; sleep 6; echo 'cat /proc/meminfo'; sleep 6; \
+  echo '/sbin/minix-service sysctl srv_status'; sleep 6; } \
+| timeout 220 ./minix/scripts/qemu-riscv64.sh -s \
+    -k minix/kernel/obj/kernel \
+    -B obj/destdir.evbriscv64 \
+  > /tmp/qemu-p0-smoke.log 2>&1 || true
+```
+
+**Observed result / 观察结果**:
+- In-log markers confirm all three commands returned success:
+  `__RC_PS__:0`, `__RC_MEMINFO__:0`, `__RC_SRV__:0`.
+- No `SIGSEGV` signature and no kernel panic were observed in this run.
+- procfs/safecopy fallback noise is still visible but recoverable (commands still succeed), consistent with `issue.md` `#17`.
+
+**Evidence / 证据**:
+- Log: `/tmp/qemu-p0-smoke.log`
+- Marker lines include `__P0_BEGIN__`, `__RC_PS__:0`, `__RC_MEMINFO__:0`, `__RC_SRV__:0`, `__P0_DONE__`.

@@ -645,3 +645,46 @@ python3 minix/tests/riscv64/qemu_runtime_probe.py \
   `minix/include/minix/config.h`,
   `minimal_kernel/include/minix/config.h`,
   `minix/releasetools/riscv64/release.conf`
+
+### Entry 17 — GCC ABI-Flag Baseline Alignment for riscv64 (#25) (2026-02-17) / riscv64 GCC ABI 参数基线收敛（#25）
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc` + raw `nbmake` verification
+
+**Goal / 目标**:
+- Remove default `-mabi=lp64d` dependency from riscv64 baseline flags to avoid
+  GCC-only incremental rebuild incompatibility in environments that do not
+  support that ABI option.
+- Eliminate wrapper-only behavior drift by making the source-tree default align
+  with the validated in-tree GCC path.
+
+**Code change / 代码改动**:
+1. `share/mk/bsd.own.mk`
+   - riscv64 default `RISCV_ARCH_FLAGS` changed from
+     `-march=rv64gc -mabi=lp64d` to
+     `-march=RV64IMAFD -mcmodel=medany`.
+
+**Verification commands / 验证命令**:
+```bash
+# Verify default from source-tree mk logic (non-wrapper lookup)
+TOOLDIR="$PWD/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64"
+"$TOOLDIR/bin/nbmake" -m "$PWD/share/mk" -C minix/drivers/storage/memory \
+  MACHINE=evbriscv64 MACHINE_ARCH=riscv64 USETOOLS=yes \
+  TOOLDIR="$TOOLDIR" DESTDIR="$PWD/obj.intrgcc/destdir.evbriscv64" \
+  NETBSDSRCDIR="$PWD" ACTIVE_CC=gcc AVAILABLE_COMPILER=gcc \
+  -V RISCV_ARCH_FLAGS
+
+# Raw (non-wrapper) GCC incremental rebuild sanity
+MAKEFLAGS='-de -m /home/donz/minix/share/mk  MKOBJDIRS=yes' \
+"$TOOLDIR/bin/nbmake" -C minix/servers/mib \
+  MACHINE=evbriscv64 MACHINE_ARCH=riscv64 USETOOLS=yes \
+  TOOLDIR="$TOOLDIR" DESTDIR="$PWD/obj.intrgcc/destdir.evbriscv64" \
+  NETBSDSRCDIR="$PWD" ACTIVE_CC=gcc AVAILABLE_COMPILER=gcc \
+  clean dependall
+```
+
+**Observed result / 观察结果**:
+- `RISCV_ARCH_FLAGS` now resolves to `-march=RV64IMAFD -mcmodel=medany`.
+- Raw (non-wrapper) `ACTIVE_CC=gcc` rebuild of `minix/servers/mib` completed
+  successfully with the aligned flags.
+- No `-mabi=lp64d` option was emitted in the successful compile lines.

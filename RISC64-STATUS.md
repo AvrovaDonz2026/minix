@@ -36,7 +36,7 @@
 - `repro_build_gate.sh` 的 relax 行为探针改为
   `ld -r --whole-archive ... --no-whole-archive`，避免空对象误通过。
 - #24 已缓解：in-tree binutils 增加 `R_RISCV_RELAX` 兼容补丁，`ld` 不再因 `0x33` 中断链接。
-- 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）、GCC-only 增量构建 ABI 参数兼容性（#25）。
+- 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）。
 
 **English**
 - Build passes with GCC + workaround flags; see `README-RISCV64.md` for exact commands.
@@ -72,8 +72,7 @@
   `ld -r --whole-archive ... --no-whole-archive` to exercise real archive-member paths.
 - #24 is now mitigated: in-tree binutils has a compatibility patch for `R_RISCV_RELAX`,
   and `ld` no longer aborts on relocation `0x33`.
-- Remaining open risks: procfs safecopy retry noise (#17) and GCC-only incremental
-  ABI-flag compatibility (#25).
+- Remaining open risk: procfs safecopy retry noise (#17).
 
 ## Build Status / 构建状态
 
@@ -86,7 +85,8 @@
 - ramdisk 更新：新增 `/bin/neofetch`（`pfetch` 兼容包装）与 `/etc/build-id` 注入。
 - 工具链进展：in-tree `ld`（NetBSD binutils 2.23.2）已通过补丁兼容
   `R_RISCV_RELAX`（见 `issue.md` #24）。
-- 新发现：显式 GCC-only 组件增量构建可能触发 `-mabi=lp64d` 参数不兼容（见 `issue.md` #25）。
+- 更新：#25 已在当前工作树修复；riscv64 默认编译参数已收敛为
+  `-march=RV64IMAFD -mcmodel=medany`，避免默认 `-mabi=lp64d` 兼容性分歧。
 
 **English**
 - Baseline: GCC, LLVM/C++ disabled, relaxed `checkflist` (see `README-RISCV64.md`).
@@ -98,8 +98,9 @@
   and injects `/etc/build-id`.
 - Toolchain update: in-tree `ld` (NetBSD binutils 2.23.2) now accepts `R_RISCV_RELAX`
   via a compatibility patch; see `issue.md` #24.
-- New finding: explicit GCC-only component rebuilds can hit `-mabi=lp64d` incompatibility
-  (see `issue.md` #25).
+- Update: #25 is fixed in the current working tree; riscv64 default compile flags
+  now use `-march=RV64IMAFD -mcmodel=medany` to avoid default `-mabi=lp64d`
+  compatibility drift.
 
 ## Runtime Status / 运行状态
 
@@ -170,7 +171,6 @@
 **Major / 重要**
 - #16: VFS service endpoint pre-resync path still needs stricter generation-safe validation.
 - #17: recoverable safecopy fallback noise on `/proc/*` path remains.
-- #25: GCC-only incremental build path may fail on unsupported `-mabi=lp64d`.
 - #23: RV64 `vm_memset` recovery plumbing is implemented and smoke-validated; targeted
   fault-injection validation is still required for full closure.
 
@@ -188,17 +188,15 @@
 1) 修复 #16：收敛 VFS 服务端点“先写后验”路径，补齐代际安全校验。
 2) 继续收敛 #17（统计/限流 + 负载下验证），区分噪声与真实功能缺陷。
 3) 在 clean 环境做一次从 `fetch.sh` 到 `tools/binutils` 的复验，确认 #24 补丁可重复生效。
-4) 修复 #25：统一 GCC 路径的 `-mabi` 参数能力探测与回退策略。
-5) 在稳定后恢复动态装载链路（`MKPIC/MKPICLIB`）并验证最小动态程序。
-6) 将 `repro_build_gate.sh` 纳入例行流水（至少每日一次），验证构建链路不依赖手工注入。
+4) 在稳定后恢复动态装载链路（`MKPIC/MKPICLIB`）并验证最小动态程序。
+5) 将 `repro_build_gate.sh` 纳入例行流水（至少每日一次），验证构建链路不依赖手工注入。
 
 **English**
 1) Fix #16 by tightening VFS endpoint-generation validation on service remap paths.
 2) Continue closing #17 with counters/rate-limit + stress validation.
 3) Re-run from clean `fetch.sh` to `tools/binutils` and confirm #24 patch reproducibility.
-4) Fix #25 by normalizing GCC `-mabi` probing/fallback in incremental paths.
-5) Restore dynamic loader path (`MKPIC/MKPICLIB`) and test a minimal dynamic binary.
-6) Run `repro_build_gate.sh` in routine CI (at least daily) to enforce source-driven reproducibility.
+4) Restore dynamic loader path (`MKPIC/MKPICLIB`) and test a minimal dynamic binary.
+5) Run `repro_build_gate.sh` in routine CI (at least daily) to enforce source-driven reproducibility.
 
 ## Success Criteria / 下一里程碑判定
 
@@ -212,6 +210,5 @@
 - Diskless and with-disk QEMU profiles keep reaching shell across regressions, with
   `virtio_blk_mmio` initialization preserved in with-disk runs.
 - `ps -aux` and `cat /proc/meminfo` pass consistently across regressions.
-- Incremental rebuild works without ad-hoc linker substitution (`R_RISCV_RELAX` link failures gone),
-  and GCC-only path no longer fails on unsupported ABI flags.
+- Incremental rebuild works without ad-hoc linker substitution (`R_RISCV_RELAX` link failures gone).
 - procfs safecopy noise is reduced to an acceptable level with measurable counters.

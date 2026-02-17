@@ -1,8 +1,12 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-02-17
-**Version / 版本**: 1.8
+**Version / 版本**: 1.9
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
+
+**Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
+`obj/...` path in older entries is historical context only. /
+当前构建与运行基线为 `obj.intrgcc`；旧条目中的 `obj/...` 路径仅用于历史记录。
 
 ## Log Entries / 日志条目
 
@@ -129,9 +133,13 @@ obj/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake-evbriscv64 \
 ```bash
 ./minix/scripts/qemu-riscv64.sh \
   -s \
-  -k obj/destdir.evbriscv64/boot/minix/.temp/kernel \
-  -B obj/destdir.evbriscv64
+  -k obj.intrgcc/minix/kernel/kernel \
+  -B obj.intrgcc/destdir.evbriscv64
 ```
+
+备注 / Note:
+- 日常验证建议使用 `obj.intrgcc/minix/kernel/kernel`，避免 `obj*/destdir.../boot/minix/.temp/kernel`
+  与最新内核构建产物不同步而出现版本号回退。
 
 **In-guest smoke commands / 来宾内冒烟命令**:
 ```sh
@@ -566,7 +574,7 @@ timeout 140 ./minix/scripts/qemu-riscv64.sh -s \
 
 **Observed result / 观察结果**:
 - Incremental RS rebuild/install completed successfully.
-- Diskless and with-disk smoke both reached shell path (`MINIX 3.4.0`, `/bin/sh`),
+- Diskless and with-disk smoke both reached shell path (`MINIX 4.0.0`, `/bin/sh`),
   and no kernel panic / `SIGSEGV` signature was observed.
 - With-disk smoke shows:
   `virtio-blk-mmio: capacity: 262144 sectors` and `virtio-blk-mmio: initialized`,
@@ -580,3 +588,103 @@ timeout 140 ./minix/scripts/qemu-riscv64.sh -s \
 **Evidence / 证据**:
 - `/tmp/qemu-smoke-incremental.log`
 - `/tmp/qemu-smoke-disk.log`
+
+### Entry 16 — neofetch Service Source Switch + Version Bump to 4.0.0 (2026-02-17) / neofetch 服务源切换 + 版本升级到 4.0.0
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Make `neofetch` service fields (`Services/CoreSvc/Missing`) useful by default,
+  without relying on noisy default `ps` probing.
+- Roll system/release version to `4.0.0` and keep runtime profile consistent.
+
+**Code changes linked to this run / 本轮关联代码改动**:
+1. `minix/drivers/storage/ramdisk/neofetch`
+   - default probe mode switched from `off` to `auto`;
+   - `auto` now prefers `/proc/service` for service summary;
+   - `ps` path remains opt-in with `NEOFETCH_SERVICE_PROBE=ps`.
+2. `minix/include/minix/config.h`
+   - `OS_RELEASE` updated to `4.0.0`;
+   - `OS_REV` updated to `400000000`.
+3. `minimal_kernel/include/minix/config.h`
+   - `OS_RELEASE` / `OS_REV` aligned to `4.0.0` / `400000000`.
+4. `minix/releasetools/riscv64/release.conf`
+   - `MINIX_VERSION` updated to `4.0.0-riscv64`.
+
+**Build/install commands / 构建与安装命令**:
+```bash
+obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake-evbriscv64 \
+  -C minix/drivers/storage/ramdisk image
+
+obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake-evbriscv64 \
+  -C minix/drivers/storage/memory all install
+```
+
+**Runtime probe command / 运行时探针命令**:
+```bash
+python3 minix/tests/riscv64/qemu_runtime_probe.py \
+  --qemu-script minix/scripts/qemu-riscv64.sh \
+  --kernel obj.intrgcc/minix/kernel/kernel \
+  --destdir obj.intrgcc/destdir.evbriscv64 \
+  --require-disk-node
+```
+
+**Observed result / 观察结果**:
+- Ramdisk image and memory service rebuild/install completed successfully.
+- Runtime probe passed all checks:
+  `meminfo`, `ps_aux`, `srv_status`, `disk_node`.
+- Service-summary data path in `neofetch` now defaults to procfs (`/proc/service`)
+  instead of disabled-by-default mode, with explicit `ps` opt-in retained.
+- System version macros and riscv64 release profile are now aligned to `4.0.0`.
+
+**Evidence / 证据**:
+- `qemu_runtime_probe.py` result: `PASS: qemu runtime probe`
+- Updated source files:
+  `minix/drivers/storage/ramdisk/neofetch`,
+  `minix/include/minix/config.h`,
+  `minimal_kernel/include/minix/config.h`,
+  `minix/releasetools/riscv64/release.conf`
+
+### Entry 17 — GCC ABI-Flag Baseline Alignment for riscv64 (#25) (2026-02-17) / riscv64 GCC ABI 参数基线收敛（#25）
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc` + raw `nbmake` verification
+
+**Goal / 目标**:
+- Remove default `-mabi=lp64d` dependency from riscv64 baseline flags to avoid
+  GCC-only incremental rebuild incompatibility in environments that do not
+  support that ABI option.
+- Eliminate wrapper-only behavior drift by making the source-tree default align
+  with the validated in-tree GCC path.
+
+**Code change / 代码改动**:
+1. `share/mk/bsd.own.mk`
+   - riscv64 default `RISCV_ARCH_FLAGS` changed from
+     `-march=rv64gc -mabi=lp64d` to
+     `-march=RV64IMAFD -mcmodel=medany`.
+
+**Verification commands / 验证命令**:
+```bash
+# Verify default from source-tree mk logic (non-wrapper lookup)
+TOOLDIR="$PWD/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64"
+"$TOOLDIR/bin/nbmake" -m "$PWD/share/mk" -C minix/drivers/storage/memory \
+  MACHINE=evbriscv64 MACHINE_ARCH=riscv64 USETOOLS=yes \
+  TOOLDIR="$TOOLDIR" DESTDIR="$PWD/obj.intrgcc/destdir.evbriscv64" \
+  NETBSDSRCDIR="$PWD" ACTIVE_CC=gcc AVAILABLE_COMPILER=gcc \
+  -V RISCV_ARCH_FLAGS
+
+# Raw (non-wrapper) GCC incremental rebuild sanity
+MAKEFLAGS='-de -m /home/donz/minix/share/mk  MKOBJDIRS=yes' \
+"$TOOLDIR/bin/nbmake" -C minix/servers/mib \
+  MACHINE=evbriscv64 MACHINE_ARCH=riscv64 USETOOLS=yes \
+  TOOLDIR="$TOOLDIR" DESTDIR="$PWD/obj.intrgcc/destdir.evbriscv64" \
+  NETBSDSRCDIR="$PWD" ACTIVE_CC=gcc AVAILABLE_COMPILER=gcc \
+  clean dependall
+```
+
+**Observed result / 观察结果**:
+- `RISCV_ARCH_FLAGS` now resolves to `-march=RV64IMAFD -mcmodel=medany`.
+- Raw (non-wrapper) `ACTIVE_CC=gcc` rebuild of `minix/servers/mib` completed
+  successfully with the aligned flags.
+- No `-mabi=lp64d` option was emitted in the successful compile lines.

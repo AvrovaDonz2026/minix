@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -26,7 +26,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   1) `#16` VFS 服务端点“先写后验”可能弱化代际校验
   2) `#17` 启动期 safecopy 噪声错误闭环（定位根因并降噪）
   3) `A3` 含盘场景 `minix-service`/`virtio_blk_mmio` SIGSEGV
-  4) `#25` 内建 GCC 不支持 `-mabi=lp64d`，阻断部分 GCC-only 增量构建
+  4) `[DONE]` `#25` 内建 GCC 不支持 `-mabi=lp64d`，阻断部分 GCC-only 增量构建
   5) `[DONE]` `#26` RS `do_up`/`do_update` 失败路径未回收 slot 资源，`RSS_COPY` 可触发可重复内存泄漏
   6) `[DONE]` `#28` RS `init_state_data` 在多个错误出口缺少内存回收
   7) `[DONE]` `#29` safecopy 首错分类规则过宽，存在门禁假阴性风险
@@ -448,6 +448,24 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - Normalize RISC-V ABI flag selection for in-tree GCC capability (e.g., `-mabi=lp64` fallback).
   - Add compiler capability probing and emit actionable diagnostics when ABI flags are unsupported.
   - Keep per-component overrides documented until GCC flag baseline is unified.
+- Update / 进展:
+  - Default riscv64 arch flags in `share/mk/bsd.own.mk` are now aligned to the
+    validated in-tree GCC baseline:
+    `RISCV_ARCH_FLAGS?= -march=RV64IMAFD -mcmodel=medany`
+    (replacing default `-march=rv64gc -mabi=lp64d`).
+    `share/mk/bsd.own.mk` 的 riscv64 默认编译参数已收敛为当前内建 GCC
+    可用基线：`-march=RV64IMAFD -mcmodel=medany`
+    （替换原默认 `-march=rv64gc -mabi=lp64d`）。
+  - Verification:
+    `nbmake -m share/mk ... -V RISCV_ARCH_FLAGS` now reports
+    `-march=RV64IMAFD -mcmodel=medany`, and raw (non-wrapper) rebuild of
+    `minix/servers/mib` with `ACTIVE_CC=gcc` succeeds.
+    验证：`nbmake -m share/mk ... -V RISCV_ARCH_FLAGS` 现返回
+    `-march=RV64IMAFD -mcmodel=medany`；且在 non-wrapper 路径下
+    `ACTIVE_CC=gcc` 的 `minix/servers/mib` 重编通过。
+- Status / 状态:
+  - Fixed in working tree on 2026-02-17.
+    已在当前工作树修复（2026-02-17）。
 
 ### 26) RS slot/exec cleanup is missing on several `do_up`/`do_update` error paths, causing repeatable `RSS_COPY` memory leaks / RS 在若干 `do_up`/`do_update` 失败路径缺少 slot/exec 回收，`RSS_COPY` 可触发可重复内存泄漏
 - Evidence / 证据:
@@ -893,6 +911,12 @@ This section archives items with code-level fixes landed (some may still require
   on relocation `0x33` during archive link validation.
   历史 Major #24：已通过 `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`
   让 in-tree binutils 将 `R_RISCV_RELAX` 作为 hint/no-op 处理；归档链接验证不再因 `0x33` 中断。
+- Former P1 #25: riscv64 default compile flags now align with in-tree GCC baseline
+  (`-march=RV64IMAFD -mcmodel=medany`), removing default `-mabi=lp64d`
+  incompatibility drift in GCC-only incremental rebuild paths.
+  历史 P1 #25：riscv64 默认编译参数已收敛为内建 GCC 基线
+  （`-march=RV64IMAFD -mcmodel=medany`），默认路径不再依赖
+  `-mabi=lp64d`，从而避免 GCC-only 增量重建兼容性漂移。
 - `minimal_kernel/proto.h:175` uses `reg_t` for `arch_set_secondary_ipc_return` to avoid RV64 truncation
   (matches `minix/kernel/proto.h` and arch implementations).  
   `minimal_kernel/proto.h:175` 已改为 `reg_t`，避免 RV64 截断（与 `minix/kernel/proto.h` 及架构实现一致）。

@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-02-17  
-**Version / 版本**: 1.8
+**Version / 版本**: 1.11
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -10,6 +10,10 @@
 **中文**
 - 构建可通过（GCC + workaround 组合），详见 `README-RISCV64.md`。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
+- 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
+  `MINIX_VERSION=4.0.0-riscv64`）。
+- ramdisk 现在内置 `neofetch`（`pfetch` 为兼容包装），默认通过 `/proc/service`
+  统计服务信息，避免默认走 `ps` 路径导致的噪声。
 - P0 复验：基于 GCC 重建内核的 QEMU 冒烟中，`ps -aux`、`cat /proc/meminfo`、
   `minix-service sysctl srv_status` 均返回 `RC=0`，未见 `SIGSEGV`/kernel panic。
 - 已验证 `obj.intrgcc` 独立链路可完成 `tools -> distribution -> QEMU`，并消除此前
@@ -17,6 +21,11 @@
 - 本轮已确认并修复 RV64 用户态 `memset` 递归导致的栈顶 SIGSEGV（见 `issue.md` A3 进展）。
 - 含盘 smoke 复测通过：`virtio_blk_mmio` 报告 capacity/initialized，未再出现
   `device not found` / `Request 0x700 to RS failed` / `couldn't start virtio_blk_mmio`。
+- `minix/releasetools/riscv64/mkdisk.sh` 已重构为非 root 可产出 U-Boot 自动探测镜像
+  （含 `boot.scr.uimg` + `/boot/kernel.bin` + 模块/`modinfo` 载荷）。
+- A4 已闭环：U-Boot 纯磁盘路径在正确 S-mode 链路
+  （`-bios default -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf`）下
+  可进入 MINIX shell（见 `issue.md` A4 归档）。
 - 已完成 source-driven 复现门禁全链路：`repro_build_gate.sh` 在同一 `obj.intrgcc`
   跑通 `tools -> distribution -> smoke`（无需手工补丁/手工拷贝产物）。
 - 多轮自动门禁通过：`minix/tests/riscv64/multi_smoke_gate.sh --rounds 2 --timeout 90`
@@ -38,6 +47,10 @@
 - Build passes with GCC + workaround flags; see `README-RISCV64.md` for exact commands.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
+- The system major version is now `Minix Cat 4.0.0`
+  (`OS_RELEASE=4.0.0`, `MINIX_VERSION=4.0.0-riscv64`).
+- Ramdisk now ships `neofetch` (`pfetch` kept as compatibility wrapper);
+  default service summary uses `/proc/service` to avoid noisy default `ps` probing.
 - P0 revalidation: with a GCC-rebuilt kernel, QEMU smoke confirms
   `ps -aux`, `cat /proc/meminfo`, and `minix-service sysctl srv_status`
   all return `RC=0` without `SIGSEGV` or kernel panic signatures.
@@ -47,6 +60,13 @@
   (see `issue.md` A3 update).
 - With-disk smoke now passes: `virtio_blk_mmio` reports capacity/initialized and no longer logs
   `device not found`, `Request 0x700 to RS failed`, or `couldn't start virtio_blk_mmio`.
+- `minix/releasetools/riscv64/mkdisk.sh` has been reworked to create a non-root
+  U-Boot autodiscovery image (`boot.scr.uimg` + `/boot/kernel.bin` +
+  module/modinfo payloads).
+- A4 is now closed: the disk-only U-Boot path reaches MINIX shell when using the
+  correct S-mode chain
+  (`-bios default -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf`);
+  see archived A4 notes in `issue.md`.
 - A source-driven reproducibility gate now passes end-to-end:
   `repro_build_gate.sh` completes `tools -> distribution -> smoke`
   on the same `obj.intrgcc` without manual patching/artifact injection.
@@ -74,6 +94,7 @@
 - 已补充 `obj.intrgcc` 自举输出：`obj.intrgcc/minix/kernel/kernel` 与
   `obj.intrgcc/destdir.evbriscv64` 可直接用于 QEMU。
 - 限制：`CHECKFLIST_FLAGS='-m -e'` 为临时绕过，需在 sets 完整后移除。
+- ramdisk 更新：新增 `/bin/neofetch`（`pfetch` 兼容包装）与 `/etc/build-id` 注入。
 - 工具链进展：in-tree `ld`（NetBSD binutils 2.23.2）已通过补丁兼容
   `R_RISCV_RELAX`（见 `issue.md` #24）。
 - 更新：#25 已在当前工作树修复；riscv64 默认编译参数已收敛为
@@ -85,6 +106,8 @@
 - Added validated self-bootstrap outputs: `obj.intrgcc/minix/kernel/kernel` and
   `obj.intrgcc/destdir.evbriscv64` are bootable in QEMU.
 - Limitation: `CHECKFLIST_FLAGS='-m -e'` is a temporary workaround until sets are complete.
+- Ramdisk update: adds `/bin/neofetch` (with `pfetch` compatibility wrapper)
+  and injects `/etc/build-id`.
 - Toolchain update: in-tree `ld` (NetBSD binutils 2.23.2) now accepts `R_RISCV_RELAX`
   via a compatibility patch; see `issue.md` #24.
 - Update: #25 is fixed in the current working tree; riscv64 default compile flags
@@ -103,6 +126,9 @@
   但命令返回保持成功（`RC=0`）。
 - 含盘 smoke（`/tmp/qemu-smoke-disk.log`）已验证 `virtio_blk_mmio` 初始化成功；
   `-i` 轮廓下未复现 `device not found` / `Request 0x700 ... not alive` 告警。
+- U-Boot 纯磁盘路径已可自动发现并执行 `/boot.scr.uimg`，并在
+  `-bios default -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf`
+  链路下进入 shell（`/tmp/qemu-uboot-diskonly-new-smode.log`）。
 - 多轮日志门禁输出位于 `/tmp/minix-smoke-gate-20260216-221610/` 与
   `/tmp/minix-smoke-gate-20260216-224157/`，含每轮 `.log` 与 `.triage.txt`，
   可用于回归比较与首错审计。
@@ -118,6 +144,8 @@
   `multi_smoke_gate.sh --rounds 1 --timeout 70 --runtime-timeout 70 --runtime-cmd-timeout 35`
   在 `/tmp/minix-smoke-gate-20260217-070246/` 完成
   `Passed: 2, Failed: 0, Runtime passed: 2, Runtime failed: 0`。
+- `neofetch` 默认服务探测模式已从 `off` 切换为 `auto`，优先读取 `/proc/service`；
+  `NEOFETCH_SERVICE_PROBE=ps` 仍可显式启用旧 `ps` 探测路径。
 
 **English**
 - Boot path is stable to the `#` shell prompt; init and core services complete basic startup handshake.
@@ -130,6 +158,10 @@
   procfs/safecopy fallback noise while command return codes remain successful (`RC=0`).
 - The with-disk smoke run (`/tmp/qemu-smoke-disk.log`) confirms `virtio_blk_mmio`
   initialization and does not reproduce the previous startup warning signature.
+- U-Boot disk-only boot now auto-discovers and executes `/boot.scr.uimg`, and
+  reaches shell when launched via the S-mode chain
+  (`-bios default -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf`);
+  see `/tmp/qemu-uboot-diskonly-new-smode.log`.
 - Multi-run gate artifacts are under `/tmp/minix-smoke-gate-20260216-221610/` and
   `/tmp/minix-smoke-gate-20260216-224157/` with per-round `.log` and `.triage.txt`
   outputs for regression auditing.
@@ -146,6 +178,9 @@
   `multi_smoke_gate.sh --rounds 1 --timeout 70 --runtime-timeout 70 --runtime-cmd-timeout 35`
   passed under `/tmp/minix-smoke-gate-20260217-070246/` with
   `Passed: 2, Failed: 0, Runtime passed: 2, Runtime failed: 0`.
+- `neofetch` default service probe switched from `off` to `auto`, preferring
+  `/proc/service`; the old `ps` path remains available via
+  `NEOFETCH_SERVICE_PROBE=ps`.
 
 ## Key Issues (Snapshot) / 关键问题（摘要）
 

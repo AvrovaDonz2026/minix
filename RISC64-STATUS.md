@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-02-17  
-**Version / 版本**: 1.11
+**Version / 版本**: 1.12
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -41,6 +41,12 @@
 - `repro_build_gate.sh` 的 relax 行为探针改为
   `ld -r --whole-archive ... --no-whole-archive`，避免空对象误通过。
 - #24 已缓解：in-tree binutils 增加 `R_RISCV_RELAX` 兼容补丁，`ld` 不再因 `0x33` 中断链接。
+- 本轮已修复 RV64 FDT 启动指针命名空间错配（`__k_unpaged__boot_fdt` 与 `_boot_fdt`）；
+  内存探测恢复到完整 256MB，日志显示 `Memory: 0x80000000 - 0x90000000`，
+  `neofetch` 的 `Mem(raw)` 总页数提升到 `61767`。
+- 已完成一次完整 `riscv64` 套件回归：`run_tests.sh all` 结果为
+  `Passed=21, Failed=0, Skipped=1`，其中 `multi_smoke_gate` 为
+  `4/4` 通过，runtime probe `4/4` 通过。
 - 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）。
 
 **English**
@@ -84,6 +90,13 @@
   `ld -r --whole-archive ... --no-whole-archive` to exercise real archive-member paths.
 - #24 is now mitigated: in-tree binutils has a compatibility patch for `R_RISCV_RELAX`,
   and `ld` no longer aborts on relocation `0x33`.
+- This cycle fixes RV64 FDT boot-pointer namespace mismatch
+  (`__k_unpaged__boot_fdt` vs `_boot_fdt`); memory detection returns to the
+  full 256MB range (`Memory: 0x80000000 - 0x90000000`), and `neofetch`
+  `Mem(raw)` total pages rise to `61767`.
+- A full `riscv64` regression has been completed:
+  `run_tests.sh all` reports `Passed=21, Failed=0, Skipped=1`,
+  with `multi_smoke_gate` `4/4` pass and runtime probe `4/4` pass.
 - Remaining open risk: procfs safecopy retry noise (#17).
 
 ## Build Status / 构建状态
@@ -144,6 +157,14 @@
   `multi_smoke_gate.sh --rounds 1 --timeout 70 --runtime-timeout 70 --runtime-cmd-timeout 35`
   在 `/tmp/minix-smoke-gate-20260217-070246/` 完成
   `Passed: 2, Failed: 0, Runtime passed: 2, Runtime failed: 0`。
+- 最新全量回归（`/tmp/minix-full-riscv64-tests.log`）通过：
+  `Passed: 21, Failed: 0, Skipped: 1`；
+  其中门禁日志在 `/tmp/minix-smoke-gate-20260217-165805/`，结果为
+  `Passed: 4, Failed: 0, Runtime passed: 4, Runtime failed: 0`。
+- FDT 启动指针桥接修复后，启动日志恢复完整内存窗口
+  `Memory: 0x80000000 - 0x90000000`，`neofetch` 显示
+  `Mem(raw): 4096 61767 52676 48338 1185`
+  （见 `/tmp/qemu-memfix.log` 与 `/tmp/qemu-neofetch-memfix.log`）。
 - `neofetch` 默认服务探测模式已从 `off` 切换为 `auto`，优先读取 `/proc/service`；
   `NEOFETCH_SERVICE_PROBE=ps` 仍可显式启用旧 `ps` 探测路径。
 
@@ -178,6 +199,14 @@
   `multi_smoke_gate.sh --rounds 1 --timeout 70 --runtime-timeout 70 --runtime-cmd-timeout 35`
   passed under `/tmp/minix-smoke-gate-20260217-070246/` with
   `Passed: 2, Failed: 0, Runtime passed: 2, Runtime failed: 0`.
+- Latest full regression (`/tmp/minix-full-riscv64-tests.log`) passes with
+  `Passed: 21, Failed: 0, Skipped: 1`;
+  the embedded gate run under `/tmp/minix-smoke-gate-20260217-165805/` reports
+  `Passed: 4, Failed: 0, Runtime passed: 4, Runtime failed: 0`.
+- After the FDT boot-pointer bridge fix, boot logs restore the full memory span
+  `Memory: 0x80000000 - 0x90000000`, and `neofetch` reports
+  `Mem(raw): 4096 61767 52676 48338 1185`
+  (see `/tmp/qemu-memfix.log` and `/tmp/qemu-neofetch-memfix.log`).
 - `neofetch` default service probe switched from `off` to `auto`, preferring
   `/proc/service`; the old `ps` path remains available via
   `NEOFETCH_SERVICE_PROBE=ps`.

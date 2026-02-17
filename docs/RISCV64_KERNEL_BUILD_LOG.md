@@ -752,3 +752,70 @@ timeout 60s minix/scripts/qemu-riscv64.sh -s \
 **Evidence / 证据**:
 - `/tmp/qemu-uboot-diskonly-new-smode.log`
 - `/tmp/qemu-with-kernel-after-mkdisk-rework.log`
+
+### Entry 19 — RV64 FDT Boot-Pointer Bridge + Full riscv64 Regression (2026-02-17) / RV64 FDT 启动指针桥接修复 + riscv64 全量回归
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Fix low-memory detection caused by FDT pointer namespace split
+  (`__k_unpaged__boot_fdt` vs `_boot_fdt`) during RV64 early boot.
+- Re-run full riscv64 regression after the fix and capture reproducible evidence.
+
+**Code changes / 代码改动**:
+1. `minix/kernel/arch/riscv64/kernel.c`
+   - bridge boot FDT pointer in `kernel_main()`:
+     `_boot_fdt = __k_unpaged__boot_fdt` when runtime symbol is zero.
+2. `minix/kernel/arch/riscv64/bsp/virt/bsp_init.c`
+   - keep BSP parser on runtime symbol (`_boot_fdt`) with explicit
+     `(uintptr_t)` cast.
+
+**Build/verification commands / 构建与验证命令**:
+```bash
+# Incremental kernel rebuild in obj.intrgcc profile
+obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake-evbriscv64 \
+  -C minix/kernel dependall
+
+# Runtime memory-path verification
+timeout 120 ./minix/scripts/qemu-riscv64.sh \
+  -k obj.intrgcc/minix/kernel/kernel \
+  -B obj.intrgcc/destdir.evbriscv64 \
+  > /tmp/qemu-memfix.log 2>&1
+
+# Runtime neofetch/meminfo verification
+(printf 'cat /proc/meminfo\nneofetch\n'; sleep 1) | \
+  timeout 140 ./minix/scripts/qemu-riscv64.sh \
+    -k obj.intrgcc/minix/kernel/kernel \
+    -B obj.intrgcc/destdir.evbriscv64 \
+    > /tmp/qemu-neofetch-memfix.log 2>&1
+
+# Full riscv64 suite
+TOOLDIR=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64 \
+DESTDIR=/home/donz/minix/obj.intrgcc/destdir.evbriscv64 \
+KERNEL=/home/donz/minix/obj.intrgcc/minix/kernel/kernel \
+NBMAKE=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake-evbriscv64 \
+READELF=/home/donz/minix/obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/riscv64-elf32-minix-readelf \
+TIMEOUT=90 \
+timeout 1800 ./minix/tests/riscv64/run_tests.sh all \
+  > /tmp/minix-full-riscv64-tests.log 2>&1
+```
+
+**Observed result / 观察结果**:
+- FDT memory parsing restored full 256MB range:
+  `Memory: 0x80000000 - 0x90000000`.
+- `neofetch` memory raw line reflects the larger VM total after fix:
+  `Mem(raw): 4096 61767 52676 48338 1185`
+  (previously total page count was around `28999` in the failing path).
+- Full riscv64 regression passed:
+  `Passed: 21`, `Failed: 0`, `Skipped: 1` (SMP test marked not implemented).
+- Multi-run smoke gate inside the same run passed:
+  `Passed: 4`, `Failed: 0`, `Runtime passed: 4`, `Runtime failed: 0`.
+- Host-side `minix/tests/run -T` still depends on in-guest MINIX runtime
+  environment and is not treated as riscv64 target pass/fail evidence.
+
+**Evidence / 证据**:
+- `/tmp/qemu-memfix.log`
+- `/tmp/qemu-neofetch-memfix.log`
+- `/tmp/minix-full-riscv64-tests.log`
+- `/tmp/minix-smoke-gate-20260217-165805/`

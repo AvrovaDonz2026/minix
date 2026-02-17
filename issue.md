@@ -945,6 +945,34 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Architecture doc / 架构文档:
   - `docs/liteos-emulation-architecture.md`
 
+### A4) U-Boot disk-only handoff for MINIX payload (fixed) / U-Boot 纯磁盘 MINIX 交接路径（已修复）
+- Evidence / 证据:
+  - U-Boot auto-discovers and executes the image script:
+    `Found U-Boot script /boot.scr.uimg`, `## Executing script ...`.
+  - The script now loads a BSS-inclusive raw payload (`/boot/kernel.bin`) plus
+    modinfo/modules, then enters MINIX:
+    `## Starting application at 0x80200000 ...`, `rv64: kernel_main`.
+  - Full boot reaches userspace shell and with-disk driver init:
+    `MINIX 4.0.0`, `virtio-blk-mmio: initialized`, `#`.
+  - Logs:
+    `/tmp/qemu-uboot-diskonly-new-smode.log`,
+    `/tmp/qemu-with-kernel-after-mkdisk-rework.log`.
+  - Related builder changes:
+    `minix/releasetools/riscv64/mkdisk.sh` now:
+    - builds `kernel.bin` from ELF with
+      `.unpaged_bss/.bss => alloc,load,contents`;
+    - boots via `go 0x80200000`;
+    - prints the correct launch chain:
+      `-bios default -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf`.
+- Root cause / 根因:
+  - `bootelf` handoff path triggered repeated load faults in this flow.
+  - Switching to raw binary without embedding BSS initially triggered
+    `assert "bss_test == 0" failed`.
+  - Launching via M-mode U-Boot chain triggered `Environment call from M-mode`.
+- Resolution / 结论:
+  - Fixed by combining BSS-inclusive payload + `go` handoff + S-mode U-Boot chain.
+  - Disk-only U-Boot image path is now usable for runtime validation.
+
 ## Fixed in Current Working Tree / 已在当前工作区修复
 
 说明 / Note: 本节记录“已合入代码但可能仍待运行时复验”的归档项，并保留原始问题编号以便追溯。  
@@ -961,6 +989,13 @@ This section archives items with code-level fixes landed (some may still require
   历史 P1 #25：riscv64 默认编译参数已收敛为内建 GCC 基线
   （`-march=RV64IMAFD -mcmodel=medany`），默认路径不再依赖
   `-mabi=lp64d`，从而避免 GCC-only 增量重建兼容性漂移。
+- Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
+  `kernel.bin` payload, boots it with `go 0x80200000`, and documents the
+  required S-mode U-Boot launch chain (`-bios default -kernel ..._smode/uboot.elf`);
+  disk-only runs now reach MINIX shell.
+  历史 A4（U-Boot 纯磁盘交接）：`mkdisk.sh` 现已产出包含 BSS 的 `kernel.bin`，
+  通过 `go 0x80200000` 交接，并明确要求 S-mode U-Boot 启动链路；
+  纯磁盘路径现可进入 MINIX shell。
 - `minimal_kernel/proto.h:175` uses `reg_t` for `arch_set_secondary_ipc_return` to avoid RV64 truncation
   (matches `minix/kernel/proto.h` and arch implementations).  
   `minimal_kernel/proto.h:175` 已改为 `reg_t`，避免 RV64 截断（与 `minix/kernel/proto.h` 及架构实现一致）。

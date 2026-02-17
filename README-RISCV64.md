@@ -1,21 +1,21 @@
-# MINIX 3 RISC-V 64-bit Port Guide / MINIX 3 RISC-V 64-bit 移植指南
+# MINIX RISC-V 64-bit Port Guide / MINIX RISC-V 64-bit 移植指南
 
 ## 概述 / Overview
 
-本文档记录 MINIX 3 在 RISC-V 64-bit 架构上的移植与构建运行方法，面向 QEMU virt 平台。  
-This document describes the MINIX 3 RISC-V 64-bit port, including build/run procedures
+本文档记录 MINIX 在 RISC-V 64-bit 架构上的移植与构建运行方法，面向 QEMU virt 平台。  
+This document describes the MINIX RISC-V 64-bit port, including build/run procedures
 targeting the QEMU virt platform.
 
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.9
+- 版本：1.10
 - 最后更新：2026-02-17
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.9
+- Version: 1.10
 - Last updated: 2026-02-17
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -29,8 +29,9 @@ targeting the QEMU virt platform.
 - ramdisk 已内置 `neofetch`（`pfetch` 兼容包装），默认服务统计来源为 `/proc/service`。
 - `obj.intrgcc` 独立构建链路已跑通：`tools(MKGCC=yes,MKGCCCMDS=yes) -> distribution -> QEMU`，不再出现 `Boot module not found: ds`
 - 含盘 smoke 已复测：`virtio_blk_mmio` 在 `-i <disk image>` 轮廓下可正常初始化。
-- 关键风险：`procfs` safecopy 回退噪声、SMP 未实现、GCC-only 增量链路 ABI 参数兼容性（#25，详见 `issue.md`）
-- 进度估计：约 76%（启动链路与基础用户态已稳定，主要剩余问题集中在噪声收敛与工具链细节）
+- 关键风险：`procfs` safecopy 回退噪声、SMP 未实现（详见 `issue.md`）
+- A4 已闭环：`mkdisk` 产物在 S-mode U-Boot 链路下可从磁盘镜像启动到 shell。
+- 进度估计：约 80%（启动链路与基础用户态已稳定，主要剩余问题集中在噪声收敛与稳定性增强）
 - 代码更新（至 2026-01-06 01:00 前）：用户态 gp 初始化（crt0 + gp.c）、exec/ucontext 与
   VM 执行权限标记、IPC/缺页 ABI 修复（64 位地址、senda 参数顺序）。
 - 文档更新：2026-02-16 追加 `memset` 递归修复后的 ramdisk 复测结果，`ps -aux` 不再复现 SIGSEGV。
@@ -46,9 +47,10 @@ targeting the QEMU virt platform.
   (`tools` with `MKGCC=yes` and `MKGCCCMDS=yes` -> `distribution` -> `QEMU`);
   `Boot module not found: ds` is no longer reproduced on this profile.
 - With-disk smoke has been revalidated: `virtio_blk_mmio` initializes in `-i <disk image>` profile.
-- Key risks: procfs safecopy fallback noise, SMP not implemented, and GCC-only
-  incremental ABI-flag compatibility (#25; see `issue.md`)
-- Progress estimate: ~76% (boot + basic userland path stabilized; remaining work is mostly
+- Key risks: procfs safecopy fallback noise and SMP not implemented
+  (see `issue.md`)
+- A4 is closed: `mkdisk` artifacts now boot from disk image via the S-mode U-Boot chain.
+- Progress estimate: ~80% (boot + basic userland path stabilized; remaining work is mostly
   noise/toolchain convergence)
 - Code updates (through 2026-01-06 01:00): userland gp init (crt0 + gp.c),
   exec/ucontext + VM exec flags, IPC/pagefault ABI fixes (64-bit addr, senda arg order).
@@ -509,14 +511,14 @@ python3 ./minix/tests/riscv64/safecopy_triage.py /tmp/qemu-smoke.log
    - Validation: in-tree `ld` now links RELAX-bearing archives without
      `unrecognized relocation (0x33)`.
 
-7. **GCC-only 增量构建 ABI 参数兼容性（#25）**  
-   - 表现：在显式 `ACTIVE_CC=gcc` 路径下，部分组件重建会报
-     `riscv64-elf32-minix-gcc: error: unrecognized command line option '-mabi=lp64d'`。  
-   - 建议：补齐 ABI 参数能力探测，并在 GCC 路径中统一可接受的 `-mabi` 组合。  
-   **GCC-only incremental ABI-flag compatibility (#25)**  
-   - Symptom: explicit `ACTIVE_CC=gcc` rebuild path can fail with
-     `unrecognized command line option '-mabi=lp64d'`.
-   - Action: add ABI-flag capability probing and normalize GCC-accepted `-mabi` selection.
+7. **GCC-only 增量构建 ABI 参数兼容性（#25，已修复）**  
+   - 现状：默认参数已收敛到 `-march=RV64IMAFD -mcmodel=medany`，不再默认依赖
+     `-mabi=lp64d`。  
+   - 建议：新脚本/新组件继续复用同一参数基线，避免局部回归。  
+   **GCC-only incremental ABI-flag compatibility (#25, fixed)**  
+   - Status: default flags now converge on `-march=RV64IMAFD -mcmodel=medany`,
+     without requiring `-mabi=lp64d` by default.
+   - Action: keep new scripts/components on the same baseline to avoid regressions.
 
 详细证据与文件行号见 `issue.md`。  
 See `issue.md` for evidence and file/line references.
@@ -607,6 +609,35 @@ cd minix/tests/riscv64
 # 在 shell 提示符下执行：echo SMOKE_OK
 ```
 
+### 使用 mkdisk 进行 U-Boot 纯磁盘启动 / Disk-only Boot with mkdisk + U-Boot
+
+```bash
+# 1) 生成镜像（使用 obj.intrgcc 产物）
+OUTPUT=/tmp/minix-rv64-diskonly.img \
+DESTDIR=/home/donz/minix/obj.intrgcc \
+minix/releasetools/riscv64/mkdisk.sh
+
+# 2) 以 OpenSBI + U-Boot S-mode 方式从磁盘启动
+qemu-system-riscv64 -machine virt -m 256M -nographic \
+  -bios default \
+  -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf \
+  -drive if=none,file=/tmp/minix-rv64-diskonly.img,format=raw,id=hd0 \
+  -device virtio-blk-device,drive=hd0
+```
+
+预期日志关键字 / Expected key log markers:
+- `Found U-Boot script /boot.scr.uimg`
+- `## Starting application at 0x80200000 ...`
+- `rv64: kernel_main`
+- `MINIX 4.0.0`
+- `virtio-blk-mmio: initialized`
+
+说明 / Notes:
+- `mkdisk.sh` 会在 root 分区放置 `/boot/kernel.bin`（包含 BSS 内容）、
+  `/boot/minix.modinfo` 与 `/boot/modules/*`，并由 `boot.scr` 执行 `go 0x80200000`。
+- 请使用上面的 S-mode U-Boot 链路；直接用
+  `/usr/lib/u-boot/qemu-riscv64/uboot.elf` 可能进入 M-mode 路径并触发异常。
+
 ## 构建输出 / Build Outputs
 
 1. **交叉编译工具链 / Toolchain**：`obj.intrgcc/tooldir.*/bin/riscv64-elf32-minix-*`
@@ -666,14 +697,14 @@ cd minix/tests/riscv64
 - [RISC-V 规范](https://riscv.org/technical/specifications/)
 - [SBI 规范](https://github.com/riscv-non-isa/riscv-sbi-doc)
 - [QEMU RISC-V 支持](https://www.qemu.org/docs/master/system/riscv/riscv-virt.html)
-- [MINIX 3 文档](http://www.minix3.org/docs/)
+- [MINIX 文档](http://www.minix3.org/docs/)
 
 ## 许可证 / License
 
-MINIX 3 遵循 BSD 许可证。详见源码中的 LICENSE 文件。  
-MINIX 3 is licensed under BSD. See LICENSE in the source tree.
+MINIX 遵循 BSD 许可证。详见源码中的 LICENSE 文件。  
+MINIX is licensed under BSD. See LICENSE in the source tree.
 
 ---
 
 **最后更新 / Last updated**：2026-02-17  
-**版本 / Version**：1.9
+**版本 / Version**：1.10

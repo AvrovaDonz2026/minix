@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-02-17  
-**Version / 版本**: 1.9
+**Version / 版本**: 1.11
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -21,6 +21,11 @@
 - 本轮已确认并修复 RV64 用户态 `memset` 递归导致的栈顶 SIGSEGV（见 `issue.md` A3 进展）。
 - 含盘 smoke 复测通过：`virtio_blk_mmio` 报告 capacity/initialized，未再出现
   `device not found` / `Request 0x700 to RS failed` / `couldn't start virtio_blk_mmio`。
+- `minix/releasetools/riscv64/mkdisk.sh` 已重构为非 root 可产出 U-Boot 自动探测镜像
+  （含 `boot.scr.uimg` + `/boot/kernel.bin` + 模块/`modinfo` 载荷）。
+- A4 已闭环：U-Boot 纯磁盘路径在正确 S-mode 链路
+  （`-bios default -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf`）下
+  可进入 MINIX shell（见 `issue.md` A4 归档）。
 - 已完成 source-driven 复现门禁全链路：`repro_build_gate.sh` 在同一 `obj.intrgcc`
   跑通 `tools -> distribution -> smoke`（无需手工补丁/手工拷贝产物）。
 - 多轮自动门禁通过：`minix/tests/riscv64/multi_smoke_gate.sh --rounds 2 --timeout 90`
@@ -55,6 +60,13 @@
   (see `issue.md` A3 update).
 - With-disk smoke now passes: `virtio_blk_mmio` reports capacity/initialized and no longer logs
   `device not found`, `Request 0x700 to RS failed`, or `couldn't start virtio_blk_mmio`.
+- `minix/releasetools/riscv64/mkdisk.sh` has been reworked to create a non-root
+  U-Boot autodiscovery image (`boot.scr.uimg` + `/boot/kernel.bin` +
+  module/modinfo payloads).
+- A4 is now closed: the disk-only U-Boot path reaches MINIX shell when using the
+  correct S-mode chain
+  (`-bios default -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf`);
+  see archived A4 notes in `issue.md`.
 - A source-driven reproducibility gate now passes end-to-end:
   `repro_build_gate.sh` completes `tools -> distribution -> smoke`
   on the same `obj.intrgcc` without manual patching/artifact injection.
@@ -114,6 +126,9 @@
   但命令返回保持成功（`RC=0`）。
 - 含盘 smoke（`/tmp/qemu-smoke-disk.log`）已验证 `virtio_blk_mmio` 初始化成功；
   `-i` 轮廓下未复现 `device not found` / `Request 0x700 ... not alive` 告警。
+- U-Boot 纯磁盘路径已可自动发现并执行 `/boot.scr.uimg`，并在
+  `-bios default -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf`
+  链路下进入 shell（`/tmp/qemu-uboot-diskonly-new-smode.log`）。
 - 多轮日志门禁输出位于 `/tmp/minix-smoke-gate-20260216-221610/` 与
   `/tmp/minix-smoke-gate-20260216-224157/`，含每轮 `.log` 与 `.triage.txt`，
   可用于回归比较与首错审计。
@@ -143,6 +158,10 @@
   procfs/safecopy fallback noise while command return codes remain successful (`RC=0`).
 - The with-disk smoke run (`/tmp/qemu-smoke-disk.log`) confirms `virtio_blk_mmio`
   initialization and does not reproduce the previous startup warning signature.
+- U-Boot disk-only boot now auto-discovers and executes `/boot.scr.uimg`, and
+  reaches shell when launched via the S-mode chain
+  (`-bios default -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf`);
+  see `/tmp/qemu-uboot-diskonly-new-smode.log`.
 - Multi-run gate artifacts are under `/tmp/minix-smoke-gate-20260216-221610/` and
   `/tmp/minix-smoke-gate-20260216-224157/` with per-round `.log` and `.triage.txt`
   outputs for regression auditing.

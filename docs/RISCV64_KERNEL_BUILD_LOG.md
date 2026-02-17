@@ -688,3 +688,67 @@ MAKEFLAGS='-de -m /home/donz/minix/share/mk  MKOBJDIRS=yes' \
 - Raw (non-wrapper) `ACTIVE_CC=gcc` rebuild of `minix/servers/mib` completed
   successfully with the aligned flags.
 - No `-mabi=lp64d` option was emitted in the successful compile lines.
+
+### Entry 18 — riscv64 mkdisk U-Boot Disk-Boot Image Rework (2026-02-17) / riscv64 mkdisk U-Boot 磁盘启动镜像重构
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Make `minix/releasetools/riscv64/mkdisk.sh` produce a meaningful disk image
+  without requiring root loop-mount flow.
+- Generate a U-Boot autodiscovery boot path (`boot.scr`) with preloaded MINIX
+  module payloads.
+
+**Code change / 代码改动**:
+1. `minix/releasetools/riscv64/mkdisk.sh`
+   - add `/usr/sbin:/sbin` PATH bootstrap;
+   - add hard checks for required host tools (`parted|sfdisk`, `mke2fs`,
+     `mkimage`, `python3`, `objcopy`);
+   - generate MBR partition table and populate ext2 filesystems without root
+     (via `mke2fs -d`);
+   - build BSS-inclusive `/boot/kernel.bin` payload from kernel ELF via
+     `objcopy --set-section-flags .unpaged_bss/.bss=alloc,load,contents`;
+   - build `boot.scr.uimg` plus `/boot/kernel.bin`, `/boot/minix.modinfo`,
+     `/boot/modules/*`;
+   - switch handoff from `bootelf` to `go 0x80200000` for the generated
+     raw payload;
+   - keep output size summary based on real file bytes.
+
+**Verification commands / 验证命令**:
+```bash
+# Rebuild image from obj.intrgcc artifacts
+PATH=/usr/sbin:/sbin:$PATH \
+  minix/releasetools/riscv64/mkdisk.sh \
+  -d /home/donz/minix/obj.intrgcc \
+  -o /home/donz/minix/obj.intrgcc/release/minix-evbriscv64-boot.img \
+  -s 256
+
+# Disk-only path with OpenSBI + U-Boot(smode) payload
+timeout 50s qemu-system-riscv64 -machine virt -m 256M -nographic \
+  -bios default \
+  -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf \
+  -drive if=none,file=/home/donz/minix/obj.intrgcc/release/minix-evbriscv64-boot.img,format=raw,id=hd0 \
+  -device virtio-blk-device,drive=hd0 \
+  > /tmp/qemu-uboot-diskonly-new-smode.log 2>&1 || true
+
+# Existing reference boot path regression
+timeout 60s minix/scripts/qemu-riscv64.sh -s \
+  -k /home/donz/minix/obj.intrgcc/minix/kernel/kernel \
+  -B /home/donz/minix/obj.intrgcc/destdir.evbriscv64 \
+  -i /home/donz/minix/obj.intrgcc/release/minix-evbriscv64-boot.img \
+  > /tmp/qemu-with-kernel-after-mkdisk-rework.log 2>&1
+```
+
+**Observed result / 观察结果**:
+- U-Boot now finds and executes the image-provided script automatically:
+  `Found U-Boot script /boot.scr.uimg`, `## Executing script ...`.
+- Script-driven disk payload boot now reaches MINIX userland:
+  `rv64: kernel_main` -> `MINIX 4.0.0` -> `#` shell prompt.
+- `virtio-blk-mmio` initialization appears in the same disk-only run:
+  `virtio-blk-mmio: initialized`.
+- Existing reference boot profile remains good.
+
+**Evidence / 证据**:
+- `/tmp/qemu-uboot-diskonly-new-smode.log`
+- `/tmp/qemu-with-kernel-after-mkdisk-rework.log`

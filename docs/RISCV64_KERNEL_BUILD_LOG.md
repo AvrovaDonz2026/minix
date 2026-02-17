@@ -4,6 +4,10 @@
 **Version / 版本**: 1.9
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
+**Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
+`obj/...` path in older entries is historical context only. /
+当前构建与运行基线为 `obj.intrgcc`；旧条目中的 `obj/...` 路径仅用于历史记录。
+
 ## Log Entries / 日志条目
 
 ### Entry 1 — Initial Attempts (date unknown) / 初始尝试（日期未知）
@@ -129,9 +133,13 @@ obj/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake-evbriscv64 \
 ```bash
 ./minix/scripts/qemu-riscv64.sh \
   -s \
-  -k obj/destdir.evbriscv64/boot/minix/.temp/kernel \
-  -B obj/destdir.evbriscv64
+  -k obj.intrgcc/minix/kernel/kernel \
+  -B obj.intrgcc/destdir.evbriscv64
 ```
+
+备注 / Note:
+- 日常验证建议使用 `obj.intrgcc/minix/kernel/kernel`，避免 `obj*/destdir.../boot/minix/.temp/kernel`
+  与最新内核构建产物不同步而出现版本号回退。
 
 **In-guest smoke commands / 来宾内冒烟命令**:
 ```sh
@@ -617,7 +625,7 @@ obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake-evbriscv64 \
 ```bash
 python3 minix/tests/riscv64/qemu_runtime_probe.py \
   --qemu-script minix/scripts/qemu-riscv64.sh \
-  --kernel minix/kernel/obj/kernel \
+  --kernel obj.intrgcc/minix/kernel/kernel \
   --destdir obj.intrgcc/destdir.evbriscv64 \
   --require-disk-node
 ```

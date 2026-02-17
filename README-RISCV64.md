@@ -110,15 +110,17 @@ make
 cd /path/to/minix
 
 # 设置构建变量
-export TOOLDIR=/path/to/minix/obj/tooldir.$(uname -s)-$(uname -r)-$(uname -m)
-export DESTDIR=/path/to/minix/obj/destdir.evbriscv64
+export TOOLDIR=/path/to/minix/obj.intrgcc/tooldir.$(uname -s)-$(uname -r)-$(uname -m)
+export DESTDIR=/path/to/minix/obj.intrgcc/destdir.evbriscv64
 ```
 
 **中文**
 - 变量用于指定工具链与输出目录。
+- 当前基线使用 `obj.intrgcc`；`obj` 路径仅作为历史记录，不用于当前构建/验证。
 
 **English**
 - These variables point to the toolchain and output directories.
+- Active baseline uses `obj.intrgcc`; `obj` paths are legacy/historical only.
 
 ### 3. 构建交叉编译工具 / Build Tools
 
@@ -134,10 +136,10 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no \
 ```
 
 **中文**
-- 若工具链已在 `obj/tooldir.*` 中生成，可直接进入下一步。
+- 若工具链已在 `obj.intrgcc/tooldir.*` 中生成，可直接进入下一步。
 
 **English**
-- If `obj/tooldir.*` already exists, proceed to the distribution build.
+- If `obj.intrgcc/tooldir.*` already exists, proceed to the distribution build.
 
 ### 4. 构建完整系统 / Build Distribution
 
@@ -182,19 +184,19 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
 
 ```bash
 MAKEFLAGS="-de -m $PWD/share/mk" \
-TOOLDIR="$PWD/obj/tooldir.$(uname -s)-$(uname -r)-$(uname -m)" \
 MACHINE=evbriscv64 MACHINE_ARCH=riscv64 NETBSDSRCDIR="$PWD" \
-DESTDIR="$PWD/obj/destdir.evbriscv64" \
+TOOLDIR="$PWD/obj.intrgcc/tooldir.$(uname -s)-$(uname -r)-$(uname -m)" \
+DESTDIR="$PWD/obj.intrgcc/destdir.evbriscv64" \
 AVAILABLE_COMPILER=gcc ACTIVE_CC=gcc ACTIVE_CPP=gcc ACTIVE_CXX=gcc ACTIVE_OBJC=gcc \
 RISCV_ARCH_FLAGS='-march=RV64IMAFD -mcmodel=medany' \
-"$PWD/obj/tooldir.$(uname -s)-$(uname -r)-$(uname -m)/bin/nbmake" \
+"$PWD/obj.intrgcc/tooldir.$(uname -s)-$(uname -r)-$(uname -m)/bin/nbmake" \
   -C lib/csu dependall
 ```
 
 ### 3. 工具链可用性验证 / Toolchain Check
 
 ```bash
-obj/tooldir.*/bin/riscv64-elf32-minix-gcc -dumpmachine
+obj.intrgcc/tooldir.*/bin/riscv64-elf32-minix-gcc -dumpmachine
 # 期望输出：riscv64-elf32-minix
 # Expected: riscv64-elf32-minix
 ```
@@ -304,9 +306,13 @@ Current status: minimum pass criteria met (shell reachable and interactive comma
 复测命令 / Retest commands:
 ```bash
 ./minix/scripts/qemu-riscv64.sh -s \
-  -k obj/destdir.evbriscv64/boot/minix/.temp/kernel \
-  -B obj/destdir.evbriscv64
+  -k obj.intrgcc/minix/kernel/kernel \
+  -B obj.intrgcc/destdir.evbriscv64
 ```
+
+注意 / Note:
+- 开发调试时优先使用 `obj.intrgcc/minix/kernel/kernel`；`obj*/destdir.../boot/minix/.temp/kernel`
+  可能滞后于最近一次内核重编译，导致来宾中仍显示旧版本号。
 
 来宾内命令 / In-guest commands:
 ```sh
@@ -495,7 +501,7 @@ python3 ./minix/tests/riscv64/safecopy_triage.py /tmp/qemu-smoke.log
 6. **in-tree linker `R_RISCV_RELAX` 兼容性（#24，已缓解）**  
    - 现状：已加入 `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`，
      让 in-tree `ld` 将 `R_RISCV_RELAX` 视为 hint/no-op。  
-   - 验证：`ld -r --whole-archive obj/destdir.evbriscv64/usr/lib/libaudiodriver.a --no-whole-archive -o /tmp/libaudiodriver.whole.o`
+   - 验证：`ld -r --whole-archive obj.intrgcc/destdir.evbriscv64/usr/lib/libaudiodriver.a --no-whole-archive -o /tmp/libaudiodriver.whole.o`
      使用 in-tree `ld` 可通过，不再触发 `unrecognized relocation (0x33)`。  
    **in-tree linker compatibility with `R_RISCV_RELAX` (#24, mitigated)**  
    - Status: `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch` handles

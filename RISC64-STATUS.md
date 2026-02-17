@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-02-17  
-**Version / 版本**: 1.8
+**Version / 版本**: 1.9
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -10,6 +10,10 @@
 **中文**
 - 构建可通过（GCC + workaround 组合），详见 `README-RISCV64.md`。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
+- 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
+  `MINIX_VERSION=4.0.0-riscv64`）。
+- ramdisk 现在内置 `neofetch`（`pfetch` 为兼容包装），默认通过 `/proc/service`
+  统计服务信息，避免默认走 `ps` 路径导致的噪声。
 - P0 复验：基于 GCC 重建内核的 QEMU 冒烟中，`ps -aux`、`cat /proc/meminfo`、
   `minix-service sysctl srv_status` 均返回 `RC=0`，未见 `SIGSEGV`/kernel panic。
 - 已验证 `obj.intrgcc` 独立链路可完成 `tools -> distribution -> QEMU`，并消除此前
@@ -38,6 +42,10 @@
 - Build passes with GCC + workaround flags; see `README-RISCV64.md` for exact commands.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
+- The system major version is now `Minix Cat 4.0.0`
+  (`OS_RELEASE=4.0.0`, `MINIX_VERSION=4.0.0-riscv64`).
+- Ramdisk now ships `neofetch` (`pfetch` kept as compatibility wrapper);
+  default service summary uses `/proc/service` to avoid noisy default `ps` probing.
 - P0 revalidation: with a GCC-rebuilt kernel, QEMU smoke confirms
   `ps -aux`, `cat /proc/meminfo`, and `minix-service sysctl srv_status`
   all return `RC=0` without `SIGSEGV` or kernel panic signatures.
@@ -75,6 +83,7 @@
 - 已补充 `obj.intrgcc` 自举输出：`obj.intrgcc/minix/kernel/kernel` 与
   `obj.intrgcc/destdir.evbriscv64` 可直接用于 QEMU。
 - 限制：`CHECKFLIST_FLAGS='-m -e'` 为临时绕过，需在 sets 完整后移除。
+- ramdisk 更新：新增 `/bin/neofetch`（`pfetch` 兼容包装）与 `/etc/build-id` 注入。
 - 工具链进展：in-tree `ld`（NetBSD binutils 2.23.2）已通过补丁兼容
   `R_RISCV_RELAX`（见 `issue.md` #24）。
 - 新发现：显式 GCC-only 组件增量构建可能触发 `-mabi=lp64d` 参数不兼容（见 `issue.md` #25）。
@@ -85,6 +94,8 @@
 - Added validated self-bootstrap outputs: `obj.intrgcc/minix/kernel/kernel` and
   `obj.intrgcc/destdir.evbriscv64` are bootable in QEMU.
 - Limitation: `CHECKFLIST_FLAGS='-m -e'` is a temporary workaround until sets are complete.
+- Ramdisk update: adds `/bin/neofetch` (with `pfetch` compatibility wrapper)
+  and injects `/etc/build-id`.
 - Toolchain update: in-tree `ld` (NetBSD binutils 2.23.2) now accepts `R_RISCV_RELAX`
   via a compatibility patch; see `issue.md` #24.
 - New finding: explicit GCC-only component rebuilds can hit `-mabi=lp64d` incompatibility
@@ -117,6 +128,8 @@
   `multi_smoke_gate.sh --rounds 1 --timeout 70 --runtime-timeout 70 --runtime-cmd-timeout 35`
   在 `/tmp/minix-smoke-gate-20260217-070246/` 完成
   `Passed: 2, Failed: 0, Runtime passed: 2, Runtime failed: 0`。
+- `neofetch` 默认服务探测模式已从 `off` 切换为 `auto`，优先读取 `/proc/service`；
+  `NEOFETCH_SERVICE_PROBE=ps` 仍可显式启用旧 `ps` 探测路径。
 
 **English**
 - Boot path is stable to the `#` shell prompt; init and core services complete basic startup handshake.
@@ -145,6 +158,9 @@
   `multi_smoke_gate.sh --rounds 1 --timeout 70 --runtime-timeout 70 --runtime-cmd-timeout 35`
   passed under `/tmp/minix-smoke-gate-20260217-070246/` with
   `Passed: 2, Failed: 0, Runtime passed: 2, Runtime failed: 0`.
+- `neofetch` default service probe switched from `off` to `auto`, preferring
+  `/proc/service`; the old `ps` path remains available via
+  `NEOFETCH_SERVICE_PROBE=ps`.
 
 ## Key Issues (Snapshot) / 关键问题（摘要）
 

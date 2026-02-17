@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-02-17
-**Version / 版本**: 1.8
+**Version / 版本**: 1.9
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 ## Log Entries / 日志条目
@@ -566,7 +566,7 @@ timeout 140 ./minix/scripts/qemu-riscv64.sh -s \
 
 **Observed result / 观察结果**:
 - Incremental RS rebuild/install completed successfully.
-- Diskless and with-disk smoke both reached shell path (`MINIX 3.4.0`, `/bin/sh`),
+- Diskless and with-disk smoke both reached shell path (`MINIX 4.0.0`, `/bin/sh`),
   and no kernel panic / `SIGSEGV` signature was observed.
 - With-disk smoke shows:
   `virtio-blk-mmio: capacity: 262144 sectors` and `virtio-blk-mmio: initialized`,
@@ -580,3 +580,60 @@ timeout 140 ./minix/scripts/qemu-riscv64.sh -s \
 **Evidence / 证据**:
 - `/tmp/qemu-smoke-incremental.log`
 - `/tmp/qemu-smoke-disk.log`
+
+### Entry 16 — neofetch Service Source Switch + Version Bump to 4.0.0 (2026-02-17) / neofetch 服务源切换 + 版本升级到 4.0.0
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Make `neofetch` service fields (`Services/CoreSvc/Missing`) useful by default,
+  without relying on noisy default `ps` probing.
+- Roll system/release version to `4.0.0` and keep runtime profile consistent.
+
+**Code changes linked to this run / 本轮关联代码改动**:
+1. `minix/drivers/storage/ramdisk/neofetch`
+   - default probe mode switched from `off` to `auto`;
+   - `auto` now prefers `/proc/service` for service summary;
+   - `ps` path remains opt-in with `NEOFETCH_SERVICE_PROBE=ps`.
+2. `minix/include/minix/config.h`
+   - `OS_RELEASE` updated to `4.0.0`;
+   - `OS_REV` updated to `400000000`.
+3. `minimal_kernel/include/minix/config.h`
+   - `OS_RELEASE` / `OS_REV` aligned to `4.0.0` / `400000000`.
+4. `minix/releasetools/riscv64/release.conf`
+   - `MINIX_VERSION` updated to `4.0.0-riscv64`.
+
+**Build/install commands / 构建与安装命令**:
+```bash
+obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake-evbriscv64 \
+  -C minix/drivers/storage/ramdisk image
+
+obj.intrgcc/tooldir.Linux-6.12.63+deb13-amd64-x86_64/bin/nbmake-evbriscv64 \
+  -C minix/drivers/storage/memory all install
+```
+
+**Runtime probe command / 运行时探针命令**:
+```bash
+python3 minix/tests/riscv64/qemu_runtime_probe.py \
+  --qemu-script minix/scripts/qemu-riscv64.sh \
+  --kernel minix/kernel/obj/kernel \
+  --destdir obj.intrgcc/destdir.evbriscv64 \
+  --require-disk-node
+```
+
+**Observed result / 观察结果**:
+- Ramdisk image and memory service rebuild/install completed successfully.
+- Runtime probe passed all checks:
+  `meminfo`, `ps_aux`, `srv_status`, `disk_node`.
+- Service-summary data path in `neofetch` now defaults to procfs (`/proc/service`)
+  instead of disabled-by-default mode, with explicit `ps` opt-in retained.
+- System version macros and riscv64 release profile are now aligned to `4.0.0`.
+
+**Evidence / 证据**:
+- `qemu_runtime_probe.py` result: `PASS: qemu runtime probe`
+- Updated source files:
+  `minix/drivers/storage/ramdisk/neofetch`,
+  `minix/include/minix/config.h`,
+  `minimal_kernel/include/minix/config.h`,
+  `minix/releasetools/riscv64/release.conf`

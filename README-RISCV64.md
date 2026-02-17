@@ -9,22 +9,24 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.8
-- 最后更新：2026-02-16
+- 版本：1.9
+- 最后更新：2026-02-17
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.8
-- Last updated: 2026-02-16
+- Version: 1.9
+- Last updated: 2026-02-17
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
 
-## 当前状态（截至 2026-02-16）/ Current Status (as of 2026-02-16)
+## 当前状态（截至 2026-02-17）/ Current Status (as of 2026-02-17)
 
 **中文**
 - 构建：可通过（需使用 workaround 组合，见本文构建命令与 `RISC64-STATUS.md`）
 - 运行：QEMU 可稳定进入 shell，并通过 `echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo` 交互复测
+- 系统版本已滚动至 `Minix Cat 4.0.0`（release profile: `4.0.0-riscv64`）。
+- ramdisk 已内置 `neofetch`（`pfetch` 兼容包装），默认服务统计来源为 `/proc/service`。
 - `obj.intrgcc` 独立构建链路已跑通：`tools(MKGCC=yes,MKGCCCMDS=yes) -> distribution -> QEMU`，不再出现 `Boot module not found: ds`
 - 含盘 smoke 已复测：`virtio_blk_mmio` 在 `-i <disk image>` 轮廓下可正常初始化。
 - 关键风险：`procfs` safecopy 回退噪声、SMP 未实现、GCC-only 增量链路 ABI 参数兼容性（#25，详见 `issue.md`）
@@ -37,6 +39,9 @@ targeting the QEMU virt platform.
 - Build: passes with workaround flags (see commands below and `RISC64-STATUS.md`)
 - Runtime: QEMU reaches a stable shell prompt and passes interactive retests:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`
+- System version is now `Minix Cat 4.0.0` (release profile: `4.0.0-riscv64`).
+- Ramdisk now includes `neofetch` (`pfetch` kept as compatibility wrapper),
+  and the default service summary source is `/proc/service`.
 - The isolated `obj.intrgcc` chain is validated end-to-end
   (`tools` with `MKGCC=yes` and `MKGCCCMDS=yes` -> `distribution` -> `QEMU`);
   `Boot module not found: ds` is no longer reproduced on this profile.
@@ -664,5 +669,5 @@ MINIX 3 is licensed under BSD. See LICENSE in the source tree.
 
 ---
 
-**最后更新 / Last updated**：2026-02-16  
-**版本 / Version**：1.6
+**最后更新 / Last updated**：2026-02-17  
+**版本 / Version**：1.9

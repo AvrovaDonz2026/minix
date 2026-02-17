@@ -33,7 +33,7 @@ SYSTEM_CONF_SRC=	${NETBSDSRCDIR}/etc/system.conf
 .if ${MACHINE_ARCH} == "riscv64" || ${MACHINE_ARCH} == "riscv"
 SYSTEM_CONF_SRC=	${NETBSDSRCDIR}/minix/releasetools/riscv64/system.conf
 .endif
-EXTRA=			rc
+EXTRA=			rc pfetch
 PROTO_FILES=		proto.common.etc
 PROTO_FILES+=		proto.common.dynamic
 PROGRAMS=		# defined

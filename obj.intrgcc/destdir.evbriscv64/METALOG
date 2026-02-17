@@ -11983,3 +11983,11 @@
 ./usr/lib/fonts//koi8-r.fnt type=file uname=root gname=wheel mode=0755 size=9728 time=1769777061.0 sha256=d5deb54e9f3923378a63b2b8740fcc979e93a96a291060580ad73925fdd98d23
 ./usr/lib/fonts//koi8-u.fnt type=file uname=root gname=wheel mode=0755 size=4096 time=1769777061.0 sha256=53b7dfe4576b65f395001c5eb4b1a9197d4d5d018a968112fa9130633f3af010
 ./usr/lib/fonts//polish.fnt type=file uname=root gname=wheel mode=0755 size=4096 time=1769777061.0 sha256=0ddf37a846e3cc54744878e269b8daaee3ccc92c41973d4955f8b564cfdef421
+./service/virtio_blk_mmio type=file uname=root gname=wheel mode=0755 size=109826 time=1771284099.0 sha256=66a88a62d468f100185754aeba4c766d63793aefadcfa5904a367fa7a7887f91
+./service/memory type=file uname=root gname=wheel mode=0755 size=4583510 time=1771284099.0 sha256=aba192fb4c7ccffea89d3958abdd08898a21de1b1e5b98a73b363d177461d821
+./service/memory type=file uname=root gname=wheel mode=0755 size=4583510 time=1771284351.0 sha256=0a835d2ad7d1ee095cdc58b96c1f080d089dca6a62b7992f7e430c539a47b198
+./service/memory type=file uname=root gname=wheel mode=0755 size=4583510 time=1771284669.0 sha256=40dc2d6335126a5c00cd243bd213514a927d8cc04cb2cce1fc5643aaa0688412
+./service/memory type=file uname=root gname=wheel mode=0755 size=4583014 time=1771286078.0 sha256=ae9a347581daadd99d5d19354cccc7a24ab16e26ecea5d374d566c70e6fd0d39
+./service/memory type=file uname=root gname=wheel mode=0755 size=4583014 time=1771286524.0 sha256=b7981e2da20a8eaa6fbea4eb8332cdb9e52091b26eddcae833543abff6409fb9
+./service/memory type=file uname=root gname=wheel mode=0755 size=4583014 time=1771286637.0 sha256=2fb4141de3e3d383f0ff845a490e66aae51a780f1a7d3819b71815eea24796e6
+./service/memory type=file uname=root gname=wheel mode=0755 size=4583014 time=1771286816.0 sha256=fb08c551abe4ad7ee7d88c4428a7a5dff2a0aa6627e2044baa55bf80ad13ab68

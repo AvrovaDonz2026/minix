@@ -16,6 +16,7 @@ d--755 0 0
  grep ---755 0 0 grep
  sh ---755 0 0 sh
  dd ---755 0 0 dd
+ test_virtio_blk_mmio ---755 0 0 test_virtio_blk_mmio
 $
  sbin d--755 0 0
   minix-service ---755 0 0 minix-service

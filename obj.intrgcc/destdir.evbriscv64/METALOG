@@ -12007,3 +12007,7 @@
 ./service/memory type=file uname=root gname=wheel mode=0755 size=4780118 time=1771293870.0 sha256=affa6602c2e671a9032142a10914eb47d3262f05c77664580b0fc76d7742ee7a
 ./service/pm type=file uname=root gname=wheel mode=0755 size=114147 time=1771294341.0 sha256=5a3d9bc4fa1f6a840ad5e4ada4618d85ca7cf263af931772ce0eff5bc1997747
 ./service/mib type=file uname=root gname=wheel mode=0755 size=122324 time=1771294411.0 sha256=83ed4591aaf035a53dc959a21c80bde4812a99c0f1426adb205516315ab1bbcf
+./service/memory type=file uname=root gname=wheel mode=0755 size=4943958 time=1771301845.0 sha256=511cee158355b9153b6e5b583f3f5e3a82c3cac92669a277ca76f263eb5086a8
+./service/memory type=file uname=root gname=wheel mode=0755 size=4943958 time=1771307117.0 sha256=3d456dfe2fd6756e217617d96595fda67333e03a8128c65b62e257c10b020d7f
+./service/memory type=file uname=root gname=wheel mode=0755 size=4943958 time=1771307340.0 sha256=92c0a95828903a98a27b012ef3526990af9b4af2e0cf9f046841822f0463c52d
+./service/memory type=file uname=root gname=wheel mode=0755 size=4943958 time=1771307616.0 sha256=19d4c43fef16a0c38903e7efec5e8692eff248994e309b66f9c2355e4c152bdb

@@ -239,6 +239,167 @@ jobs:
           echo "sysroot_path=${sysroot_path}" >>"${GITHUB_OUTPUT}"
           echo "sums_path=${sums_path}" >>"${GITHUB_OUTPUT}"
 
+      - name: QEMU interactive smoke test (neofetch + shutdown chain)
+        timeout-minutes: 8
+        shell: bash
+        env:
+          CI_IMAGE_PATH: ${{ steps.package.outputs.image_path }}
+          QEMU_SMOKE_LOG: /tmp/qemu-neofetch-smoke.log
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import re
+          import time
+          import fcntl
+          import select
+          import subprocess
+          import sys
+
+          image_path = os.environ["CI_IMAGE_PATH"]
+          log_path = os.environ["QEMU_SMOKE_LOG"]
+          uboot_path = "/usr/lib/u-boot/qemu-riscv64_smode/uboot.elf"
+
+          if not os.path.isfile(image_path):
+            print(f"[smoke] missing image: {image_path}", file=sys.stderr)
+            sys.exit(1)
+          if not os.path.isfile(uboot_path):
+            print(f"[smoke] missing u-boot: {uboot_path}", file=sys.stderr)
+            sys.exit(1)
+
+          cmd = [
+            "qemu-system-riscv64",
+            "-machine", "virt",
+            "-m", "512M",
+            "-nographic",
+            "-bios", "default",
+            "-kernel", uboot_path,
+            "-drive", f"if=none,file={image_path},format=raw,id=hd0",
+            "-device", "virtio-blk-device,drive=hd0",
+          ]
+          print("[smoke] launching qemu:", " ".join(cmd))
+
+          proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+          )
+          if proc.stdin is None or proc.stdout is None:
+            print("[smoke] failed to open qemu stdio", file=sys.stderr)
+            sys.exit(1)
+
+          fd = proc.stdout.fileno()
+          flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+          fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
+          os.makedirs(os.path.dirname(log_path), exist_ok=True)
+          logf = open(log_path, "w", encoding="utf-8", errors="ignore")
+          buf = ""
+
+          def pump(seconds=0.4):
+            global buf
+            end = time.time() + seconds
+            while time.time() < end:
+              r, _, _ = select.select([fd], [], [], 0.1)
+              if not r:
+                if proc.poll() is not None:
+                  return
+                continue
+              try:
+                data = os.read(fd, 65536)
+              except BlockingIOError:
+                data = b""
+              if not data:
+                if proc.poll() is not None:
+                  return
+                continue
+              text = data.decode("utf-8", errors="ignore")
+              buf += text
+              if len(buf) > 800000:
+                buf = buf[-400000:]
+              logf.write(text)
+              logf.flush()
+
+          def wait_for(pattern, timeout, label):
+            rx = re.compile(pattern, re.M)
+            end = time.time() + timeout
+            while time.time() < end:
+              if rx.search(buf):
+                print(f"[smoke] ok: {label}")
+                return True
+              if proc.poll() is not None:
+                break
+              pump(0.5)
+            print(f"[smoke] timeout: {label}", file=sys.stderr)
+            return False
+
+          def send_line(line):
+            print(f"[smoke] send: {line}")
+            proc.stdin.write((line + "\n").encode("utf-8"))
+            proc.stdin.flush()
+
+          def shutdown_qemu():
+            if proc.poll() is not None:
+              return
+            try:
+              proc.stdin.write(b"\x01x")
+              proc.stdin.flush()
+            except Exception:
+              pass
+            end = time.time() + 8
+            while time.time() < end and proc.poll() is None:
+              pump(0.3)
+            if proc.poll() is None:
+              proc.terminate()
+              try:
+                proc.wait(timeout=5)
+              except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=5)
+
+          ok = True
+          try:
+            ok &= wait_for(r"(?:^|\n)#\s", 240, "shell prompt")
+
+            if ok:
+              send_line("neofetch")
+              ok &= wait_for(r"Donz Fetch", 90, "neofetch banner")
+              ok &= wait_for(r"OS:\s+Minix Cat", 90, "neofetch os line")
+              ok &= wait_for(r"(?:^|\n)#\s", 90, "prompt after neofetch")
+
+            if ok:
+              send_line("/sbin/shutdown -p now || /sbin/halt -p || /sbin/poweroff || /sbin/reboot -p || /sbin/reboot")
+              ok &= wait_for(
+                r"MINIX has halted and will now power off|MINIX will now be shut down",
+                150,
+                "shutdown banner",
+              )
+
+            # Missing shutdown binaries in bootramdisk is a regression.
+            if re.search(r"sh:\s+/sbin/(shutdown|halt|poweroff|reboot): not found", buf):
+              print("[smoke] detected missing shutdown binary in guest output", file=sys.stderr)
+              ok = False
+          finally:
+            shutdown_qemu()
+            pump(1.0)
+            logf.close()
+
+          if not ok:
+            print(f"[smoke] failed. log saved to: {log_path}", file=sys.stderr)
+            sys.exit(1)
+
+          print(f"[smoke] passed. log saved to: {log_path}")
+          PY
+
+      - name: Upload QEMU smoke log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: riscv64-qemu-smoke-log-${{ steps.meta.outputs.safe_tag }}-${{ steps.package.outputs.short_sha }}
+          if-no-files-found: ignore
+          path: /tmp/qemu-neofetch-smoke.log
+
       - name: Upload build artifacts to workflow
         uses: actions/upload-artifact@v4
         with:

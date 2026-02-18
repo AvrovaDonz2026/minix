@@ -31,6 +31,10 @@ $
 		minix-service ---755 0 0 minix-service
 		sysenv ---755 0 0 sysenv
 #if defined(__riscv) || defined(__riscv_xlen)
+		shutdown ---755 0 0 shutdown
+		halt ---755 0 0 reboot
+		poweroff ---755 0 0 reboot
+		reboot ---755 0 0 reboot
 		ifconfig ---755 0 0 ifconfig
 		route ---755 0 0 route
 		ping ---755 0 0 ping

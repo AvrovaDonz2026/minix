@@ -139,11 +139,15 @@ jobs:
             -V ACTIVE_OBJC=gcc \
             -V RISCV_ARCH_FLAGS='-march=RV64IMAFD -mcmodel=medany' \
             -V NOGCCERROR=yes \
+            -V MKGCC=yes \
+            -V MKGCCCMDS=no \
             -V MKPIC=no \
             -V MKPICLIB=no \
             -V MKPICINSTALL=no \
             -V MKCXX=no \
             -V MKLIBSTDCXX=no \
+            -V MKLIBOBJC=no \
+            -V MKLIBGOMP=no \
             -V MKATF=no \
             -V USE_PCI=no \
             -V CHECKFLIST_FLAGS='-m -e' \

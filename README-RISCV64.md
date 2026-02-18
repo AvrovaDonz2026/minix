@@ -9,13 +9,13 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.17
+- 版本：1.18
 - 最后更新：2026-02-18
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.17
+- Version: 1.18
 - Last updated: 2026-02-18
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -744,6 +744,10 @@ qemu-system-riscv64 -machine virt -m 256M -nographic \
   当前 workflow 已在 `Build tools`/`Build distribution` 使用
   `HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"`
   作为 CI 规避参数。
+- 若 `distribution` 阶段在 `bind/dig` 链接时报
+  `cannot find -lgcc` / `cannot find -lgcc_eh`，
+  需要保证该步启用 `-V MKGCC=yes -V MKGCCCMDS=no`，以在 `destdir/usr/lib`
+  生成目标侧 `libgcc.a` / `libgcc_eh.a`（CI clean 环境默认 `MKGCC=no`）。
 
 ## 性能优化 / Performance Optimization
 

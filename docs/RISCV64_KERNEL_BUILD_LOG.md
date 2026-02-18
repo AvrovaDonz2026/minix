@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-02-18
-**Version / 版本**: 1.19
+**Version / 版本**: 1.20
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1033,6 +1033,43 @@ Dual-VM link-local check / 双 VM 链路本地复测:
 **Evidence / 证据**:
 - `.github/workflows/release-riscv64.yml`
 - `README-RISCV64.md`
+
+### Entry 30 — Fix `libgcc_s.so` Undefined `mprotect` in CI Distribution (2026-02-18) / 修复 CI distribution 中 `libgcc_s.so` 的 `mprotect` 未定义
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Symptom / 现象**:
+- New CI run (`v4.0.0-riscv64-ci-20260218185915`) progressed through `Build tools`,
+  then failed in `Build distribution` when linking `external/mit/lua/usr.bin/lua`:
+  - `.../usr/lib/libgcc_s.so: undefined reference to 'mprotect'`
+
+**Root cause / 根因**:
+- RISC-V `libgcc` arch defs selected
+  `${GNUHOSTDIST}/libgcc/enable-execute-stack-mprotect.c` for
+  `enable-execute-stack.c`.
+- On MINIX target side in this lane, that pulls an unresolved `mprotect`
+  reference into `libgcc_s.so`, which surfaces during dynamic link of `lua`.
+
+**Fix / 修复**:
+1. Updated:
+   - `external/gpl3/gcc/lib/libgcc/arch/riscv64/defs.mk`
+   - `external/gpl3/gcc/lib/libgcc/arch/riscv32/defs.mk`
+2. Switched `G_CONFIGLINKS` mapping from:
+   - `enable-execute-stack-mprotect.c`
+   to:
+   - `enable-execute-stack-empty.c`
+3. Kept remaining `G_CONFIGLINKS` items intact to avoid unrelated libgcc ABI
+   drift.
+
+**Validation status / 验证状态**:
+- Patch committed for next CI retrigger; success criterion is passing
+  `Build distribution` without `libgcc_s.so: undefined reference to 'mprotect'`.
+
+**Evidence / 证据**:
+- `.github/workflows/release-riscv64.yml`
+- `external/gpl3/gcc/lib/libgcc/arch/riscv64/defs.mk`
+- `external/gpl3/gcc/lib/libgcc/arch/riscv32/defs.mk`
 
 ### Entry 24 — Enforce Commit-Hash Artifact Naming in Release Pipeline (2026-02-18) / 发布流水线产物命名强制包含提交 hash
 **Workspace / 工作区**: `/home/donz/minix`  

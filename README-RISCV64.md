@@ -9,13 +9,13 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.19
+- 版本：1.20
 - 最后更新：2026-02-18
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.19
+- Version: 1.20
 - Last updated: 2026-02-18
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -752,6 +752,11 @@ qemu-system-riscv64 -machine virt -m 256M -nographic \
   `ld: cannot find -lgcc_s`，不要在该 CI 路径里强制
   `-V MKPIC=no -V MKPICLIB=no -V MKPICINSTALL=no`，否则 `libgcc_s`
   不会按期望生成/安装；当前 release workflow 已移除这三个覆盖参数。
+- 若 `distribution` 阶段进一步报
+  `.../usr/lib/libgcc_s.so: undefined reference to 'mprotect'`，
+  需要确保 RISC-V `libgcc` 的 `enable-execute-stack` 选择为
+  `enable-execute-stack-empty.c`（而不是 `...-mprotect.c`），以避免在
+  MINIX 目标侧引入不可解析的 `mprotect` 依赖。
 
 ## 性能优化 / Performance Optimization
 

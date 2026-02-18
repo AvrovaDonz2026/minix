@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-02-18
-**Version / 版本**: 1.20
+**Version / 版本**: 1.21
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1070,6 +1070,37 @@ Dual-VM link-local check / 双 VM 链路本地复测:
 - `.github/workflows/release-riscv64.yml`
 - `external/gpl3/gcc/lib/libgcc/arch/riscv64/defs.mk`
 - `external/gpl3/gcc/lib/libgcc/arch/riscv32/defs.mk`
+
+### Entry 31 — Add Runner Disk-Reclaim Step for GitHub Actions (2026-02-18) / 为 GitHub Actions 增加 runner 磁盘回收步骤
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Motivation / 动机**:
+- The release workflow performs full `tools -> distribution`, and hosted runner
+  disk pressure can become a blocker before build completion.
+- 发布流水线执行完整 `tools -> distribution`，GitHub hosted runner 容量紧张时
+  容易在中后期失败。
+
+**Change / 改动**:
+1. Updated `/.github/workflows/release-riscv64.yml`:
+   - Added step `Reclaim runner disk space` right after `Checkout`.
+2. Reclaim actions include:
+   - print `df -h` before/after cleanup,
+   - remove preinstalled heavy directories:
+     `/usr/share/dotnet`, `/usr/local/lib/android`, `/opt/ghc`,
+     `/opt/hostedtoolcache/CodeQL`,
+   - disable/remove swap file (`/swapfile`),
+   - prune docker leftovers (`docker system prune -af` when available),
+   - clear apt cache and list files.
+
+**Validation status / 验证状态**:
+- Workflow updated; next tag-triggered run should confirm whether disk margin is
+  sufficient through the full build path.
+
+**Evidence / 证据**:
+- `.github/workflows/release-riscv64.yml`
+- `README-RISCV64.md`
 
 ### Entry 24 — Enforce Commit-Hash Artifact Naming in Release Pipeline (2026-02-18) / 发布流水线产物命名强制包含提交 hash
 **Workspace / 工作区**: `/home/donz/minix`  

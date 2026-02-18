@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-02-18
-**Version / 版本**: 1.11
+**Version / 版本**: 1.12
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -942,3 +942,31 @@ Dual-VM link-local check / 双 VM 链路本地复测:
 - `/tmp/qemu-ping6-loopback-nocount-softtimer-20260218.log`
 - `/tmp/qemu-ping6-dual-softtimer-20260218.log`
 - `/tmp/qemu-minix-public-ping-slirp-root-20260218.log`
+
+### Entry 22 — Add Dedicated VirtIO Driver Guide (Doc Update Only) (2026-02-18) / 新增 VirtIO 驱动专门文档（仅文档更新）
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Add one dedicated document for current VirtIO driver implementation and
+  acceptance workflow, so future network/storage iterations have a stable
+  technical reference.
+
+**Documentation changes / 文档变更**:
+1. Added `docs/RISCV64_VIRTIO_DRIVER_GUIDE.md`
+   - Scope/stack map for `virtio_blk_mmio`, `virtio_net_mmio`, `libvirtio_mmio`.
+   - MMIO/IRQ layout and service policy (`system.conf`, `lwip.conf`, ramdisk `rc`).
+   - Build/refresh commands (obj.intrgcc baseline).
+   - Runtime profiles, acceptance checklist, and common failure signatures.
+2. Updated `README-RISCV64.md`
+   - Added guide link in References section.
+   - Bumped document version metadata (`1.12`).
+
+**Build/test status / 构建测试状态**:
+- No new code build or runtime test executed in this entry.
+- 本条目仅文档更新，未新增构建与运行测试。
+
+**Evidence / 证据**:
+- `docs/RISCV64_VIRTIO_DRIVER_GUIDE.md`
+- `README-RISCV64.md`

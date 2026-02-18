@@ -9578,3 +9578,5 @@
 ./service/memory type=file uname=root gname=wheel mode=0755 size=6844502 time=1771401113.0 sha256=d348265fbc17147ee3e1f337eb0687c95314359fe3d1a25fdede2082452ba7e9
 ./service/memory type=file uname=root gname=wheel mode=0755 size=6844502 time=1771401266.0 sha256=224800888e6b12887fd6c36ba7db9f465cad43226999266fee6ed2d617230cdb
 ./service/memory type=file uname=root gname=wheel mode=0755 size=6844502 time=1771401814.0 sha256=8abafd9f0afa1582549faf79d5ba705b4d13b9d7c35ecf6ecfc8b40e4f7d32de
+./sbin/ping6 type=file uname=root gname=wheel mode=04555 size=443462 time=1771401802.0 sha256=f29b6e60ffedb42cee149f5720ac40d2dbf3809daa13d93a176f3370efcdd91c
+./service/memory type=file uname=root gname=wheel mode=0755 size=7016534 time=1771404268.0 sha256=23762be6b3dbcf6035a413e85a0033c6e2c7d404267970cef3fe131180cca61f

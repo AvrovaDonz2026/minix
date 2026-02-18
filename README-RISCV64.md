@@ -9,13 +9,13 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.11
+- 版本：1.12
 - 最后更新：2026-02-18
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.11
+- Version: 1.12
 - Last updated: 2026-02-18
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -744,8 +744,8 @@ qemu-system-riscv64 -machine virt -m 256M -nographic \
    New issues: record symptoms, repro steps, logs, files/lines, and impact in `issue.md`
 2. 修复后：同步更新 `RISC64-STATUS.md` 的状态与风险评估  
    After fixes: update status and risk assessment in `RISC64-STATUS.md`
-3. 关键变更：补充到 `docs/RISCV64_PORTING_GUIDE.md` 的移植步骤与验证记录  
-   Key changes: add porting steps and verification notes to `docs/RISCV64_PORTING_GUIDE.md`
+3. 关键变更：补充到 `docs/RISCV64_PORTING_GUIDE.md` 的移植步骤与验证记录；VirtIO 相关变更同步到 `docs/RISCV64_VIRTIO_DRIVER_GUIDE.md`  
+   Key changes: add porting steps and verification notes to `docs/RISCV64_PORTING_GUIDE.md`; sync VirtIO-specific updates to `docs/RISCV64_VIRTIO_DRIVER_GUIDE.md`
 
 ## 参考资料 / References
 
@@ -753,6 +753,7 @@ qemu-system-riscv64 -machine virt -m 256M -nographic \
 - [SBI 规范](https://github.com/riscv-non-isa/riscv-sbi-doc)
 - [QEMU RISC-V 支持](https://www.qemu.org/docs/master/system/riscv/riscv-virt.html)
 - [MINIX 文档](http://www.minix3.org/docs/)
+- [RISC-V VirtIO 驱动指南 / RISC-V VirtIO Driver Guide](docs/RISCV64_VIRTIO_DRIVER_GUIDE.md)
 
 ## 许可证 / License
 
@@ -762,4 +763,4 @@ MINIX is licensed under BSD. See LICENSE in the source tree.
 ---
 
 **最后更新 / Last updated**：2026-02-18  
-**版本 / Version**：1.11
+**版本 / Version**：1.12

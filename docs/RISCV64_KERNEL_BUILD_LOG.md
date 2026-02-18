@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-02-18
-**Version / 版本**: 1.12
+**Version / 版本**: 1.14
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -969,4 +969,66 @@ Dual-VM link-local check / 双 VM 链路本地复测:
 
 **Evidence / 证据**:
 - `docs/RISCV64_VIRTIO_DRIVER_GUIDE.md`
+- `README-RISCV64.md`
+
+### Entry 23 — Add GitHub Actions Release Pipeline (Doc/CI Update) (2026-02-18) / 新增 GitHub Actions 自动发布流水线（文档/CI 更新）
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Add a repository-native pipeline that can build riscv64 artifacts and publish
+  release assets directly to GitHub Release.
+
+**CI changes / CI 变更**:
+1. Added `/.github/workflows/release-riscv64.yml`
+   - Trigger on tag push (`v*`) and manual dispatch.
+   - Build flow: `tools -> distribution` on `obj.intrgcc`.
+   - Package flow: run `minix/releasetools/riscv64/mkdisk.sh`.
+   - Publish flow: upload `.img`, `.sha256`, and manifest to GitHub Release.
+2. Updated `README-RISCV64.md`
+   - Added a dedicated section documenting trigger method, outputs, and required
+     workflow permissions.
+   - Bumped document version metadata (`1.13`).
+
+**Build/test status / 构建测试状态**:
+- This entry introduces CI workflow and docs; no local full rebuild/retest was
+  executed in this log entry.
+- 本条目为 CI/文档更新，未在本地执行新的完整重建与运行测试。
+
+**Evidence / 证据**:
+- `.github/workflows/release-riscv64.yml`
+- `README-RISCV64.md`
+
+### Entry 24 — Enforce Commit-Hash Artifact Naming in Release Pipeline (2026-02-18) / 发布流水线产物命名强制包含提交 hash
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Enforce a stable artifact naming standard where every release asset embeds
+  the built commit short hash.
+
+**CI updates / CI 更新**:
+1. Updated `/.github/workflows/release-riscv64.yml`
+   - Added naming base:
+     `minix-cat-<tag>-<shortsha>-riscv64`.
+   - `shortsha` source:
+     `git rev-parse --short=12 $GITHUB_SHA`.
+   - Release assets now include:
+     - `minix-cat-<tag>-<shortsha>-riscv64.img`
+     - `minix-cat-<tag>-<shortsha>-riscv64.img.gz`
+     - `minix-cat-<tag>-<shortsha>-riscv64.elf`
+     - `minix-cat-<tag>-<shortsha>-riscv64-sysroot.tar.gz`
+     - `SHA256SUMS.txt`
+2. Updated `README-RISCV64.md`
+   - Documented the naming convention and release asset list.
+   - Bumped document version metadata (`1.14`).
+
+**Build/test status / 构建测试状态**:
+- This entry updates CI naming/packaging logic and docs only.
+- 本条目仅更新 CI 命名/打包逻辑与文档，未新增本地完整构建回归。
+
+**Evidence / 证据**:
+- `.github/workflows/release-riscv64.yml`
 - `README-RISCV64.md`

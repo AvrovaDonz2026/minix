@@ -9,13 +9,13 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.12
+- 版本：1.14
 - 最后更新：2026-02-18
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.12
+- Version: 1.14
 - Last updated: 2026-02-18
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -701,6 +701,35 @@ qemu-system-riscv64 -machine virt -m 256M -nographic \
 4. **服务器程序 / Servers**：`obj.intrgcc/destdir.evbriscv64/sbin/`
 5. **用户程序 / User programs**：`obj.intrgcc/destdir.evbriscv64/usr/bin/`
 
+## GitHub Actions Release Pipeline / GitHub Actions 自动发布流水线
+
+仓库已提供自动构建并发布到 GitHub Release 的流水线：  
+`/.github/workflows/release-riscv64.yml`
+
+触发方式 / Triggers:
+- `push` 到 tag（模式：`v*`）
+- 手动触发 `workflow_dispatch`（需输入 tag）
+
+流水线行为 / Pipeline behavior:
+1. 安装宿主依赖并按 `obj.intrgcc` 基线执行 `tools -> distribution`
+2. 调用 `minix/releasetools/riscv64/mkdisk.sh` 生成磁盘镜像并压缩
+3. 导出内核 ELF 与开发用 sysroot（头文件/库）
+4. 生成统一 `SHA256SUMS.txt`
+5. 自动创建/更新 GitHub Release 并上传以下产物
+
+构建产物命名规范（含构建提交 hash）/ Artifact naming (with commit hash):
+- `minix-cat-<tag>-<shortsha>-riscv64.img`
+- `minix-cat-<tag>-<shortsha>-riscv64.img.gz`
+- `minix-cat-<tag>-<shortsha>-riscv64.elf`
+- `minix-cat-<tag>-<shortsha>-riscv64-sysroot.tar.gz`
+- `SHA256SUMS.txt`
+
+注意 / Notes:
+- Release workflow 依赖 GitHub Actions 默认 `GITHUB_TOKEN`（`contents: write`）。
+- 若首次启用失败，请确认仓库 Actions 权限允许 workflow 写 Release。
+- `shortsha` 来自当前构建提交（`git rev-parse --short=12 $GITHUB_SHA`）。
+- 构建时间较长（完整 `distribution`），建议通过 tag 触发正式发布。
+
 ## 性能优化 / Performance Optimization
 
 ### 编译优化标志 / Compiler Flags
@@ -763,4 +792,4 @@ MINIX is licensed under BSD. See LICENSE in the source tree.
 ---
 
 **最后更新 / Last updated**：2026-02-18  
-**版本 / Version**：1.12
+**版本 / Version**：1.14

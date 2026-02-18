@@ -9531,3 +9531,10 @@
 ./usr/man/man3/data_ahead.3 type=file uname=root gname=wheel mode=0644 size=2461 sha256=a352fbc3dfab01cae5784a8e5f6c945fc0c9cc6138633edec24b1f6d20bba91d
 ./usr/man/man3/dynamic_field_info.3 type=file uname=root gname=wheel mode=0644 size=3061 sha256=0dd8328f92e1fa7752f967da8c28bc249b71667708172808156315282cfda73d
 ./service/memory type=file uname=root gname=wheel mode=0755 size=4943958 time=1771318679.0 sha256=d49f9164e42f422e43df6ca3de00f44e2e65db1d56047b6b7f433982e7d17e9a
+./etc/system.conf.d/virtio_net_mmio type=file uname=root gname=wheel mode=0644 size=121 time=1771381872.0 sha256=65f4b5d6966f1f838172d11943d0bd28ac354e87483bbdcd384d66761d48e628
+./service/memory type=file uname=root gname=wheel mode=0755 size=4943958 time=1771383817.0 sha256=d49f9164e42f422e43df6ca3de00f44e2e65db1d56047b6b7f433982e7d17e9a
+./service/memory type=file uname=root gname=wheel mode=0755 size=5213798 time=1771384084.0 sha256=b61fd97bc2abfed9edee9c1f1c84bfb2d51d69fa1fb10d94e62eb9fd90f09cff
+./service/memory type=file uname=root gname=wheel mode=0755 size=5213798 time=1771384713.0 sha256=8a9456d45db89a7122764bfacd744b012fa3f732e164786278164e93d54c85dd
+./service/lwip type=file uname=root gname=wheel mode=0755 size=431171 time=1771384920.0 sha256=aff08e21632a9a2c3c390e5cc22c844699dcbf8367b204c731a7b98dffc531b8
+./etc/system.conf.d/lwip type=file uname=root gname=wheel mode=0644 size=115 time=1771384704.0 sha256=74bf6c47840134cf5023005f74f808f5f378ccd0af94908f857ced22122891e4
+./service/memory type=file uname=root gname=wheel mode=0755 size=5222486 time=1771384920.0 sha256=df7978f56bbccfb4d0ba0b67aaeb289d29a2fb2c76577623f747db373bbc4c7f

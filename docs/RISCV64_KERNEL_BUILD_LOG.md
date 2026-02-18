@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
-**Last updated / 最后更新**: 2026-02-17
-**Version / 版本**: 1.9
+**Last updated / 最后更新**: 2026-02-18
+**Version / 版本**: 1.11
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -819,3 +819,126 @@ timeout 1800 ./minix/tests/riscv64/run_tests.sh all \
 - `/tmp/qemu-neofetch-memfix.log`
 - `/tmp/minix-full-riscv64-tests.log`
 - `/tmp/minix-smoke-gate-20260217-165805/`
+
+### Entry 20 — lwIP Raw-Socket Permission Fix Retest + New ping6 Scoped Crash Finding (2026-02-18) / lwIP raw socket 权限修复复测 + 新增 ping6 scoped 崩溃发现
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Revalidate networking after adding `pm` to `service lwip` IPC allow-list.
+- Confirm the previous `ping/ping6` `Permission denied` signature is removed.
+- Capture any remaining IPv6 runtime blockers.
+
+**Code changes linked to this run / 本轮关联代码改动**:
+1. `minix/releasetools/riscv64/system.conf`
+   - `service lwip` IPC mask:
+     `ipc SYSTEM ds vfs rs vm mib;` -> `ipc SYSTEM pm ds vfs rs vm mib;`
+2. `minix/net/lwip/lwip.c`
+   - Removed temporary `RAWDBG` tracing used for permission-path diagnosis.
+
+**Build/image commands / 构建与镜像命令**:
+```bash
+TOOLDIR=$(echo /home/donz/minix/obj.intrgcc/tooldir.*)
+NBMAKE="$TOOLDIR/bin/nbmake-evbriscv64"
+
+"$NBMAKE" -C minix/net/lwip all install
+"$NBMAKE" -C minix/drivers/storage/ramdisk RAMDISK_TESTS=1 image
+"$NBMAKE" -C minix/drivers/storage/memory RAMDISK_TESTS=1 all install
+```
+
+**QEMU/runtime verification / QEMU 运行时验证**:
+```bash
+OBJDIR=/home/donz/minix/obj.intrgcc \
+  /tmp/qemu-riscv64-nohostfwd.sh -n \
+  -B /home/donz/minix/obj.intrgcc/destdir.evbriscv64 \
+  -k /home/donz/minix/obj.intrgcc/minix/kernel/kernel
+```
+
+In-guest commands / 来宾内命令:
+```sh
+/sbin/ping -c 1 10.0.2.2
+/sbin/ping6 -c 1 ::1
+/sbin/ping6 -c 1 fe80::2%vio0
+/sbin/route -n show
+/sbin/ifconfig -a
+```
+
+**Observed result / 观察结果**:
+- `ping/ping6` raw-socket creation no longer fails with `Permission denied`.
+  Previous kernel denial signature (`ipc mask denied SENDREC ... to 0`) is not reproduced
+  on raw-socket creation path in this run.
+- `/sbin/ping6 -c 1 ::1` succeeds (`0% packet loss`), confirming IPv6 loopback ICMP path is alive.
+- `/sbin/ping -c 1 10.0.2.2` enters normal send/wait path (this run timed out with packet loss, but no permission failure).
+- New finding: `/sbin/ping6 -c 1 fe80::2%vio0` crashes in userspace with
+  `VM: pagefault: SIGSEGV ... bad addr 0x0` and shell-side `Segmentation fault`.
+  This is tracked as a new open issue (`issue.md` #35).
+
+**Evidence / 证据**:
+- Interactive QEMU PTY transcript captured in this session (2026-02-18, `obj.intrgcc` profile).
+
+### Entry 21 — ping6 Soft-Timer Stabilization + Public Reachability Validation (slirp) (2026-02-18) / ping6 软定时稳定化 + 公网可达性验收（slirp）
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Close the remaining `ping6` userland crash path (`#35`) with no-count loopback
+  and dual-VM link-local revalidation.
+- Verify first-pass public reachability from MINIX guest.
+
+**Code changes linked to this run / 本轮关联代码改动**:
+1. `sbin/ping6/ping6.c`
+   - On `__minix`, add `SO_RCVTIMEO` for bounded receive wait.
+   - Keep non-Minix `SIGALRM`/`setitimer` pacing unchanged.
+   - On Minix path, use monotonic soft-timer pacing in main loop
+     (instead of timer-signal retransmit path), and preserve graceful
+     `EAGAIN/EWOULDBLOCK` handling.
+   - For Minix verbose extension-header options, keep warnings instead of hard
+     exit when setsockopt is unsupported.
+
+**Build/image commands / 构建与镜像命令**:
+```bash
+TOOLDIR=$(echo /home/donz/minix/obj.intrgcc/tooldir.*)
+NBMAKE="$TOOLDIR/bin/nbmake-evbriscv64"
+
+"$NBMAKE" -C sbin/ping6 all install
+"$NBMAKE" -C minix/drivers/storage/ramdisk RAMDISK_TESTS=1 image
+"$NBMAKE" -C minix/drivers/storage/memory RAMDISK_TESTS=1 all install
+```
+
+**QEMU/runtime verification / QEMU 运行时验证**:
+```bash
+OBJDIR=/home/donz/minix/obj.intrgcc \
+  /tmp/qemu-riscv64-nohostfwd.sh -n \
+  -B /home/donz/minix/obj.intrgcc/destdir.evbriscv64 \
+  -k /home/donz/minix/obj.intrgcc/minix/kernel/kernel
+```
+
+In-guest commands / 来宾内命令:
+```sh
+/sbin/ping6 ::1
+/sbin/ping6 -c 5 ::1
+/sbin/ping -c 2 10.0.2.2
+/sbin/ping -c 2 1.1.1.1
+```
+
+Dual-VM link-local check / 双 VM 链路本地复测:
+```sh
+/sbin/ping6 -q -c 1 fe80::5054:ff:fe12:3457%vio0
+```
+
+**Observed result / 观察结果**:
+- `ping6 ::1` (no `-c`) no longer reproduces `SIGSEGV ... bad addr 0x0` in
+  this runtime window.
+- `ping6 -c 5 ::1` returns normal success statistics.
+- Dual-VM link-local `ping6 -q -c 1 fe80::...%vio0` passes without process crash.
+- Public reachability check passes in QEMU user-net (slirp):
+  guest can ping both gateway (`10.0.2.2`) and public IP (`1.1.1.1`).
+- Bridge-mode validation remains host-config dependent (missing bridge-helper
+  prerequisites on this host), so slirp is used as the current acceptance mode.
+
+**Evidence / 证据**:
+- `/tmp/qemu-ping6-loopback-nocount-softtimer-20260218.log`
+- `/tmp/qemu-ping6-dual-softtimer-20260218.log`
+- `/tmp/qemu-minix-public-ping-slirp-root-20260218.log`

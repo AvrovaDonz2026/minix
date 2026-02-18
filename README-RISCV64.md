@@ -9,13 +9,13 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.21
+- 版本：1.22
 - 最后更新：2026-02-18
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.21
+- Version: 1.22
 - Last updated: 2026-02-18
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -760,6 +760,11 @@ qemu-system-riscv64 -machine virt -m 256M -nographic \
   需要确保 RISC-V `libgcc` 的 `enable-execute-stack` 选择为
   `enable-execute-stack-empty.c`（而不是 `...-mprotect.c`），以避免在
   MINIX 目标侧引入不可解析的 `mprotect` 依赖。
+- 若 `distribution` 阶段在 `libexec/ld.elf_so` 报
+  `R_TYPESZ` 隐式声明，以及 `ADDR`/`TLS_DTPMOD`/`TLS_DTPREL`
+  未定义（`mdreloc.c`），需要将 RISC-V 重定位 case 按 `ELFSIZE`
+  映射到显式 `R_TYPE(64/32)`、`R_TYPE(TLS_DTPMOD64/32)`、
+  `R_TYPE(TLS_DTPREL64/32)`，并为 `TLS_DTV_OFFSET` 提供兜底定义。
 
 ## 性能优化 / Performance Optimization
 

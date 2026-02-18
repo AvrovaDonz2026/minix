@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-02-18
-**Version / 版本**: 1.21
+**Version / 版本**: 1.22
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1032,6 +1032,47 @@ Dual-VM link-local check / 双 VM 链路本地复测:
 
 **Evidence / 证据**:
 - `.github/workflows/release-riscv64.yml`
+- `README-RISCV64.md`
+
+### Entry 32 — Fix RISC-V `ld.elf_so` Reloc Macro Build Break in CI (2026-02-18) / 修复 CI 中 RISC-V `ld.elf_so` 重定位宏编译失败
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Symptom / 现象**:
+- New CI run (`22138059197`) passed `Build tools` and failed in
+  `Build distribution` at `libexec/ld.elf_so/arch/riscv/mdreloc.c`:
+  - `warning: implicit declaration of function 'R_TYPESZ'`
+  - `error: 'ADDR' undeclared`
+  - `error: 'TLS_DTPMOD' undeclared`
+  - `error: 'TLS_DTPREL' undeclared`
+  - `error: 'TLS_DTV_OFFSET' undeclared`
+
+**Root cause / 根因**:
+- RISC-V path used `R_TYPESZ(ADDR/TLS_*)` style relocation cases, but CI build
+  environment did not provide those macro mappings on this path, causing
+  unresolved macro tokens in `mdreloc.c`.
+
+**Fix / 修复**:
+1. Updated `libexec/ld.elf_so/arch/riscv/mdreloc.c`:
+   - Added `TLS_DTV_OFFSET` fallback:
+     `#ifndef TLS_DTV_OFFSET #define TLS_DTV_OFFSET 0 #endif`
+   - Replaced `R_TYPESZ(...)` cases with explicit `ELFSIZE`-based mappings:
+     - `R_TYPE_ADDR` -> `R_TYPE(64/32)`
+     - `R_TYPE_TLS_DTPMOD` -> `R_TYPE(TLS_DTPMOD64/32)`
+     - `R_TYPE_TLS_DTPREL` -> `R_TYPE(TLS_DTPREL64/32)`
+2. Added compatibility aliases in:
+   - `sys/arch/riscv/include/elf_machdep.h`
+   to keep `ADDR32/ADDR64` and `R_TYPESZ(name)` available for RISC-V code that
+   still uses that naming model.
+
+**Validation / 验证**:
+- Local targeted compile of `mdreloc.c` with the same flags/profile succeeds:
+  `mdreloc compile OK`.
+
+**Evidence / 证据**:
+- `libexec/ld.elf_so/arch/riscv/mdreloc.c`
+- `sys/arch/riscv/include/elf_machdep.h`
 - `README-RISCV64.md`
 
 ### Entry 30 — Fix `libgcc_s.so` Undefined `mprotect` in CI Distribution (2026-02-18) / 修复 CI distribution 中 `libgcc_s.so` 的 `mprotect` 未定义

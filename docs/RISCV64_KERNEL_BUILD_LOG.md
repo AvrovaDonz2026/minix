@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-02-18
-**Version / 版本**: 1.17
+**Version / 版本**: 1.18
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -995,6 +995,40 @@ Dual-VM link-local check / 双 VM 链路本地复测:
 - This entry introduces CI workflow and docs; no local full rebuild/retest was
   executed in this log entry.
 - 本条目为 CI/文档更新，未在本地执行新的完整重建与运行测试。
+
+**Evidence / 证据**:
+- `.github/workflows/release-riscv64.yml`
+
+### Entry 28 — Fix CI Missing `-lgcc/-lgcc_eh` During Static Links (2026-02-18) / 修复 CI 静态链接缺失 `-lgcc/-lgcc_eh`
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Symptom / 现象**:
+- Release workflow reached `distribution`, then failed in static links
+  (`external/bsd/bind/bin/dig`) with:
+  - `ld: cannot find -lgcc`
+  - `ld: cannot find -lgcc_eh`
+
+**Root cause / 根因**:
+- On Minix build defaults, `MKGCC` is `no` unless explicitly enabled.
+- CI `distribution` step previously did not force `MKGCC=yes`, so target-side
+  GCC runtime libraries (`libgcc.a`, `libgcc_eh.a`) were not generated into
+  `${DESTDIR}/usr/lib`.
+- Cross gcc then failed to satisfy static link dependencies.
+
+**Fix / 修复**:
+1. Updated `/.github/workflows/release-riscv64.yml` (distribution step) to add:
+   - `-V MKGCC=yes`
+   - `-V MKGCCCMDS=no`
+   - `-V MKLIBOBJC=no`
+   - `-V MKLIBGOMP=no`
+2. Kept existing `MKCXX=no` / `MKLIBSTDCXX=no` profile to avoid unrelated C++
+   closure expansion in this release lane.
+
+**Validation status / 验证状态**:
+- Workflow updated and retrigger pending for run-time confirmation.
+- Success criterion: `distribution` no longer fails at `cannot find -lgcc*`.
 
 **Evidence / 证据**:
 - `.github/workflows/release-riscv64.yml`

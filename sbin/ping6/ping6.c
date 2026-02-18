@@ -255,6 +255,8 @@ static volatile sig_atomic_t seeninfo;
 #endif
 
 static void	 fill(char *, char *);
+static int	 cmsg_is_valid(struct msghdr *, struct cmsghdr *);
+static struct cmsghdr *cmsg_next(struct msghdr *, struct cmsghdr *);
 static int	 get_hoplim(struct msghdr *);
 static int	 get_pathmtu(struct msghdr *);
 static struct in6_pktinfo *get_rcvpktinfo(struct msghdr *);
@@ -291,10 +293,8 @@ int
 main(int argc, char *argv[])
 {
 	struct itimerval itimer;
-	struct sockaddr_in6 from;
-	int timeout;
+	struct sockaddr_storage from;
 	struct addrinfo hints;
-	struct pollfd fdmaskp[1];
 	int cc;
 	u_int i, packlen;
 	int ch, hold, preload, optval, ret_ga;
@@ -320,6 +320,10 @@ main(int argc, char *argv[])
 #endif
 	struct timespec now;
 	double exitat = 0.0;
+#ifndef __minix
+	int timeout;
+	struct pollfd fdmaskp[1];
+#endif
 
 	/* just to be sure */
 	memset(&smsghdr, 0, sizeof(smsghdr));
@@ -1056,8 +1060,9 @@ main(int argc, char *argv[])
 
 	for (;;) {
 		struct msghdr m;
-		u_char buf[1024];
+		u_char buf[4096];
 		struct iovec iov[2];
+		int recv_flags;
 
 		/* check deadline */
 		if (exitat > 0) {
@@ -1084,8 +1089,13 @@ main(int argc, char *argv[])
 			continue;
 		}
 #endif
-		if (options & F_FLOOD) {
+		if (options & F_FLOOD)
 			(void)pinger();
+#ifdef __minix
+		recv_flags = MSG_DONTWAIT;
+#else
+		recv_flags = 0;
+		if (options & F_FLOOD) {
 			timeout = 10;
 		} else if (deadline > 0) {
 			timeout = (int)floor(deadline * 1000);
@@ -1103,6 +1113,7 @@ main(int argc, char *argv[])
 			continue;
 		} else if (cc == 0)
 			continue;
+#endif
 
 		m.msg_name = (caddr_t)&from;
 		m.msg_namelen = sizeof(from);
@@ -1114,8 +1125,16 @@ main(int argc, char *argv[])
 		m.msg_control = (caddr_t)buf;
 		m.msg_controllen = sizeof(buf);
 
-		cc = prog_recvmsg(s, &m, 0);
+		cc = prog_recvmsg(s, &m, recv_flags);
+		if (m.msg_controllen > sizeof(buf))
+			m.msg_controllen = sizeof(buf);
 		if (cc < 0) {
+#ifdef __minix
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				usleep(10000);
+				continue;
+			}
+#endif
 			if (errno != EINTR) {
 				warn("recvmsg");
 				sleep(1);
@@ -1443,7 +1462,7 @@ pr_pack(u_char *buf, int cc, struct msghdr *mhdr)
 	(void)gettimeofday(&tv, NULL);
 
 	if (!mhdr || !mhdr->msg_name ||
-	    mhdr->msg_namelen != sizeof(struct sockaddr_in6) ||
+	    mhdr->msg_namelen < sizeof(struct sockaddr_in6) ||
 	    ((struct sockaddr *)mhdr->msg_name)->sa_family != AF_INET6) {
 		if (options & F_VERBOSE)
 			warnx("invalid peername");
@@ -1707,8 +1726,10 @@ pr_exthdrs(struct msghdr *mhdr)
 {
 	struct cmsghdr *cm;
 
-	for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(mhdr); cm;
-	     cm = (struct cmsghdr *)CMSG_NXTHDR(mhdr, cm)) {
+	for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(mhdr); cm != NULL;
+	     cm = cmsg_next(mhdr, cm)) {
+		if (!cmsg_is_valid(mhdr, cm))
+			return;
 		if (cm->cmsg_level != IPPROTO_IPV6)
 			continue;
 
@@ -1995,22 +2016,77 @@ pr_nodeaddr(struct icmp6_nodeinfo *ni, /* ni->qtype must be NODEADDR */
 }
 
 static int
+cmsg_is_valid(struct msghdr *mhdr, struct cmsghdr *cm)
+{
+	uintptr_t start, end, cur;
+	size_t rem;
+
+	if (mhdr == NULL || cm == NULL || mhdr->msg_control == NULL)
+		return (0);
+
+	start = (uintptr_t)mhdr->msg_control;
+	end = start + mhdr->msg_controllen;
+	if (end < start)
+		return (0);
+	cur = (uintptr_t)cm;
+
+	if (cur < start || cur > end)
+		return (0);
+	rem = (size_t)(end - cur);
+	if (rem < sizeof(*cm))
+		return (0);
+	if (cm->cmsg_len < CMSG_LEN(0))
+		return (0);
+	if (cm->cmsg_len > rem)
+		return (0);
+
+	return (1);
+}
+
+static struct cmsghdr *
+cmsg_next(struct msghdr *mhdr, struct cmsghdr *cm)
+{
+	uintptr_t start, end, cur, next;
+	size_t step;
+
+	if (!cmsg_is_valid(mhdr, cm))
+		return (NULL);
+
+	start = (uintptr_t)mhdr->msg_control;
+	end = start + mhdr->msg_controllen;
+	if (end < start)
+		return (NULL);
+	cur = (uintptr_t)cm;
+	step = __CMSG_ALIGN(cm->cmsg_len);
+	next = cur + step;
+	if (next < cur)
+		return (NULL);
+	if (next < start || next > end)
+		return (NULL);
+
+	if ((size_t)(end - next) < sizeof(*cm))
+		return (NULL);
+
+	return ((struct cmsghdr *)next);
+}
+
+static int
 get_hoplim(struct msghdr *mhdr)
 {
 	struct cmsghdr *cm;
 
-	for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(mhdr); cm;
-	     cm = (struct cmsghdr *)CMSG_NXTHDR(mhdr, cm)) {
-		if (cm->cmsg_len == 0)
-			return(-1);
+	for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(mhdr); cm != NULL;
+	     cm = cmsg_next(mhdr, cm)) {
+		if (!cmsg_is_valid(mhdr, cm))
+			return (-1);
 
 		if (cm->cmsg_level == IPPROTO_IPV6 &&
 		    cm->cmsg_type == IPV6_HOPLIMIT &&
 		    cm->cmsg_len == CMSG_LEN(sizeof(int)))
-			return(*(int *)CMSG_DATA(cm));
+			return (*(int *)CMSG_DATA(cm));
 	}
 
-	return(-1);
+	return (-1);
 }
 
 static struct in6_pktinfo *
@@ -2018,18 +2094,18 @@ get_rcvpktinfo(struct msghdr *mhdr)
 {
 	struct cmsghdr *cm;
 
-	for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(mhdr); cm;
-	     cm = (struct cmsghdr *)CMSG_NXTHDR(mhdr, cm)) {
-		if (cm->cmsg_len == 0)
-			return(NULL);
+	for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(mhdr); cm != NULL;
+	     cm = cmsg_next(mhdr, cm)) {
+		if (!cmsg_is_valid(mhdr, cm))
+			return (NULL);
 
 		if (cm->cmsg_level == IPPROTO_IPV6 &&
 		    cm->cmsg_type == IPV6_PKTINFO &&
 		    cm->cmsg_len == CMSG_LEN(sizeof(struct in6_pktinfo)))
-			return((struct in6_pktinfo *)CMSG_DATA(cm));
+			return ((struct in6_pktinfo *)CMSG_DATA(cm));
 	}
 
-	return(NULL);
+	return (NULL);
 }
 
 static int
@@ -2039,10 +2115,10 @@ get_pathmtu(struct msghdr *mhdr)
 	struct cmsghdr *cm;
 	struct ip6_mtuinfo *mtuctl = NULL;
 
-	for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(mhdr); cm;
-	     cm = (struct cmsghdr *)CMSG_NXTHDR(mhdr, cm)) {
-		if (cm->cmsg_len == 0)
-			return(0);
+	for (cm = (struct cmsghdr *)CMSG_FIRSTHDR(mhdr); cm != NULL;
+	     cm = cmsg_next(mhdr, cm)) {
+		if (!cmsg_is_valid(mhdr, cm))
+			return (0);
 
 		if (cm->cmsg_level == IPPROTO_IPV6 &&
 		    cm->cmsg_type == IPV6_PATHMTU &&
@@ -2439,9 +2515,43 @@ pr_addr(struct sockaddr *addr, int addrlen)
 {
 	static char buf[NI_MAXHOST];
 	int flag = 0;
+	const struct sockaddr_in6 *sin6;
+	char abuf[INET6_ADDRSTRLEN];
+	char ifbuf[IF_NAMESIZE];
+	size_t used;
 
 	if ((options & F_HOSTNAME) == 0)
 		flag |= NI_NUMERICHOST;
+
+	if ((flag & NI_NUMERICHOST) != 0 && addr != NULL &&
+	    addr->sa_family == AF_INET6 &&
+	    addrlen >= (int)sizeof(struct sockaddr_in6)) {
+		sin6 = (const struct sockaddr_in6 *)(const void *)addr;
+		if (inet_ntop(AF_INET6, &sin6->sin6_addr, abuf,
+		    sizeof(abuf)) == NULL)
+			return "?";
+		(void)strlcpy(buf, abuf, sizeof(buf));
+
+		if (sin6->sin6_scope_id != 0 &&
+		    (IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr) ||
+		    IN6_IS_ADDR_MC_LINKLOCAL(&sin6->sin6_addr))) {
+			used = strlen(buf);
+			if (used + 1 < sizeof(buf)) {
+				buf[used++] = '%';
+				buf[used] = '\0';
+				if (if_indextoname(sin6->sin6_scope_id,
+				    ifbuf) != NULL)
+					(void)strlcat(buf, ifbuf, sizeof(buf));
+				else {
+					char nbuf[16];
+					(void)snprintf(nbuf, sizeof(nbuf), "%u",
+					    sin6->sin6_scope_id);
+					(void)strlcat(buf, nbuf, sizeof(buf));
+				}
+			}
+		}
+		return (buf);
+	}
 
 	if (getnameinfo(addr, addrlen, buf, sizeof(buf), NULL, 0, flag) == 0)
 		return (buf);

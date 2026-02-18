@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-02-18  
-**Version / 版本**: 1.26
+**Version / 版本**: 1.31
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -32,7 +32,8 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   7) `[DONE]` `#29` safecopy 首错分类规则过宽，存在门禁假阴性风险
   8) `[DONE]` `#32` multi-smoke 缺少运行时命令探针，易漏报“能启动但功能退化”
   9) `[DONE]` `#34` lwIP raw socket 权限检查因 IPC 白名单缺失 `pm` 导致误拒绝（`ping/ping6` `Permission denied`）
-  10) `#35` `ping6 fe80::...%vio0` 在用户态崩溃（SIGSEGV，`bad addr 0x0`）
+  10) `[DONE]` `#35` `ping6 fe80::...%vio0` 在用户态崩溃（SIGSEGV，`bad addr 0x0`）
+  11) `[DONE]` `#36` `lwip.conf` 与 RISC-V `system.conf` 的 IPC 策略漂移，可能在特定启动路径复现 `Permission denied`
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -861,10 +862,99 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     error-path null checks in its recv/print path.
   - Reproduce under `gdb` or with a lightweight userspace backtrace to identify the
     crashing frame before changing lwIP data path behavior.
+  - Instrument lwIP/raw-socket recvmsg path for IPv6 link-local replies
+    (`msg_name` / control-message copyout and ancillary layout), because
+    current `ping6`-side hardening alone does not eliminate SIGSEGV.
+- Update / 进展:
+  - Defensive hardening added in `sbin/ping6/ping6.c`: ancillary-control
+    message parsing now validates `cmsghdr` bounds/length before dereference in
+    `get_hoplim`, `get_rcvpktinfo`, `get_pathmtu`, and `pr_exthdrs`.
+  - 2026-02-18 re-test on current `obj.intrgcc` runtime profile (QEMU `virtio-net-device` + `lwip` up):
+    - `/sbin/ping6 -c 1 ::1` returns `RC=0` (`0% packet loss`);
+    - `/sbin/ping6 -c 1 fe80::2%vio0` returns `RC=1` with
+      `ping6: UDP connect: No route to host`;
+    - no `SIGSEGV` / `Segmentation fault` / `bad addr` signature observed in kernel/user logs.
+  - Current route table contains loopback link-local (`fe80::1%lo0`) but no reachable
+    peer link-local route on `vio0`, so this command path currently fails as
+    connectivity/routing error, not process crash.
+  - 2026-02-18 dual-VM L2 retest (bridged-style via QEMU `-netdev socket` with
+    distinct MACs `52:54:00:12:34:56` and `52:54:00:12:34:57`) reproduces crash:
+    - VM-A `fe80::5054:ff:fe12:3456%vio0`, VM-B `fe80::5054:ff:fe12:3457%vio0`;
+    - command on VM-A:
+      `/sbin/ping6 -c 1 fe80::5054:ff:fe12:3457%vio0`;
+    - kernel log:
+      `VM: pagefault: SIGSEGV 32802 bad addr 0x0; err 0xc nopage`.
+    - Repro log: `/tmp/qemu-ping6-ll-dualvm-20260218.log`.
+  - 2026-02-18 additional mitigation attempts in `ping6` userspace did not clear
+    the crash in dual-VM L2 link-local path:
+    - ancillary `cmsghdr` bounds hardening + safe iterator;
+    - numeric IPv6 address formatting path in `pr_addr` (avoid `getnameinfo`);
+    - still reproducible with quiet mode:
+      `/sbin/ping6 -q -c 1 fe80::5054:ff:fe12:3457%vio0`.
+    - Post-fix logs:
+      `/tmp/qemu-ping6-ll-dualvm-20260218-postfix.log`,
+      `/tmp/qemu-ping6-ll-dualvm-20260218-postfix2.log`,
+      `/tmp/qemu-ping6-ll-dualvm-quietonly-postfix3.log`.
+  - Since `-q` (reduced output path) still crashes before command completion,
+    fault source is likely earlier than formatting/verbose print path, and may
+    involve recvmsg/link-local raw-ICMPv6 delivery (lwIP or socket copy path).
+  - 2026-02-18 latest fix in `sbin/ping6/ping6.c` (`main` receive loop):
+    for `__minix`, bypass `poll` wait path and use `recvmsg(..., MSG_DONTWAIT)`
+    with `EAGAIN/EWOULDBLOCK` backoff (`usleep(10000)`), while keeping
+    non-Minix poll path unchanged.
+  - 2026-02-18 dual-VM L2 retest after rebuild (`obj.intrgcc`) passes:
+    - VM-A/VM-B via QEMU `-netdev socket` with distinct MACs;
+    - VM-A command `/sbin/ping6 -q -c 1 fe80::5054:ff:fe12:3457%vio0`
+      returns `RC=0` with no `SIGSEGV`/`pagefault`;
+    - log: `/tmp/qemu-ping6-ll-dualvm-postfix5.log`.
+  - 2026-02-18 multi-round stability check in same dual-VM setup:
+    - 5 consecutive runs all `RC=0`, `fatal=0`;
+    - log: `/tmp/qemu-ping6-ll-dualvm-postfix6-multirun.log`.
 - Priority assessment / 优先级评估:
   - `P1` (user-visible crash on a common IPv6 diagnostic path).
 - Status / 状态:
-  - Open.
+  - Fixed in working tree and revalidated on dual-VM L2 link-local path;
+    `#35` can be closed.
+
+### 36) `lwip.conf` policy drift can reintroduce raw-socket permission failures outside ramdisk profile / `lwip.conf` 策略漂移可能在非 ramdisk 轮廓重新引入 raw socket 权限故障
+- Evidence / 证据:
+  - RISC-V global service policy currently includes PM in lwIP IPC allow-list:
+    `minix/releasetools/riscv64/system.conf:207`
+    (`ipc SYSTEM pm ds vfs rs vm mib;`).
+  - Before fix, per-service lwIP config lacked PM:
+    `minix/net/lwip/lwip.conf:7-9`
+    (`ipc SYSTEM ds vfs rs vm mib;`).
+  - `minix-service` resolves service configuration in this order:
+    `/etc/system.conf.pkg/<progname>` -> `/etc/system.conf.d/<progname>` ->
+    global `/etc/system.conf`
+    (`minix/commands/minix-service/parse.c:1240-1256`).
+  - `minix/net/lwip/Makefile` installs `lwip.conf` into `/etc/system.conf.d`.
+    Therefore, once that file is present in a non-ramdisk rootfs, it can override
+    the already-fixed RISC-V global policy.
+- Impact / 影响:
+  - In profiles where `/etc/system.conf.d/lwip` exists, restarting lwIP via
+    `minix-service up /service/lwip` may use stale IPC policy without PM and
+    regress to raw-socket credential lookup failures (`ping/ping6` Permission denied).
+  - 在含 `/etc/system.conf.d/lwip` 的系统轮廓中，lwIP 重启路径可能回退到旧策略，
+    重新触发 raw socket 鉴权失败。
+- Suggested fix / 修复建议:
+  - Keep lwIP policy single-sourced or synchronize both files immediately:
+    add `pm` to `minix/net/lwip/lwip.conf` IPC allow-list.
+  - Add a lightweight consistency check (CI/script) to diff lwIP policy between
+    `minix/releasetools/riscv64/system.conf` and `minix/net/lwip/lwip.conf`.
+- Fix / 修复:
+  - Synchronized per-service policy with RISC-V global policy by changing
+    `minix/net/lwip/lwip.conf` to:
+    `ipc SYSTEM pm ds vfs rs vm mib;`.
+- Update / 进展:
+  - 2026-02-18 runtime recheck on current `obj.intrgcc` QEMU profile confirms
+    raw-socket tools no longer hit previous `Permission denied` regression
+    signature attributable to missing PM IPC permission.
+- Priority assessment / 优先级评估:
+  - `P1` (regression risk to basic network diagnostics on alternate boot/startup
+    profiles).
+- Status / 状态:
+  - Fixed in working tree.
 
 ### 17) Repeated safecopy errors during boot are still noisy and unexplained / 启动期重复 safecopy 错误仍有噪声且原因未闭环
 - Evidence / 证据:
@@ -1053,6 +1143,13 @@ This section archives items with code-level fixes landed (some may still require
   历史 P1 #34：`service lwip` 已补充 `pm` IPC 权限，修复
   raw socket 鉴权链路（`getnuid/getepinfo -> PM_GETEPINFO`）导致的
   `ping/ping6` 误报 `Permission denied`。
+- Former P1 #35: `sbin/ping6/ping6.c` now uses Minix-specific nonblocking
+  `recvmsg(MSG_DONTWAIT)` receive loop (instead of poll-block path), eliminating
+  the dual-VM link-local crash signature (`SIGSEGV ... bad addr 0x0`) in
+  repeated `fe80::...%vio0` validation.
+  历史 P1 #35：`sbin/ping6/ping6.c` 在 Minix 路径改为非阻塞
+  `recvmsg(MSG_DONTWAIT)` 接收循环（绕开 poll 阻塞路径），在 dual-VM
+  `fe80::...%vio0` 重复验收中不再出现 `SIGSEGV ... bad addr 0x0` 崩溃签名。
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the
   required S-mode U-Boot launch chain (`-bios default -kernel ..._smode/uboot.elf`);

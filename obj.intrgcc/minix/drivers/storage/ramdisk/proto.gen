@@ -20,6 +20,10 @@ $
  sbin d--755 0 0
   minix-service ---755 0 0 minix-service
   sysenv ---755 0 0 sysenv
+  ifconfig ---755 0 0 ifconfig
+  route ---755 0 0 route
+  ping ---755 0 0 ping
+  ping6 ---755 0 0 ping6
  $
  service d--755 0 0
   virtio_blk_mmio ---755 0 0 virtio_blk_mmio

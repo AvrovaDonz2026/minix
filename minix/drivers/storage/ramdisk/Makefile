@@ -117,6 +117,14 @@ PROGRAMS+=		dd
 dir.dd:=	bin/dd
 PROGRAMS+=		cmp
 dir.cmp:=	usr.bin/cmp
+PROGRAMS+=		ifconfig
+dir.ifconfig:=	sbin/ifconfig
+PROGRAMS+=		route
+dir.route:=	sbin/route
+PROGRAMS+=		ping
+dir.ping:=	sbin/ping
+PROGRAMS+=		ping6
+dir.ping6:=	sbin/ping6
 PROGRAMS+=		virtio_net_mmio
 dir.virtio_net_mmio:=	minix/drivers/net/virtio_net_mmio
 PROGRAMS+=		lwip
@@ -237,6 +245,7 @@ ${prog}: ${PROGROOT}/${dir.${prog}}${PROGSUFFIX}/${prog}
 realall image:	proto.gen ${ETC:C/^/etc\//} ${EXTRA} \
 		etc/master.passwd etc/pwd.db etc/spwd.db etc/passwd etc/group
 	${_MKMSG_CREATE} "Generating ramdisk image"
+	rm -f image
 	${TOOL_MKFSMFS} image proto.gen || { rm -f image; false; }
 
 etc/pwd.db etc/spwd.db etc/passwd: etc/master.passwd

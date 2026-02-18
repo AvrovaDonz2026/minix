@@ -9,13 +9,13 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.15
+- 版本：1.16
 - 最后更新：2026-02-18
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.15
+- Version: 1.16
 - Last updated: 2026-02-18
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -733,6 +733,10 @@ qemu-system-riscv64 -machine virt -m 256M -nographic \
   `GAS does not know what format to use for target riscv-ucb-minix`，
   需要确保 `external/gpl3/binutils/patches/0012-riscv-gas-minix-target-format.patch`
   已包含在当前分支（该补丁为 CI 的 fresh dist 提供 `riscv*-*-minix*` 目标格式映射）。
+- 若 `Build tools` 阶段出现
+  `*** Configuration riscv-ucb-minix not supported`（`configure-gcc`），
+  需要确保 `external/gpl3/gcc/patches/0005-riscv-minix-config.patch`
+  已包含在当前分支（该补丁为 fresh gcc dist 增加 `riscv*-*-minix*` 目标配置）。
 
 ## 性能优化 / Performance Optimization
 

@@ -104,19 +104,44 @@ need_tool() {
 }
 
 check_tools() {
+    local tooldir_objcopy
+
     need_tool dd
     need_tool stat
     need_tool mke2fs
     need_tool mkimage
     need_tool python3
-    if command -v riscv64-linux-gnu-objcopy >/dev/null 2>&1; then
-        OBJCOPY_TOOL="riscv64-linux-gnu-objcopy"
-    elif command -v objcopy >/dev/null 2>&1; then
-        OBJCOPY_TOOL="objcopy"
+
+    if [ -n "${OBJCOPY_TOOL:-}" ]; then
+        if command -v "$OBJCOPY_TOOL" >/dev/null 2>&1 || [ -x "$OBJCOPY_TOOL" ]; then
+            :
+        else
+            log_error "Requested OBJCOPY_TOOL is not executable: $OBJCOPY_TOOL"
+            exit 1
+        fi
+    elif command -v riscv64-elf32-minix-objcopy >/dev/null 2>&1; then
+        OBJCOPY_TOOL="riscv64-elf32-minix-objcopy"
     else
-        log_error "Need riscv64-linux-gnu-objcopy or objcopy"
+        tooldir_objcopy=$(find "$DESTDIR" -maxdepth 3 -type f \
+            -path '*/tooldir.*/bin/riscv64-elf32-minix-objcopy' \
+            -print -quit 2>/dev/null || true)
+        if [ -n "$tooldir_objcopy" ]; then
+            OBJCOPY_TOOL="$tooldir_objcopy"
+        fi
+    fi
+
+    if [ -z "$OBJCOPY_TOOL" ] && \
+       command -v riscv64-linux-gnu-objcopy >/dev/null 2>&1; then
+        OBJCOPY_TOOL="riscv64-linux-gnu-objcopy"
+    elif [ -z "$OBJCOPY_TOOL" ] && \
+         command -v objcopy >/dev/null 2>&1; then
+        OBJCOPY_TOOL="objcopy"
+    fi
+    if [ -z "$OBJCOPY_TOOL" ]; then
+        log_error "Need riscv64-elf32-minix-objcopy, riscv64-linux-gnu-objcopy, or objcopy"
         exit 1
     fi
+    log_info "Using objcopy tool: $OBJCOPY_TOOL"
     if ! command -v parted >/dev/null 2>&1 && \
        ! command -v sfdisk >/dev/null 2>&1; then
         log_error "Need parted or sfdisk to create partition table"

@@ -9,13 +9,13 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.20
+- 版本：1.21
 - 最后更新：2026-02-18
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.20
+- Version: 1.21
 - Last updated: 2026-02-18
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -729,6 +729,9 @@ qemu-system-riscv64 -machine virt -m 256M -nographic \
 - 若首次启用失败，请确认仓库 Actions 权限允许 workflow 写 Release。
 - `shortsha` 来自当前构建提交（`git rev-parse --short=12 $GITHUB_SHA`）。
 - 构建时间较长（完整 `distribution`），建议通过 tag 触发正式发布。
+- 为降低 GitHub hosted runner 磁盘不足风险，workflow 在安装依赖前会执行
+  `Reclaim runner disk space`，清理预装大体积组件（dotnet/android/ghc/CodeQL）、
+  swap、docker 残留与 apt 缓存，并打印清理前后磁盘占用。
 - 若 `Build tools` 阶段出现
   `GAS does not know what format to use for target riscv-ucb-minix`，
   需要确保 `external/gpl3/binutils/patches/0012-riscv-gas-minix-target-format.patch`

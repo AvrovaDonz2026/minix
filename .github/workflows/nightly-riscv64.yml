@@ -160,8 +160,6 @@ jobs:
             -V NOGCCERROR=yes \
             -V MKGCC=yes \
             -V MKGCCCMDS=yes \
-            -V MKCXX=no \
-            -V MKLIBSTDCXX=no \
             -V MKLIBOBJC=no \
             -V MKLIBGOMP=no \
             -V MKATF=no \

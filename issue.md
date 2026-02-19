@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
-**Date / 日期**: 2026-02-18  
-**Version / 版本**: 1.32
+**Date / 日期**: 2026-02-19  
+**Version / 版本**: 1.34
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -41,6 +41,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   4) `#14` DT 多段内存/保留区解析补齐
   5) `[DONE]` `#30` multi-smoke 默认复用磁盘镜像，削弱跨次可复现性
   6) `[DONE]` `#31` smoke/repro 门禁对退出语义与宿主可移植性校验不足
+  7) `#37` native toolchain（来宾内 `as/ld/ar/ranlib` + `cc/gcc/clang`）闭环未完成
 - P3 / 低优先（可维护性与技术债）:
   1) `#19` kernel/VM/RS 无条件调试日志收敛
   2) `#11` `minimal_kernel` RISC-V 适配
@@ -1049,6 +1050,50 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Suggested fix / 修复建议:
   - Gate noisy traces behind build-time/runtime debug flags (or strict rate limits).
   - Keep only milestone-level boot markers enabled by default.
+
+### 37) Native toolchain command set not yet closed in guest image / 来宾 native 工具链命令集尚未闭环
+- Evidence / 证据:
+  - 2026-02-19 native-toolchain image lane is available and reproducible:
+    `minix/releasetools/riscv64/mkdisk.sh -d obj.intrgcc -o /tmp/minix-native-toolchain.img -s 1024 -u 768 -U`.
+    The resulting image contains `/usr` payload and boots with ext2-backed `/usr`.
+  - Runtime gate (`minix/tests/riscv64/native_toolchain_gate.sh`) now reaches
+    staged checks successfully:
+    `prepare_ext2`, `prepare_usr_mount`, `native_cc_detect`, `native_tools`,
+    `native_hello_preprocess` (`cc -E`) and `native_hello_to_asm` (`cc -S`).
+  - Minimal assembler-only step is now a direct reproducer:
+    `native_as_stdin` (`printf '.text ...' | as -o /dev/null`)
+    can reproducibly hit VM panic in current kernel/VM path.
+  - Full object-generation closure (`native_hello_build`,
+    `printf ... | cc -pipe -x c - -c -o /dev/null`) remains blocked as expected,
+    but the newer minimal repro already fails earlier at assembler stage.
+  - Panic signature (runtime probe tail):
+    `rv64: VM pagefault ...` + `kernel panic: pagefault in VM`.
+  - Secondary instability observed after panic/reboot cycles:
+    ext2 may report dirty state (`ext2: filesystem wasn't cleanly unmounted last time`)
+    and root mfs inode pressure can surface (`Out of i-nodes on device 1/6`),
+    which can interfere with ad-hoc file-based toolchain probes.
+- Impact / 影响:
+  - Stage N2 is partially complete (toolchain commands visible and front-end
+    compilation path works), but full native C object compile is not yet stable.
+  - This still blocks a reliable self-host/bootstrap claim.
+- Suggested fix / 修复建议:
+  - Keep the staged gate and treat the final `-c` object step as the current
+    blocking repro (do not downgrade to PASS).
+  - Add a minimal VM-focused repro loop around:
+    `printf '.text ...' | as -o /dev/null` (and then `cc ... -c`)
+    to isolate whether the crash is in assembler output path, VM/VFS safecopy,
+    or grant/mapping teardown after tool subprocess exits.
+  - Add crash artifacts (panic excerpt + exact command line) to each run record
+    in `issue.md`/status docs to track signature drift.
+  - Consider separate follow-up to harden runtime probe environment against
+    incidental root-mfs inode exhaustion (e.g., stricter no-temp-file probes).
+- Validation target / 验收目标:
+  1) `command -v as ld ar ranlib` succeeds in guest.
+  2) `command -v cc || command -v gcc || command -v clang` succeeds in guest.
+  3) `cc -E` and `cc -S` pass under runtime gate.
+  4) `as` stdin-to-object (`as -o /dev/null`) completes without VM panic.
+  5) `hello.c` object compile (`-c`) completes without VM panic.
+  6) (Optional final) link+run returns `NATIVE_TOOLCHAIN_OK`.
 
 ## Technical Debt / 技术债务
 

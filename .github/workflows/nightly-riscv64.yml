@@ -137,6 +137,13 @@ jobs:
             -V MKGCCCMDS=yes \
             tools
 
+      - name: Prepare GCC include install dirs (obj.intrgcc)
+        shell: bash
+        run: |
+          set -euo pipefail
+          destdir_root="${PWD}/${OBJDIR}/destdir.${MACHINE}"
+          mkdir -p "${destdir_root}/usr/include/gcc-4.8"
+
       - name: Build distribution (obj.intrgcc)
         shell: bash
         run: |

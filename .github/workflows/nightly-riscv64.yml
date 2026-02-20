@@ -398,7 +398,7 @@ jobs:
             ${{ steps.meta.outputs.sysroot_path }}
             ${{ steps.meta.outputs.sums_path }}
 
-      - name: Native toolchain runtime gate (non-blocking)
+      - name: Native toolchain runtime gate
         id: native_gate
         if: always()
         shell: bash
@@ -407,18 +407,22 @@ jobs:
           log="/tmp/native-toolchain-gate.log"
           image="${{ steps.meta.outputs.image_path }}"
           echo "[native-ci] gate log: ${log}"
-          set +e
-          ./minix/tests/riscv64/native_toolchain_gate.sh \
-            --kernel "${OBJDIR}/minix/kernel/kernel" \
-            --destdir "${OBJDIR}/destdir.evbriscv64" \
-            --disk-image "${image}" \
-            --timeout 240 \
-            --cmd-timeout 120 \
-            >"${log}" 2>&1
-          rc=$?
-          set -e
-          echo "rc=${rc}" >>"${GITHUB_OUTPUT}"
-          echo "[native-ci] native gate rc=${rc}"
+          if ./minix/tests/riscv64/native_toolchain_gate.sh \
+              --kernel "${OBJDIR}/minix/kernel/kernel" \
+              --destdir "${OBJDIR}/destdir.evbriscv64" \
+              --disk-image "${image}" \
+              --timeout 240 \
+              --cmd-timeout 120 \
+              >"${log}" 2>&1; then
+            echo "rc=0" >>"${GITHUB_OUTPUT}"
+            echo "[native-ci] native gate rc=0"
+          else
+            rc=$?
+            echo "rc=${rc}" >>"${GITHUB_OUTPUT}"
+            echo "[native-ci] native gate rc=${rc}"
+            tail -n 200 "${log}" || true
+            exit "${rc}"
+          fi
 
       - name: Upload native toolchain logs
         if: always()
@@ -483,9 +487,8 @@ jobs:
             echo "- ELF: \`${{ steps.meta.outputs.elf_name }}\`"
             echo "- Sysroot: \`${{ steps.meta.outputs.sysroot_name }}\`"
             echo ""
-            echo "### Native Toolchain Lane (non-blocking)"
+            echo "### Native Toolchain Lane (blocking)"
             echo "- Release image mode: native (/usr payload enabled)"
             echo "- Gate rc: \`${gate_rc}\`"
             echo "- Logs: artifact \`riscv64-nightly-native-toolchain-logs-${{ steps.meta.outputs.nightly_stamp }}-${{ steps.meta.outputs.short_sha }}\`"
-            echo "- Note: non-zero gate result is currently tracked under issue \`#37\`."
           } >> "${GITHUB_STEP_SUMMARY}"

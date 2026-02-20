@@ -169,7 +169,9 @@ base_probe_args=(
   --cmd-timeout "$CMD_TIMEOUT"
 )
 
-if ! python3 "$RUNTIME_PROBE" "${base_probe_args[@]}" --require-disk-node; then
+if python3 "$RUNTIME_PROBE" "${base_probe_args[@]}" --require-disk-node; then
+  :
+else
   rc=$?
   if [ "$rc" -eq 2 ]; then
     echo "[native-gate] SKIP"
@@ -187,7 +189,9 @@ detect_probe_args=(
   --cmd "$CC_DETECT_CMD"
 )
 
-if ! python3 "$RUNTIME_PROBE" "${detect_probe_args[@]}"; then
+if python3 "$RUNTIME_PROBE" "${detect_probe_args[@]}"; then
+  :
+else
   rc=$?
   if [ "$rc" -eq 2 ]; then
     echo "[native-gate] SKIP"
@@ -208,7 +212,9 @@ toolchain_probe_args=(
   --cmd "$AS_STDIN_CMD"
 )
 
-if ! python3 "$RUNTIME_PROBE" "${toolchain_probe_args[@]}"; then
+if python3 "$RUNTIME_PROBE" "${toolchain_probe_args[@]}"; then
+  :
+else
   rc=$?
   if [ "$rc" -eq 2 ]; then
     echo "[native-gate] SKIP"
@@ -229,12 +235,12 @@ full_compile_probe_args=(
 if python3 "$RUNTIME_PROBE" "${full_compile_probe_args[@]}"; then
   echo "[native-gate] PASS"
   exit 0
-fi
-
-rc=$?
-if [ "$rc" -eq 2 ]; then
-  echo "[native-gate] SKIP"
 else
-  echo "[native-gate] FAIL: full guest object compile remains unstable (see panic/inode evidence in issue #37)"
+  rc=$?
+  if [ "$rc" -eq 2 ]; then
+    echo "[native-gate] SKIP"
+  else
+    echo "[native-gate] FAIL: full guest object compile remains unstable (see panic/inode evidence in issue #37)"
+  fi
+  exit "$rc"
 fi
-exit "$rc"

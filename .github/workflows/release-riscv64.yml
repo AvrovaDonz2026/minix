@@ -156,39 +156,22 @@ jobs:
         run: |
           set -euo pipefail
           destdir_root="${PWD}/${OBJDIR}/destdir.${MACHINE}"
-          defs_file="${PWD}/external/gpl3/gcc/lib/libstdc++-v3/arch/riscv64/defs.mk"
+          src_include_root="${PWD}/external/gpl3/gcc/dist/libstdc++-v3/include"
 
-          if [[ ! -f "${defs_file}" ]]; then
-            echo "Missing GCC defs file: ${defs_file}" >&2
+          if [[ ! -d "${src_include_root}" ]]; then
+            echo "Missing libstdc++ include tree: ${src_include_root}" >&2
             exit 1
           fi
 
           mkdir -p "${destdir_root}/usr/include/gcc-4.8"
           mkdir -p "${destdir_root}/usr/include/g++"
-          for subdir in profile parallel pb bits ext debug decimal backward tr1 tr2; do
-            mkdir -p "${destdir_root}/usr/include/g++/${subdir}"
-          done
 
-          # Precreate all nested libstdc++ include directories to avoid
-          # install-time mkstemp failures on paths like ext/pb_ds/... .
-          awk '
-            /^[A-Za-z0-9_]+=/ {
-              sub(/^[^=]*=/, "")
-              n = split($0, fields, " ")
-              for (i = 1; i <= n; i++) {
-                token = fields[i]
-                gsub(/\r/, "", token)
-                gsub(/\\$/, "", token)
-                if (token ~ /\//) {
-                  dir = token
-                  sub(/\/[^\/]+$/, "", dir)
-                  if (dir != "")
-                    print dir
-                }
-              }
-            }
-          ' "${defs_file}" | sort -u | while IFS= read -r subdir; do
-            mkdir -p "${destdir_root}/usr/include/g++/${subdir}"
+          # Mirror the libstdc++ include directory layout under DESTDIR so
+          # install(1) never fails mkstemp on nested targets.
+          find "${src_include_root}" -mindepth 1 -type d -print0 | \
+          while IFS= read -r -d '' src_dir; do
+            rel="${src_dir#${src_include_root}/}"
+            mkdir -p "${destdir_root}/usr/include/g++/${rel}"
           done
 
       - name: Build distribution (obj.intrgcc)

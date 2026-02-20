@@ -184,13 +184,17 @@ DPSRCS+=	tconfig.h
 
 .if ${MKGCC} != "no"
 .if defined(G_CONFIGLINKS) && !empty(G_CONFIGLINKS)
-BUILDSYMLINKS+=	${G_CONFIGLINKS}
 .for _src _dst in ${G_CONFIGLINKS}
-DPSRCS+=	${_dst}
 .if ${_dst} == "enable-execute-stack.c"
 ENABLE_EXEC_STACK_SRC=	${_src}
+.else
+BUILDSYMLINKS+=	${_src} ${_dst}
+DPSRCS+=	${_dst}
 .endif
 .endfor
+.if defined(ENABLE_EXEC_STACK_SRC)
+DPSRCS+=	enable-execute-stack.c
+.endif
 .endif
 .endif
 
@@ -199,7 +203,7 @@ ENABLE_EXEC_STACK_SRC=	${_src}
 # Refresh the local source file from the selected arch source.
 .if defined(ENABLE_EXEC_STACK_SRC)
 enable-execute-stack.c: ${ENABLE_EXEC_STACK_SRC} \
-    ${.CURDIR}/../arch/${GCC_MACHINE_ARCH}/defs.mk
+    ${.CURDIR}/../arch/${LIBGCC_MACHINE_ARCH}/defs.mk
 	rm -f ${.TARGET}
 	cp -pf ${ENABLE_EXEC_STACK_SRC} ${.TARGET}
 .endif

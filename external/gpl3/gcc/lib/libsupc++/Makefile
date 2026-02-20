@@ -33,13 +33,17 @@ G_CONFIGLINKS:= ${G_CONFIGLINKS:S,libgcc/config/arm/unwind-arm.h,libgcc/unwind-g
 
 .if ${MKGCC} != "no"
 .if defined(G_CONFIGLINKS) && !empty(G_CONFIGLINKS)
-BUILDSYMLINKS+=        ${G_CONFIGLINKS}
 .for _src _dst in ${G_CONFIGLINKS}
-DPSRCS+=       ${_dst}
 .if ${_dst} == "enable-execute-stack.c"
 ENABLE_EXEC_STACK_SRC=	${_src}
+.else
+BUILDSYMLINKS+=	${_src} ${_dst}
+DPSRCS+=	${_dst}
 .endif
 .endfor
+.if defined(ENABLE_EXEC_STACK_SRC)
+DPSRCS+=	enable-execute-stack.c
+.endif
 .endif
 .endif
 

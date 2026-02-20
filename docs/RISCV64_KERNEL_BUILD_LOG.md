@@ -1569,3 +1569,50 @@ minix/tests/riscv64/run_tests.sh native
 **Evidence / 证据**:
 - `.github/workflows/release-riscv64.yml`
 - `README-RISCV64.md`
+
+### Entry 40 — CI Native Payload Closure + Staged Full-Suite Blocking (2026-02-20) / CI native payload 闭环 + 分阶段全量阻断测试
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Ensure every release/nightly artifact contains a complete native toolchain
+  payload (not only tool presence, but usable link/run chain).
+- Upgrade CI test gate from smoke-only checks to staged blocking full-suite
+  checks (`build -> user -> native -> kernel -> gate`).
+
+**Change / 改动**:
+1. Updated release/nightly workflows:
+   - `/.github/workflows/release-riscv64.yml`
+   - `/.github/workflows/nightly-riscv64.yml`
+2. Added native payload precheck in both workflows (blocking):
+   - binaries: `cc gcc c++ g++ cpp as ld ar ranlib nm objcopy objdump readelf strip`
+   - libraries: `usr/lib/libgcc.a`, `usr/lib/libgcc_eh.a`, `usr/lib/libstdc++.a`
+   - headers: `usr/include/stdio.h`, `usr/include/g++/bits/c++config.h`
+3. Upgraded full-suite stage to explicit blocking sequence in CI:
+   - `build -> user -> native -> kernel -> gate(timeout 900s)`
+   - env: `SMOKE_DD_UNSAFE=1`, `SMOKE_ROUNDS=1`
+4. Upgraded native runtime gate script:
+   - `minix/tests/riscv64/native_toolchain_gate.sh`
+   - added link/run-level checks in single boot:
+     `native_ar_ranlib`, `native_hello_link_run`, `native_cxx_link_run`
+     (alongside existing `native_as_stdin` / compile checks)
+5. Updated manual documentation:
+   - `README-RISCV64.md` version bump to `1.28`, with workflow behavior,
+     artifact naming, and staged gate updates.
+
+**Validation / 验证**:
+- Local runtime gate logs show full native chain PASS:
+  - `/tmp/native-gate-full-linkrun.log`
+  - `/tmp/run-tests-native.log`
+- Local staged full-suite path validated with:
+  - `/tmp/riscv64-full-suite-local.log`
+- GitHub Actions release run `22218664841` completed `success` with the
+  updated blocking chain enabled.
+
+**Evidence / 证据**:
+- `.github/workflows/release-riscv64.yml`
+- `.github/workflows/nightly-riscv64.yml`
+- `minix/tests/riscv64/native_toolchain_gate.sh`
+- `README-RISCV64.md`
+- `https://github.com/AvrovaDonz2026/minix/actions/runs/22218664841`

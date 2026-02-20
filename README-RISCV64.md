@@ -9,13 +9,13 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.27
+- 版本：1.28
 - 最后更新：2026-02-20
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.27
+- Version: 1.28
 - Last updated: 2026-02-20
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -39,10 +39,15 @@ targeting the QEMU virt platform.
   `nightly-master-riscv64-YYYYMMDD-<sha>`，并将 5 件产物同步上传到
   workflow artifacts 与 GitHub Release（prerelease）。
 - Native toolchain N1/N2 已闭环：`native_toolchain_gate.sh` 在 fresh native
-  镜像上可稳定通过 `native_as_stdin` 与 `native_hello_build`。
+  镜像上可稳定通过 `native_as_stdin`、`native_ar_ranlib`、
+  `native_hello_build`、`native_hello_link_run` 与 `native_cxx_link_run`。
 - 已修复 VM 根因：`alloc_pages()` 在 RV64 上的 `NO_MEM` 哨兵宽度/符号扩展
   问题（`minix/servers/vm/alloc.c`），不再复现工具链路径下的 VM panic。
-- Release/Nightly 流水线中的 native gate 已升级为阻断式（blocking）。
+- Release/Nightly 流水线中的 native gate 已升级为阻断式（blocking），并新增
+  native payload 预检（`DESTDIR` 中的 `cc/gcc/c++/g++/binutils/libgcc/libstdc++`
+  必须齐全）。
+- Release/Nightly 现执行分阶段“完整测试”阻断门禁：
+  `build -> user -> native -> kernel -> gate(timeout 900s)`。
 - 关键风险：`procfs` safecopy 回退噪声、SMP 未实现（详见 `issue.md`）
 - A4 已闭环：`mkdisk` 产物在 S-mode U-Boot 链路下可从磁盘镜像启动到 shell。
 - 进度估计：约 80%（启动链路与基础用户态已稳定，主要剩余问题集中在噪声收敛与稳定性增强）
@@ -73,11 +78,15 @@ targeting the QEMU virt platform.
   `nightly-master-riscv64-YYYYMMDD-<sha>` and publishes the same five build
   artifacts to both workflow artifacts and GitHub prerelease assets.
 - Native toolchain N1/N2 is now closed: `native_toolchain_gate.sh` passes
-  `native_as_stdin` and `native_hello_build` on a fresh native image.
+  `native_as_stdin`, `native_ar_ranlib`, `native_hello_build`,
+  `native_hello_link_run`, and `native_cxx_link_run` on a fresh native image.
 - VM root cause is fixed in `minix/servers/vm/alloc.c` (`NO_MEM` sentinel
   width/sign-extension handling in `alloc_pages()` on RV64), eliminating the
   previous VM panic reproducer in native toolchain paths.
-- Native gate in release/nightly workflows is now blocking.
+- Native gate in release/nightly workflows is now blocking, with an additional
+  native payload precheck (`cc/gcc/c++/g++/binutils/libgcc/libstdc++`) in DESTDIR.
+- Release/nightly now enforce a staged full-suite blocking sequence:
+  `build -> user -> native -> kernel -> gate(timeout 900s)`.
 - Key risks: procfs safecopy fallback noise and SMP not implemented
   (see `issue.md`)
 - A4 is closed: `mkdisk` artifacts now boot from disk image via the S-mode U-Boot chain.
@@ -739,6 +748,9 @@ minix/releasetools/riscv64/mkdisk.sh \
   -s 1024 -u 768 -U
 
 # 自动化 native gate（来宾内验证 as/ld/ar/ranlib + cc -c）
+# 自动化 native gate（单次启动中验证：
+# as/ld/ar/ranlib + nm/objcopy/objdump/readelf/strip +
+# cc/c++ 编译与静态链接运行）
 ./minix/tests/riscv64/native_toolchain_gate.sh \
   --kernel obj.intrgcc/minix/kernel/kernel \
   --destdir obj.intrgcc/destdir.evbriscv64 \
@@ -789,16 +801,19 @@ SMOKE_DISK_IMAGE=$PWD/.ci-artifact-test/minix-native-toolchain.img \
 2. 调用 `minix/releasetools/riscv64/mkdisk.sh` 生成磁盘镜像并压缩
 3. 导出内核 ELF 与开发用 sysroot（头文件/库）
 4. 生成统一 `SHA256SUMS.txt`
-5. 执行 QEMU 交互式 gate（`neofetch` + 关机链），失败则阻断发布
-6. 执行 native toolchain gate（阻断式），失败则阻断发布
-7. 上传 QEMU/native gate 日志到 workflow artifact（步骤 `if: always()`）
-8. 自动创建/更新 GitHub Release 并上传以下产物
+5. 预检 native payload（`DESTDIR` 中 `cc/gcc/c++/g++/binutils`、
+   `libgcc.a/libgcc_eh.a/libstdc++.a`、关键头文件）
+6. 执行 QEMU 交互式 gate（`neofetch` + 关机链），失败则阻断发布
+7. 执行分阶段完整测试（阻断式）：
+   `build -> user -> native -> kernel -> gate(timeout 900s)`
+8. 上传 full-suite 日志到 workflow artifact（步骤 `if: always()`）
+9. 自动创建/更新 GitHub Release 并上传以下产物
 
 构建产物命名规范（含构建提交 hash）/ Artifact naming (with commit hash):
-- `minix-cat-<tag>-<shortsha>.img`
-- `minix-cat-<tag>-<shortsha>.img.gz`
-- `minix-cat-<tag>-<shortsha>.elf`
-- `minix-cat-<tag>-<shortsha>-sysroot.tar.gz`
+- `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>.img`
+- `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>.img.gz`
+- `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>.elf`
+- `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>-sysroot.tar.gz`
 - `SHA256SUMS.txt`
 
 注意 / Notes:
@@ -862,21 +877,23 @@ Nightly workflow 文件：`/.github/workflows/nightly-riscv64.yml`
 Nightly 行为 / Pipeline behavior:
 1. 与 release 相同的 `obj.intrgcc` 基线构建：`tools -> distribution`
 2. 产出并打包 5 件标准产物（`img/img.gz/elf/sysroot/SHA256SUMS`）
-3. 执行 QEMU 交互式 gate（`neofetch` + 关机链）
-4. 执行 native toolchain gate（阻断式）
-5. 上传 smoke/native gate 日志 artifact
-6. 上传构建产物 artifact：`riscv64-nightly-<date>-<sha>`
-7. 创建 nightly tag 并发布 prerelease
+3. 预检 native payload（阻断式）
+4. 执行 QEMU 交互式 gate（`neofetch` + 关机链）
+5. 执行分阶段完整测试（阻断式）：
+   `build -> user -> native -> kernel -> gate(timeout 900s)`
+6. 上传 full-suite 日志 artifact
+7. 上传构建产物 artifact：`riscv64-nightly-<date>-<sha>`
+8. 创建 nightly tag 并发布 prerelease
 
 Nightly tag 规则 / Nightly tag format:
 - `nightly-master-riscv64-YYYYMMDD-<shortsha>`
 - 例如：`nightly-master-riscv64-20260219-abcdef123456`
 
 Nightly 产物命名 / Nightly asset naming:
-- `minix-cat-nightly-<YYYYMMDD>-<shortsha>-riscv64.img`
-- `minix-cat-nightly-<YYYYMMDD>-<shortsha>-riscv64.img.gz`
-- `minix-cat-nightly-<YYYYMMDD>-<shortsha>-riscv64.elf`
-- `minix-cat-nightly-<YYYYMMDD>-<shortsha>-riscv64-sysroot.tar.gz`
+- `minix-cat-nightly-master-riscv64-<YYYYMMDD>-<shortsha>-ci-<UTCYYYYMMDDhhmmss>.img`
+- `minix-cat-nightly-master-riscv64-<YYYYMMDD>-<shortsha>-ci-<UTCYYYYMMDDhhmmss>.img.gz`
+- `minix-cat-nightly-master-riscv64-<YYYYMMDD>-<shortsha>-ci-<UTCYYYYMMDDhhmmss>.elf`
+- `minix-cat-nightly-master-riscv64-<YYYYMMDD>-<shortsha>-ci-<UTCYYYYMMDDhhmmss>-sysroot.tar.gz`
 - `SHA256SUMS.txt`
 
 说明 / Notes:
@@ -948,4 +965,4 @@ MINIX is licensed under BSD. See LICENSE in the source tree.
 ---
 
 **最后更新 / Last updated**：2026-02-20  
-**版本 / Version**：1.27
+**版本 / Version**：1.28

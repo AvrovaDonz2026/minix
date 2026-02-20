@@ -151,6 +151,9 @@ jobs:
 
           mkdir -p "${destdir_root}/usr/include/gcc-4.8"
           mkdir -p "${destdir_root}/usr/include/g++"
+          for subdir in profile parallel pb bits ext debug decimal backward tr1 tr2; do
+            mkdir -p "${destdir_root}/usr/include/g++/${subdir}"
+          done
 
           # Precreate all nested libstdc++ include directories to avoid
           # install-time mkstemp failures on paths like ext/pb_ds/... .

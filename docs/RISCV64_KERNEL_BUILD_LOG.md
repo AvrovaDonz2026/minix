@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
-**Last updated / 最后更新**: 2026-02-19
-**Version / 版本**: 1.25
+**Last updated / 最后更新**: 2026-02-20
+**Version / 版本**: 1.27
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1033,6 +1033,125 @@ Dual-VM link-local check / 双 VM 链路本地复测:
 **Evidence / 证据**:
 - `.github/workflows/release-riscv64.yml`
 - `README-RISCV64.md`
+
+### Entry 38 — Close RV64 Native Toolchain Panic Path and Enforce Blocking CI Gate (2026-02-20) / 修复 RV64 native toolchain panic 路径并切换为阻断式 CI 门禁
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Symptom / 现象**:
+- Guest native toolchain lane reproduced VM panic while running:
+  - `printf '.text ...' | as -o /dev/null`
+  - `printf ... | cc -pipe -x c - -c -o /dev/null`
+- Panic signature:
+  `rv64: VM pagefault ...` + `kernel panic: pagefault in VM`.
+
+**Root cause / 根因**:
+- In `minix/servers/vm/alloc.c`, `alloc_pages()` used page-index variables as
+  `phys_bytes` (64-bit on RV64) while `NO_MEM` is a 32-bit click sentinel
+  (`0xFFFFFFFE`).
+- On RV64, failed `findbit()` results could be sign-extended and bypass
+  `mem == NO_MEM` checks, then flow into bitmap access with invalid page index.
+
+**Fix / 修复**:
+1. `minix/servers/vm/alloc.c`
+   - changed `alloc_pages` return type and page-index locals from
+     `phys_bytes` to `phys_clicks`;
+   - cast `findbit()` return values to `phys_clicks` before compare/use.
+2. `minix/tests/riscv64/native_toolchain_gate.sh`
+   - fixed shell exit-code handling so probe failures return nonzero reliably.
+3. CI workflows
+   - `.github/workflows/release-riscv64.yml`
+   - `.github/workflows/nightly-riscv64.yml`
+   changed native toolchain lane from non-blocking to blocking.
+
+**Build / 构建命令**:
+- `obj.intrgcc/tooldir.../bin/nbmake-evbriscv64 -C minix/servers/vm ACTIVE_CC=gcc ACTIVE_CPP=gcc AVAILABLE_COMPILER=gcc dependall`
+- `obj.intrgcc/tooldir.../bin/nbmake-evbriscv64 -C minix/servers/vm ACTIVE_CC=gcc ACTIVE_CPP=gcc AVAILABLE_COMPILER=gcc DESTDIR=$PWD/obj.intrgcc/destdir.evbriscv64 install`
+- `TMPDIR=$PWD/.ci-artifact-test/tmphost minix/releasetools/riscv64/mkdisk.sh -d obj.intrgcc -o $PWD/.ci-artifact-test/minix-native-gcc-test-fixed.img -s 1024 -u 768 -U`
+
+**Validation / 验证**:
+- `native_toolchain_gate.sh` on fresh native image:
+  - passes `native_as_stdin` and `native_hello_build`;
+  - final result: `[native-gate] PASS`, `rc=0`.
+- Workflow-equivalent interactive smoke on same image:
+  - shell prompt -> `neofetch` -> shutdown chain all pass.
+- Negative-path check (dirty old image) now returns nonzero (`rc=2`), confirming
+  gate failure is no longer misreported as success.
+
+**Evidence / 证据**:
+- `minix/servers/vm/alloc.c`
+- `minix/tests/riscv64/native_toolchain_gate.sh`
+- `.github/workflows/release-riscv64.yml`
+- `.github/workflows/nightly-riscv64.yml`
+- `.ci-artifact-test/native-toolchain-gate-fixed-image.log`
+- `.ci-artifact-test/qemu-neofetch-shutdown-fixed.log`
+
+### Entry 39 — Start Native Toolchain Stage with Automated Guest Gate (2026-02-19) / 启动 native 工具链阶段并接入来宾自动门禁
+**Workspace / 工作区**: `/home/donz/minix`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Goal / 目标**:
+- Start native-toolchain bring-up with executable acceptance, not doc-only planning.
+- 以可执行门禁方式启动 native toolchain 阶段，避免仅停留在文字方案。
+
+**Code/Script changes / 代码与脚本改动**:
+1. Extended runtime probe:
+   - `minix/tests/riscv64/qemu_runtime_probe.py`
+   - Added:
+     - `--cmd NAME=COMMAND` (repeatable custom checks)
+     - `--only-custom-cmds` (optional)
+2. Added new native gate script:
+   - `minix/tests/riscv64/native_toolchain_gate.sh`
+   - Verifies in-guest:
+     - tool commands: `as/ld/ar/ranlib`
+     - native compiler detection: `cc/gcc/clang`
+     - compile + run `hello.c` with output marker `NATIVE_TOOLCHAIN_OK`
+   - Exit contract: `0=pass`, `1=fail`, `2=skip`.
+3. Updated test runner entrypoint:
+   - `minix/tests/riscv64/run_tests.sh`
+   - Added top-level target `native`.
+   - `all` now also executes native gate.
+   - Default profile detection now prefers `obj.intrgcc` for kernel/tooldir/destdir,
+     then falls back to legacy `obj`.
+4. Added native build helper:
+   - `minix/tests/riscv64/native_toolchain_build.sh`
+   - Captures native-oriented build flags (`MKGCC=yes`, `MKGCCCMDS=yes`) with
+     `obj.intrgcc` default profile and optional `--with-tools`.
+
+**Documentation updates / 文档更新**:
+1. Added dedicated guide:
+   - `docs/RISCV64_NATIVE_TOOLCHAIN_GUIDE.md`
+2. Updated:
+   - `README-RISCV64.md` (native section + commands + references)
+   - `RISC64-STATUS.md` (status and priorities include Stage N1/N2 native work)
+
+**Validation commands run / 已执行验证命令**:
+```bash
+bash -n minix/tests/riscv64/native_toolchain_gate.sh
+python3 -m py_compile minix/tests/riscv64/qemu_runtime_probe.py
+bash -n minix/tests/riscv64/run_tests.sh
+minix/tests/riscv64/native_toolchain_gate.sh --help
+minix/tests/riscv64/native_toolchain_build.sh --help
+python3 minix/tests/riscv64/qemu_runtime_probe.py --help
+minix/tests/riscv64/run_tests.sh native
+```
+
+**Observed result / 观察结果**:
+- All syntax/help checks pass.
+- `run_tests.sh native` returns `SKIP` in current image because
+  `obj.intrgcc/destdir.evbriscv64/usr/bin` does not yet contain
+  `cc/gcc/clang`, which matches Stage N1/N2 expected pre-closure state.
+
+**Evidence / 证据**:
+- `minix/tests/riscv64/qemu_runtime_probe.py`
+- `minix/tests/riscv64/native_toolchain_gate.sh`
+- `minix/tests/riscv64/native_toolchain_build.sh`
+- `minix/tests/riscv64/run_tests.sh`
+- `docs/RISCV64_NATIVE_TOOLCHAIN_GUIDE.md`
+- `README-RISCV64.md`
+- `RISC64-STATUS.md`
 
 ### Entry 33 — Fix Missing `-lvirtio_mmio` in CI Distribution Link (2026-02-18) / 修复 CI distribution 链接缺失 `-lvirtio_mmio`
 **Workspace / 工作区**: `/home/donz/minix`  

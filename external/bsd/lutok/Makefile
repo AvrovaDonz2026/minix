@@ -4,9 +4,11 @@
 
 SUBDIR= lib .WAIT share
 
-.if ${MKTESTS} != "no" && ${MKATF} != "no"
+.if ${MKTESTS:Uno} != "no"
+.if ${MKATF:Uno} != "no"
 .if !defined(__MINIX)
 SUBDIR+= tests
+.endif
 .endif
 .endif
 

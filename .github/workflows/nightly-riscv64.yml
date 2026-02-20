@@ -93,9 +93,10 @@ jobs:
         run: |
           set -euo pipefail
           nightly_stamp="$(date -u +%Y%m%d)"
+          ci_stamp="$(date -u +%Y%m%d%H%M%S)"
           short_sha="$(git rev-parse --short=12 "${GITHUB_SHA}")"
-          base_name="minix-cat-nightly-${nightly_stamp}-${short_sha}-riscv64"
           nightly_tag="nightly-master-riscv64-${nightly_stamp}-${short_sha}"
+          base_name="minix-cat-${nightly_tag}-ci-${ci_stamp}"
 
           image_name="${base_name}.img"
           image_path="/tmp/${image_name}"
@@ -108,6 +109,7 @@ jobs:
           sums_path="/tmp/SHA256SUMS.txt"
 
           echo "nightly_stamp=${nightly_stamp}" >>"${GITHUB_OUTPUT}"
+          echo "ci_stamp=${ci_stamp}" >>"${GITHUB_OUTPUT}"
           echo "short_sha=${short_sha}" >>"${GITHUB_OUTPUT}"
           echo "nightly_tag=${nightly_tag}" >>"${GITHUB_OUTPUT}"
           echo "artifact_base=${base_name}" >>"${GITHUB_OUTPUT}"
@@ -385,19 +387,6 @@ jobs:
           path: /tmp/qemu-neofetch-smoke.log
           retention-days: 14
 
-      - name: Upload nightly artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: riscv64-nightly-${{ steps.meta.outputs.nightly_stamp }}-${{ steps.meta.outputs.short_sha }}
-          if-no-files-found: error
-          retention-days: 14
-          path: |
-            ${{ steps.meta.outputs.image_path }}
-            ${{ steps.meta.outputs.image_gz_path }}
-            ${{ steps.meta.outputs.elf_path }}
-            ${{ steps.meta.outputs.sysroot_path }}
-            ${{ steps.meta.outputs.sums_path }}
-
       - name: Native toolchain runtime gate
         id: native_gate
         if: always()
@@ -433,6 +422,19 @@ jobs:
           retention-days: 14
           path: |
             /tmp/native-toolchain-gate.log
+
+      - name: Upload nightly artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: riscv64-nightly-${{ steps.meta.outputs.nightly_stamp }}-${{ steps.meta.outputs.short_sha }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            ${{ steps.meta.outputs.image_path }}
+            ${{ steps.meta.outputs.image_gz_path }}
+            ${{ steps.meta.outputs.elf_path }}
+            ${{ steps.meta.outputs.sysroot_path }}
+            ${{ steps.meta.outputs.sums_path }}
 
       - name: Create nightly tag
         shell: bash
@@ -481,6 +483,7 @@ jobs:
             echo "- Date (UTC): ${{ steps.meta.outputs.nightly_stamp }}"
             echo "- Commit: \`${{ github.sha }}\`"
             echo "- Nightly tag: \`${{ steps.meta.outputs.nightly_tag }}\`"
+            echo "- CI stamp (UTC): \`${{ steps.meta.outputs.ci_stamp }}\`"
             echo "- Artifact base: \`${{ steps.meta.outputs.artifact_base }}\`"
             echo "- Image: \`${{ steps.meta.outputs.image_name }}\`"
             echo "- Compressed image: \`${{ steps.meta.outputs.image_gz_name }}\`"

@@ -151,10 +151,12 @@ echo "[native-gate] destdir: $DESTDIR"
 echo "[native-gate] qemu script: $QEMU_SCRIPT"
 echo "[native-gate] disk image: $DISK_IMAGE"
 
+# Keep each runtime command short: long single-line commands can be truncated
+# by the guest TTY line discipline and hang waiting for completion.
 PREP_EXT2_CMD='prepare_ext2=PATH=/sbin:/bin:/usr/bin; test -x /service/ext2 && (minix-service up /service/ext2 >/dev/null 2>&1 || minix-service -c up /service/ext2 >/dev/null 2>&1 || true)'
-# In CI guest boots, /usr can be writable but still not the disk /usr that
-# carries native toolchain binaries. Remount if compiler binaries are missing.
-PREP_USR_MOUNT_CMD='prepare_usr_mount=PATH=/sbin:/bin:/usr/bin; if ! test -w /usr || ! (test -x /usr/bin/cc || test -x /usr/bin/gcc || test -x /usr/bin/clang); then umount /usr >/dev/null 2>&1 || true; mount -t ext2 /dev/c0d0p2 /usr >/dev/null 2>&1 || mount -t ext2 /dev/c0d1p2 /usr >/dev/null 2>&1 || mount /usr >/dev/null 2>&1 || true; fi; test -w /usr && (test -x /usr/bin/cc || test -x /usr/bin/gcc || test -x /usr/bin/clang)'
+PREP_USR_UMOUNT_CMD='prepare_usr_umount=PATH=/sbin:/bin:/usr/bin; umount /usr >/dev/null 2>&1 || true'
+PREP_USR_MOUNT_P0_CMD='prepare_usr_mount_p0=PATH=/sbin:/bin:/usr/bin; mount -t ext2 /dev/c0d0p2 /usr >/dev/null 2>&1 || true'
+PREP_USR_MOUNT_P1_CMD='prepare_usr_mount_p1=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/cc || test -x /usr/bin/gcc || mount -t ext2 /dev/c0d1p2 /usr >/dev/null 2>&1 || true'
 PREP_TMP_CMD='prepare_tmp=PATH=/sbin:/bin:/usr/bin; test -w /usr'
 CC_DETECT_CMD='native_cc_detect=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/cc || test -x /usr/bin/gcc || test -x /usr/bin/clang'
 CXX_DETECT_CMD='native_cxx_detect=PATH=/sbin:/bin:/usr/bin; command -v c++ >/dev/null 2>&1 || command -v g++ >/dev/null 2>&1'
@@ -162,19 +164,35 @@ PP_DETECT_CMD='native_pp_detect=PATH=/sbin:/bin:/usr/bin; command -v cpp >/dev/n
 TOOLS_CMD='native_tools=PATH=/sbin:/bin:/usr/bin; command -v as >/dev/null 2>&1 && command -v ld >/dev/null 2>&1 && command -v ar >/dev/null 2>&1 && command -v ranlib >/dev/null 2>&1'
 TOOLS_EXT_CMD='native_tools_ext=PATH=/sbin:/bin:/usr/bin; command -v nm >/dev/null 2>&1 && command -v objcopy >/dev/null 2>&1 && command -v objdump >/dev/null 2>&1 && command -v readelf >/dev/null 2>&1 && command -v strip >/dev/null 2>&1'
 WORKDIR_PREP_CMD='native_workdir_prep=PATH=/sbin:/bin:/usr/bin; mkdir -p /usr/nt && rm -f /usr/nt/*'
-CC_ALIAS_BUILD_CMD='native_cc_alias_build=PATH=/sbin:/bin:/usr/bin; ok=0; for c in cc gcc; do if command -v "$c" >/dev/null 2>&1; then printf "int main(void){return 0;}\n" | TMPDIR=/usr TMP=/usr TEMP=/usr "$c" -pipe -x c - -c -o /usr/nt/"$c".o || exit 1; ok=1; fi; done; test "$ok" -eq 1'
-CPP_ALIAS_RUN_CMD='native_cpp_alias_run=PATH=/sbin:/bin:/usr/bin; ok=0; for p in cpp gcpp; do if command -v "$p" >/dev/null 2>&1; then printf "#define V 9\nV\n" | "$p" -P - >/usr/nt/"$p".txt || exit 1; test -s /usr/nt/"$p".txt || exit 1; ok=1; fi; done; test "$ok" -eq 1'
+SRC_C_PREP_CMD='native_src_c_prep=PATH=/sbin:/bin:/usr/bin; printf "int main(void){return 0;}\n" >/usr/nt/t.c'
+CC_ALIAS_CC_BUILD_CMD='native_cc_alias_cc_build=PATH=/sbin:/bin:/usr/bin; if command -v cc >/dev/null 2>&1; then TMPDIR=/usr TMP=/usr TEMP=/usr cc -pipe -c /usr/nt/t.c -o /usr/nt/cc.o; fi'
+CC_ALIAS_GCC_BUILD_CMD='native_cc_alias_gcc_build=PATH=/sbin:/bin:/usr/bin; if command -v gcc >/dev/null 2>&1; then TMPDIR=/usr TMP=/usr TEMP=/usr gcc -pipe -c /usr/nt/t.c -o /usr/nt/gcc.o; fi'
+CC_ALIAS_BUILD_CHECK_CMD='native_cc_alias_build_check=PATH=/sbin:/bin:/usr/bin; test -s /usr/nt/cc.o || test -s /usr/nt/gcc.o'
+SRC_CPP_PREP_CMD='native_src_cpp_prep=PATH=/sbin:/bin:/usr/bin; printf "#define V 9\nV\n" >/usr/nt/macro.c'
+CPP_ALIAS_CPP_RUN_CMD='native_cpp_alias_cpp_run=PATH=/sbin:/bin:/usr/bin; if command -v cpp >/dev/null 2>&1; then cpp -P /usr/nt/macro.c >/usr/nt/cpp.txt; fi'
+CPP_ALIAS_GCPP_RUN_CMD='native_cpp_alias_gcpp_run=PATH=/sbin:/bin:/usr/bin; if command -v gcpp >/dev/null 2>&1; then gcpp -P /usr/nt/macro.c >/usr/nt/gcpp.txt; fi'
+CPP_ALIAS_RUN_CHECK_CMD='native_cpp_alias_run_check=PATH=/sbin:/bin:/usr/bin; test -s /usr/nt/cpp.txt || test -s /usr/nt/gcpp.txt'
 AS_OBJ_CMD='native_as_obj=PATH=/sbin:/bin:/usr/bin; printf ".text\n.globl nt\nnt:\n  nop\n" | as -o /usr/nt/asm.o && test -s /usr/nt/asm.o'
 AR_RANLIB_CMD='native_ar_ranlib=PATH=/sbin:/bin:/usr/bin; ar rcs /usr/nt/libnt.a /usr/nt/asm.o && ranlib /usr/nt/libnt.a && test -s /usr/nt/libnt.a'
-LD_RELOC_CMD='native_ld_reloc=PATH=/sbin:/bin:/usr/bin; cc_bin=$(command -v cc || command -v gcc); printf "int foo(void){return 42;}\n" | TMPDIR=/usr TMP=/usr TEMP=/usr "$cc_bin" -pipe -x c - -c -o /usr/nt/foo.o && ld -r /usr/nt/foo.o /usr/nt/asm.o -o /usr/nt/combo.o && test -s /usr/nt/combo.o'
+LD_SRC_PREP_CMD='native_ld_src_prep=PATH=/sbin:/bin:/usr/bin; printf "int foo(void){return 42;}\n" >/usr/nt/foo.c'
+LD_OBJ_PREP_CMD='native_ld_obj_prep=PATH=/sbin:/bin:/usr/bin; cc_bin=$(command -v cc || command -v gcc); TMPDIR=/usr TMP=/usr TEMP=/usr "$cc_bin" -pipe -c /usr/nt/foo.c -o /usr/nt/foo.o'
+LD_RELOC_CMD='native_ld_reloc=PATH=/sbin:/bin:/usr/bin; ld -r /usr/nt/foo.o /usr/nt/asm.o -o /usr/nt/combo.o && test -s /usr/nt/combo.o'
 NM_CHECK_CMD='native_nm_check=PATH=/sbin:/bin:/usr/bin; nm /usr/nt/libnt.a >/usr/nt/nm.txt && grep -q "nt$" /usr/nt/nm.txt'
 OBJCOPY_CMD='native_objcopy=PATH=/sbin:/bin:/usr/bin; objcopy /usr/nt/combo.o /usr/nt/combo.copy.o && test -s /usr/nt/combo.copy.o'
 OBJDUMP_CMD='native_objdump=PATH=/sbin:/bin:/usr/bin; objdump -t /usr/nt/combo.o >/usr/nt/objdump.txt && test -s /usr/nt/objdump.txt'
 READELF_CMD='native_readelf=PATH=/sbin:/bin:/usr/bin; readelf -h /usr/nt/combo.o >/usr/nt/readelf.txt && grep -q "ELF" /usr/nt/readelf.txt'
 STRIP_CMD='native_strip=PATH=/sbin:/bin:/usr/bin; cp /usr/nt/combo.copy.o /usr/nt/combo.strip.o && strip /usr/nt/combo.strip.o >/dev/null 2>&1 && test -s /usr/nt/combo.strip.o'
-CC_LINK_RUN_CMD='native_cc_link_run=PATH=/sbin:/bin:/usr/bin; cc_bin=$(command -v cc || command -v gcc); printf "#include <stdio.h>\nint main(void){puts(\"CC_LINK_OK\");return 0;}\n" | TMPDIR=/usr TMP=/usr TEMP=/usr "$cc_bin" -pipe -static -x c - -o /usr/nt/cc_link && /usr/nt/cc_link | grep -q CC_LINK_OK'
-GCC_LINK_RUN_CMD='native_gcc_link_run=PATH=/sbin:/bin:/usr/bin; if command -v gcc >/dev/null 2>&1; then printf "#include <stdio.h>\nint main(void){puts(\"GCC_LINK_OK\");return 0;}\n" | TMPDIR=/usr TMP=/usr TEMP=/usr gcc -pipe -static -x c - -o /usr/nt/gcc_link && /usr/nt/gcc_link | grep -q GCC_LINK_OK; fi'
-CXX_ALIAS_LINK_RUN_CMD='native_cxx_alias_link_run=PATH=/sbin:/bin:/usr/bin; ok=0; n=0; for c in c++ g++; do if command -v "$c" >/dev/null 2>&1; then printf "#include <iostream>\nint main(){std::cout<<\"CXX_LINK_OK\";return 0;}\n" | TMPDIR=/usr TMP=/usr TEMP=/usr "$c" -pipe -static -x c++ - -o /usr/nt/cxx_link${n} || exit 1; /usr/nt/cxx_link${n} | grep -q CXX_LINK_OK || exit 1; n=$((n+1)); ok=1; fi; done; test "$ok" -eq 1'
+CC_LINK_SRC_CMD='native_cc_link_src=PATH=/sbin:/bin:/usr/bin; printf "#include <stdio.h>\nint main(void){puts(\"CC_LINK_OK\");return 0;}\n" >/usr/nt/cc_link.c'
+CC_LINK_BUILD_CMD='native_cc_link_build=PATH=/sbin:/bin:/usr/bin; cc_bin=$(command -v cc || command -v gcc); TMPDIR=/usr TMP=/usr TEMP=/usr "$cc_bin" -pipe -static /usr/nt/cc_link.c -o /usr/nt/cc_link'
+CC_LINK_RUN_CMD='native_cc_link_run=PATH=/sbin:/bin:/usr/bin; /usr/nt/cc_link | grep -q CC_LINK_OK'
+GCC_LINK_BUILD_CMD='native_gcc_link_build=PATH=/sbin:/bin:/usr/bin; if command -v gcc >/dev/null 2>&1; then TMPDIR=/usr TMP=/usr TEMP=/usr gcc -pipe -static /usr/nt/cc_link.c -o /usr/nt/gcc_link; fi'
+GCC_LINK_RUN_CMD='native_gcc_link_run=PATH=/sbin:/bin:/usr/bin; if test -x /usr/nt/gcc_link; then /usr/nt/gcc_link | grep -q CC_LINK_OK; fi'
+CXX_LINK_SRC_CMD='native_cxx_link_src=PATH=/sbin:/bin:/usr/bin; printf "#include <iostream>\nint main(){std::cout<<\"CXX_LINK_OK\";return 0;}\n" >/usr/nt/cxx_link.cc'
+CXX_LINK_CXX_BUILD_CMD='native_cxx_link_cxx_build=PATH=/sbin:/bin:/usr/bin; if command -v c++ >/dev/null 2>&1; then TMPDIR=/usr TMP=/usr TEMP=/usr c++ -pipe -static /usr/nt/cxx_link.cc -o /usr/nt/cxx_link_cxx; fi'
+CXX_LINK_GPP_BUILD_CMD='native_cxx_link_gpp_build=PATH=/sbin:/bin:/usr/bin; if command -v g++ >/dev/null 2>&1; then TMPDIR=/usr TMP=/usr TEMP=/usr g++ -pipe -static /usr/nt/cxx_link.cc -o /usr/nt/cxx_link_gpp; fi'
+CXX_LINK_CXX_RUN_CMD='native_cxx_link_cxx_run=PATH=/sbin:/bin:/usr/bin; if test -x /usr/nt/cxx_link_cxx; then /usr/nt/cxx_link_cxx | grep -q CXX_LINK_OK; fi'
+CXX_LINK_GPP_RUN_CMD='native_cxx_link_gpp_run=PATH=/sbin:/bin:/usr/bin; if test -x /usr/nt/cxx_link_gpp; then /usr/nt/cxx_link_gpp | grep -q CXX_LINK_OK; fi'
+CXX_LINK_CHECK_CMD='native_cxx_link_check=PATH=/sbin:/bin:/usr/bin; test -x /usr/nt/cxx_link_cxx || test -x /usr/nt/cxx_link_gpp'
 OPTIONAL_TOOLS_CMD='native_optional_tools=PATH=/sbin:/bin:/usr/bin; for t in size strings; do if command -v "$t" >/dev/null 2>&1; then "$t" /usr/nt/combo.o >/dev/null 2>&1 || exit 1; fi; done'
 
 base_probe_args=(
@@ -191,7 +209,9 @@ probe_args=(
   --require-disk-node
   --only-custom-cmds
   --cmd "$PREP_EXT2_CMD"
-  --cmd "$PREP_USR_MOUNT_CMD"
+  --cmd "$PREP_USR_UMOUNT_CMD"
+  --cmd "$PREP_USR_MOUNT_P0_CMD"
+  --cmd "$PREP_USR_MOUNT_P1_CMD"
   --cmd "$PREP_TMP_CMD"
   --cmd "$CC_DETECT_CMD"
   --cmd "$CXX_DETECT_CMD"
@@ -199,19 +219,35 @@ probe_args=(
   --cmd "$TOOLS_CMD"
   --cmd "$TOOLS_EXT_CMD"
   --cmd "$WORKDIR_PREP_CMD"
-  --cmd "$CC_ALIAS_BUILD_CMD"
-  --cmd "$CPP_ALIAS_RUN_CMD"
+  --cmd "$SRC_C_PREP_CMD"
+  --cmd "$CC_ALIAS_CC_BUILD_CMD"
+  --cmd "$CC_ALIAS_GCC_BUILD_CMD"
+  --cmd "$CC_ALIAS_BUILD_CHECK_CMD"
+  --cmd "$SRC_CPP_PREP_CMD"
+  --cmd "$CPP_ALIAS_CPP_RUN_CMD"
+  --cmd "$CPP_ALIAS_GCPP_RUN_CMD"
+  --cmd "$CPP_ALIAS_RUN_CHECK_CMD"
   --cmd "$AS_OBJ_CMD"
   --cmd "$AR_RANLIB_CMD"
+  --cmd "$LD_SRC_PREP_CMD"
+  --cmd "$LD_OBJ_PREP_CMD"
   --cmd "$LD_RELOC_CMD"
   --cmd "$NM_CHECK_CMD"
   --cmd "$OBJCOPY_CMD"
   --cmd "$OBJDUMP_CMD"
   --cmd "$READELF_CMD"
   --cmd "$STRIP_CMD"
+  --cmd "$CC_LINK_SRC_CMD"
+  --cmd "$CC_LINK_BUILD_CMD"
   --cmd "$CC_LINK_RUN_CMD"
+  --cmd "$GCC_LINK_BUILD_CMD"
   --cmd "$GCC_LINK_RUN_CMD"
-  --cmd "$CXX_ALIAS_LINK_RUN_CMD"
+  --cmd "$CXX_LINK_SRC_CMD"
+  --cmd "$CXX_LINK_CXX_BUILD_CMD"
+  --cmd "$CXX_LINK_GPP_BUILD_CMD"
+  --cmd "$CXX_LINK_CXX_RUN_CMD"
+  --cmd "$CXX_LINK_GPP_RUN_CMD"
+  --cmd "$CXX_LINK_CHECK_CMD"
   --cmd "$OPTIONAL_TOOLS_CMD"
 )
 

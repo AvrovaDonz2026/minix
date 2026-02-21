@@ -322,6 +322,13 @@ jobs:
           QEMU_SMOKE_LOG: /tmp/qemu-neofetch-smoke.log
         run: |
           set -euo pipefail
+          smoke_image="${CI_IMAGE_PATH}.smoke"
+          cp -f "${CI_IMAGE_PATH}" "${smoke_image}"
+          cleanup_smoke_image() {
+            rm -f "${smoke_image}" || true
+          }
+          trap cleanup_smoke_image EXIT
+          export CI_SMOKE_IMAGE_PATH="${smoke_image}"
           python3 - <<'PY'
           import os
           import re
@@ -331,7 +338,7 @@ jobs:
           import subprocess
           import sys
 
-          image_path = os.environ["CI_IMAGE_PATH"]
+          image_path = os.environ["CI_SMOKE_IMAGE_PATH"]
           log_path = os.environ["QEMU_SMOKE_LOG"]
           uboot_path = "/usr/lib/u-boot/qemu-riscv64_smode/uboot.elf"
 

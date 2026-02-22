@@ -164,13 +164,19 @@ jobs:
             mkdir -p "${destdir_root}/usr/include/g++/${rel}"
           done
 
-      - name: Refresh ramdisk objs (obj.intrgcc)
+      - name: Refresh ramdisk and libstdc++ objs (obj.intrgcc)
         shell: bash
         run: |
           set -euo pipefail
-          # The repository tracks obj.intrgcc; drop stale ramdisk artifacts so
-          # distribution always regenerates ramdisk system files from sources.
+          destdir_root="${OBJDIR}/destdir.${MACHINE}"
+          # The repository tracks obj.intrgcc; drop stale artifacts that can
+          # leak host/thread profile mismatches into release images.
           rm -rf "${OBJDIR}/minix/drivers/storage/ramdisk"
+          rm -rf "${OBJDIR}/external/gpl3/gcc/lib/libstdc++-v3"
+          rm -f \
+            "${destdir_root}/usr/lib/libstdc++.a" \
+            "${destdir_root}/usr/lib/libstdc++_pic.a" \
+            "${destdir_root}/usr/include/g++/bits/c++config.h"
 
       - name: Build distribution (obj.intrgcc)
         shell: bash
@@ -240,6 +246,47 @@ jobs:
           fi
 
           echo "[native-toolchain] payload check PASS"
+
+      - name: Verify libstdc++ thread profile (DESTDIR)
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="${PWD}/${OBJDIR}/destdir.evbriscv64"
+          tooldir="$(find "${PWD}/${OBJDIR}" -maxdepth 1 -type d -name 'tooldir.*' -print -quit)"
+          if [[ -z "${tooldir}" ]]; then
+            echo "Missing tooldir under ${PWD}/${OBJDIR}" >&2
+            exit 1
+          fi
+
+          ar="${tooldir}/bin/riscv64-elf32-minix-ar"
+          nm="${tooldir}/bin/riscv64-elf32-minix-nm"
+          lib="${root}/usr/lib/libstdc++.a"
+          for tool in "${ar}" "${nm}"; do
+            if [[ ! -x "${tool}" ]]; then
+              echo "Missing tool: ${tool}" >&2
+              exit 1
+            fi
+          done
+          if [[ ! -f "${lib}" ]]; then
+            echo "Missing libstdc++ archive: ${lib}" >&2
+            exit 1
+          fi
+
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "${tmp}"' EXIT
+          (
+            cd "${tmp}"
+            "${ar}" x "${lib}" functexcept.o
+            "${nm}" -u functexcept.o >undef.txt
+          )
+
+          if grep -Eq 'future_category|future_error' "${tmp}/undef.txt"; then
+            echo "[native-toolchain] libstdc++ mismatch: functexcept.o unexpectedly references future_*" >&2
+            cat "${tmp}/undef.txt" >&2
+            exit 1
+          fi
+
+          echo "[native-toolchain] libstdc++ thread profile check PASS"
 
       - name: Build nightly artifacts
         id: package

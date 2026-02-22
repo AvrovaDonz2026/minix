@@ -70,7 +70,7 @@ CPPFLAGS.strstream.cc=	-I$(GLIBCPP_INCLUDE_DIR)/backward -Wno-deprecated
 # XXX also need this for some PCHs.
 CPPFLAGS.atomic.cc = -std=gnu++0x
 CPPFLAGS.compatibility-c++0x.cc = -std=gnu++0x
-CPPFLAGS.functexcept.cc = -std=gnu++0x
+CPPFLAGS.functexcept.cc+= -std=gnu++0x
 CPPFLAGS.hash_c++0x.cc = -std=gnu++0x
 CPPFLAGS.hashtable_c++0x.cc = -std=gnu++0x
 CPPFLAGS.limits.cc = -std=gnu++0x

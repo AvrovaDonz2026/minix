@@ -155,9 +155,8 @@ echo "[native-gate] disk image: $DISK_IMAGE"
 # by the guest TTY line discipline and hang waiting for completion.
 PREP_EXT2_CMD='prepare_ext2=PATH=/sbin:/bin:/usr/bin; test -x /service/ext2 && (minix-service up /service/ext2 >/dev/null 2>&1 || minix-service -c up /service/ext2 >/dev/null 2>&1 || true)'
 PREP_USR_UMOUNT_CMD='prepare_usr_umount=PATH=/sbin:/bin:/usr/bin; umount /usr >/dev/null 2>&1 || true'
-PREP_USR_MOUNT_P0_CMD='prepare_usr_mount_p0=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/cc || test -x /usr/bin/gcc || mount -t ext2 /dev/c0d0p3 /usr >/dev/null 2>&1 || true'
-PREP_USR_MOUNT_P1_CMD='prepare_usr_mount_p1=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/cc || test -x /usr/bin/gcc || mount -t ext2 /dev/c0d0p2 /usr >/dev/null 2>&1 || mount -t ext2 /dev/c0d1p3 /usr >/dev/null 2>&1 || true'
-PREP_USR_MOUNT_P2_CMD='prepare_usr_mount_p2=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/cc || test -x /usr/bin/gcc || mount -t ext2 /dev/c0d1p2 /usr >/dev/null 2>&1 || true'
+PREP_USR_MOUNT_STAGE1_CMD='prepare_usr_mount_stage1=PATH=/sbin:/bin:/usr/bin; [ -x /usr/bin/cc -o -x /usr/bin/gcc ] || mount -t ext2 /dev/c0d0p3 /usr || mount -t ext2 /dev/c0d0p2 /usr || true'
+PREP_USR_MOUNT_STAGE2_CMD='prepare_usr_mount_stage2=PATH=/sbin:/bin:/usr/bin; [ -x /usr/bin/cc -o -x /usr/bin/gcc ] || mount -t ext2 /dev/c0d1p3 /usr || mount -t ext2 /dev/c0d1p2 /usr'
 PREP_USR_CHECK_CMD='prepare_usr_check=PATH=/sbin:/bin:/usr/bin; mount | grep " on /usr type " || (mount; false)'
 PREP_TMP_CMD='prepare_tmp=PATH=/sbin:/bin:/usr/bin; test -w /usr'
 CC_DETECT_CMD='native_cc_detect=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/cc || test -x /usr/bin/gcc || (mount | grep " on /usr type " || mount; ls -l /usr/bin/cc /usr/bin/gcc /usr/bin/clang 2>&1; false)'
@@ -212,9 +211,8 @@ probe_args=(
   --only-custom-cmds
   --cmd "$PREP_EXT2_CMD"
   --cmd "$PREP_USR_UMOUNT_CMD"
-  --cmd "$PREP_USR_MOUNT_P0_CMD"
-  --cmd "$PREP_USR_MOUNT_P1_CMD"
-  --cmd "$PREP_USR_MOUNT_P2_CMD"
+  --cmd "$PREP_USR_MOUNT_STAGE1_CMD"
+  --cmd "$PREP_USR_MOUNT_STAGE2_CMD"
   --cmd "$PREP_USR_CHECK_CMD"
   --cmd "$PREP_TMP_CMD"
   --cmd "$CC_DETECT_CMD"

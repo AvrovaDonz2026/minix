@@ -158,8 +158,9 @@ PREP_USR_UMOUNT_CMD='prepare_usr_umount=PATH=/sbin:/bin:/usr/bin; umount /usr >/
 PREP_USR_MOUNT_P0_CMD='prepare_usr_mount_p0=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/cc || test -x /usr/bin/gcc || mount -t ext2 /dev/c0d0p3 /usr >/dev/null 2>&1 || true'
 PREP_USR_MOUNT_P1_CMD='prepare_usr_mount_p1=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/cc || test -x /usr/bin/gcc || mount -t ext2 /dev/c0d0p2 /usr >/dev/null 2>&1 || mount -t ext2 /dev/c0d1p3 /usr >/dev/null 2>&1 || true'
 PREP_USR_MOUNT_P2_CMD='prepare_usr_mount_p2=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/cc || test -x /usr/bin/gcc || mount -t ext2 /dev/c0d1p2 /usr >/dev/null 2>&1 || true'
+PREP_USR_CHECK_CMD='prepare_usr_check=PATH=/sbin:/bin:/usr/bin; mount | grep " on /usr type " || (mount; false)'
 PREP_TMP_CMD='prepare_tmp=PATH=/sbin:/bin:/usr/bin; test -w /usr'
-CC_DETECT_CMD='native_cc_detect=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/cc || test -x /usr/bin/gcc || (ls -l /usr/bin/cc /usr/bin/gcc /usr/bin/clang 2>&1; false)'
+CC_DETECT_CMD='native_cc_detect=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/cc || test -x /usr/bin/gcc || (mount | grep " on /usr type " || mount; ls -l /usr/bin/cc /usr/bin/gcc /usr/bin/clang 2>&1; false)'
 CXX_DETECT_CMD='native_cxx_detect=PATH=/sbin:/bin:/usr/bin; command -v c++ >/dev/null 2>&1 || command -v g++ >/dev/null 2>&1'
 PP_DETECT_CMD='native_pp_detect=PATH=/sbin:/bin:/usr/bin; command -v cpp >/dev/null 2>&1 || command -v gcpp >/dev/null 2>&1'
 TOOLS_CMD='native_tools=PATH=/sbin:/bin:/usr/bin; command -v as >/dev/null 2>&1 && command -v ld >/dev/null 2>&1 && command -v ar >/dev/null 2>&1 && command -v ranlib >/dev/null 2>&1'
@@ -214,6 +215,7 @@ probe_args=(
   --cmd "$PREP_USR_MOUNT_P0_CMD"
   --cmd "$PREP_USR_MOUNT_P1_CMD"
   --cmd "$PREP_USR_MOUNT_P2_CMD"
+  --cmd "$PREP_USR_CHECK_CMD"
   --cmd "$PREP_TMP_CMD"
   --cmd "$CC_DETECT_CMD"
   --cmd "$CXX_DETECT_CMD"

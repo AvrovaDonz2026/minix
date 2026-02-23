@@ -205,7 +205,7 @@ jobs:
           # Patch the throw site directly so the no-future profile is stable.
           if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
             perl -0777 -i -pe \
-              's@(_GLIBCXX_THROW_OR_ABORT\s*\(\s*future_error\s*\(\s*make_error_code\s*\(\s*future_errc\s*\(\s*__i\s*\)\s*\)\s*\)\s*\)\s*;)@#if !defined(_GLIBCXX_MINIX_NO_FUTURE)\n    $1\n#else\n    __throw_system_error(__i);\n#endif@g' \
+              's@\{\s*_GLIBCXX_THROW_OR_ABORT\s*\(\s*future_error\s*\(\s*make_error_code\s*\(\s*future_errc\s*\(\s*__i\s*\)\s*\)\s*\)\s*\)\s*;@{\n#if !defined(_GLIBCXX_MINIX_NO_FUTURE)\n    _GLIBCXX_THROW_OR_ABORT(future_error(make_error_code(future_errc(__i))));\n#else\n    __throw_system_error(__i);\n#endif\n@g' \
               "${functexcept_src}"
           fi
           if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then

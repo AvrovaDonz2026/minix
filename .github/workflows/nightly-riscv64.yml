@@ -209,7 +209,8 @@ jobs:
               "${functexcept_src}"
           fi
           if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
-            echo "Warning: no MINIX future fallback found in ${functexcept_src}" >&2
+            echo "Failed: no MINIX future fallback found in ${functexcept_src}" >&2
+            exit 1
           fi
           grep -nE '__throw_future_error|future_errc|_GLIBCXX_MINIX_NO_FUTURE|__throw_system_error' \
             "${functexcept_src}" | head -n 20 || true

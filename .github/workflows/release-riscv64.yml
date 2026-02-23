@@ -213,13 +213,18 @@ jobs:
             echo "Missing ${functexcept_src}" >&2
             exit 1
           fi
-          perl -pi -e \
-            's/_GLIBCXX_HAS_GTHREADS(?!\s*&&\s*!defined\(_GLIBCXX_MINIX_NO_FUTURE\))/_GLIBCXX_HAS_GTHREADS && !defined(_GLIBCXX_MINIX_NO_FUTURE)/g' \
-            "${functexcept_src}"
-          if ! grep -q '_GLIBCXX_MINIX_NO_FUTURE' "${functexcept_src}"; then
-            echo "Warning: patch marker not found in ${functexcept_src}" >&2
-            grep -n '_GLIBCXX_HAS_GTHREADS' "${functexcept_src}" | head -n 6 || true
+          # Some upstream snapshots don't use _GLIBCXX_HAS_GTHREADS here.
+          # Patch the throw site directly so the no-future profile is stable.
+          if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
+            perl -0777 -i -pe \
+              's@(_GLIBCXX_THROW_OR_ABORT\s*\(\s*future_error\s*\(\s*make_error_code\s*\(\s*future_errc\s*\(\s*__i\s*\)\s*\)\s*\)\s*\)\s*;)@#if !defined(_GLIBCXX_MINIX_NO_FUTURE)\n    $1\n#else\n    __throw_system_error(__i);\n#endif@g' \
+              "${functexcept_src}"
           fi
+          if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
+            echo "Warning: no MINIX future fallback found in ${functexcept_src}" >&2
+          fi
+          grep -nE '__throw_future_error|future_errc|_GLIBCXX_MINIX_NO_FUTURE|__throw_system_error' \
+            "${functexcept_src}" | head -n 20 || true
 
       - name: Build distribution (obj.intrgcc)
         shell: bash

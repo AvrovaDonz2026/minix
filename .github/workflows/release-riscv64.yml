@@ -176,6 +176,57 @@ jobs:
             mkdir -p "${destdir_root}/usr/include/g++/${rel}"
           done
 
+      - name: Refresh ramdisk and libstdc++ objs (obj.intrgcc)
+        shell: bash
+        run: |
+          set -euo pipefail
+          destdir_root="${OBJDIR}/destdir.${MACHINE}"
+          # The repository tracks obj.intrgcc; drop stale artifacts that can
+          # leak host/thread profile mismatches into release images.
+          rm -rf "${OBJDIR}/minix/drivers/storage/ramdisk"
+          rm -rf "${OBJDIR}/external/gpl3/gcc/lib/libstdc++-v3"
+          rm -f \
+            "${destdir_root}/usr/lib/libstdc++.a" \
+            "${destdir_root}/usr/lib/libstdc++_pic.a" \
+            "${destdir_root}/usr/include/g++/bits/c++config.h"
+
+          # Keep gthreads profile deterministic even when obj.intrgcc carries
+          # stale generated headers from earlier CI iterations.
+          sanitize_cxxconfig() {
+            local cfg="$1"
+            [[ -f "${cfg}" ]] || return 0
+            sed -i -E \
+              's@^#define[[:space:]]+_GLIBCXX_HAS_GTHREADS([[:space:]]+.*)?$@/* #undef _GLIBCXX_HAS_GTHREADS */@' \
+              "${cfg}"
+          }
+
+          sanitize_cxxconfig "${PWD}/external/gpl3/gcc/lib/libstdc++-v3/arch/riscv64/c++config.h"
+
+          if [[ -d "${destdir_root}/usr/include/g++" ]]; then
+            while IFS= read -r -d '' cfg; do
+              sanitize_cxxconfig "${cfg}"
+            done < <(find "${destdir_root}/usr/include/g++" -type f -name 'c++config.h' -print0)
+          fi
+
+          functexcept_src="${PWD}/external/gpl3/gcc/dist/libstdc++-v3/src/c++11/functexcept.cc"
+          if [[ ! -f "${functexcept_src}" ]]; then
+            echo "Missing ${functexcept_src}" >&2
+            exit 1
+          fi
+          # Some upstream snapshots don't use _GLIBCXX_HAS_GTHREADS here.
+          # Patch the throw site directly so the no-future profile is stable.
+          if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
+            perl -0777 -i -pe \
+              's@\{\s*_GLIBCXX_THROW_OR_ABORT\s*\(\s*future_error\s*\(\s*make_error_code\s*\(\s*future_errc\s*\(\s*__i\s*\)\s*\)\s*\)\s*\)\s*;@{\n#if !defined(_GLIBCXX_MINIX_NO_FUTURE)\n    _GLIBCXX_THROW_OR_ABORT(future_error(make_error_code(future_errc(__i))));\n#else\n    __throw_system_error(__i);\n#endif\n@g' \
+              "${functexcept_src}"
+          fi
+          if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
+            echo "Failed: no MINIX future fallback found in ${functexcept_src}" >&2
+            exit 1
+          fi
+          grep -nE '__throw_future_error|future_errc|_GLIBCXX_MINIX_NO_FUTURE|__throw_system_error' \
+            "${functexcept_src}" | head -n 20 || true
+
       - name: Build distribution (obj.intrgcc)
         shell: bash
         run: |
@@ -244,6 +295,47 @@ jobs:
           fi
 
           echo "[native-toolchain] payload check PASS"
+
+      - name: Verify libstdc++ thread profile (DESTDIR)
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="${PWD}/${OBJDIR}/destdir.evbriscv64"
+          tooldir="$(find "${PWD}/${OBJDIR}" -maxdepth 1 -type d -name 'tooldir.*' -print -quit)"
+          if [[ -z "${tooldir}" ]]; then
+            echo "Missing tooldir under ${PWD}/${OBJDIR}" >&2
+            exit 1
+          fi
+
+          ar="${tooldir}/bin/riscv64-elf32-minix-ar"
+          nm="${tooldir}/bin/riscv64-elf32-minix-nm"
+          lib="${root}/usr/lib/libstdc++.a"
+          for tool in "${ar}" "${nm}"; do
+            if [[ ! -x "${tool}" ]]; then
+              echo "Missing tool: ${tool}" >&2
+              exit 1
+            fi
+          done
+          if [[ ! -f "${lib}" ]]; then
+            echo "Missing libstdc++ archive: ${lib}" >&2
+            exit 1
+          fi
+
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "${tmp}"' EXIT
+          (
+            cd "${tmp}"
+            "${ar}" x "${lib}" functexcept.o
+            "${nm}" -u functexcept.o >undef.txt
+          )
+
+          if grep -Eq 'future_category|future_error' "${tmp}/undef.txt"; then
+            echo "[native-toolchain] libstdc++ mismatch: functexcept.o unexpectedly references future_*" >&2
+            cat "${tmp}/undef.txt" >&2
+            exit 1
+          fi
+
+          echo "[native-toolchain] libstdc++ thread profile check PASS"
 
       - name: Build release artifacts
         id: package
@@ -322,6 +414,13 @@ jobs:
           QEMU_SMOKE_LOG: /tmp/qemu-neofetch-smoke.log
         run: |
           set -euo pipefail
+          smoke_image="${CI_IMAGE_PATH}.smoke"
+          cp -f "${CI_IMAGE_PATH}" "${smoke_image}"
+          cleanup_smoke_image() {
+            rm -f "${smoke_image}" || true
+          }
+          trap cleanup_smoke_image EXIT
+          export CI_SMOKE_IMAGE_PATH="${smoke_image}"
           python3 - <<'PY'
           import os
           import re
@@ -331,7 +430,7 @@ jobs:
           import subprocess
           import sys
 
-          image_path = os.environ["CI_IMAGE_PATH"]
+          image_path = os.environ["CI_SMOKE_IMAGE_PATH"]
           log_path = os.environ["QEMU_SMOKE_LOG"]
           uboot_path = "/usr/lib/u-boot/qemu-riscv64_smode/uboot.elf"
 

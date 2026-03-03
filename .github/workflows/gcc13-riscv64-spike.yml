@@ -1,6 +1,12 @@
 name: riscv64-gcc13-spike
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/gcc13-riscv64-spike.yml"
+      - "toolchain/patches/gcc13/**"
   workflow_dispatch:
     inputs:
       gcc_version:

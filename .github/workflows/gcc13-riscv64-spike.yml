@@ -211,6 +211,7 @@ jobs:
           workspace_patch_dir="toolchain/patches/gcc13/workspace"
           bash toolchain/patches/gcc13/scripts/apply-workspace-patches.sh \
             "${workspace_patch_dir}" "${target_mode}"
+          bash toolchain/patches/gcc13/scripts/ensure-riscv-config-links.sh
 
           if ! grep -q -- '-std=gnu++11' tools/gcc/Makefile; then
             echo "Failed to switch tools/gcc/Makefile host C++ standard to gnu++11" >&2

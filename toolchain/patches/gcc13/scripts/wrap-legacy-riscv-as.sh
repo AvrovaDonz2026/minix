@@ -78,6 +78,7 @@ for arg in "$@"; do
         sed \
           -e '/^[[:space:]]*\.option[[:space:]]\+pic[[:space:]]*$/d' \
           -e 's/\([[:space:]]call[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
+          -e 's/\([[:space:]]tail[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
           "${arg}" > "${patched}"
         tmpfiles+=("${patched}")
         args+=("${patched}")

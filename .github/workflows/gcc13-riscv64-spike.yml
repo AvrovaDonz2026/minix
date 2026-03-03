@@ -158,11 +158,15 @@ jobs:
           # For spike progress, force the tools/gcc wrapper target triple to a
           # supported baseline and collect the next blocker.
           if ! grep -q '^MACHINE_GNU_PLATFORM=.*riscv64-unknown-elf' tools/gcc/Makefile; then
-            sed -i '/^\\.include <bsd\\.own\\.mk>$/a MACHINE_GNU_PLATFORM=\\triscv64-unknown-elf' \
+            sed -i '/^\.include <bsd\.own\.mk>$/a MACHINE_GNU_PLATFORM=\triscv64-unknown-elf' \
               tools/gcc/Makefile
           fi
           if ! grep -q -- '-std=gnu++11' tools/gcc/Makefile; then
             echo "Failed to switch tools/gcc/Makefile host C++ standard to gnu++11" >&2
+            exit 1
+          fi
+          if ! grep -q '^MACHINE_GNU_PLATFORM=.*riscv64-unknown-elf' tools/gcc/Makefile; then
+            echo "Failed to override MACHINE_GNU_PLATFORM in tools/gcc/Makefile" >&2
             exit 1
           fi
           grep -nE '^MACHINE_GNU_PLATFORM|gnu\\+\\+1[1-7]|--target=\\$\\{MACHINE_GNU_PLATFORM\\}' \

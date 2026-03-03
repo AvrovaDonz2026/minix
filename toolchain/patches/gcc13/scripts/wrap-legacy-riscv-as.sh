@@ -55,7 +55,14 @@ for arg in "$@"; do
       fi
       isa="${isa%%_*}"
       isa="${isa^^}"
+      # Legacy MINIX/NetBSD assembler in this tree does not accept the
+      # compressed extension marker and predates modern split-ISA strings.
+      isa="${isa//C/}"
+      [[ -n "${isa}" ]] || isa="I"
       args+=("-march=${isa}")
+      ;;
+    -mabi=*)
+      # Old assembler rejects modern -mabi=... options passed through GCC.
       ;;
     *)
       args+=("${arg}")

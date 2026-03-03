@@ -271,6 +271,21 @@ jobs:
             target_override_args+=( -V MACHINE_GNU_PLATFORM=riscv64-unknown-elf )
           fi
 
+          tooldir="$(find "${PWD}/${OBJDIR}" -maxdepth 1 -type d -name 'tooldir.*' -print -quit)"
+          if [[ -z "${tooldir}" ]]; then
+            echo "Missing tooldir under ${PWD}/${OBJDIR}" >&2
+            exit 1
+          fi
+
+          if [[ "${target_mode}" == "shim" ]]; then
+            triplet="riscv64-unknown-elf"
+          else
+            triplet="riscv64-elf32-minix"
+          fi
+
+          bash toolchain/patches/gcc13/scripts/wrap-legacy-riscv-as.sh \
+            "${tooldir}/bin/${triplet}-as"
+
           if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
             ./build.sh -U -u -j"$(nproc)" -m "${MACHINE}" -O "${OBJDIR}" \
               "${target_override_args[@]}" \

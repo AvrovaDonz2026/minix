@@ -7,7 +7,13 @@
 
 .cc: # disable .cc->NULL transform
 
-INCS=		${G_tr1_impl_headers}
+INCS=
+.for _f in ${G_tr1_impl_headers}
+.if exists(${DIST}/libstdc++-v3/include/${_f}) || \
+    exists(${DIST}/libstdc++-v3/include/tr1_impl/${_f})
+INCS+=		${_f}
+.endif
+.endfor
 INCSDIR=	/usr/include/g++/tr1_impl
 
 # Get default targets including <bsd.inc.mk>.

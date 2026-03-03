@@ -9,7 +9,13 @@
 DIST=		${GCCDIST}
 GNUHOSTDIST=	${DIST}
 
-INCS=		${G_profile_headers} ${G_profile_impl_headers}
+INCS=
+.for _f in ${G_profile_headers} ${G_profile_impl_headers}
+.if exists(${DIST}/libstdc++-v3/include/profile/${_f}) || \
+    exists(${DIST}/libstdc++-v3/include/${_f})
+INCS+=		${_f}
+.endif
+.endfor
 INCSDIR=	/usr/include/g++/profile
 
 .PATH: ${DIST}/libstdc++-v3/include/profile

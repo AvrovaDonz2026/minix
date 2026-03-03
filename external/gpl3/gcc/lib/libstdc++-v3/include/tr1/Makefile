@@ -7,7 +7,12 @@
 
 .cc: # disable .cc->NULL transform
 
-INCS=		${G_tr1_headers}
+INCS=
+.for _f in ${G_tr1_headers}
+.if exists(${DIST}/libstdc++-v3/include/${_f})
+INCS+=		${_f}
+.endif
+.endfor
 INCSDIR=	/usr/include/g++/tr1
 
 .include "${.CURDIR}/../Makefile.includes"

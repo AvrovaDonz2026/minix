@@ -9,7 +9,12 @@
 DIST=		${GCCDIST}
 GNUHOSTDIST=	${DIST}
 
-INCS=		${G_tr2_headers}
+INCS=
+.for _f in ${G_tr2_headers}
+.if exists(${DIST}/libstdc++-v3/include/${_f})
+INCS+=		${_f}
+.endif
+.endfor
 INCSDIR=	/usr/include/g++/tr2
 
 .include "${.CURDIR}/../Makefile.includes"

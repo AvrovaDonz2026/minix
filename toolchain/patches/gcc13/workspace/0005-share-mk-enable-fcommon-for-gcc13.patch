@@ -1,0 +1,13 @@
+--- a/share/mk/bsd.sys.mk
++++ b/share/mk/bsd.sys.mk
+@@ -37,6 +37,10 @@ _BSD_SYS_MK_=1
+ CFLAGS+=	${${ACTIVE_CC} == "gcc":? -std=gnu99 :}
+ CFLAGS+=	${${ACTIVE_CC} == "pcc":? -std=gnu99 :}
+ 
++# GCC10+ defaults to -fno-common; this tree still relies on common symbols
++# in legacy objects when building with the GCC13 spike toolchain.
++CFLAGS+=	${${ACTIVE_CC} == "gcc":? -fcommon :}
++
+ .if ${MKLIBCXX:Uno} == "yes"
+ CXXFLAGS+=	-I${DESTDIR}/usr/include/c++
+ .endif

@@ -1,0 +1,13 @@
+--- a/lib/libc/gdtoa/Makefile.inc
++++ b/lib/libc/gdtoa/Makefile.inc
+@@ -27,6 +27,10 @@ SRCS+=	strtod.c
+ # private interfaces interfacing to libc
+ SRCS+=	dtoa.c ldtoa.c hdtoa.c gdtoa.c
+ 
++# GCC 13 can ICE in vectorization on hdtoa.c for this target/toolchain pair.
++# Keep optimization otherwise unchanged and disable only tree vectorization here.
++COPTS.hdtoa.c+=	-fno-tree-vectorize
++
+ .if !defined(__MINIX)
+ # local locking implementation
+ SRCS+=	gdtoa_locks.c

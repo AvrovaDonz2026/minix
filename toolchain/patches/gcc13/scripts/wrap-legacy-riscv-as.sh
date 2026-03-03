@@ -79,6 +79,7 @@ for arg in "$@"; do
           -e '/^[[:space:]]*\.option[[:space:]]\+pic[[:space:]]*$/d' \
           -e 's/\([[:space:]]call[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
           -e 's/\([[:space:]]tail[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
+          -e 's/^\([[:space:]]*\)ebreak\([[:space:]]\|$\)/\1sbreak\2/' \
           "${arg}" > "${patched}"
         tmpfiles+=("${patched}")
         args+=("${patched}")

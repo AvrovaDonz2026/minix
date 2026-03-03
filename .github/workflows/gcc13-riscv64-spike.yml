@@ -169,22 +169,17 @@ jobs:
             echo "Failed to override MACHINE_GNU_PLATFORM in tools/gcc/Makefile" >&2
             exit 1
           fi
-          # Build tools before gcc are still produced under the legacy
-          # riscv64-elf32-minix prefix. Create compatibility links so the gcc
-          # sub-build can resolve riscv64-unknown-elf-* helper tools.
-          toolbindirs=( ${OBJDIR}/tooldir.*/bin )
-          for toolbindir in "${toolbindirs[@]}"; do
-            [[ -d "${toolbindir}" ]] || continue
-            shopt -s nullglob
-            for src in "${toolbindir}"/riscv64-elf32-minix-*; do
-              base="${src##*/riscv64-elf32-minix-}"
-              dst="${toolbindir}/riscv64-unknown-elf-${base}"
-              ln -sf "$(basename "${src}")" "${dst}"
-            done
-            shopt -u nullglob
+          # GCC13 spike still builds host tools under the legacy
+          # riscv64-elf32-minix prefix. Preseed a set of dangling compatibility
+          # links so gcc sub-builds can resolve riscv64-unknown-elf-* helpers.
+          host_id="$(uname -s)-$(uname -r)-$(uname -m)"
+          toolbindir="${OBJDIR}/tooldir.${host_id}/bin"
+          mkdir -p "${toolbindir}"
+          for tool in install ar as ld nm objcopy objdump ranlib readelf size strings strip addr2line c++ c++filt cc cpp g++ gcc gcov gprof elfedit; do
+            ln -sf "riscv64-elf32-minix-${tool}" "${toolbindir}/riscv64-unknown-elf-${tool}"
           done
-          if ! compgen -G "${OBJDIR}/tooldir.*/bin/riscv64-unknown-elf-install" >/dev/null; then
-            echo "Failed to create riscv64-unknown-elf-install compatibility link" >&2
+          if [[ ! -L "${toolbindir}/riscv64-unknown-elf-install" ]]; then
+            echo "Failed to preseed riscv64-unknown-elf-install compatibility link" >&2
             exit 1
           fi
           grep -nE '^MACHINE_GNU_PLATFORM|gnu\\+\\+1[1-7]|--target=\\$\\{MACHINE_GNU_PLATFORM\\}' \
@@ -206,6 +201,12 @@ jobs:
             echo "gcc13 spike build failed. Inspect /tmp/gcc13-spike-tools.log" >&2
             exit 1
           fi
+          shopt -s nullglob
+          for src in "${toolbindir}"/riscv64-elf32-minix-*; do
+            base="${src##*/riscv64-elf32-minix-}"
+            ln -sf "$(basename "${src}")" "${toolbindir}/riscv64-unknown-elf-${base}"
+          done
+          shopt -u nullglob
 
       - name: Upload gcc13 spike log
         if: always()

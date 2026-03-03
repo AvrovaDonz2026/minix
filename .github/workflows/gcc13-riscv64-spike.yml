@@ -151,6 +151,14 @@ jobs:
           set -euo pipefail
           HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
 
+          # GCC 13 configure requires host C++11 support; the legacy tools/gcc
+          # wrapper pins gnu++98 for GCC 4.8 and must be relaxed for this spike.
+          sed -i 's/-std=gnu++98/-std=gnu++11/g' tools/gcc/Makefile
+          if ! grep -q -- '-std=gnu++11' tools/gcc/Makefile; then
+            echo "Failed to switch tools/gcc/Makefile host C++ standard to gnu++11" >&2
+            exit 1
+          fi
+
           if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
             ./build.sh -U -m "${MACHINE}" -O "${OBJDIR}" \
               -V AVAILABLE_COMPILER=gcc \

@@ -46,6 +46,13 @@ if [[ ! -x "${real}" ]]; then
 fi
 
 args=()
+tmpfiles=()
+cleanup_tmpfiles() {
+  if (( ${#tmpfiles[@]} > 0 )); then
+    rm -f "${tmpfiles[@]}"
+  fi
+}
+trap cleanup_tmpfiles EXIT
 for arg in "$@"; do
   case "${arg}" in
     -march=rv32*|-march=rv64*)
@@ -63,6 +70,20 @@ for arg in "$@"; do
       ;;
     -mabi=*)
       # Old assembler rejects modern -mabi=... options passed through GCC.
+      ;;
+    *.s|*.S)
+      if [[ -f "${arg}" ]]; then
+        patched="${TMPDIR:-/tmp}/legacy-as-wrap.$$.$(( ${#tmpfiles[@]} + 1 )).s"
+        # Old assembler rejects some newer textual asm forms emitted by GCC.
+        sed \
+          -e '/^[[:space:]]*\.option[[:space:]]\+pic[[:space:]]*$/d' \
+          -e 's/\([[:space:]]call[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
+          "${arg}" > "${patched}"
+        tmpfiles+=("${patched}")
+        args+=("${patched}")
+      else
+        args+=("${arg}")
+      fi
       ;;
     *)
       args+=("${arg}")

@@ -279,7 +279,7 @@ jobs:
               -V ACTIVE_CPP=gcc \
               -V ACTIVE_CXX=gcc \
               -V ACTIVE_OBJC=gcc \
-              -V RISCV_ARCH_FLAGS='-march=RV64IMAFD -mcmodel=medany' \
+              -V RISCV_ARCH_FLAGS='-march=rv64imafd -mcmodel=medany' \
               -V NOGCCERROR=yes \
               -V MKGCC=yes \
               -V MKGCCCMDS=yes \

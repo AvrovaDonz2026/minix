@@ -9,8 +9,13 @@
 DIST=		${GCCDIST}
 GNUHOSTDIST=	${DIST}
 
-INCS=		${G_pb_headers1} ${G_pb_headers2} ${G_pb_headers3} ${G_pb_headers4}
-INCS+=		${G_pb_headers5} ${G_pb_headers6} ${G_pb_headers7}
+INCS=
+.for _f in ${G_pb_headers1} ${G_pb_headers2} ${G_pb_headers3} ${G_pb_headers4} \
+    ${G_pb_headers5} ${G_pb_headers6} ${G_pb_headers7}
+.if exists(${DIST}/libstdc++-v3/include/${_f})
+INCS+=		${_f}
+.endif
+.endfor
 INCSDIR=	/usr/include/g++
 
 .PATH:	${DIST}/libstdc++-v3/include

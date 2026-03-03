@@ -301,6 +301,11 @@ jobs:
             triplet="riscv64-elf32-minix"
           fi
 
+          bash toolchain/patches/gcc13/scripts/ensure-riscv-config-links.sh
+          link_watch_pid=""
+          bash toolchain/patches/gcc13/scripts/watch-riscv-config-links.sh &
+          link_watch_pid=$!
+
           as_watch_targets=("${tooldir}/bin/${triplet}-as")
           if [[ -d "${tooldir}/${triplet}/bin" ]]; then
             as_watch_targets+=("${tooldir}/${triplet}/bin/as")
@@ -316,6 +321,9 @@ jobs:
           done
 
           cleanup_as_watchers() {
+            if [[ -n "${link_watch_pid}" ]]; then
+              kill "${link_watch_pid}" >/dev/null 2>&1 || true
+            fi
             for pid in "${as_watch_pids[@]:-}"; do
               kill "${pid}" >/dev/null 2>&1 || true
             done

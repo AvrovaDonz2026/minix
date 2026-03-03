@@ -302,6 +302,10 @@ jobs:
 
           bash toolchain/patches/gcc13/scripts/wrap-legacy-riscv-as.sh \
             "${tooldir}/bin/${triplet}-as"
+          if [[ -x "${tooldir}/${triplet}/bin/as" ]]; then
+            bash toolchain/patches/gcc13/scripts/wrap-legacy-riscv-as.sh \
+              "${tooldir}/${triplet}/bin/as"
+          fi
 
           if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
             ./build.sh -U -u -j"$(nproc)" -m "${MACHINE}" -O "${OBJDIR}" \

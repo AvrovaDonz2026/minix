@@ -169,6 +169,24 @@ jobs:
             echo "Failed to override MACHINE_GNU_PLATFORM in tools/gcc/Makefile" >&2
             exit 1
           fi
+          # Build tools before gcc are still produced under the legacy
+          # riscv64-elf32-minix prefix. Create compatibility links so the gcc
+          # sub-build can resolve riscv64-unknown-elf-* helper tools.
+          toolbindirs=( ${OBJDIR}/tooldir.*/bin )
+          for toolbindir in "${toolbindirs[@]}"; do
+            [[ -d "${toolbindir}" ]] || continue
+            shopt -s nullglob
+            for src in "${toolbindir}"/riscv64-elf32-minix-*; do
+              base="${src##*/riscv64-elf32-minix-}"
+              dst="${toolbindir}/riscv64-unknown-elf-${base}"
+              ln -sf "$(basename "${src}")" "${dst}"
+            done
+            shopt -u nullglob
+          done
+          if ! compgen -G "${OBJDIR}/tooldir.*/bin/riscv64-unknown-elf-install" >/dev/null; then
+            echo "Failed to create riscv64-unknown-elf-install compatibility link" >&2
+            exit 1
+          fi
           grep -nE '^MACHINE_GNU_PLATFORM|gnu\\+\\+1[1-7]|--target=\\$\\{MACHINE_GNU_PLATFORM\\}' \
             tools/gcc/Makefile | head -n 20 || true
 

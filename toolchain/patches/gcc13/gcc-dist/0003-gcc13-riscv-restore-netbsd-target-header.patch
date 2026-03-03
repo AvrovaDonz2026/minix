@@ -1,30 +1,30 @@
 diff --git a/gcc/config/riscv/netbsd.h b/gcc/config/riscv/netbsd.h
 new file mode 100644
-index 00000000000..42f46e34cdd
+index 0000000..02b09ef
 --- /dev/null
 +++ b/gcc/config/riscv/netbsd.h
-@@ -0,0 +1,111 @@
-+/* Definitions for RISCV running NetBSD systems using ELF.
-+   Compatibility copy for MINIX GCC13 bring-up.  */
+@@ -0,0 +1,114 @@
++/* Definitions for RISCV running NetBSD systems using ELF
++   Copyright (C) 2014
++   Free Software Foundation, Inc.
++   Contributed by Matt Thomas <matt@netbsd.org>
 +
-+/* Copyright (C) 2014-2026 Free Software Foundation, Inc.
-+   Contributed by Matt Thomas <matt@netbsd.org>.  */
++This file is part of GNU CC.
 +
-+/* This file is part of GCC.
++GNU CC is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 2, or (at your option)
++any later version.
 +
-+   GCC is free software; you can redistribute it and/or modify
-+   it under the terms of the GNU General Public License as published by
-+   the Free Software Foundation; either version 3, or (at your option)
-+   any later version.
++GNU CC is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
 +
-+   GCC is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+   GNU General Public License for more details.
-+
-+   You should have received a copy of the GNU General Public License
-+   along with GCC; see the file COPYING3.  If not see
-+   <http://www.gnu.org/licenses/>.  */
++You should have received a copy of the GNU General Public License
++along with this program; see the file COPYING.  If not, write to
++the Free Software Foundation, 59 Temple Place - Suite 330,
++Boston, MA 02111-1307, USA.  */
 +
 +#undef TARGET_USE_GP
 +#define TARGET_USE_GP 0
@@ -36,19 +36,17 @@ index 00000000000..42f46e34cdd
 +#define TARGET_DEFAULT (MASK_FDIV)
 +
 +#undef TARGET_DEFAULT_CMODEL
-+#define TARGET_DEFAULT_CMODEL CM_MEDANY
++#define TARGET_DEFAULT_CMODEL	CM_MEDANY
 +
-+#define TARGET_OS_CPP_BUILTINS()                         \
-+  do                                                     \
-+    {                                                    \
-+      NETBSD_OS_CPP_BUILTINS_ELF ();                    \
-+      /* The GNU C++ standard library requires this.  */\
-+      if (c_dialect_cxx ())                             \
-+        builtin_define ("_GNU_SOURCE");                 \
-+      if (!TARGET_HARD_FLOAT_ABI)                       \
-+        builtin_define ("_SOFT_FLOAT");                 \
-+    }                                                    \
-+  while (0)
++#define TARGET_OS_CPP_BUILTINS()				\
++  do {								\
++    NETBSD_OS_CPP_BUILTINS_ELF();				\
++    /* The GNU C++ standard library requires this.  */		\
++    if (c_dialect_cxx ())					\
++      builtin_define ("_GNU_SOURCE");				\
++    if (!TARGET_HARD_FLOAT_ABI)					\
++      builtin_define ("_SOFT_FLOAT");				\
++  } while (0)
 +
 +#undef CPP_SPEC
 +#define CPP_SPEC NETBSD_CPP_SPEC
@@ -58,17 +56,26 @@ index 00000000000..42f46e34cdd
 +
 +#undef LINK_SPEC
 +#define LINK_SPEC NETBSD_LINK_SPEC_ELF
++/* Provide a LINK_SPEC appropriate for a NetBSD/mips target.
++   This is a copy of LINK_SPEC from <netbsd-elf.h> tweaked for
++   the MIPS target.  */
++
++#undef LINK_SPEC
++#define LINK_SPEC \
++  "%{m64:-m elf64lriscv} \
++   %{m32:-m elf32lriscv} \
++   %(netbsd_link_spec)"
 +
 +#undef NETBSD_ENTRY_POINT
-+#define NETBSD_ENTRY_POINT "_start"
++#define NETBSD_ENTRY_POINT	"_start"
 +
 +#undef SUBTARGET_EXTRA_SPECS
-+#define SUBTARGET_EXTRA_SPECS                    \
-+  { "netbsd_link_spec", NETBSD_LINK_SPEC_ELF },  \
-+  { "netbsd_entry_point", NETBSD_ENTRY_POINT },  \
-+  { "netbsd_endfile_spec", NETBSD_ENDFILE_SPEC },
++#define SUBTARGET_EXTRA_SPECS					\
++  { "netbsd_link_spec",		NETBSD_LINK_SPEC_ELF },		\
++  { "netbsd_entry_point",	NETBSD_ENTRY_POINT },		\
++  { "netbsd_endfile_spec",	NETBSD_ENDFILE_SPEC },
 +
-+#define SIG_ATOMIC_TYPE "int"
++#define SIG_ATOMIC_TYPE   "int"
 +
 +#define INT8_TYPE "signed char"
 +#define INT16_TYPE "short int"

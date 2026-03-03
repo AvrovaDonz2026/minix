@@ -127,7 +127,7 @@ jobs:
           rm -rf external/gpl3/gcc/dist
           mv "${workdir}/gcc-${gcc_ver}" external/gpl3/gcc/dist
 
-          patch_dir="toolchain/patches/gcc13"
+          patch_dir="toolchain/patches/gcc13/gcc-dist"
           shopt -s nullglob
           patches=("${patch_dir}"/*.patch)
           if (( ${#patches[@]} > 0 )); then
@@ -136,7 +136,7 @@ jobs:
               patch -d external/gpl3/gcc/dist -p1 < "${p}"
             done
           else
-            echo "No GCC13 patch files found in ${patch_dir}."
+            echo "No GCC13 dist patch files found in ${patch_dir}."
           fi
 
           # Visibility check only: without MINIX target hooks in config.gcc,
@@ -151,16 +151,11 @@ jobs:
           set -euo pipefail
           HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
 
-          # GCC 13 configure requires host C++11 support; the legacy tools/gcc
-          # wrapper pins gnu++98 for GCC 4.8 and must be relaxed for this spike.
-          sed -i 's/-std=gnu++98/-std=gnu++11/g' tools/gcc/Makefile
-          # GCC13 upstream does not recognize riscv64-elf32-minix yet.
-          # For spike progress, force the tools/gcc wrapper target triple to a
-          # supported baseline and collect the next blocker.
-          if ! grep -q '^MACHINE_GNU_PLATFORM=.*riscv64-unknown-elf' tools/gcc/Makefile; then
-            sed -i '/^\.include <bsd\.own\.mk>$/a MACHINE_GNU_PLATFORM=\triscv64-unknown-elf' \
-              tools/gcc/Makefile
-          fi
+          # Apply small workspace-scoped compatibility patches in lexical order.
+          workspace_patch_dir="toolchain/patches/gcc13/workspace"
+          bash toolchain/patches/gcc13/scripts/apply-workspace-patches.sh \
+            "${workspace_patch_dir}"
+
           if ! grep -q -- '-std=gnu++11' tools/gcc/Makefile; then
             echo "Failed to switch tools/gcc/Makefile host C++ standard to gnu++11" >&2
             exit 1
@@ -169,38 +164,17 @@ jobs:
             echo "Failed to override MACHINE_GNU_PLATFORM in tools/gcc/Makefile" >&2
             exit 1
           fi
+
           # GCC13 spike still builds host tools under the legacy
-          # riscv64-elf32-minix prefix. Start a watcher that waits for tooldir
-          # creation and then injects riscv64-unknown-elf-* compatibility links
-          # without pre-creating incomplete tooldir trees.
-          (
-            set +e
-            shopt -s nullglob
-            for _ in $(seq 1 180); do
-              for toolbindir in ${OBJDIR}/tooldir.*/bin; do
-                [[ -d "${toolbindir}" ]] || continue
-                for tool in install ar as ld nm objcopy objdump ranlib readelf size strings strip addr2line c++ c++filt cc cpp g++ gcc gcov gprof elfedit; do
-                  ln -sf "riscv64-elf32-minix-${tool}" "${toolbindir}/riscv64-unknown-elf-${tool}"
-                done
-                exit 0
-              done
-              sleep 2
-            done
-            exit 0
-          ) &
+          # riscv64-elf32-minix prefix; start a background link watcher.
+          bash toolchain/patches/gcc13/scripts/spawn-compat-linkwatch.sh "${OBJDIR}" &
           linkwatch_pid=$!
           grep -nE '^MACHINE_GNU_PLATFORM|gnu\\+\\+1[1-7]|--target=\\$\\{MACHINE_GNU_PLATFORM\\}' \
             tools/gcc/Makefile | head -n 20 || true
 
-          # GCC13 fixincludes expects a sysroot include tree under DESTDIR.
-          # The spike uses a clean OBJDIR, so seed headers from obj.intrgcc if
-          # available; otherwise create an empty include root to get a clearer
-          # downstream failure than a missing-directory abort.
-          destdir_root="${OBJDIR}/destdir.${MACHINE}"
-          mkdir -p "${destdir_root}/usr/include"
-          if [[ -d "obj.intrgcc/destdir.${MACHINE}/usr/include" ]]; then
-            cp -a "obj.intrgcc/destdir.${MACHINE}/usr/include/." "${destdir_root}/usr/include/"
-          fi
+          # GCC13 fixincludes expects a sysroot include tree in OBJDIR destdir.
+          bash toolchain/patches/gcc13/scripts/seed-sysroot-headers.sh \
+            "${OBJDIR}" "${MACHINE}" "obj.intrgcc"
 
           if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
             ./build.sh -U -m "${MACHINE}" -O "${OBJDIR}" \
@@ -220,15 +194,7 @@ jobs:
             exit 1
           fi
           wait "${linkwatch_pid}" || true
-          shopt -s nullglob
-          for toolbindir in ${OBJDIR}/tooldir.*/bin; do
-            [[ -d "${toolbindir}" ]] || continue
-            for src in "${toolbindir}"/riscv64-elf32-minix-*; do
-              base="${src##*/riscv64-elf32-minix-}"
-              ln -sf "$(basename "${src}")" "${toolbindir}/riscv64-unknown-elf-${base}"
-            done
-          done
-          shopt -u nullglob
+          bash toolchain/patches/gcc13/scripts/refresh-compat-links.sh "${OBJDIR}"
 
       - name: Upload gcc13 spike log
         if: always()

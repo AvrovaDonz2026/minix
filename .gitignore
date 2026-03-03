@@ -6,6 +6,8 @@ cscope.*
 *.orig
 *.diff
 *.patch
+!toolchain/patches/gcc13/**/*.patch
+!toolchain/patches/gcc13/*.patch
 *.rej
 *.[1-9].gz
 *.o

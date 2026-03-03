@@ -130,9 +130,26 @@ jobs:
           workdir="$(mktemp -d)"
           trap 'rm -rf "${workdir}"' EXIT
 
-          src_url="https://ftp.gnu.org/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
-          echo "Fetching ${src_url}"
-          curl -L --fail --retry 3 --retry-delay 2 -o "${workdir}/gcc.tar.xz" "${src_url}"
+          src_urls=(
+            "https://ftp.gnu.org/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
+            "https://ftpmirror.gnu.org/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
+            "https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
+          )
+          fetched=0
+          for src_url in "${src_urls[@]}"; do
+            echo "Fetching ${src_url}"
+            if curl -L --fail --retry 5 --retry-delay 3 --retry-all-errors \
+              --connect-timeout 20 --max-time 900 \
+              -o "${workdir}/gcc.tar.xz" "${src_url}"; then
+              fetched=1
+              break
+            fi
+            echo "Fetch failed from ${src_url}, trying next mirror..."
+          done
+          if [[ "${fetched}" != "1" ]]; then
+            echo "Failed to download gcc-${gcc_ver}.tar.xz from all mirrors" >&2
+            exit 1
+          fi
 
           echo "Extracting gcc-${gcc_ver}"
           tar -C "${workdir}" -xf "${workdir}/gcc.tar.xz"

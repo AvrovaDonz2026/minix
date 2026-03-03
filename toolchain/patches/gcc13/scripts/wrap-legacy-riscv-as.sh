@@ -77,6 +77,7 @@ for arg in "$@"; do
         # Old assembler rejects some newer textual asm forms emitted by GCC.
         sed \
           -e '/^[[:space:]]*\.option[[:space:]]\+pic[[:space:]]*$/d' \
+          -e '/^[[:space:]]*\.option[[:space:]]\+nopic[[:space:]]*$/d' \
           -e 's/\([[:space:]]call[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
           -e 's/\([[:space:]]tail[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
           -e 's/^\([[:space:]]*\)ebreak\([[:space:]]\|$\)/\1sbreak\2/' \

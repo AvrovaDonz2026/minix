@@ -154,10 +154,19 @@ jobs:
           # GCC 13 configure requires host C++11 support; the legacy tools/gcc
           # wrapper pins gnu++98 for GCC 4.8 and must be relaxed for this spike.
           sed -i 's/-std=gnu++98/-std=gnu++11/g' tools/gcc/Makefile
+          # GCC13 upstream does not recognize riscv64-elf32-minix yet.
+          # For spike progress, force the tools/gcc wrapper target triple to a
+          # supported baseline and collect the next blocker.
+          if ! grep -q '^MACHINE_GNU_PLATFORM=.*riscv64-unknown-elf' tools/gcc/Makefile; then
+            sed -i '/^\\.include <bsd\\.own\\.mk>$/a MACHINE_GNU_PLATFORM=\\triscv64-unknown-elf' \
+              tools/gcc/Makefile
+          fi
           if ! grep -q -- '-std=gnu++11' tools/gcc/Makefile; then
             echo "Failed to switch tools/gcc/Makefile host C++ standard to gnu++11" >&2
             exit 1
           fi
+          grep -nE '^MACHINE_GNU_PLATFORM|gnu\\+\\+1[1-7]|--target=\\$\\{MACHINE_GNU_PLATFORM\\}' \
+            tools/gcc/Makefile | head -n 20 || true
 
           if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
             ./build.sh -U -m "${MACHINE}" -O "${OBJDIR}" \

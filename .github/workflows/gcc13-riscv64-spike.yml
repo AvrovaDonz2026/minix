@@ -14,6 +14,22 @@ on:
         required: false
         default: "13.2.0"
         type: string
+      target_mode:
+        description: "Target mode: native=minix triple, shim=unknown-elf override"
+        required: false
+        default: "native"
+        type: choice
+        options:
+          - native
+          - shim
+      build_scope:
+        description: "Build scope: tools only or full distribution + bootstrap smoke"
+        required: false
+        default: "full"
+        type: choice
+        options:
+          - full
+          - tools
 
 permissions:
   contents: read
@@ -25,7 +41,7 @@ concurrency:
 jobs:
   spike:
     runs-on: ubuntu-24.04
-    timeout-minutes: 240
+    timeout-minutes: 480
     env:
       DEBIAN_FRONTEND: noninteractive
       OBJDIR: obj.gcc13
@@ -150,25 +166,59 @@ jobs:
         run: |
           set -euo pipefail
           HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
+          target_mode='${{ inputs.target_mode }}'
+          build_scope='${{ inputs.build_scope }}'
+          if [[ -z "${target_mode}" ]]; then
+            target_mode="native"
+          fi
+          if [[ -z "${build_scope}" ]]; then
+            build_scope="full"
+          fi
+          case "${target_mode}" in
+            native|shim) ;;
+            *)
+              echo "unsupported target_mode=${target_mode}" >&2
+              exit 1
+              ;;
+          esac
+          case "${build_scope}" in
+            full|tools) ;;
+            *)
+              echo "unsupported build_scope=${build_scope}" >&2
+              exit 1
+              ;;
+          esac
 
           # Apply small workspace-scoped compatibility patches in lexical order.
           workspace_patch_dir="toolchain/patches/gcc13/workspace"
           bash toolchain/patches/gcc13/scripts/apply-workspace-patches.sh \
-            "${workspace_patch_dir}"
+            "${workspace_patch_dir}" "${target_mode}"
 
           if ! grep -q -- '-std=gnu++11' tools/gcc/Makefile; then
             echo "Failed to switch tools/gcc/Makefile host C++ standard to gnu++11" >&2
             exit 1
           fi
-          if ! grep -q '^MACHINE_GNU_PLATFORM=.*riscv64-unknown-elf' tools/gcc/Makefile; then
-            echo "Failed to override MACHINE_GNU_PLATFORM in tools/gcc/Makefile" >&2
-            exit 1
+          if [[ "${target_mode}" == "shim" ]]; then
+            if ! grep -q '^MACHINE_GNU_PLATFORM=.*riscv64-unknown-elf' tools/gcc/Makefile; then
+              echo "Failed to override MACHINE_GNU_PLATFORM in tools/gcc/Makefile (shim mode)" >&2
+              exit 1
+            fi
+          else
+            if grep -q '^MACHINE_GNU_PLATFORM=.*riscv64-unknown-elf' tools/gcc/Makefile; then
+              echo "Unexpected shim MACHINE_GNU_PLATFORM override in native mode" >&2
+              exit 1
+            fi
           fi
 
-          # GCC13 spike still builds host tools under the legacy
-          # riscv64-elf32-minix prefix; start a background link watcher.
-          bash toolchain/patches/gcc13/scripts/spawn-compat-linkwatch.sh "${OBJDIR}" &
-          linkwatch_pid=$!
+          target_override_args=()
+          linkwatch_pid=""
+          if [[ "${target_mode}" == "shim" ]]; then
+            # Shim mode still builds host tools under riscv64-elf32-minix
+            # while gcc sub-build expects riscv64-unknown-elf tools.
+            bash toolchain/patches/gcc13/scripts/spawn-compat-linkwatch.sh "${OBJDIR}" &
+            linkwatch_pid=$!
+            target_override_args+=( -V MACHINE_GNU_PLATFORM=riscv64-unknown-elf )
+          fi
           grep -nE '^MACHINE_GNU_PLATFORM|gnu\\+\\+1[1-7]|--target=\\$\\{MACHINE_GNU_PLATFORM\\}' \
             tools/gcc/Makefile | head -n 20 || true
 
@@ -178,7 +228,7 @@ jobs:
 
           if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
             ./build.sh -U -m "${MACHINE}" -O "${OBJDIR}" \
-              -V MACHINE_GNU_PLATFORM=riscv64-unknown-elf \
+              "${target_override_args[@]}" \
               -V AVAILABLE_COMPILER=gcc \
               -V ACTIVE_CC=gcc \
               -V ACTIVE_CPP=gcc \
@@ -189,16 +239,122 @@ jobs:
               -V MKCXX=yes \
               -V MKLIBSTDCXX=yes \
               tools) 2>&1 | tee /tmp/gcc13-spike-tools.log; then
-            wait "${linkwatch_pid}" || true
+            if [[ -n "${linkwatch_pid}" ]]; then
+              wait "${linkwatch_pid}" || true
+            fi
             echo "gcc13 spike build failed. Inspect /tmp/gcc13-spike-tools.log" >&2
             exit 1
           fi
-          wait "${linkwatch_pid}" || true
-          bash toolchain/patches/gcc13/scripts/refresh-compat-links.sh "${OBJDIR}"
+          if [[ -n "${linkwatch_pid}" ]]; then
+            wait "${linkwatch_pid}" || true
+            bash toolchain/patches/gcc13/scripts/refresh-compat-links.sh "${OBJDIR}"
+          fi
+
+          echo "target_mode=${target_mode}" >>"${GITHUB_ENV}"
+          echo "build_scope=${build_scope}" >>"${GITHUB_ENV}"
+
+      - name: Build distribution (gcc13 spike)
+        shell: bash
+        run: |
+          set -euo pipefail
+          HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
+          target_mode="${target_mode:-native}"
+          build_scope="${build_scope:-full}"
+          if [[ "${build_scope}" != "full" ]]; then
+            echo "Skipping distribution build for build_scope=${build_scope}"
+            exit 0
+          fi
+
+          target_override_args=()
+          if [[ "${target_mode}" == "shim" ]]; then
+            target_override_args+=( -V MACHINE_GNU_PLATFORM=riscv64-unknown-elf )
+          fi
+
+          if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
+            ./build.sh -U -u -j"$(nproc)" -m "${MACHINE}" -O "${OBJDIR}" \
+              "${target_override_args[@]}" \
+              -V AVAILABLE_COMPILER=gcc \
+              -V ACTIVE_CC=gcc \
+              -V ACTIVE_CPP=gcc \
+              -V ACTIVE_CXX=gcc \
+              -V ACTIVE_OBJC=gcc \
+              -V RISCV_ARCH_FLAGS='-march=RV64IMAFD -mcmodel=medany' \
+              -V NOGCCERROR=yes \
+              -V MKGCC=yes \
+              -V MKGCCCMDS=yes \
+              -V MKCXX=yes \
+              -V MKLIBSTDCXX=yes \
+              -V MKLIBOBJC=no \
+              -V MKLIBGOMP=no \
+              -V MKATF=no \
+              -V USE_PCI=no \
+              -V CHECKFLIST_FLAGS='-m -e' \
+              distribution) 2>&1 | tee /tmp/gcc13-spike-distribution.log; then
+            echo "gcc13 spike distribution build failed. Inspect /tmp/gcc13-spike-distribution.log" >&2
+            exit 1
+          fi
+
+      - name: Bootstrap compiler smoke (gcc13 spike)
+        shell: bash
+        run: |
+          set -euo pipefail
+          target_mode="${target_mode:-native}"
+          build_scope="${build_scope:-full}"
+          if [[ "${build_scope}" != "full" ]]; then
+            echo "Skipping bootstrap smoke for build_scope=${build_scope}"
+            exit 0
+          fi
+
+          {
+            tooldir="$(find "${PWD}/${OBJDIR}" -maxdepth 1 -type d -name 'tooldir.*' -print -quit)"
+            if [[ -z "${tooldir}" ]]; then
+              echo "Missing tooldir under ${PWD}/${OBJDIR}" >&2
+              exit 1
+            fi
+            destdir="${PWD}/${OBJDIR}/destdir.${MACHINE}"
+            if [[ "${target_mode}" == "shim" ]]; then
+              triplet="riscv64-unknown-elf"
+            else
+              triplet="riscv64-elf32-minix"
+            fi
+
+            cc="${tooldir}/bin/${triplet}-gcc"
+            cxx="${tooldir}/bin/${triplet}-g++"
+            readelf="${tooldir}/bin/${triplet}-readelf"
+            for tool in "${cc}" "${cxx}" "${readelf}"; do
+              if [[ ! -x "${tool}" ]]; then
+                echo "Missing compiler smoke tool: ${tool}" >&2
+                exit 1
+              fi
+            done
+
+            smoke_dir="/tmp/gcc13-bootstrap-smoke"
+            rm -rf "${smoke_dir}"
+            mkdir -p "${smoke_dir}"
+
+            cat > "${smoke_dir}/hello.c" <<'SRC'
+            #include <stdio.h>
+            int main(void) { puts("hello"); return 0; }
+            SRC
+
+            cat > "${smoke_dir}/hello.cpp" <<'SRC'
+            #include <vector>
+            int main() { std::vector<int> v; v.push_back(1); return v[0] - 1; }
+            SRC
+
+            "${cc}" --sysroot="${destdir}" -I"${destdir}/usr/include" -c "${smoke_dir}/hello.c" -o "${smoke_dir}/hello.c.o"
+            "${cxx}" --sysroot="${destdir}" -I"${destdir}/usr/include" -I"${destdir}/usr/include/g++" -c "${smoke_dir}/hello.cpp" -o "${smoke_dir}/hello.cpp.o"
+            "${readelf}" -h "${smoke_dir}/hello.c.o" > "${smoke_dir}/hello.readelf.txt"
+            grep -E 'Machine:.*RISC-V' "${smoke_dir}/hello.readelf.txt" >/dev/null
+          } 2>&1 | tee /tmp/gcc13-spike-bootstrap.log
 
       - name: Upload gcc13 spike log
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: riscv64-gcc13-spike-log-${{ github.run_id }}
-          path: /tmp/gcc13-spike-tools.log
+          if-no-files-found: warn
+          path: |
+            /tmp/gcc13-spike-tools.log
+            /tmp/gcc13-spike-distribution.log
+            /tmp/gcc13-spike-bootstrap.log

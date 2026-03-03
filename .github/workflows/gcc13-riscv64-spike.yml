@@ -192,6 +192,16 @@ jobs:
           grep -nE '^MACHINE_GNU_PLATFORM|gnu\\+\\+1[1-7]|--target=\\$\\{MACHINE_GNU_PLATFORM\\}' \
             tools/gcc/Makefile | head -n 20 || true
 
+          # GCC13 fixincludes expects a sysroot include tree under DESTDIR.
+          # The spike uses a clean OBJDIR, so seed headers from obj.intrgcc if
+          # available; otherwise create an empty include root to get a clearer
+          # downstream failure than a missing-directory abort.
+          destdir_root="${OBJDIR}/destdir.${MACHINE}"
+          mkdir -p "${destdir_root}/usr/include"
+          if [[ -d "obj.intrgcc/destdir.${MACHINE}/usr/include" ]]; then
+            cp -a "obj.intrgcc/destdir.${MACHINE}/usr/include/." "${destdir_root}/usr/include/"
+          fi
+
           if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
             ./build.sh -U -m "${MACHINE}" -O "${OBJDIR}" \
               -V MACHINE_GNU_PLATFORM=riscv64-unknown-elf \

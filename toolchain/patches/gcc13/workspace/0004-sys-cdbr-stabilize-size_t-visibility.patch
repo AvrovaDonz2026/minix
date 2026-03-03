@@ -1,0 +1,15 @@
+--- a/sys/sys/cdbr.h	2026-01-30 20:44:30.406087354 +0800
++++ b/sys/sys/cdbr.h
+@@ -39,7 +39,11 @@
+ #include <sys/types.h>
+ #else
+ #include <inttypes.h>
+-#include <stddef.h>
++/*
++ * GCC13 toolchain paths can reach this header after a partial stddef view.
++ * Pull size_t from sys/types.h as a stable fallback for userland consumers.
++ */
++#include <sys/types.h>
+ #endif
+ 
+ #define	CDBR_DEFAULT	0

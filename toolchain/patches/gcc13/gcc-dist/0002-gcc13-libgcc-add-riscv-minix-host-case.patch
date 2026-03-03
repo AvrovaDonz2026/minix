@@ -1,0 +1,13 @@
+--- a/libgcc/config.host	2026-03-03 13:04:48.283351052 +0800
++++ b/libgcc/config.host	2026-03-03 13:04:48.327362476 +0800
+@@ -1308,6 +1308,10 @@
+ 	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o crtendS.o crtbeginT.o"
+ 	md_unwind_header=riscv/linux-unwind.h
+ 	;;
++riscv*-*-minix*)
++	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address}"
++	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o"
++	;;
+ riscv*-*-freebsd*)
+ 	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address} t-slibgcc-libgcc"
+ 	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o crtendS.o crtbeginT.o"

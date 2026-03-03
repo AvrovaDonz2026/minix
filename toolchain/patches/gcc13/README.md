@@ -26,4 +26,12 @@ This directory stores MINIX GCC13 integration changes as small, scoped units.
 
 ## Current GCC dist patch set
 
-- No GCC13 MINIX target hooks are committed yet.
+- `gcc-dist/0001-gcc13-config-gcc-add-minix-riscv-target.patch`
+  - Add generic `*-*-minix*` OS defaults in `gcc/config.gcc`.
+  - Add an explicit `riscv*-*-minix*` target case in `gcc/config.gcc`.
+- `gcc-dist/0002-gcc13-libgcc-add-riscv-minix-host-case.patch`
+  - Add an explicit `riscv*-*-minix*` stanza in `libgcc/config.host`.
+
+These `gcc-dist` patches are the first bootstrap step toward removing the
+`riscv64-unknown-elf` workspace override. They are intentionally minimal and
+safe to keep enabled while the spike still uses the temporary target shim.

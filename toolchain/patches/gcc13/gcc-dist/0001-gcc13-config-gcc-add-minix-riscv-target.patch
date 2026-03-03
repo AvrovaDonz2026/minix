@@ -1,0 +1,38 @@
+--- a/gcc/config.gcc	2026-03-03 13:04:48.275348975 +0800
++++ b/gcc/config.gcc	2026-03-03 13:04:48.327362476 +0800
+@@ -947,6 +947,13 @@
+       ;;
+   esac
+   ;;
++*-*-minix*)
++  tmake_file="t-slibgcc"
++  gas=yes
++  gnu_ld=yes
++  use_gcc_stdint=wrap
++  default_use_cxa_atexit=yes
++  ;;
+ *-*-openbsd*)
+   tmake_file="t-openbsd"
+   case ${enable_threads} in
+@@ -2461,6 +2468,21 @@
+ 	# automatically detect that GAS supports it, yet we require it.
+ 	gcc_cv_initfini_array=yes
+ 	;;
++riscv*-*-minix*)
++	tm_file="elfos.h newlib-stdint.h ${tm_file} riscv/elf.h"
++	tmake_file="${tmake_file} riscv/t-riscv"
++	gnu_ld=yes
++	gas=yes
++	case $target in
++	riscv32be-*|riscv64be-*)
++		tm_defines="${tm_defines} TARGET_BIG_ENDIAN_DEFAULT=1"
++		;;
++	esac
++	# Force .init_array support.  The configure script cannot always
++	# automatically detect that GAS supports it, yet we require it.
++	gcc_cv_initfini_array=yes
++	default_use_cxa_atexit=yes
++	;;
+ riscv*-*-freebsd*)
+ 	tm_file="${tm_file} elfos.h ${fbsd_tm_file} riscv/freebsd.h"
+ 	tmake_file="${tmake_file} riscv/t-riscv"

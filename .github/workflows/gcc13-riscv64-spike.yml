@@ -1,0 +1,169 @@
+name: riscv64-gcc13-spike
+
+on:
+  workflow_dispatch:
+    inputs:
+      gcc_version:
+        description: "Upstream GCC version to overlay (example: 13.2.0)"
+        required: false
+        default: "13.2.0"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: riscv64-gcc13-spike-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  spike:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      OBJDIR: obj.gcc13
+      MACHINE: evbriscv64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reclaim runner disk space
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Disk usage before cleanup"
+          df -h
+
+          sudo swapoff -a || true
+          sudo rm -f /swapfile || true
+
+          sudo rm -rf \
+            /usr/share/dotnet \
+            /usr/local/lib/android \
+            /opt/ghc \
+            /opt/hostedtoolcache/CodeQL || true
+
+          if command -v docker >/dev/null 2>&1; then
+            sudo docker system prune -af || true
+          fi
+
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+
+          echo "Disk usage after cleanup"
+          df -h
+
+      - name: Install host dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            bc \
+            bison \
+            build-essential \
+            byacc \
+            ca-certificates \
+            curl \
+            e2fsprogs \
+            file \
+            flex \
+            gawk \
+            gperf \
+            libelf-dev \
+            libncurses-dev \
+            libssl-dev \
+            m4 \
+            make \
+            pkg-config \
+            python3 \
+            python3-pip \
+            rsync \
+            texinfo
+
+      - name: Overlay GCC dist with upstream GCC 13
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gcc_ver='${{ inputs.gcc_version }}'
+          if [[ -z "${gcc_ver}" ]]; then
+            gcc_ver="13.2.0"
+          fi
+
+          case "${gcc_ver}" in
+            13.*) ;;
+            *)
+              echo "This spike workflow currently supports GCC 13.x only. got=${gcc_ver}" >&2
+              exit 1
+              ;;
+          esac
+
+          workdir="$(mktemp -d)"
+          trap 'rm -rf "${workdir}"' EXIT
+
+          src_url="https://ftp.gnu.org/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
+          echo "Fetching ${src_url}"
+          curl -L --fail --retry 3 --retry-delay 2 -o "${workdir}/gcc.tar.xz" "${src_url}"
+
+          echo "Extracting gcc-${gcc_ver}"
+          tar -C "${workdir}" -xf "${workdir}/gcc.tar.xz"
+          if [[ ! -d "${workdir}/gcc-${gcc_ver}" ]]; then
+            echo "Missing extracted source dir: ${workdir}/gcc-${gcc_ver}" >&2
+            exit 1
+          fi
+
+          rm -rf external/gpl3/gcc/dist
+          mv "${workdir}/gcc-${gcc_ver}" external/gpl3/gcc/dist
+
+          patch_dir="toolchain/patches/gcc13"
+          shopt -s nullglob
+          patches=("${patch_dir}"/*.patch)
+          if (( ${#patches[@]} > 0 )); then
+            for p in "${patches[@]}"; do
+              echo "Applying ${p}"
+              patch -d external/gpl3/gcc/dist -p1 < "${p}"
+            done
+          else
+            echo "No GCC13 patch files found in ${patch_dir}."
+          fi
+
+          # Visibility check only: without MINIX target hooks in config.gcc,
+          # configure will fail with unsupported target.
+          if ! grep -Eq 'minix|.*-\*-minix' external/gpl3/gcc/dist/gcc/config.gcc; then
+            echo "Warning: no MINIX target entry found in GCC13 config.gcc; build is expected to fail until patchset is added." >&2
+          fi
+
+      - name: Build tools (gcc13 spike)
+        shell: bash
+        run: |
+          set -euo pipefail
+          HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
+
+          if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
+            ./build.sh -U -m "${MACHINE}" -O "${OBJDIR}" \
+              -V AVAILABLE_COMPILER=gcc \
+              -V ACTIVE_CC=gcc \
+              -V ACTIVE_CPP=gcc \
+              -V ACTIVE_CXX=gcc \
+              -V ACTIVE_OBJC=gcc \
+              -V MKGCC=yes \
+              -V MKGCCCMDS=yes \
+              -V MKCXX=yes \
+              -V MKLIBSTDCXX=yes \
+              tools) 2>&1 | tee /tmp/gcc13-spike-tools.log; then
+            echo "gcc13 spike build failed. Inspect /tmp/gcc13-spike-tools.log" >&2
+            exit 1
+          fi
+
+      - name: Upload gcc13 spike log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: riscv64-gcc13-spike-log-${{ github.run_id }}
+          path: /tmp/gcc13-spike-tools.log

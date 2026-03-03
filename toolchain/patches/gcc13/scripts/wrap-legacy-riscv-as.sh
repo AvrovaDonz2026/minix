@@ -3,21 +3,38 @@ set -euo pipefail
 
 as_bin="${1:?usage: wrap-legacy-riscv-as.sh <triplet-as-path>}"
 as_real="${as_bin}.real"
+wrapper_marker="MINIX_GCC13_LEGACY_RISCV_AS_WRAPPER"
+
+is_wrapper_installed() {
+  local target="$1"
+  [[ -f "${target}" ]] || return 1
+  grep -q "${wrapper_marker}" "${target}" 2>/dev/null \
+    || grep -q 'real="\${self}\.real"' "${target}" 2>/dev/null
+}
 
 if [[ -x "${as_real}" ]]; then
-  echo "Assembler wrapper already installed at ${as_bin}"
-  exit 0
-fi
+  if is_wrapper_installed "${as_bin}"; then
+    echo "Assembler wrapper already installed at ${as_bin}"
+    exit 0
+  fi
 
-if [[ ! -x "${as_bin}" ]]; then
-  echo "Missing assembler binary: ${as_bin}" >&2
-  exit 1
+  # The wrapped assembler can be replaced later by a tools reinstall.
+  # If that happens, preserve the newest assembler payload as .real and
+  # regenerate the wrapper script.
+  if [[ -x "${as_bin}" ]]; then
+    mv -f "${as_bin}" "${as_real}"
+  fi
+else
+  if [[ ! -x "${as_bin}" ]]; then
+    echo "Missing assembler binary: ${as_bin}" >&2
+    exit 1
+  fi
+  mv "${as_bin}" "${as_real}"
 fi
-
-mv "${as_bin}" "${as_real}"
 
 cat > "${as_bin}" <<'EOF'
 #!/usr/bin/env bash
+# MINIX_GCC13_LEGACY_RISCV_AS_WRAPPER
 set -euo pipefail
 
 self="$0"

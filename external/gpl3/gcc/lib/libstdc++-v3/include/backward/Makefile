@@ -6,7 +6,12 @@
 
 .cc: # disable .cc->NULL transform
 
-INCS=		${G_backward_headers}
+INCS=
+.for _f in ${G_backward_headers}
+.if exists(${DIST}/libstdc++-v3/include/${_f})
+INCS+=		${_f}
+.endif
+.endfor
 INCSDIR=	/usr/include/g++/backward
 
 .include "${.CURDIR}/../Makefile.includes"

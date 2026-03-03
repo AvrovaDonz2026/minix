@@ -170,18 +170,25 @@ jobs:
             exit 1
           fi
           # GCC13 spike still builds host tools under the legacy
-          # riscv64-elf32-minix prefix. Preseed a set of dangling compatibility
-          # links so gcc sub-builds can resolve riscv64-unknown-elf-* helpers.
-          host_id="$(uname -s)-$(uname -r)-$(uname -m)"
-          toolbindir="${OBJDIR}/tooldir.${host_id}/bin"
-          mkdir -p "${toolbindir}"
-          for tool in install ar as ld nm objcopy objdump ranlib readelf size strings strip addr2line c++ c++filt cc cpp g++ gcc gcov gprof elfedit; do
-            ln -sf "riscv64-elf32-minix-${tool}" "${toolbindir}/riscv64-unknown-elf-${tool}"
-          done
-          if [[ ! -L "${toolbindir}/riscv64-unknown-elf-install" ]]; then
-            echo "Failed to preseed riscv64-unknown-elf-install compatibility link" >&2
-            exit 1
-          fi
+          # riscv64-elf32-minix prefix. Start a watcher that waits for tooldir
+          # creation and then injects riscv64-unknown-elf-* compatibility links
+          # without pre-creating incomplete tooldir trees.
+          (
+            set +e
+            shopt -s nullglob
+            for _ in $(seq 1 180); do
+              for toolbindir in ${OBJDIR}/tooldir.*/bin; do
+                [[ -d "${toolbindir}" ]] || continue
+                for tool in install ar as ld nm objcopy objdump ranlib readelf size strings strip addr2line c++ c++filt cc cpp g++ gcc gcov gprof elfedit; do
+                  ln -sf "riscv64-elf32-minix-${tool}" "${toolbindir}/riscv64-unknown-elf-${tool}"
+                done
+                exit 0
+              done
+              sleep 2
+            done
+            exit 0
+          ) &
+          linkwatch_pid=$!
           grep -nE '^MACHINE_GNU_PLATFORM|gnu\\+\\+1[1-7]|--target=\\$\\{MACHINE_GNU_PLATFORM\\}' \
             tools/gcc/Makefile | head -n 20 || true
 
@@ -198,13 +205,18 @@ jobs:
               -V MKCXX=yes \
               -V MKLIBSTDCXX=yes \
               tools) 2>&1 | tee /tmp/gcc13-spike-tools.log; then
+            wait "${linkwatch_pid}" || true
             echo "gcc13 spike build failed. Inspect /tmp/gcc13-spike-tools.log" >&2
             exit 1
           fi
+          wait "${linkwatch_pid}" || true
           shopt -s nullglob
-          for src in "${toolbindir}"/riscv64-elf32-minix-*; do
-            base="${src##*/riscv64-elf32-minix-}"
-            ln -sf "$(basename "${src}")" "${toolbindir}/riscv64-unknown-elf-${base}"
+          for toolbindir in ${OBJDIR}/tooldir.*/bin; do
+            [[ -d "${toolbindir}" ]] || continue
+            for src in "${toolbindir}"/riscv64-elf32-minix-*; do
+              base="${src##*/riscv64-elf32-minix-}"
+              ln -sf "$(basename "${src}")" "${toolbindir}/riscv64-unknown-elf-${base}"
+            done
           done
           shopt -u nullglob
 

@@ -372,9 +372,13 @@ jobs:
           # several libstdc++ feature/deprecation/transaction macros required
           # by GCC13 headers. Add conservative fallbacks only when absent.
           gxx_cxxconfig="${gxx_bits_dir}/c++config.h"
-          if [[ -f "${gxx_cxxconfig}" ]] && \
-             ! grep -q 'GCC13_SPIKE_CXXCONFIG_COMPAT' "${gxx_cxxconfig}"; then
-            cat >> "${gxx_cxxconfig}" <<'EOF'
+          arch_cxxconfig="external/gpl3/gcc/lib/libstdc++-v3/arch/riscv64/c++config.h"
+          for cxxconfig_target in "${gxx_cxxconfig}" "${arch_cxxconfig}"; do
+            if [[ ! -f "${cxxconfig_target}" ]] || \
+               grep -q 'GCC13_SPIKE_CXXCONFIG_COMPAT' "${cxxconfig_target}"; then
+              continue
+            fi
+            cat >> "${cxxconfig_target}" <<'EOF'
             /* GCC13_SPIKE_CXXCONFIG_COMPAT: fallback macros for legacy c++config.h. */
             #ifndef _GLIBCXX_DEPRECATED_SUGGEST
             # define _GLIBCXX_DEPRECATED_SUGGEST(ALT)
@@ -419,7 +423,7 @@ jobs:
             # define _GLIBCXX_TXN_SAFE_DYN
             #endif
           EOF
-          fi
+          done
 
           # GCC13 riscv driver specs can inject -lgloss for this spike target.
           # MINIX userland does not provide libgloss; seed an empty archive to

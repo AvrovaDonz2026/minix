@@ -1,3 +1,20 @@
+--- a/external/mit/lua/dist/src/llimits.h
++++ b/external/mit/lua/dist/src/llimits.h
+@@ -13,6 +13,14 @@
+ #ifndef _KERNEL
+ #include <limits.h>
+ #include <stddef.h>
++
++/*
++ * GCC13 spike toolchains can expose stddef.h partially on some include paths.
++ * Use the compiler builtin type as a fallback so Lua sees ptrdiff_t reliably.
++ */
++#if defined(__PTRDIFF_TYPE__) && !defined(ptrdiff_t)
++#define ptrdiff_t __PTRDIFF_TYPE__
++#endif
+ #endif
+ 
+ 
 --- a/external/mit/lua/dist/src/lobject.h
 +++ b/external/mit/lua/dist/src/lobject.h
 @@ -11,6 +11,13 @@

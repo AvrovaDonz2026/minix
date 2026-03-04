@@ -320,6 +320,13 @@ jobs:
               "${as_target}" || true
           done
 
+          # MPFR dist sources are materialized by tool/build stages; apply the
+          # ptrdiff_t visibility fallback here (not in pre-tools workspace patching).
+          mpfr_vasprintf="external/lgpl3/mpfr/dist/src/vasprintf.c"
+          if [[ -f "${mpfr_vasprintf}" ]] && ! grep -q '<sys/types.h>' "${mpfr_vasprintf}"; then
+            perl -0pi -e 's|#include <stddef.h>             /\* for ptrdiff_t \*/\n#endif|#include <stddef.h>             /* for ptrdiff_t */\n#endif\n\n/* Fallback for GCC13 spike headers where stddef visibility can be partial. */\n#include <sys/types.h>|' "${mpfr_vasprintf}"
+          fi
+
           # GCC13 riscv driver specs can inject -lgloss for this spike target.
           # MINIX userland does not provide libgloss; seed an empty archive to
           # satisfy the driver and keep the build moving.

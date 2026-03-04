@@ -368,17 +368,17 @@ jobs:
               "${gxx_bits_dir}/cxxabi_init_exception.h"
           fi
 
-          # The legacy MINIX c++config.h in destdir is GCC4-era and misses
-          # several libstdc++ feature/deprecation/transaction macros required
-          # by GCC13 headers. Add conservative fallbacks only when absent.
+          # The legacy MINIX c++config.h used in this lane is GCC4-era and
+          # misses macros required by GCC13 headers. Patch the arch source once
+          # and then force-sync it to all include search locations.
           gxx_cxxconfig="${gxx_bits_dir}/c++config.h"
+          gxx_legacy_bits_dir="${PWD}/${OBJDIR}/destdir.${MACHINE}/usr/include/gcc-4.8/bits"
+          gxx_legacy_cxxconfig="${gxx_legacy_bits_dir}/c++config.h"
           arch_cxxconfig="external/gpl3/gcc/lib/libstdc++-v3/arch/riscv64/c++config.h"
-          for cxxconfig_target in "${gxx_cxxconfig}" "${arch_cxxconfig}"; do
-            if [[ ! -f "${cxxconfig_target}" ]] || \
-               grep -q 'GCC13_SPIKE_CXXCONFIG_COMPAT' "${cxxconfig_target}"; then
-              continue
-            fi
-            cat >> "${cxxconfig_target}" <<'EOF'
+
+          if [[ -f "${arch_cxxconfig}" ]] && \
+             ! grep -q 'GCC13_SPIKE_CXXCONFIG_COMPAT' "${arch_cxxconfig}"; then
+            cat >> "${arch_cxxconfig}" <<'EOF'
             /* GCC13_SPIKE_CXXCONFIG_COMPAT: fallback macros for legacy c++config.h. */
             #ifndef _GLIBCXX_DEPRECATED_SUGGEST
             # define _GLIBCXX_DEPRECATED_SUGGEST(ALT)
@@ -423,9 +423,15 @@ jobs:
             # define _GLIBCXX_TXN_SAFE_DYN
             #endif
           EOF
-          done
+          fi
 
-          for verify_cxxconfig in "${gxx_cxxconfig}" "${arch_cxxconfig}"; do
+          if [[ -f "${arch_cxxconfig}" ]]; then
+            mkdir -p "${gxx_bits_dir}" "${gxx_legacy_bits_dir}"
+            cp -f "${arch_cxxconfig}" "${gxx_cxxconfig}"
+            cp -f "${arch_cxxconfig}" "${gxx_legacy_cxxconfig}"
+          fi
+
+          for verify_cxxconfig in "${gxx_cxxconfig}" "${gxx_legacy_cxxconfig}" "${arch_cxxconfig}"; do
             if [[ -f "${verify_cxxconfig}" ]]; then
               echo "cxxconfig-check: ${verify_cxxconfig}"
               grep -nE 'GCC13_SPIKE_CXXCONFIG_COMPAT|_GLIBCXX_TXN_SAFE_DYN|_GLIBCXX11_DEPRECATED|_GLIBCXX_NODISCARD|_GLIBCXX23_CONSTEXPR' \

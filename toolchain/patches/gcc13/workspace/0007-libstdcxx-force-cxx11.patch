@@ -7,18 +7,21 @@
 -CXXFLAGS+=	${CXXFLAGS.${ACTIVE_CC}}
 +CXXFLAGS+=	${CXXFLAGS.${ACTIVE_CC}}
 +
-+# GCC13 defaults to newer dialects; keep legacy libstdc++ units on C++98.
-+CXXFLAGS+=	-std=gnu++98
++# GCC13 libstdc++ headers require C++11 baseline in libsupc++ paths.
++CXXFLAGS+=	-std=gnu++11
  CWARNFLAGS.clang+=	-Wno-logical-op-parentheses \
  			-Wno-deprecated-writable-strings -Wno-parentheses
  
-@@ -84,6 +87,10 @@
+@@ -84,6 +87,13 @@
  CPPFLAGS.thread.cc = -std=gnu++0x
  CPPFLAGS.future.cc = -std=gnu++0x
  
 +# GCC13 moves these c++98 sources to C++11 semantics.
 +CPPFLAGS.locale_init.cc += -std=gnu++11
 +CPPFLAGS.localename.cc += -std=gnu++11
++
++# Keep this legacy TU on C++98; it trips over newer dialect defaults.
++CPPFLAGS.misc-inst.cc += -std=gnu++98
 +
  CPPFLAGS.cp-demangle.cc += -DIN_GLIBCPP_V3
  CPPFLAGS.concept-inst.cc += -D_GLIBCXX_CONCEPT_CHECKS

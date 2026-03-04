@@ -1,0 +1,13 @@
+--- a/external/gpl3/gcc/lib/libstdc++-v3/Makefile
++++ b/external/gpl3/gcc/lib/libstdc++-v3/Makefile
+@@ -19,6 +19,10 @@
+ 
+ CXXFLAGS.clang+=	-stdlib=libstdc++ -std=c++11 -D_GLIBCXX_ABI_TAG_CXX11=
+ CXXFLAGS+=	${CXXFLAGS.${ACTIVE_CC}}
++
++# GCC13 libstdc++ sources require C++11 (e.g. locale_init/localename).
++# Enforce this globally for the spike workspace to avoid per-file fallout.
++CXXFLAGS+=	-std=gnu++11
+ CWARNFLAGS.clang+=	-Wno-logical-op-parentheses \
+ 			-Wno-deprecated-writable-strings -Wno-parentheses
+ 

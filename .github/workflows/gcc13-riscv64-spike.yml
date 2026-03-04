@@ -356,6 +356,9 @@ jobs:
               -V MKGCCCMDS=yes \
               -V MKCXX=yes \
               -V MKLIBSTDCXX=yes \
+              -V MKPIC=no \
+              -V MKPICLIB=no \
+              -V MKPICINSTALL=no \
               -V MKLIBOBJC=no \
               -V MKLIBGOMP=no \
               -V MKATF=no \

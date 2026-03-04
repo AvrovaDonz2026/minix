@@ -330,16 +330,41 @@ jobs:
           # GCC13 libstdc++ expects these internal bits headers while this
           # spike lane still composes include trees in a GCC4-era layout.
           # Seed the two required headers from libsupc++ before distribution.
+          gxx_include_dir="${PWD}/${OBJDIR}/destdir.${MACHINE}/usr/include/g++"
           gxx_bits_dir="${PWD}/${OBJDIR}/destdir.${MACHINE}/usr/include/g++/bits"
+          src_libstdcpp_include="external/gpl3/gcc/dist/libstdc++-v3/include"
+          src_libstdcpp_libsupcxx="external/gpl3/gcc/dist/libstdc++-v3/libsupc++"
           mkdir -p "${gxx_bits_dir}"
-          if [[ -f "external/gpl3/gcc/dist/libstdc++-v3/libsupc++/exception" ]] && \
+
+          # Backfill GCC13 headers that are not installed by the legacy header
+          # lists used in this build system (copy-missing only, no overwrite).
+          if [[ -d "${src_libstdcpp_include}/std" ]]; then
+            cp -an "${src_libstdcpp_include}/std/." "${gxx_include_dir}/"
+          fi
+          if [[ -d "${src_libstdcpp_include}/c_global" ]]; then
+            cp -an "${src_libstdcpp_include}/c_global/." "${gxx_include_dir}/"
+          fi
+          if [[ -d "${src_libstdcpp_include}/bits" ]]; then
+            mkdir -p "${gxx_include_dir}/bits"
+            cp -an "${src_libstdcpp_include}/bits/." "${gxx_include_dir}/bits/"
+          fi
+          if [[ -d "${src_libstdcpp_include}/ext" ]]; then
+            mkdir -p "${gxx_include_dir}/ext"
+            cp -an "${src_libstdcpp_include}/ext/." "${gxx_include_dir}/ext/"
+          fi
+          if [[ -d "${src_libstdcpp_include}/backward" ]]; then
+            mkdir -p "${gxx_include_dir}/backward"
+            cp -an "${src_libstdcpp_include}/backward/." "${gxx_include_dir}/backward/"
+          fi
+
+          if [[ -f "${src_libstdcpp_libsupcxx}/exception" ]] && \
              [[ ! -f "${gxx_bits_dir}/exception.h" ]]; then
-            cp -f "external/gpl3/gcc/dist/libstdc++-v3/libsupc++/exception" \
+            cp -f "${src_libstdcpp_libsupcxx}/exception" \
               "${gxx_bits_dir}/exception.h"
           fi
-          if [[ -f "external/gpl3/gcc/dist/libstdc++-v3/libsupc++/cxxabi_init_exception.h" ]] && \
+          if [[ -f "${src_libstdcpp_libsupcxx}/cxxabi_init_exception.h" ]] && \
              [[ ! -f "${gxx_bits_dir}/cxxabi_init_exception.h" ]]; then
-            cp -f "external/gpl3/gcc/dist/libstdc++-v3/libsupc++/cxxabi_init_exception.h" \
+            cp -f "${src_libstdcpp_libsupcxx}/cxxabi_init_exception.h" \
               "${gxx_bits_dir}/cxxabi_init_exception.h"
           fi
 

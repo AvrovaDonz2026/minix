@@ -1,0 +1,16 @@
+--- a/external/mit/lua/dist/src/lobject.h
++++ b/external/mit/lua/dist/src/lobject.h
+@@ -11,6 +11,13 @@
+ #define lobject_h
+ 
+ 
++/*
++ * GCC13 spike headers can expose stddef types partially through stdarg paths.
++ * Include stddef explicitly here so ptrdiff_t is reliably visible.
++ */
++#ifndef _KERNEL
++#include <stddef.h>
++#endif
+ #include <stdarg.h>
+ 
+ 

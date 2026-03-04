@@ -425,6 +425,14 @@ jobs:
           EOF
           done
 
+          for verify_cxxconfig in "${gxx_cxxconfig}" "${arch_cxxconfig}"; do
+            if [[ -f "${verify_cxxconfig}" ]]; then
+              echo "cxxconfig-check: ${verify_cxxconfig}"
+              grep -nE 'GCC13_SPIKE_CXXCONFIG_COMPAT|_GLIBCXX_TXN_SAFE_DYN|_GLIBCXX11_DEPRECATED|_GLIBCXX_NODISCARD|_GLIBCXX23_CONSTEXPR' \
+                "${verify_cxxconfig}" | tail -n 20 || true
+            fi
+          done
+
           # GCC13 riscv driver specs can inject -lgloss for this spike target.
           # MINIX userland does not provide libgloss; seed an empty archive to
           # satisfy the driver and keep the build moving.

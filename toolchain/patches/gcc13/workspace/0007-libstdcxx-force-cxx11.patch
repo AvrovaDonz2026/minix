@@ -1,6 +1,18 @@
 --- a/external/gpl3/gcc/lib/libstdc++-v3/Makefile
 +++ b/external/gpl3/gcc/lib/libstdc++-v3/Makefile
-@@ -84,6 +84,10 @@
+@@ -18,7 +18,10 @@
+ .endif
+ 
+ CXXFLAGS.clang+=	-stdlib=libstdc++ -std=c++11 -D_GLIBCXX_ABI_TAG_CXX11=
+-CXXFLAGS+=	${CXXFLAGS.${ACTIVE_CC}}
++CXXFLAGS+=	${CXXFLAGS.${ACTIVE_CC}}
++
++# GCC13 defaults to newer dialects; keep legacy libstdc++ units on C++98.
++CXXFLAGS+=	-std=gnu++98
+ CWARNFLAGS.clang+=	-Wno-logical-op-parentheses \
+ 			-Wno-deprecated-writable-strings -Wno-parentheses
+ 
+@@ -84,6 +87,10 @@
  CPPFLAGS.thread.cc = -std=gnu++0x
  CPPFLAGS.future.cc = -std=gnu++0x
  

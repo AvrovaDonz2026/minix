@@ -418,7 +418,7 @@ jobs:
             #ifndef _GLIBCXX_TXN_SAFE_DYN
             # define _GLIBCXX_TXN_SAFE_DYN
             #endif
-            EOF
+          EOF
           fi
 
           # GCC13 riscv driver specs can inject -lgloss for this spike target.

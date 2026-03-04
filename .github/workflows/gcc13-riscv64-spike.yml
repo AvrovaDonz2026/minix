@@ -375,149 +375,50 @@ jobs:
           if [[ -f "${gxx_cxxconfig}" ]] && \
              ! grep -q 'GCC13_SPIKE_CXXCONFIG_COMPAT' "${gxx_cxxconfig}"; then
             cat >> "${gxx_cxxconfig}" <<'EOF'
-
-/* GCC13_SPIKE_CXXCONFIG_COMPAT: fallback macro layer for legacy c++config.h. */
-#ifndef _GLIBCXX_DEPRECATED_SUGGEST
-# if defined(__DEPRECATED)
-#  define _GLIBCXX_DEPRECATED_SUGGEST(ALT) __attribute__ ((__deprecated__))
-# else
-#  define _GLIBCXX_DEPRECATED_SUGGEST(ALT)
-# endif
-#endif
-
-#ifndef _GLIBCXX11_DEPRECATED
-# if defined(__DEPRECATED) && (__cplusplus >= 201103L)
-#  define _GLIBCXX11_DEPRECATED _GLIBCXX_DEPRECATED
-# else
-#  define _GLIBCXX11_DEPRECATED
-# endif
-#endif
-#ifndef _GLIBCXX11_DEPRECATED_SUGGEST
-# if defined(__DEPRECATED) && (__cplusplus >= 201103L)
-#  define _GLIBCXX11_DEPRECATED_SUGGEST(ALT) _GLIBCXX_DEPRECATED_SUGGEST(ALT)
-# else
-#  define _GLIBCXX11_DEPRECATED_SUGGEST(ALT)
-# endif
-#endif
-
-#ifndef _GLIBCXX14_DEPRECATED
-# if defined(__DEPRECATED) && (__cplusplus >= 201402L)
-#  define _GLIBCXX14_DEPRECATED _GLIBCXX_DEPRECATED
-# else
-#  define _GLIBCXX14_DEPRECATED
-# endif
-#endif
-#ifndef _GLIBCXX14_DEPRECATED_SUGGEST
-# if defined(__DEPRECATED) && (__cplusplus >= 201402L)
-#  define _GLIBCXX14_DEPRECATED_SUGGEST(ALT) _GLIBCXX_DEPRECATED_SUGGEST(ALT)
-# else
-#  define _GLIBCXX14_DEPRECATED_SUGGEST(ALT)
-# endif
-#endif
-
-#ifndef _GLIBCXX17_DEPRECATED
-# if defined(__DEPRECATED) && (__cplusplus >= 201703L)
-#  define _GLIBCXX17_DEPRECATED _GLIBCXX_DEPRECATED
-# else
-#  define _GLIBCXX17_DEPRECATED
-# endif
-#endif
-#ifndef _GLIBCXX17_DEPRECATED_SUGGEST
-# if defined(__DEPRECATED) && (__cplusplus >= 201703L)
-#  define _GLIBCXX17_DEPRECATED_SUGGEST(ALT) _GLIBCXX_DEPRECATED_SUGGEST(ALT)
-# else
-#  define _GLIBCXX17_DEPRECATED_SUGGEST(ALT)
-# endif
-#endif
-
-#ifndef _GLIBCXX20_DEPRECATED
-# if defined(__DEPRECATED) && (__cplusplus >= 202002L)
-#  define _GLIBCXX20_DEPRECATED _GLIBCXX_DEPRECATED
-# else
-#  define _GLIBCXX20_DEPRECATED
-# endif
-#endif
-#ifndef _GLIBCXX20_DEPRECATED_SUGGEST
-# if defined(__DEPRECATED) && (__cplusplus >= 202002L)
-#  define _GLIBCXX20_DEPRECATED_SUGGEST(ALT) _GLIBCXX_DEPRECATED_SUGGEST(ALT)
-# else
-#  define _GLIBCXX20_DEPRECATED_SUGGEST(ALT)
-# endif
-#endif
-
-#ifndef _GLIBCXX23_DEPRECATED
-# if defined(__DEPRECATED) && (__cplusplus >= 202100L)
-#  define _GLIBCXX23_DEPRECATED _GLIBCXX_DEPRECATED
-# else
-#  define _GLIBCXX23_DEPRECATED
-# endif
-#endif
-#ifndef _GLIBCXX23_DEPRECATED_SUGGEST
-# if defined(__DEPRECATED) && (__cplusplus >= 202100L)
-#  define _GLIBCXX23_DEPRECATED_SUGGEST(ALT) _GLIBCXX_DEPRECATED_SUGGEST(ALT)
-# else
-#  define _GLIBCXX23_DEPRECATED_SUGGEST(ALT)
-# endif
-#endif
-
-#ifndef _GLIBCXX_NODISCARD
-# if __cplusplus >= 201703L
-#  define _GLIBCXX_NODISCARD [[__nodiscard__]]
-# else
-#  define _GLIBCXX_NODISCARD
-# endif
-#endif
-#ifndef _GLIBCXX_NODISCARD_CTOR
-# define _GLIBCXX_NODISCARD_CTOR _GLIBCXX_NODISCARD
-#endif
-
-#ifndef _GLIBCXX14_CONSTEXPR
-# if __cplusplus >= 201402L
-#  define _GLIBCXX14_CONSTEXPR constexpr
-# else
-#  define _GLIBCXX14_CONSTEXPR
-# endif
-#endif
-#ifndef _GLIBCXX17_CONSTEXPR
-# if __cplusplus >= 201703L
-#  define _GLIBCXX17_CONSTEXPR constexpr
-# else
-#  define _GLIBCXX17_CONSTEXPR
-# endif
-#endif
-#ifndef _GLIBCXX20_CONSTEXPR
-# if __cplusplus >= 202002L
-#  define _GLIBCXX20_CONSTEXPR constexpr
-# else
-#  define _GLIBCXX20_CONSTEXPR
-# endif
-#endif
-#ifndef _GLIBCXX23_CONSTEXPR
-# if __cplusplus >= 202100L
-#  define _GLIBCXX23_CONSTEXPR constexpr
-# else
-#  define _GLIBCXX23_CONSTEXPR
-# endif
-#endif
-#ifndef _GLIBCXX17_INLINE
-# if __cplusplus >= 201703L
-#  define _GLIBCXX17_INLINE inline
-# else
-#  define _GLIBCXX17_INLINE
-# endif
-#endif
-
-#ifndef _GLIBCXX_NOEXCEPT_IF
-# define _GLIBCXX_NOEXCEPT_IF(...)
-#endif
-
-#ifndef _GLIBCXX_TXN_SAFE
-# define _GLIBCXX_TXN_SAFE
-#endif
-#ifndef _GLIBCXX_TXN_SAFE_DYN
-# define _GLIBCXX_TXN_SAFE_DYN
-#endif
-EOF
+            /* GCC13_SPIKE_CXXCONFIG_COMPAT: fallback macros for legacy c++config.h. */
+            #ifndef _GLIBCXX_DEPRECATED_SUGGEST
+            # define _GLIBCXX_DEPRECATED_SUGGEST(ALT)
+            #endif
+            #ifndef _GLIBCXX11_DEPRECATED
+            # define _GLIBCXX11_DEPRECATED
+            #endif
+            #ifndef _GLIBCXX11_DEPRECATED_SUGGEST
+            # define _GLIBCXX11_DEPRECATED_SUGGEST(ALT)
+            #endif
+            #ifndef _GLIBCXX17_DEPRECATED_SUGGEST
+            # define _GLIBCXX17_DEPRECATED_SUGGEST(ALT)
+            #endif
+            #ifndef _GLIBCXX_NODISCARD
+            # define _GLIBCXX_NODISCARD
+            #endif
+            #ifndef _GLIBCXX_NODISCARD_CTOR
+            # define _GLIBCXX_NODISCARD_CTOR
+            #endif
+            #ifndef _GLIBCXX14_CONSTEXPR
+            # define _GLIBCXX14_CONSTEXPR
+            #endif
+            #ifndef _GLIBCXX17_CONSTEXPR
+            # define _GLIBCXX17_CONSTEXPR
+            #endif
+            #ifndef _GLIBCXX20_CONSTEXPR
+            # define _GLIBCXX20_CONSTEXPR
+            #endif
+            #ifndef _GLIBCXX23_CONSTEXPR
+            # define _GLIBCXX23_CONSTEXPR
+            #endif
+            #ifndef _GLIBCXX17_INLINE
+            # define _GLIBCXX17_INLINE
+            #endif
+            #ifndef _GLIBCXX_NOEXCEPT_IF
+            # define _GLIBCXX_NOEXCEPT_IF(...)
+            #endif
+            #ifndef _GLIBCXX_TXN_SAFE
+            # define _GLIBCXX_TXN_SAFE
+            #endif
+            #ifndef _GLIBCXX_TXN_SAFE_DYN
+            # define _GLIBCXX_TXN_SAFE_DYN
+            #endif
+            EOF
           fi
 
           # GCC13 riscv driver specs can inject -lgloss for this spike target.

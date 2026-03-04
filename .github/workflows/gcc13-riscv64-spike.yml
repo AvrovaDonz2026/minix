@@ -320,6 +320,18 @@ jobs:
               "${as_target}" || true
           done
 
+          # GCC13 riscv driver specs can inject -lgloss for this spike target.
+          # MINIX userland does not provide libgloss; seed an empty archive to
+          # satisfy the driver and keep the build moving.
+          triplet_libdir="${tooldir}/${triplet}/lib"
+          mkdir -p "${triplet_libdir}"
+          ar_bin="${tooldir}/bin/${triplet}-ar"
+          if [[ ! -x "${ar_bin}" ]]; then
+            echo "Missing archiver for ${triplet}: ${ar_bin}" >&2
+            exit 1
+          fi
+          "${ar_bin}" crsD "${triplet_libdir}/libgloss.a"
+
           cleanup_as_watchers() {
             if [[ -n "${link_watch_pid}" ]]; then
               kill "${link_watch_pid}" >/dev/null 2>&1 || true

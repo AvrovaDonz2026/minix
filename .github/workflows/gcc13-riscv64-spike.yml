@@ -357,10 +357,16 @@ jobs:
             cp -an "${src_libstdcpp_include}/backward/." "${gxx_include_dir}/backward/"
           fi
 
-          if [[ -f "${src_libstdcpp_libsupcxx}/exception" ]] && \
-             [[ ! -f "${gxx_bits_dir}/exception.h" ]]; then
-            cp -f "${src_libstdcpp_libsupcxx}/exception" \
-              "${gxx_bits_dir}/exception.h"
+          # GCC13 ships bits/exception.h as libsupc++/exception.h.
+          # Older trees used libsupc++/exception for this role.
+          if [[ ! -f "${gxx_bits_dir}/exception.h" ]]; then
+            if [[ -f "${src_libstdcpp_libsupcxx}/exception.h" ]]; then
+              cp -f "${src_libstdcpp_libsupcxx}/exception.h" \
+                "${gxx_bits_dir}/exception.h"
+            elif [[ -f "${src_libstdcpp_libsupcxx}/exception" ]]; then
+              cp -f "${src_libstdcpp_libsupcxx}/exception" \
+                "${gxx_bits_dir}/exception.h"
+            fi
           fi
           if [[ -f "${src_libstdcpp_libsupcxx}/cxxabi_init_exception.h" ]] && \
              [[ ! -f "${gxx_bits_dir}/cxxabi_init_exception.h" ]]; then

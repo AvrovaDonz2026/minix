@@ -425,8 +425,29 @@ jobs:
             #ifndef _GLIBCXX_END_NAMESPACE_CXX11
             # define _GLIBCXX_END_NAMESPACE_CXX11
             #endif
+            #ifndef _GLIBCXX_NAMESPACE_CXX11
+            # define _GLIBCXX_NAMESPACE_CXX11
+            #endif
             #ifndef _GLIBCXX_DEFAULT_ABI_TAG
             # define _GLIBCXX_DEFAULT_ABI_TAG
+            #endif
+            #ifndef _GLIBCXX_USE_DUAL_ABI
+            # define _GLIBCXX_USE_DUAL_ABI 0
+            #endif
+            #ifndef _GLIBCXX_NOEXCEPT_PARM
+            # define _GLIBCXX_NOEXCEPT_PARM
+            #endif
+            #ifndef _GLIBCXX_NOEXCEPT_QUAL
+            # define _GLIBCXX_NOEXCEPT_QUAL
+            #endif
+            #ifndef _GLIBCXX_NAMESPACE_LDBL_OR_CXX11
+            # define _GLIBCXX_NAMESPACE_LDBL_OR_CXX11 _GLIBCXX_NAMESPACE_CXX11
+            #endif
+            #ifndef _GLIBCXX_BEGIN_NAMESPACE_LDBL_OR_CXX11
+            # define _GLIBCXX_BEGIN_NAMESPACE_LDBL_OR_CXX11 _GLIBCXX_BEGIN_NAMESPACE_CXX11
+            #endif
+            #ifndef _GLIBCXX_END_NAMESPACE_LDBL_OR_CXX11
+            # define _GLIBCXX_END_NAMESPACE_LDBL_OR_CXX11 _GLIBCXX_END_NAMESPACE_CXX11
             #endif
             #ifndef _GLIBCXX_NODISCARD
             # define _GLIBCXX_NODISCARD

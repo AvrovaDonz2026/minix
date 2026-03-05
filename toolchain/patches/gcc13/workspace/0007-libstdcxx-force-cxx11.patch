@@ -21,13 +21,16 @@
  CPPFLAGS.functexcept.cc+= -std=gnu++0x
  CPPFLAGS.hash_c++0x.cc = -std=gnu++0x
  CPPFLAGS.hashtable_c++0x.cc = -std=gnu++0x
-@@ -84,6 +91,13 @@
+@@ -84,6 +91,16 @@
  CPPFLAGS.thread.cc = -std=gnu++0x
  CPPFLAGS.future.cc = -std=gnu++0x
  
 +# GCC13 moves these c++98 sources to at least C++11 semantics.
 +CPPFLAGS.locale_init.cc += -std=gnu++11
 +CPPFLAGS.localename.cc += -std=gnu++11
++
++# GCC13 still keeps dynamic exception specs in this legacy TU.
++CPPFLAGS.bitmap_allocator.cc += -std=gnu++11
 +
 +# Keep this legacy TU on C++98; it trips over newer dialect defaults.
 +CPPFLAGS.misc-inst.cc += -std=gnu++98

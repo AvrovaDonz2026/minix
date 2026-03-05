@@ -489,6 +489,12 @@ jobs:
             # define _GLIBCXX_TXN_SAFE_DYN
             #endif
 
+            #ifndef _GLIBCXX_SPIKE_GLOBAL_SIZE_T
+            #define _GLIBCXX_SPIKE_GLOBAL_SIZE_T 1
+            typedef __SIZE_TYPE__ size_t;
+            typedef __PTRDIFF_TYPE__ ptrdiff_t;
+            #endif
+
             #ifndef _GLIBCXX_SPIKE_STD_TERMINATE_FALLBACK
             #define _GLIBCXX_SPIKE_STD_TERMINATE_FALLBACK 1
             namespace std {

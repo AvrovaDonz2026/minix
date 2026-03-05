@@ -11,17 +11,27 @@
  CWARNFLAGS.clang+=	-Wno-logical-op-parentheses \
  			-Wno-deprecated-writable-strings -Wno-parentheses
  
-@@ -70,6 +74,9 @@
+@@ -48,6 +52,9 @@
+ CPPFLAGS+=	-I${.CURDIR}/arch/${LIBSTDCXX_MACHINE_ARCH}
+ # include backwards compatible code
+ CPPFLAGS+=     -D_GLIBCXX_SHARED -DGTHREAD_USE_WEAK -DSUPPORTS_WEAK
++# GCC13 ginclude/stddef.h can define _BSD_SIZE_T_ as an empty macro;
++# mark BSD size_t as already declared to avoid invalid typedefs in headers.
++CPPFLAGS+=     -D_BSD_SIZE_T_DEFINED_=1
+ 
+ CONF=		${DIST}/libstdc++-v3/config
+ 
+@@ -70,6 +77,9 @@
  # XXX also need this for some PCHs.
  CPPFLAGS.atomic.cc = -std=gnu++0x
  CPPFLAGS.compatibility-c++0x.cc = -std=gnu++0x
 +
-+# GCC13 ginclude/stddef.h can leave _BSD_SIZE_T_ empty in this TU.
++# Keep compatibility-c++0x immune to empty _BSD_SIZE_T_ regressions.
 +CPPFLAGS.compatibility-c++0x.cc += -D_BSD_SIZE_T_=__SIZE_TYPE__ -D_BSD_SIZE_T_DEFINED_=1
  CPPFLAGS.functexcept.cc+= -std=gnu++0x
  CPPFLAGS.hash_c++0x.cc = -std=gnu++0x
  CPPFLAGS.hashtable_c++0x.cc = -std=gnu++0x
-@@ -84,6 +91,16 @@
+@@ -84,6 +94,16 @@
  CPPFLAGS.thread.cc = -std=gnu++0x
  CPPFLAGS.future.cc = -std=gnu++0x
  

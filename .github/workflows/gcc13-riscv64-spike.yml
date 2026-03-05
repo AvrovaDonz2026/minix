@@ -489,6 +489,22 @@ jobs:
             # define _GLIBCXX_TXN_SAFE_DYN
             #endif
 
+            #ifndef _GLIBCXX_SPIKE_STD_TERMINATE_FALLBACK
+            #define _GLIBCXX_SPIKE_STD_TERMINATE_FALLBACK 1
+            namespace std {
+            #pragma GCC visibility push(default)
+              extern "C++" __attribute__ ((__noreturn__, __always_inline__))
+              inline void
+              __terminate() _GLIBCXX_USE_NOEXCEPT
+              {
+                void terminate() _GLIBCXX_USE_NOEXCEPT
+                  __attribute__ ((__noreturn__,__cold__));
+                terminate();
+              }
+            #pragma GCC visibility pop
+            }
+            #endif
+
             #if !defined(__cpp_lib_is_constant_evaluated) && (__cplusplus >= 201103L)
             #ifndef _GLIBCXX_SPIKE_IS_CONSTANT_EVALUATED
             #define _GLIBCXX_SPIKE_IS_CONSTANT_EVALUATED 1

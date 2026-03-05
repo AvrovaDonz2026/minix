@@ -440,6 +440,15 @@ jobs:
             #ifndef _GLIBCXX_NOEXCEPT_QUAL
             # define _GLIBCXX_NOEXCEPT_QUAL
             #endif
+            #ifndef _GLIBCXX_INLINE_VERSION
+            # define _GLIBCXX_INLINE_VERSION 0
+            #endif
+            #ifndef _GLIBCXX_BEGIN_INLINE_ABI_NAMESPACE
+            # define _GLIBCXX_BEGIN_INLINE_ABI_NAMESPACE(X)
+            #endif
+            #ifndef _GLIBCXX_END_INLINE_ABI_NAMESPACE
+            # define _GLIBCXX_END_INLINE_ABI_NAMESPACE(X)
+            #endif
             #ifndef _GLIBCXX_NAMESPACE_LDBL_OR_CXX11
             # define _GLIBCXX_NAMESPACE_LDBL_OR_CXX11 _GLIBCXX_NAMESPACE_CXX11
             #endif

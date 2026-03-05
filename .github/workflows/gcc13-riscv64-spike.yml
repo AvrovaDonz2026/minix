@@ -464,23 +464,63 @@ jobs:
             #ifndef _GLIBCXX_NODISCARD_CTOR
             # define _GLIBCXX_NODISCARD_CTOR
             #endif
+            #ifndef _GLIBCXX_CONSTEXPR
+            # if __cplusplus >= 201103L
+            #  define _GLIBCXX_CONSTEXPR constexpr
+            #  define _GLIBCXX_USE_CONSTEXPR constexpr
+            # else
+            #  define _GLIBCXX_CONSTEXPR
+            #  define _GLIBCXX_USE_CONSTEXPR const
+            # endif
+            #endif
+            #ifndef _GLIBCXX_USE_CONSTEXPR
+            # if __cplusplus >= 201103L
+            #  define _GLIBCXX_USE_CONSTEXPR constexpr
+            # else
+            #  define _GLIBCXX_USE_CONSTEXPR const
+            # endif
+            #endif
             #ifndef _GLIBCXX14_CONSTEXPR
-            # define _GLIBCXX14_CONSTEXPR
+            # if __cplusplus >= 201402L
+            #  define _GLIBCXX14_CONSTEXPR constexpr
+            # else
+            #  define _GLIBCXX14_CONSTEXPR
+            # endif
             #endif
             #ifndef _GLIBCXX17_CONSTEXPR
-            # define _GLIBCXX17_CONSTEXPR
+            # if __cplusplus >= 201703L
+            #  define _GLIBCXX17_CONSTEXPR constexpr
+            # else
+            #  define _GLIBCXX17_CONSTEXPR
+            # endif
             #endif
             #ifndef _GLIBCXX20_CONSTEXPR
-            # define _GLIBCXX20_CONSTEXPR
+            # if __cplusplus >= 202002L
+            #  define _GLIBCXX20_CONSTEXPR constexpr
+            # else
+            #  define _GLIBCXX20_CONSTEXPR
+            # endif
             #endif
             #ifndef _GLIBCXX23_CONSTEXPR
-            # define _GLIBCXX23_CONSTEXPR
+            # if __cplusplus >= 202100L
+            #  define _GLIBCXX23_CONSTEXPR constexpr
+            # else
+            #  define _GLIBCXX23_CONSTEXPR
+            # endif
             #endif
             #ifndef _GLIBCXX17_INLINE
-            # define _GLIBCXX17_INLINE
+            # if __cplusplus >= 201703L
+            #  define _GLIBCXX17_INLINE inline
+            # else
+            #  define _GLIBCXX17_INLINE
+            # endif
             #endif
             #ifndef _GLIBCXX_NOEXCEPT_IF
-            # define _GLIBCXX_NOEXCEPT_IF(...)
+            # if __cplusplus >= 201103L
+            #  define _GLIBCXX_NOEXCEPT_IF(...) noexcept(__VA_ARGS__)
+            # else
+            #  define _GLIBCXX_NOEXCEPT_IF(...)
+            # endif
             #endif
             #ifndef _GLIBCXX_TXN_SAFE
             # define _GLIBCXX_TXN_SAFE

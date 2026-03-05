@@ -17,7 +17,7 @@
  CPPFLAGS.compatibility-c++0x.cc = -std=gnu++0x
 +
 +# GCC13 ginclude/stddef.h can leave _BSD_SIZE_T_ empty in this TU.
-+CPPFLAGS.compatibility-c++0x.cc += -D_BSD_SIZE_T_=__SIZE_TYPE__
++CPPFLAGS.compatibility-c++0x.cc += -D_BSD_SIZE_T_=__SIZE_TYPE__ -D_BSD_SIZE_T_DEFINED_=1
  CPPFLAGS.functexcept.cc+= -std=gnu++0x
  CPPFLAGS.hash_c++0x.cc = -std=gnu++0x
  CPPFLAGS.hashtable_c++0x.cc = -std=gnu++0x

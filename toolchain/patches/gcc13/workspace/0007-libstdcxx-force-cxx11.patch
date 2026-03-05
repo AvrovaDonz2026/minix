@@ -29,8 +29,8 @@
 +CPPFLAGS.locale_init.cc += -std=gnu++11
 +CPPFLAGS.localename.cc += -std=gnu++11
 +
-+# GCC13 still keeps dynamic exception specs in this legacy TU.
-+CPPFLAGS.bitmap_allocator.cc += -std=gnu++11
++# GCC13 keeps legacy throw(...) signatures in this TU.
++CPPFLAGS.bitmap_allocator.cc += -std=gnu++98
 +
 +# Keep this legacy TU on C++98; it trips over newer dialect defaults.
 +CPPFLAGS.misc-inst.cc += -std=gnu++98

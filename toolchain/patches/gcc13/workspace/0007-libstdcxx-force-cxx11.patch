@@ -15,9 +15,9 @@
  CPPFLAGS+=	-I${.CURDIR}/arch/${LIBSTDCXX_MACHINE_ARCH}
  # include backwards compatible code
  CPPFLAGS+=     -D_GLIBCXX_SHARED -DGTHREAD_USE_WEAK -DSUPPORTS_WEAK
-+# GCC13 ginclude/stddef.h can define _BSD_SIZE_T_ as an empty macro;
-+# mark BSD size_t as already declared to avoid invalid typedefs in headers.
-+CPPFLAGS+=     -D_BSD_SIZE_T_DEFINED_=1
++# GCC13 ginclude/stddef.h can define _BSD_SIZE_T_ as an empty macro.
++# Seed it explicitly and mark BSD size_t as already declared.
++CPPFLAGS+=     -D_BSD_SIZE_T_=__SIZE_TYPE__ -D_BSD_SIZE_T_DEFINED_=1
  
  CONF=		${DIST}/libstdc++-v3/config
  

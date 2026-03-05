@@ -7,6 +7,8 @@ on:
     paths:
       - ".github/workflows/gcc13-riscv64-spike.yml"
       - "toolchain/patches/gcc13/**"
+      - "toolchain/patches/gcc13/workspace/**"
+      - "toolchain/patches/gcc13/scripts/**"
       - "external/gpl3/gcc/lib/**"
   workflow_dispatch:
     inputs:

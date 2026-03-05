@@ -53,3 +53,15 @@
  CPPFLAGS.cp-demangle.cc += -DIN_GLIBCPP_V3
  CPPFLAGS.concept-inst.cc += -D_GLIBCXX_CONCEPT_CHECKS
  CPPFLAGS.parallel_list.cc += -D_GLIBCXX_PARALLEL
+
+--- a/external/gpl3/gcc/lib/libsupc++/Makefile.common
++++ b/external/gpl3/gcc/lib/libsupc++/Makefile.common
+@@ -20,4 +20,8 @@
+ CPPFLAGS+=	-I${DIST}/libstdc++-v3/libsupc++
+ CPPFLAGS+=	-I${DIST}/libgcc
+ CPPFLAGS+=	-I${.CURDIR}/../libstdc++-v3/arch/${LIBSTDCXX_MACHINE_ARCH} -I.
++# GCC13 adds headers (e.g. debug/assertions.h) that are absent from
++# the legacy installed include set during early libsupc++ build.
++CPPFLAGS+=	-I${DIST}/libstdc++-v3/include
++CPPFLAGS+=	-I${DIST}/libstdc++-v3/include/debug
+ CPPFLAGS+=	-DHAVE_STDLIB_H -DHAVE_STRING_H

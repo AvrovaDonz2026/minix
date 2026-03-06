@@ -429,6 +429,35 @@ jobs:
             #ifndef _GLIBCXX23_DEPRECATED_SUGGEST
             # define _GLIBCXX23_DEPRECATED_SUGGEST(ALT)
             #endif
+            #ifndef _GLIBCXX_USE_DUAL_ABI
+            # define _GLIBCXX_USE_DUAL_ABI 1
+            #endif
+            #if ! _GLIBCXX_USE_DUAL_ABI
+            # undef _GLIBCXX_USE_CXX11_ABI
+            #endif
+            #ifndef _GLIBCXX_USE_CXX11_ABI
+            # define _GLIBCXX_USE_CXX11_ABI 1
+            #endif
+            #if _GLIBCXX_USE_CXX11_ABI
+            namespace std {
+              inline namespace __cxx11 _GLIBCXX_ABI_TAG_CXX11 { }
+            }
+            namespace __gnu_cxx {
+              inline namespace __cxx11 _GLIBCXX_ABI_TAG_CXX11 { }
+            }
+            #ifndef _GLIBCXX_BEGIN_NAMESPACE_CXX11
+            # define _GLIBCXX_BEGIN_NAMESPACE_CXX11 namespace __cxx11 {
+            #endif
+            #ifndef _GLIBCXX_END_NAMESPACE_CXX11
+            # define _GLIBCXX_END_NAMESPACE_CXX11 }
+            #endif
+            #ifndef _GLIBCXX_NAMESPACE_CXX11
+            # define _GLIBCXX_NAMESPACE_CXX11 __cxx11::
+            #endif
+            #ifndef _GLIBCXX_DEFAULT_ABI_TAG
+            # define _GLIBCXX_DEFAULT_ABI_TAG _GLIBCXX_ABI_TAG_CXX11
+            #endif
+            #else
             #ifndef _GLIBCXX_BEGIN_NAMESPACE_CXX11
             # define _GLIBCXX_BEGIN_NAMESPACE_CXX11
             #endif
@@ -441,8 +470,6 @@ jobs:
             #ifndef _GLIBCXX_DEFAULT_ABI_TAG
             # define _GLIBCXX_DEFAULT_ABI_TAG
             #endif
-            #ifndef _GLIBCXX_USE_DUAL_ABI
-            # define _GLIBCXX_USE_DUAL_ABI 0
             #endif
             #ifndef _GLIBCXX_NOEXCEPT_PARM
             # define _GLIBCXX_NOEXCEPT_PARM
@@ -454,10 +481,18 @@ jobs:
             # define _GLIBCXX_INLINE_VERSION 0
             #endif
             #ifndef _GLIBCXX_BEGIN_INLINE_ABI_NAMESPACE
-            # define _GLIBCXX_BEGIN_INLINE_ABI_NAMESPACE(X)
+            # if _GLIBCXX_INLINE_VERSION
+            #  define _GLIBCXX_BEGIN_INLINE_ABI_NAMESPACE(X)
+            # else
+            #  define _GLIBCXX_BEGIN_INLINE_ABI_NAMESPACE(X) inline namespace X {
+            # endif
             #endif
             #ifndef _GLIBCXX_END_INLINE_ABI_NAMESPACE
-            # define _GLIBCXX_END_INLINE_ABI_NAMESPACE(X)
+            # if _GLIBCXX_INLINE_VERSION
+            #  define _GLIBCXX_END_INLINE_ABI_NAMESPACE(X)
+            # else
+            #  define _GLIBCXX_END_INLINE_ABI_NAMESPACE(X) }
+            # endif
             #endif
             #ifndef _GLIBCXX_NAMESPACE_LDBL_OR_CXX11
             # define _GLIBCXX_NAMESPACE_LDBL_OR_CXX11 _GLIBCXX_NAMESPACE_CXX11

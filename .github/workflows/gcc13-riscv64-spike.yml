@@ -12,6 +12,8 @@ on:
       - "external/gpl3/gcc/lib/**"
       - "lib/libc/arch/riscv/**"
       - "lib/libc/softfloat/**"
+      - "sys/sys/ansi.h"
+      - "sys/sys/stdarg.h"
   workflow_dispatch:
     inputs:
       gcc_version:

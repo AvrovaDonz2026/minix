@@ -36,6 +36,9 @@ This directory stores MINIX GCC13 integration changes as small, scoped units.
 - `gcc-dist/0004-gcc13-riscv-add-minix-target-header.patch`
   - Add `gcc/config/riscv/minix.h` to force the historical MINIX RISC-V
     `long double` ABI (`64-bit`) and preserve MINIX CPU builtins.
+- `gcc-dist/0005-gcc13-add-minix-base-target-files.patch`
+  - Restore upstream-overlay-missing MINIX base target files:
+    `gcc/config/minix-spec.h`, `gcc/config/minix.h`, and `gcc/config/t-minix`.
 
 These `gcc-dist` patches are the compiler-side ABI glue required for native
 `riscv64-elf32-minix` GCC13 builds. The shim-mode workspace override remains

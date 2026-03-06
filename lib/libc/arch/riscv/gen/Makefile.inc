@@ -16,7 +16,7 @@ SRCS+=	isfinitef_ieee754.c isfinited_ieee754.c
 SRCS+=	signbitf_ieee754.c signbitd_ieee754.c
 SRCS+=	fabs_ieee754.c
 
-SRCS+=	nanf.c ldbl_compat.c
+SRCS+=	nanf.c fpclassifyl.c
 
 .if (${MKSOFTFLOAT} == "no")
 SRCS+=	fpgetround.c fpsetround.c fpgetmask.c fpsetmask.c

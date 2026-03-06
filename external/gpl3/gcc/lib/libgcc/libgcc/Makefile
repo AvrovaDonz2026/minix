@@ -43,37 +43,39 @@ COPTS.unwind-dw2.c = -Wno-stack-protector
 .include <bsd.lib.mk>
 
 
-CLEANFILES+=	${SOBJS:=.tmp1} ${SOBJS:=.tmp2}
+CLEANFILES+=	${SOBJS:=.tmp1} ${SOBJS:=.tmp2} ${SOBJS:=.tmp3} ${SOBJS:=.tmpasm}
 
 .c.o:
 	${_MKTARGET_COMPILE}
 	${COMPILE.c} ${COPTS.${.IMPSRC:T}} ${CSHLIBFLAGS} ${.IMPSRC} -o ${.TARGET}.tmp1
 	${NM} -pg ${.TARGET}.tmp1 | \
-	    ${TOOL_AWK} 'NF == 3 { print "\t.hidden", $$3 }' | \
-	    ${CC} ${COPTS} -r -nostdinc -nostdlib ${CPUFLAGS} -o ${.TARGET}.tmp2 ${.TARGET}.tmp1 -xassembler -
-	${OBJCOPY} ${OBJCOPYLIBFLAGS} ${.TARGET}.tmp2
+	    ${TOOL_AWK} 'NF == 3 { print "\t.hidden", $$3 }' > ${.TARGET}.tmpasm
+	${CC} -c -x assembler ${CPUFLAGS} -o ${.TARGET}.tmp2 ${.TARGET}.tmpasm
+	${LD} -r ${.TARGET}.tmp1 ${.TARGET}.tmp2 -o ${.TARGET}.tmp3
+	${OBJCOPY} ${OBJCOPYLIBFLAGS} ${.TARGET}.tmp3
 .if defined(COPTS) && !empty(COPTS:M*-g*)
-	mv ${.TARGET}.tmp2 ${.TARGET}
+	mv ${.TARGET}.tmp3 ${.TARGET}
 .else
-	${LD} -r ${.TARGET}.tmp2 -o ${.TARGET}
-	rm -f ${.TARGET}.tmp2
+	${LD} -r ${.TARGET}.tmp3 -o ${.TARGET}
+	rm -f ${.TARGET}.tmp3
 .endif
-	rm -f ${.TARGET}.tmp1
+	rm -f ${.TARGET}.tmp1 ${.TARGET}.tmp2 ${.TARGET}.tmpasm
 
 .S.o .s.o:
 	${_MKTARGET_COMPILE}
 	${COMPILE.S} ${PICFLAGS} ${CFLAGS:M-[ID]*} ${.IMPSRC} -o ${.TARGET}.tmp1
 	${NM} -pg ${.TARGET}.tmp1 | \
-	    ${TOOL_AWK} 'NF == 3 { print "\t.hidden", $$3 }' | \
-	    ${CC} ${COPTS} -r -nostdinc -nostdlib -o ${.TARGET}.tmp2 ${.TARGET}.tmp1 -xassembler -
-	${OBJCOPY} ${OBJCOPYLIBFLAGS} ${.TARGET}.tmp2
+	    ${TOOL_AWK} 'NF == 3 { print "\t.hidden", $$3 }' > ${.TARGET}.tmpasm
+	${CC} -c -x assembler ${CPUFLAGS} -o ${.TARGET}.tmp2 ${.TARGET}.tmpasm
+	${LD} -r ${.TARGET}.tmp1 ${.TARGET}.tmp2 -o ${.TARGET}.tmp3
+	${OBJCOPY} ${OBJCOPYLIBFLAGS} ${.TARGET}.tmp3
 .if defined(COPTS) && !empty(COPTS:M*-g*)
-	mv ${.TARGET}.tmp2 ${.TARGET}
+	mv ${.TARGET}.tmp3 ${.TARGET}
 .else
-	${LD} -r ${.TARGET}.tmp2 -o ${.TARGET}
-	rm -f ${.TARGET}.tmp2
+	${LD} -r ${.TARGET}.tmp3 -o ${.TARGET}
+	rm -f ${.TARGET}.tmp3
 .endif
-	rm -f ${.TARGET}.tmp1
+	rm -f ${.TARGET}.tmp1 ${.TARGET}.tmp2 ${.TARGET}.tmpasm
 
 .else
 .include <bsd.prog.mk> # do nothing

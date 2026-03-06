@@ -49,8 +49,13 @@
 #define __builtin_va_start(ap, last)    __builtin_stdarg_start((ap), (last))
 #endif
 
+#ifndef __GNUC_VA_LIST
+#define __GNUC_VA_LIST
+typedef __va_list __gnuc_va_list;
+#endif
+
 #ifndef __VA_LIST_DECLARED
-typedef __va_list va_list;
+typedef __gnuc_va_list va_list;
 #define __VA_LIST_DECLARED
 #endif
 

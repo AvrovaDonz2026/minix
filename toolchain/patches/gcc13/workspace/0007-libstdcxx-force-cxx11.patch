@@ -65,3 +65,20 @@
 +CPPFLAGS+=	-I${DIST}/libstdc++-v3/include
 +CPPFLAGS+=	-I${DIST}/libstdc++-v3/include/debug
  CPPFLAGS+=	-DHAVE_STDLIB_H -DHAVE_STRING_H
+
+--- a/external/gpl3/gcc/lib/libstdc++-v3/include/debug/Makefile
++++ b/external/gpl3/gcc/lib/libstdc++-v3/include/debug/Makefile
+@@ -13,4 +13,11 @@
+ INCS+=		${_f}
+ .endif
+ .endfor
++# GCC13 adds debug headers not present in the legacy arch defs list.
++.for _f in debug/assertions.h debug/helper_functions.h \
++	   debug/safe_container.h debug/stl_iterator.h
++.if exists(${DIST}/libstdc++-v3/include/${_f})
++INCS+=		${_f}
++.endif
++.endfor
+ INCSDIR=	/usr/include/g++/debug
+ 
+ .include "${.CURDIR}/../Makefile.includes"

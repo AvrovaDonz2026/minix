@@ -264,6 +264,7 @@ jobs:
               -V MKGCCCMDS=yes \
               -V MKCXX=yes \
               -V MKLIBSTDCXX=yes \
+              -V GCC13_SPIKE=yes \
               tools) 2>&1 | tee /tmp/gcc13-spike-tools.log; then
             if [[ -n "${linkwatch_pid}" ]]; then
               wait "${linkwatch_pid}" || true
@@ -630,6 +631,7 @@ jobs:
               -V MKGCCCMDS=yes \
               -V MKCXX=yes \
               -V MKLIBSTDCXX=yes \
+              -V GCC13_SPIKE=yes \
               -V MKPIC=no \
               -V MKPICLIB=no \
               -V MKPICINSTALL=no \

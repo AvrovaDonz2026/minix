@@ -343,25 +343,27 @@ jobs:
           src_libstdcpp_libsupcxx="external/gpl3/gcc/dist/libstdc++-v3/libsupc++"
           mkdir -p "${gxx_bits_dir}"
 
-          # Backfill GCC13 headers that are not installed by the legacy header
-          # lists used in this build system (copy-missing only, no overwrite).
+          # Refresh the seeded libstdc++ headers with GCC13 sources. Copy-missing
+          # is not enough here because obj.intrgcc seeds a GCC4-era usr/include/g++
+          # tree whose stale headers (for example string/system_error/cstddef)
+          # must be replaced for GCC13 compilation.
           if [[ -d "${src_libstdcpp_include}/std" ]]; then
-            cp -an "${src_libstdcpp_include}/std/." "${gxx_include_dir}/"
+            cp -af "${src_libstdcpp_include}/std/." "${gxx_include_dir}/"
           fi
           if [[ -d "${src_libstdcpp_include}/c_global" ]]; then
-            cp -an "${src_libstdcpp_include}/c_global/." "${gxx_include_dir}/"
+            cp -af "${src_libstdcpp_include}/c_global/." "${gxx_include_dir}/"
           fi
           if [[ -d "${src_libstdcpp_include}/bits" ]]; then
             mkdir -p "${gxx_include_dir}/bits"
-            cp -an "${src_libstdcpp_include}/bits/." "${gxx_include_dir}/bits/"
+            cp -af "${src_libstdcpp_include}/bits/." "${gxx_include_dir}/bits/"
           fi
           if [[ -d "${src_libstdcpp_include}/ext" ]]; then
             mkdir -p "${gxx_include_dir}/ext"
-            cp -an "${src_libstdcpp_include}/ext/." "${gxx_include_dir}/ext/"
+            cp -af "${src_libstdcpp_include}/ext/." "${gxx_include_dir}/ext/"
           fi
           if [[ -d "${src_libstdcpp_include}/backward" ]]; then
             mkdir -p "${gxx_include_dir}/backward"
-            cp -an "${src_libstdcpp_include}/backward/." "${gxx_include_dir}/backward/"
+            cp -af "${src_libstdcpp_include}/backward/." "${gxx_include_dir}/backward/"
           fi
 
           # GCC13 ships bits/exception.h as libsupc++/exception.h.

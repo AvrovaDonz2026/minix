@@ -14,6 +14,7 @@ on:
       - "lib/libc/softfloat/**"
       - "sys/sys/ansi.h"
       - "sys/sys/stdarg.h"
+      - "include/stddef.h"
   workflow_dispatch:
     inputs:
       gcc_version:

@@ -32,7 +32,7 @@ else
   mv "${as_bin}" "${as_real}"
 fi
 
-cat > "${as_bin}" <<'EOF'
+cat > "${as_bin}" <<'EOF_WRAPPER'
 #!/usr/bin/env bash
 # MINIX_GCC13_LEGACY_RISCV_AS_WRAPPER
 set -euo pipefail
@@ -51,6 +51,31 @@ cleanup_tmpfiles() {
   if (( ${#tmpfiles[@]} > 0 )); then
     rm -f "${tmpfiles[@]}"
   fi
+}
+rewrite_asm_source() {
+  local src="$1"
+  local patched
+
+  patched="${TMPDIR:-/tmp}/legacy-as-wrap.$$.$(( ${#tmpfiles[@]} + 1 )).s"
+  if [[ "${src}" == "-" ]]; then
+    sed \
+      -e '/^[[:space:]]*\.option[[:space:]]\+pic[[:space:]]*$/d' \
+      -e '/^[[:space:]]*\.option[[:space:]]\+nopic[[:space:]]*$/d' \
+      -e 's/\([[:space:]]call[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
+      -e 's/\([[:space:]]tail[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
+      -e 's/^\([[:space:]]*\)ebreak\([[:space:]]\|$\)/\1sbreak\2/' \
+      > "${patched}"
+  else
+    sed \
+      -e '/^[[:space:]]*\.option[[:space:]]\+pic[[:space:]]*$/d' \
+      -e '/^[[:space:]]*\.option[[:space:]]\+nopic[[:space:]]*$/d' \
+      -e 's/\([[:space:]]call[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
+      -e 's/\([[:space:]]tail[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
+      -e 's/^\([[:space:]]*\)ebreak\([[:space:]]\|$\)/\1sbreak\2/' \
+      "${src}" > "${patched}"
+  fi
+  tmpfiles+=("${patched}")
+  args+=("${patched}")
 }
 trap cleanup_tmpfiles EXIT
 for arg in "$@"; do
@@ -73,20 +98,16 @@ for arg in "$@"; do
       ;;
     *.s|*.S)
       if [[ -f "${arg}" ]]; then
-        patched="${TMPDIR:-/tmp}/legacy-as-wrap.$$.$(( ${#tmpfiles[@]} + 1 )).s"
         # Old assembler rejects some newer textual asm forms emitted by GCC.
-        sed \
-          -e '/^[[:space:]]*\.option[[:space:]]\+pic[[:space:]]*$/d' \
-          -e '/^[[:space:]]*\.option[[:space:]]\+nopic[[:space:]]*$/d' \
-          -e 's/\([[:space:]]call[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
-          -e 's/\([[:space:]]tail[[:space:]]\+\)\([_.$[:alnum:]+-][_.$[:alnum:]+-]*\)@plt/\1\2/g' \
-          -e 's/^\([[:space:]]*\)ebreak\([[:space:]]\|$\)/\1sbreak\2/' \
-          "${arg}" > "${patched}"
-        tmpfiles+=("${patched}")
-        args+=("${patched}")
+        rewrite_asm_source "${arg}"
       else
         args+=("${arg}")
       fi
+      ;;
+    -)
+      # GCC's libgcc rules feed visibility directives to the assembler on
+      # stdin. Materialize them so the wrapper can normalize the stream too.
+      rewrite_asm_source "-"
       ;;
     *)
       args+=("${arg}")
@@ -95,7 +116,7 @@ for arg in "$@"; do
 done
 
 exec "${real}" "${args[@]}"
-EOF
+EOF_WRAPPER
 
 chmod +x "${as_bin}"
 echo "Installed assembler wrapper at ${as_bin}"

@@ -10,6 +10,8 @@ on:
       - "toolchain/patches/gcc13/workspace/**"
       - "toolchain/patches/gcc13/scripts/**"
       - "external/gpl3/gcc/lib/**"
+      - "lib/libc/arch/riscv/**"
+      - "lib/libc/softfloat/**"
   workflow_dispatch:
     inputs:
       gcc_version:

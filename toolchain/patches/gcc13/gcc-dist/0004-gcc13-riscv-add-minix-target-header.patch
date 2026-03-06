@@ -1,9 +1,9 @@
 diff --git a/gcc/config/riscv/minix.h b/gcc/config/riscv/minix.h
 new file mode 100644
-index 000000000..ce16683e5
+index 000000000..1827ccad8
 --- /dev/null
 +++ b/gcc/config/riscv/minix.h
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,27 @@
 +/* Definitions for RISC-V running MINIX using the ELF format.
 +   Copyright (C) 2026 Free Software Foundation, Inc.
 +
@@ -29,15 +29,5 @@ index 000000000..ce16683e5
 +/* MINIX keeps the historical 64-bit long double ABI on RISC-V.  */
 +#undef LONG_DOUBLE_TYPE_SIZE
 +#define LONG_DOUBLE_TYPE_SIZE 64
-+
-+/* Advertise soft-float mode to the headers when requested.  */
-+#undef MINIX_TARGET_CPU_CPP_BUILTINS
-+#define MINIX_TARGET_CPU_CPP_BUILTINS() \
-+  do \
-+    { \
-+      if (!TARGET_HARD_FLOAT_ABI) \
-+        builtin_define ("_SOFT_FLOAT"); \
-+    } \
-+  while (0)
 +
 +#endif /* GCC_RISCV_MINIX_H */

@@ -1,5 +1,5 @@
 --- a/gcc/config.gcc	2026-03-03 13:04:48.275348975 +0800
-+++ b/gcc/config.gcc	2026-03-03 13:04:48.327362476 +0800
++++ b/gcc/config.gcc	2026-03-06 15:20:00.000000000 +0800
 @@ -947,6 +947,13 @@
        ;;
    esac
@@ -14,13 +14,14 @@
  *-*-openbsd*)
    tmake_file="t-openbsd"
    case ${enable_threads} in
-@@ -2461,6 +2468,21 @@
+@@ -2461,6 +2468,22 @@
  	# automatically detect that GAS supports it, yet we require it.
  	gcc_cv_initfini_array=yes
  	;;
 +riscv*-*-minix*)
-+	tm_file="elfos.h newlib-stdint.h ${tm_file} riscv/elf.h"
-+	tmake_file="${tmake_file} riscv/t-riscv"
++	tm_file="elfos.h ${tm_file} netbsd-stdint.h riscv/elf.h minix-spec.h riscv/minix.h minix.h"
++	tmake_file="${tmake_file} riscv/t-riscv t-minix"
++	extra_options="${extra_options} netbsd.opt netbsd-elf.opt"
 +	gnu_ld=yes
 +	gas=yes
 +	case $target in

@@ -1,0 +1,12 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -57,7 +57,8 @@
+ 	mv ${.TARGET}.o ${.TARGET}
+ 
+ # Headers that host objects depend on (except gen*rtl*)
+-HH_NORTL=	${G_tm_file_list} ${G_build_xm_include_list}
++G_BUILD_XM_HEADERS=	${G_build_xm_include_list:S,ansidecl.h,${DIST}/include/ansidecl.h,}
++HH_NORTL=		${G_tm_file_list} ${G_BUILD_XM_HEADERS}
+ HH=		${HH_NORTL} genrtl.h insn-modes.h
+ 
+ #

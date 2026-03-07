@@ -596,7 +596,6 @@ jobs:
             }
             #endif
 
-            #if !defined(__cpp_lib_is_constant_evaluated) && (__cplusplus >= 201103L)
             #ifndef _GLIBCXX_SPIKE_IS_CONSTANT_EVALUATED
             #define _GLIBCXX_SPIKE_IS_CONSTANT_EVALUATED 1
             namespace std {
@@ -605,13 +604,14 @@ jobs:
               {
             #if defined(__has_builtin)
             # if __has_builtin(__builtin_is_constant_evaluated)
+            #  if __cplusplus >= 201103L
                 return __builtin_is_constant_evaluated();
+            #  endif
             # endif
             #endif
                 return false;
               }
             }
-            #endif
             #endif
           EOF
           fi

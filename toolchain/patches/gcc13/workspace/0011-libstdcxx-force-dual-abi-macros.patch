@@ -1,0 +1,29 @@
+--- a/external/gpl3/gcc/lib/libstdc++-v3/Makefile	2026-03-07 11:41:23.037791023 +0800
++++ b/external/gpl3/gcc/lib/libstdc++-v3/Makefile	2026-03-07 11:41:23.077791529 +0800
+@@ -56,6 +56,13 @@
+ # Seed them explicitly and mark size_t/ptrdiff_t as already declared.
+ CPPFLAGS+=     -D_BSD_SIZE_T_=__SIZE_TYPE__ -D_BSD_SIZE_T_DEFINED_=1 -D_BSD_PTRDIFF_T_=__PTRDIFF_TYPE__ -D_BSD_PTRDIFF_T_DEFINED_=1
+ 
++.if ${GCC13_SPIKE:Uno} == "yes"
++# Force the overlaid GCC13 headers onto the dual-ABI/C++11 path even if an
++# intermediate generated c++config.h still carries legacy defaults.
++CPPFLAGS+=	-U_GLIBCXX_USE_DUAL_ABI -D_GLIBCXX_USE_DUAL_ABI=1
++CPPFLAGS+=	-U_GLIBCXX_USE_CXX11_ABI -D_GLIBCXX_USE_CXX11_ABI=1
++.endif
++
+ CONF=		${DIST}/libstdc++-v3/config
+ 
+ .if ${GCC13_SPIKE:Uno} == "yes"
+--- a/external/gpl3/gcc/lib/libsupc++/Makefile.common	2026-03-07 11:41:23.041791074 +0800
++++ b/external/gpl3/gcc/lib/libsupc++/Makefile.common	2026-03-07 11:41:23.077791529 +0800
+@@ -42,6 +42,10 @@
+ CPPFLAGS+=	-I${DIST}/libstdc++-v3/include/c_global
+ CPPFLAGS+=	-I${DIST}/libstdc++-v3/include
+ CPPFLAGS+=	-I${DIST}/libstdc++-v3/include/debug
++# Force libsupc++ and the libstdc++ sources that include this common
++# fragment onto GCC13's dual-ABI/C++11 path.
++CPPFLAGS+=	-U_GLIBCXX_USE_DUAL_ABI -D_GLIBCXX_USE_DUAL_ABI=1
++CPPFLAGS+=	-U_GLIBCXX_USE_CXX11_ABI -D_GLIBCXX_USE_CXX11_ABI=1
+ .endif #defined(__MINIX)
+ 
+ CPPFLAGS.cp-demangle.c=-DIN_GLIBCPP_V3

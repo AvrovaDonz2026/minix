@@ -15,6 +15,7 @@ on:
       - "sys/sys/ansi.h"
       - "sys/sys/stdarg.h"
       - "include/stddef.h"
+      - "bin/ksh/**"
   workflow_dispatch:
     inputs:
       gcc_version:

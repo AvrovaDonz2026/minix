@@ -621,6 +621,9 @@ jobs:
           obj_libstdcpp_arch_bits_dir="${obj_libstdcpp_bits_dir}/riscv64"
           obj_libstdcpp_cxxconfig="${obj_libstdcpp_bits_dir}/c++config.h"
           obj_libstdcpp_arch_cxxconfig="${obj_libstdcpp_arch_bits_dir}/c++config.h"
+          dist_libstdcpp_bits_dir="${PWD}/external/gpl3/gcc/dist/libstdc++-v3/include/bits"
+          dist_libstdcpp_cxxconfig_h="${dist_libstdcpp_bits_dir}/c++config.h"
+          dist_libstdcpp_cxxconfig="${dist_libstdcpp_bits_dir}/c++config"
 
           if [[ -f "${arch_cxxconfig}" ]]; then
             mkdir -p "${gxx_bits_dir}" "${gxx_legacy_bits_dir}"
@@ -633,9 +636,17 @@ jobs:
             mkdir -p "${obj_libstdcpp_bits_dir}" "${obj_libstdcpp_arch_bits_dir}"
             cp -f "${arch_cxxconfig}" "${obj_libstdcpp_cxxconfig}"
             cp -f "${arch_cxxconfig}" "${obj_libstdcpp_arch_cxxconfig}"
+
+            # GCC13 source headers are searched before -I. during libstdc++
+            # compilation, so refresh the dist copy as well when it exists.
+            mkdir -p "${dist_libstdcpp_bits_dir}"
+            cp -f "${arch_cxxconfig}" "${dist_libstdcpp_cxxconfig_h}"
+            if [[ -f "${dist_libstdcpp_cxxconfig}" ]]; then
+              cp -f "${arch_cxxconfig}" "${dist_libstdcpp_cxxconfig}"
+            fi
           fi
 
-          for verify_cxxconfig in "${obj_libstdcpp_cxxconfig}" "${obj_libstdcpp_arch_cxxconfig}" "${gxx_cxxconfig}" "${gxx_legacy_cxxconfig}" "${arch_cxxconfig}"; do
+          for verify_cxxconfig in "${dist_libstdcpp_cxxconfig_h}" "${dist_libstdcpp_cxxconfig}" "${obj_libstdcpp_cxxconfig}" "${obj_libstdcpp_arch_cxxconfig}" "${gxx_cxxconfig}" "${gxx_legacy_cxxconfig}" "${arch_cxxconfig}"; do
             if [[ -f "${verify_cxxconfig}" ]]; then
               echo "cxxconfig-check: ${verify_cxxconfig}"
               grep -nE 'GCC13_SPIKE_CXXCONFIG_COMPAT|_GLIBCXX_USE_DUAL_ABI|_GLIBCXX_USE_CXX11_ABI|_GLIBCXX_BEGIN_NAMESPACE_CXX11|_GLIBCXX_NAMESPACE_CXX11|_GLIBCXX_DEFAULT_ABI_TAG|_GLIBCXX_BEGIN_INLINE_ABI_NAMESPACE|_GLIBCXX_TXN_SAFE_DYN|_GLIBCXX11_DEPRECATED|_GLIBCXX_NODISCARD|_GLIBCXX23_CONSTEXPR' \

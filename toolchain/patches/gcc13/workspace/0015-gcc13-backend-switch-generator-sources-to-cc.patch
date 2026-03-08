@@ -10,7 +10,7 @@
 +G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
 +.endif
 +
-+SRCS=		${G_OBJS:.o=.cc} ${G_OUT_FILE_SRC:T}
++SRCS=		${G_OBJS:S,analyzer/,,:S,rtl-ssa/,,} ${G_OUT_FILE_SRC:T}
  
  BOTH_CPPFLAGS+=	-I. -I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
  CPPFLAGS+=	${BOTH_CPPFLAGS} -DTARGET_NAME=\"${MACHINE_GNU_PLATFORM}\"
@@ -68,6 +68,8 @@
  # XXX
  COPTS.varasm.c=			-Wno-error
 +COPTS.varasm.cc=			${COPTS.varasm.c}
++
++.SUFFIXES: .lo .h .c .cc
  
 -# XXX Override the normal rule to use HOST_COMPILE.cc
 +# XXX Override the normal rules to use HOST_COMPILE.cc

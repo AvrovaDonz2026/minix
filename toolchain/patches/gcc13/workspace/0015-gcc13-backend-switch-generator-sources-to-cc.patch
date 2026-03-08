@@ -1,23 +1,28 @@
---- a/external/gpl3/gcc/usr.bin/backend/Makefile	2026-03-09 01:49:35.832254001 +0800
-+++ b/external/gpl3/gcc/usr.bin/backend/Makefile	2026-03-09 01:49:35.836254101 +0800
-@@ -4,7 +4,7 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -4,7 +4,12 @@
  
  LIB=		backend
  
 -SRCS=		${G_OBJS:.o=.c} ${G_out_file:T}
-+SRCS=		${G_OBJS:.o=.cc} ${G_out_file:T}
++G_OUT_FILE_SRC=	${G_out_file}
++.if !exists(${G_out_file}) && exists(${G_out_file:S,.c,.cc,})
++G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
++.endif
++
++SRCS=		${G_OBJS:.o=.cc} ${G_OUT_FILE_SRC:T}
  
  BOTH_CPPFLAGS+=	-I. -I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
  CPPFLAGS+=	${BOTH_CPPFLAGS} -DTARGET_NAME=\"${MACHINE_GNU_PLATFORM}\"
-@@ -14,6 +14,7 @@
- CPPFLAGS+=	-I${.CURDIR}/../../lib/libgcc/libgcov/arch/${MACHINE_ARCH}
+@@ -15,6 +20,7 @@
  
  CPPFLAGS.cppdefault.c+=	-DPREFIX=\"/usr\" \
-+CPPFLAGS.cppdefault.cc+=	${CPPFLAGS.cppdefault.c}
  			-DNATIVE_SYSTEM_HEADER_DIR=\"${G_NATIVE_SYSTEM_HEADER_DIR}\"
++CPPFLAGS.cppdefault.cc+=	${CPPFLAGS.cppdefault.c}
  
  HOSTPROG_CXX=	1
-@@ -23,6 +24,8 @@
+ 
+@@ -23,6 +29,8 @@
  # bsd.lib.mk pulls in .depend so those lookups remain resolvable.
  .PATH: ${DIST}/gcc ${DIST}/libiberty ${GCCARCH} ${G_out_file:H} ${DIST}/include
  .PATH: ${DIST}/gcc/config
@@ -26,7 +31,7 @@
  
  .include <bsd.lib.mk>
  
-@@ -32,22 +35,23 @@
+@@ -32,22 +40,23 @@
  CC:=		${CXX}
  CFLAGS:=	${CXXFLAGS}
  
@@ -57,7 +62,7 @@
  		gt-*.h *.o *.lo \
  		cs-config.h \
  		gcov-iov gcov-iov.h \
-@@ -55,13 +59,19 @@
+@@ -55,13 +64,19 @@
  
  # XXX
  COPTS.varasm.c=			-Wno-error
@@ -78,7 +83,7 @@
  # Headers that host objects depend on (except gen*rtl*)
  G_BUILD_XM_HEADERS=	${G_build_xm_include_list:S,ansidecl.h,${DIST}/include/ansidecl.h,}
  HH_NORTL=		${G_tm_file_list} ${G_BUILD_XM_HEADERS}
-@@ -78,7 +88,7 @@
+@@ -78,7 +93,7 @@
  	${_MKTARGET_LINK}
  	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
  
@@ -87,7 +92,7 @@
  	${_MKTARGET_CREATE}
  	./genpreds ${G_md_file} >${.TARGET}
  tm-preds.h: genpreds ${G_md_file}
-@@ -96,7 +106,7 @@
+@@ -96,7 +111,7 @@
  # XXX
  CLEANFILES+=	gtype-lto.h gtype-objcp.h tm-constrs.h
  
@@ -96,7 +101,7 @@
  gtype-desc.h: gengtype gtyp-input.list.tmp
  	${_MKTARGET_CREATE}
  	rm -f auto-host.h
-@@ -134,13 +144,13 @@
+@@ -134,13 +149,13 @@
  	echo "NULL };"							; \
  	) >${.TARGET}
  
@@ -112,7 +117,7 @@
  	${_MKTARGET_CREATE}
  	./genmodes -m >${.TARGET}
  genmodes.lo: ${HH_NORTL}
-@@ -200,59 +210,52 @@
+@@ -200,59 +215,52 @@
  # by the genfoo programs.
  #
  
@@ -189,7 +194,7 @@
  ${f:R}.lo: ${HH}
  .endfor
  
-@@ -271,7 +274,7 @@
+@@ -271,7 +279,7 @@
  #
  .for f in attr attr-common attrtab automata codes conditions config emit \
  	  extract flags opinit output peep preds recog mddump condmd
@@ -198,7 +203,7 @@
  gen${f}: gen${f}.lo ${GENPROG_RTL_DEPENDS} 
  	${_MKTARGET_LINK}
  	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
-@@ -279,7 +282,7 @@
+@@ -279,7 +287,7 @@
  .endfor
  
  .for f in mddeps constants enums
@@ -207,7 +212,7 @@
  gen${f}: gen${f}.lo ${GENPROG_READER_DEPENDS} 
  	${_MKTARGET_LINK}
  	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
-@@ -287,7 +290,7 @@
+@@ -287,7 +295,7 @@
  .endfor
  
  .for f in check checksum
@@ -216,7 +221,7 @@
  gen${f}: gen${f}.lo
  	${_MKTARGET_LINK}
  	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
-@@ -306,7 +309,7 @@
+@@ -306,7 +314,7 @@
  
  # RTL based files
  .for f in attr.h attr-common.h codes.h config.h flags.h \
@@ -225,7 +230,7 @@
  insn-${f}: gen${f:R} ${G_md_file} insn-conditions.md
  	${_MKTARGET_CREATE}
  	./gen${f:R} ${G_md_file} insn-conditions.md >${.TARGET}
-@@ -314,18 +317,18 @@
+@@ -314,18 +322,18 @@
  .endfor
  
  # normal files
@@ -248,7 +253,7 @@
  
  # gencheck outputs tree-check.h
  tree-check.h: gencheck
-@@ -338,16 +341,16 @@
+@@ -338,16 +346,16 @@
  
  # genattrtab has three output files
  # XXX fix me
@@ -271,7 +276,7 @@
  
  LDFLAGS.genautomata+=	-lm
  
-@@ -405,7 +408,9 @@
+@@ -405,7 +413,9 @@
  .if ${GCC_MACHINE_ARCH} == "vax"
  CPPFLAGS+=-I${.CURDIR}/../../lib/libgcc/libgcov/arch/${GCC_MACHINE_ARCH}
  COPTS.expmed.c=-O0
@@ -281,7 +286,7 @@
  .endif
  
  CFLAGS+=	-Wno-stack-protector
-@@ -413,7 +418,9 @@
+@@ -413,7 +423,9 @@
  .if ${GCC_MACHINE_ARCH} == "m68000" || ${GCC_MACHINE_ARCH} == "m68k" || \
  	${GCC_MACHINE_ARCH} == "coldfire"
  COPTS.tree-loop-distribution.c=	-O2

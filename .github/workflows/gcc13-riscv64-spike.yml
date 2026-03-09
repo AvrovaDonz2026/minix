@@ -16,6 +16,9 @@ on:
       - "sys/sys/stdarg.h"
       - "include/stddef.h"
       - "bin/ksh/**"
+      - "share/mk/**"
+      - "external/mit/lua/**"
+      - "minix/tests/**"
   workflow_dispatch:
     inputs:
       gcc_version:

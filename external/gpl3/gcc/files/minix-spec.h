@@ -165,7 +165,7 @@ is built with the --enable-threads configure-time option.}		\
     -dc -dp								\
     %{!static:								\
       %{rdynamic:-export-dynamic}					\
-      %{!dynamic-linker:-dynamic-linker %(minix_dynamic_linker) }}	\
+      %{!dynamic-linker:--dynamic-linker=" MINIX_DYNAMIC_LINKER " }}	\
     %{static:-Bstatic}}"
 
 #define MINIX_TARGET_UNWIND_TABLES_DEFAULT true

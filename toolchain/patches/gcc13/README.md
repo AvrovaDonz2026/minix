@@ -39,6 +39,11 @@ This directory stores MINIX GCC13 integration changes as small, scoped units.
 - `gcc-dist/0005-gcc13-add-minix-base-target-files.patch`
   - Restore upstream-overlay-missing MINIX base target files:
     `gcc/config/minix-spec.h`, `gcc/config/minix.h`, and `gcc/config/t-minix`.
+- `gcc-dist/0006-gcc13-minix-add-dynamic-driver-option.patch`
+  - Add `gcc/config/minix.opt` and wire it through `gcc/config.gcc` for
+    MINIX targets.
+  - Restore the historical MINIX driver-only `-dynamic` option so GCC13 does
+    not leak it into target links as a stray linker input.
 
 These `gcc-dist` patches are the compiler-side ABI glue required for native
 `riscv64-elf32-minix` GCC13 builds. The shim-mode workspace override remains

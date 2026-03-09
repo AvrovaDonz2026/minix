@@ -23,7 +23,7 @@
  
  HOSTPROG_CXX=	1
  
-@@ -23,6 +29,8 @@
+@@ -23,6 +30,8 @@
  # bsd.lib.mk pulls in .depend so those lookups remain resolvable.
  .PATH: ${DIST}/gcc ${DIST}/libiberty ${GCCARCH} ${G_out_file:H} ${DIST}/include
  .PATH: ${DIST}/gcc/config
@@ -32,7 +32,7 @@
  
  .include <bsd.lib.mk>
  
-@@ -32,22 +40,23 @@
+@@ -32,22 +41,23 @@
  CC:=		${CXX}
  CFLAGS:=	${CXXFLAGS}
  
@@ -63,15 +63,15 @@
  		gt-*.h *.o *.lo \
  		cs-config.h \
  		gcov-iov gcov-iov.h \
-@@ -55,13 +64,19 @@
+@@ -55,13 +65,21 @@
  
  # XXX
  COPTS.varasm.c=			-Wno-error
 +COPTS.varasm.cc=			${COPTS.varasm.c}
-+
-+.SUFFIXES: .lo .h .c .cc
  
 -# XXX Override the normal rule to use HOST_COMPILE.cc
++.SUFFIXES: .lo .h .c .cc
++
 +# XXX Override the normal rules to use HOST_COMPILE.cc
  .c.lo:
  	${_MKTARGET_COMPILE}
@@ -86,7 +86,7 @@
  # Headers that host objects depend on (except gen*rtl*)
  G_BUILD_XM_HEADERS=	${G_build_xm_include_list:S,ansidecl.h,${DIST}/include/ansidecl.h,}
  HH_NORTL=		${G_tm_file_list} ${G_BUILD_XM_HEADERS}
-@@ -78,7 +93,7 @@
+@@ -78,7 +96,7 @@
  	${_MKTARGET_LINK}
  	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
  
@@ -95,7 +95,7 @@
  	${_MKTARGET_CREATE}
  	./genpreds ${G_md_file} >${.TARGET}
  tm-preds.h: genpreds ${G_md_file}
-@@ -96,7 +111,7 @@
+@@ -96,7 +114,7 @@
  # XXX
  CLEANFILES+=	gtype-lto.h gtype-objcp.h tm-constrs.h
  
@@ -104,7 +104,7 @@
  gtype-desc.h: gengtype gtyp-input.list.tmp
  	${_MKTARGET_CREATE}
  	rm -f auto-host.h
-@@ -134,13 +149,13 @@
+@@ -134,13 +152,13 @@
  	echo "NULL };"							; \
  	) >${.TARGET}
  
@@ -120,7 +120,7 @@
  	${_MKTARGET_CREATE}
  	./genmodes -m >${.TARGET}
  genmodes.lo: ${HH_NORTL}
-@@ -200,59 +215,52 @@
+@@ -200,59 +218,52 @@
  # by the genfoo programs.
  #
  
@@ -146,7 +146,7 @@
 +		${GNUHOSTDIST}/gcc/print-rtl.cc >${.TARGET}
  build-print-rtl.lo: ${HH}
 -build/print-rtl.o: ${DIST}/gcc/print-rtl.c $(BCONFIG_H) $(SYSTEM_H) coretypes.h     \
-+build/print-rtl.o: ${DIST}/gcc/print-rtl.cc $(BCONFIG_H) $(SYSTEM_H) coretypes.h     \
++build/print-rtl.o: ${DIST}/gcc/print-rtl.cc $(BCONFIG_H) $(SYSTEM_H) ${DIST}/gcc/coretypes.h     \
    $(GTM_H) $(RTL_BASE_H)
  
  
@@ -197,7 +197,7 @@
  ${f:R}.lo: ${HH}
  .endfor
  
-@@ -271,7 +279,7 @@
+@@ -271,7 +282,7 @@
  #
  .for f in attr attr-common attrtab automata codes conditions config emit \
  	  extract flags opinit output peep preds recog mddump condmd
@@ -206,7 +206,7 @@
  gen${f}: gen${f}.lo ${GENPROG_RTL_DEPENDS} 
  	${_MKTARGET_LINK}
  	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
-@@ -279,7 +287,7 @@
+@@ -279,7 +290,7 @@
  .endfor
  
  .for f in mddeps constants enums
@@ -215,7 +215,7 @@
  gen${f}: gen${f}.lo ${GENPROG_READER_DEPENDS} 
  	${_MKTARGET_LINK}
  	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
-@@ -287,7 +295,7 @@
+@@ -287,7 +298,7 @@
  .endfor
  
  .for f in check checksum
@@ -224,7 +224,7 @@
  gen${f}: gen${f}.lo
  	${_MKTARGET_LINK}
  	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
-@@ -306,7 +314,7 @@
+@@ -306,7 +317,7 @@
  
  # RTL based files
  .for f in attr.h attr-common.h codes.h config.h flags.h \
@@ -233,7 +233,7 @@
  insn-${f}: gen${f:R} ${G_md_file} insn-conditions.md
  	${_MKTARGET_CREATE}
  	./gen${f:R} ${G_md_file} insn-conditions.md >${.TARGET}
-@@ -314,18 +322,18 @@
+@@ -314,18 +325,18 @@
  .endfor
  
  # normal files
@@ -256,7 +256,7 @@
  
  # gencheck outputs tree-check.h
  tree-check.h: gencheck
-@@ -338,16 +346,16 @@
+@@ -338,16 +349,16 @@
  
  # genattrtab has three output files
  # XXX fix me
@@ -279,7 +279,7 @@
  
  LDFLAGS.genautomata+=	-lm
  
-@@ -405,7 +413,9 @@
+@@ -405,7 +416,9 @@
  .if ${GCC_MACHINE_ARCH} == "vax"
  CPPFLAGS+=-I${.CURDIR}/../../lib/libgcc/libgcov/arch/${GCC_MACHINE_ARCH}
  COPTS.expmed.c=-O0
@@ -289,7 +289,7 @@
  .endif
  
  CFLAGS+=	-Wno-stack-protector
-@@ -413,7 +423,9 @@
+@@ -413,7 +426,9 @@
  .if ${GCC_MACHINE_ARCH} == "m68000" || ${GCC_MACHINE_ARCH} == "m68k" || \
  	${GCC_MACHINE_ARCH} == "coldfire"
  COPTS.tree-loop-distribution.c=	-O2

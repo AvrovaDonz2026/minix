@@ -1,0 +1,44 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile	2026-03-10 10:53:51.609212734 +0800
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile	2026-03-10 10:53:51.641212818 +0800
+@@ -270,8 +270,8 @@
+ # First we generate the rules for the generators.
+ #
+ .for f in attr attr-common attrtab automata codes conditions config emit \
+-	  extract flags opinit output peep preds recog mddump condmd
+-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.c
++	  extract flags opinit output peep preds recog mddump
++gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc
+ gen${f}: gen${f}.lo ${GENPROG_RTL_DEPENDS} 
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
+@@ -279,7 +279,7 @@
+ .endfor
+ 
+ .for f in mddeps constants enums
+-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.c
++gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc
+ gen${f}: gen${f}.lo ${GENPROG_READER_DEPENDS} 
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
+@@ -287,13 +287,20 @@
+ .endfor
+ 
+ .for f in check checksum
+-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.c
++gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc
+ gen${f}: gen${f}.lo
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
+ CLEANFILES+=	gen${f} gen${f}.lo
+ .endfor
+ 
++# gencondmd is synthesized locally from genconditions output.
++gencondmd.lo: ${HH} gencondmd.c
++gencondmd: gencondmd.lo ${GENPROG_RTL_DEPENDS}
++	${_MKTARGET_LINK}
++	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
++CLEANFILES+=	gencondmd gencondmd.lo
++
+ .include "../../Makefile.hooks"
+ 
+ #

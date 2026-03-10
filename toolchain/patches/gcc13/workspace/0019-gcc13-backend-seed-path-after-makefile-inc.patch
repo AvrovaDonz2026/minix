@@ -1,0 +1,13 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -24,6 +24,10 @@
+ 
+ HOSTPROG_CXX=	1
+ 
++# bsd.lib.mk pulls in ../Makefile.inc via bsd.init.mk, but the early .PATH
++# seed below must not expand before DIST/GCCARCH/G_out_file are defined.
++.include "../Makefile.inc"
++
+ # GCC13's generated dependency files may keep backend generator inputs as
+ # bare names such as genattr.c. Seed the gcc/dist search path before
+ # bsd.lib.mk pulls in .depend so those lookups remain resolvable.

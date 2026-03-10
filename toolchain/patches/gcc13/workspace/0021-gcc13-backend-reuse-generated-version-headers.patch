@@ -1,0 +1,69 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -83,17 +83,20 @@
+ HH_NORTL=		${G_tm_file_list} ${G_BUILD_XM_HEADERS}
+ HH=		${HH_NORTL} genrtl.h insn-modes.h
+ 
++TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
++TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
++
+ # GCC13 carries many backend helper prerequisites as bare basenames in the
+ # generated defs. Canonicalize the source-tree headers here so host helper
+ # rules do not depend on .PATH continuing to resolve each basename.
+-GCC13_BACKEND_G_GCC_H_DIST=	gcc.h version.h diagnostic-core.h input.h diagnostic.def
+-GCC13_BACKEND_G_GCC_H_ARCH=	bversion.h
++GCC13_BACKEND_G_GCC_H_DIST=	gcc.h diagnostic-core.h input.h diagnostic.def
++GCC13_BACKEND_G_GCC_H_TOOLS=	version.h bversion.h
+ GCC13_BACKEND_G_GCC_H=
+ .for h in ${G_GCC_H}
+ .if !empty(GCC13_BACKEND_G_GCC_H_DIST:M${h})
+ GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${DIST}/gcc/${h}
+-.elif !empty(GCC13_BACKEND_G_GCC_H_ARCH:M${h})
+-GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${GCCARCH}/${h}
++.elif !empty(GCC13_BACKEND_G_GCC_H_TOOLS:M${h})
++GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${TOOLSGCCBUILD}/${h}
+ .else
+ GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${h}
+ .endif
+@@ -128,6 +131,7 @@
+ GCC13_BACKEND_G_TREE_H_DIST=	coretypes.h tree.h tree.def machmode.h mode-classes.def
+ GCC13_BACKEND_G_TREE_H_DIST+=	builtins.def sync-builtins.def omp-builtins.def
+ GCC13_BACKEND_G_TREE_H_DIST+=	gtm-builtins.def sanitizer.def input.h
++GCC13_BACKEND_G_TREE_H_DIST+=	c-family/c-common.def
+ GCC13_BACKEND_G_TREE_H_DIST+=	statistics.h vec.h ggc.h treestruct.def
+ GCC13_BACKEND_G_TREE_H_DIST+=	double-int.h alias.h flags.h flag-types.h
+ GCC13_BACKEND_G_TREE_H_DIST+=	real.h fixed-value.h
+@@ -156,6 +160,7 @@
+ GCC13_BACKEND_G_BASIC_BLOCK_H_DIST=	basic-block.h predict.h predict.def
+ GCC13_BACKEND_G_BASIC_BLOCK_H_DIST+=	vec.h statistics.h ggc.h function.h
+ GCC13_BACKEND_G_BASIC_BLOCK_H_DIST+=	hard-reg-set.h cfghooks.h machmode.h
++GCC13_BACKEND_G_BASIC_BLOCK_H_DIST+=	input.h
+ GCC13_BACKEND_G_BASIC_BLOCK_H_DIST+=	mode-classes.def cfg-flags.def flag-types.h
+ GCC13_BACKEND_G_BASIC_BLOCK_H_ARCH=	tm.h
+ GCC13_BACKEND_G_BASIC_BLOCK_H=
+@@ -169,6 +174,16 @@
+ .endif
+ .endfor
+ 
++GCC13_BACKEND_REGS_H_DIST=	regs.h machmode.h mode-classes.def hard-reg-set.h
++GCC13_BACKEND_REGS_H=
++.for h in ${REGS_H:U}
++.if !empty(GCC13_BACKEND_REGS_H_DIST:M${h})
++GCC13_BACKEND_REGS_H:= ${GCC13_BACKEND_REGS_H} ${DIST}/gcc/${h}
++.else
++GCC13_BACKEND_REGS_H:= ${GCC13_BACKEND_REGS_H} ${h}
++.endif
++.endfor
++
+ #
+ # Generate the various header files we need.
+ #
+@@ -322,7 +337,7 @@
+ 
+ 
+ build-bitmap.cc: ${DIST}/gcc/bitmap.cc \
+-  ${GCC13_BACKEND_G_RTL_H} ${DIST}/gcc/flags.h ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${REGS_H} ${GCC13_BACKEND_G_GCC_H} gtype-desc.h
++  ${GCC13_BACKEND_G_RTL_H} ${DIST}/gcc/flags.h ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${GCC13_BACKEND_REGS_H} ${GCC13_BACKEND_G_GCC_H} gtype-desc.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-bitmap.cc
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \

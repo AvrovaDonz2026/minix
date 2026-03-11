@@ -1,0 +1,11 @@
+--- a/external/gpl3/gcc/Makefile.hooks
++++ b/external/gpl3/gcc/Makefile.hooks
+@@ -5,7 +5,7 @@
+ #
+ 
+ .for f in hooks
+-gen${f}.lo: ${HH} gen${f}.c
++gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.c
+ gen${f}: gen${f}.lo ${GENPROG_ERROR_DEPENDS} 
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}

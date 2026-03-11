@@ -1,0 +1,11 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -9,7 +9,7 @@
+ BOTH_CPPFLAGS+=	-I. -I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
+ CPPFLAGS+=	${BOTH_CPPFLAGS} -DTARGET_NAME=\"${MACHINE_GNU_PLATFORM}\"
+ HOST_CPPFLAGS+=	${BOTH_CPPFLAGS} -DGENERATOR_FILE
+-DPSRCS+=	insn-attr.h insn-codes.h insn-config.h insn-flags.h tree-check.h
++DPSRCS+=	insn-attr.h insn-codes.h insn-config.h insn-flags.h insn-modes.h tree-check.h
+ CPPFLAGS+=	-I${DIST}/libgcc
+ CPPFLAGS+=	-I${.CURDIR}/../../lib/libgcc/libgcov/arch/${MACHINE_ARCH}
+ 

@@ -1,13 +1,21 @@
 --- a/external/gpl3/gcc/usr.bin/backend/Makefile
 +++ b/external/gpl3/gcc/usr.bin/backend/Makefile
-@@ -24,6 +24,10 @@
+@@ -18,6 +18,18 @@
  
  HOSTPROG_CXX=	1
  
 +# bsd.lib.mk pulls in ../Makefile.inc via bsd.init.mk, but the early .PATH
-+# seed below must not expand before DIST/GCCARCH/G_out_file are defined.
++# seed below and G_out_file-based GCC13 source fallback must not expand
++# before DIST/GCCARCH/G_out_file are defined.
 +.include "../Makefile.inc"
 +
- # GCC13's generated dependency files may keep backend generator inputs as
- # bare names such as genattr.c. Seed the gcc/dist search path before
- # bsd.lib.mk pulls in .depend so those lookups remain resolvable.
++# 0018 seeds G_OUT_FILE_SRC before Makefile.inc exists. Recompute it here once
++# G_out_file is available so GCC13 backend targets can switch .c -> .cc.
++G_OUT_FILE_SRC=	${G_out_file}
++.if !exists(${G_out_file}) && exists(${G_out_file:S,.c,.cc,})
++G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
++.endif
++
+ .include <bsd.lib.mk>
+ 
+ # Force using C++ for this

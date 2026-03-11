@@ -1,0 +1,17 @@
+--- a/external/gpl3/gcc/Makefile.hooks
++++ b/external/gpl3/gcc/Makefile.hooks
+@@ -4,8 +4,13 @@
+ # Makefile fragment to build genhooks and *target-hooks*.h
+ #
+ 
++GCC13_HOOKS_SRC=	${DIST}/gcc/genhooks.c
++.if !exists(${GCC13_HOOKS_SRC}) && exists(${DIST}/gcc/genhooks.cc)
++GCC13_HOOKS_SRC:=	${DIST}/gcc/genhooks.cc
++.endif
++
+ .for f in hooks
+-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.c
++gen${f}.lo: ${HH} ${GCC13_HOOKS_SRC}
+ gen${f}: gen${f}.lo ${GENPROG_ERROR_DEPENDS} 
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}

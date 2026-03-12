@@ -6,9 +6,9 @@
  
 +.for f in gengenrtl gengtype gengtype-lex gengtype-parse gengtype-state version \
 +	genmodes gcov-iov gensupport read-rtl dummy-conditions
-+GCC13_BACKEND_${f:S,-,_g}_SRC=	${f}.c
++GCC13_BACKEND_${f:S,-,_,g}_SRC:=	${f}.c
 +.if !exists(${DIST}/gcc/${f}.c) && exists(${DIST}/gcc/${f}.cc)
-+GCC13_BACKEND_${f:S,-,_g}_SRC:=	${f}.cc
++GCC13_BACKEND_${f:S,-,_,g}_SRC:=	${f}.cc
 +.endif
 +.endfor
 +

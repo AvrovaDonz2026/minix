@@ -1,0 +1,77 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -42,6 +42,14 @@
+ G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
+ .endif
+ 
++.for f in gengenrtl gengtype gengtype-lex gengtype-parse gengtype-state version \
++	genmodes gcov-iov gensupport read-rtl dummy-conditions
++GCC13_BACKEND_${f:S,-,_g}_SRC=	${f}.c
++.if !exists(${DIST}/gcc/${f}.c) && exists(${DIST}/gcc/${f}.cc)
++GCC13_BACKEND_${f:S,-,_g}_SRC:=	${f}.cc
++.endif
++.endfor
++
+ # Reseed the search path after Makefile.inc so GCCARCH and G_out_file
+ # contribute their real directories before bsd.lib.mk consumes .depend.
+ .PATH: ${DIST}/gcc ${DIST}/libiberty ${GCCARCH} ${G_out_file:H} ${DIST}/include
+@@ -212,7 +220,7 @@
+ genrtl.h: gengenrtl
+ 	${_MKTARGET_CREATE}
+ 	./gengenrtl >${.TARGET}
+-gengenrtl.lo: ${HH_NORTL}
++gengenrtl.lo: ${HH_NORTL} ${GCC13_BACKEND_gengenrtl_SRC}
+ gengenrtl: gengenrtl.lo build-errors.lo
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
+@@ -250,7 +258,11 @@
+ 	# GCC 4.8 installs gtype-state and gengtype as a plugin
+ 
+ # gengtype is the real need for options.h
+-gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo version.lo: ${HH} gtyp-gen.h config.h options.h
++gengtype.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_gengtype_SRC}
++gengtype-lex.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_gengtype_lex_SRC}
++gengtype-parse.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_gengtype_parse_SRC}
++gengtype-state.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_gengtype_state_SRC}
++version.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_version_SRC}
+ gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo build-errors.lo version.lo
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
+@@ -283,7 +295,7 @@
+ min-insn-modes.c: genmodes
+ 	${_MKTARGET_CREATE}
+ 	./genmodes -m >${.TARGET}
+-genmodes.lo: ${HH_NORTL}
++genmodes.lo: ${HH_NORTL} ${GCC13_BACKEND_genmodes_SRC}
+ genmodes: genmodes.lo build-errors.lo
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
+@@ -291,7 +303,7 @@
+ gcov-iov.h: gcov-iov
+ 	${_MKTARGET_CREATE}
+ 	./gcov-iov "${BASEVER}" "${DEVPHASE}" >${.TARGET}
+-gcov-iov.lo: ${HH_NORTL}
++gcov-iov.lo: ${HH_NORTL} ${GCC13_BACKEND_gcov_iov_SRC}
+ gcov-iov: gcov-iov.lo
+ 	${_MKTARGET_CREATE}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
+@@ -379,7 +391,7 @@
+ 	rm -f build-varray.c
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+ 		${GNUHOSTDIST}/gcc/varray.c >${.TARGET}
+-build-varray.lo: ${HH} gtype-desc.h
++build-varray.lo: ${HH} gtype-desc.h build-varray.c
+ 
+ build-ggc-none.cc: ${DIST}/gcc/ggc-none.cc \
+   ${GCC13_BACKEND_G_GCC_H} gtype-desc.h
+@@ -393,7 +405,9 @@
+ # The normal insn-foo generators
+ #
+ .for f in gensupport.cc read-rtl.cc dummy-conditions.c
+-${f:R}.lo: ${HH}
++.if exists(${DIST}/gcc/${f})
++${f:R}.lo: ${HH} ${f}
++.endif
+ .endfor
+ 
+ #

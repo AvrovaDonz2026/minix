@@ -4,7 +4,7 @@
  G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
  .endif
  
-+.for f in gengenrtl gengtype gengtype-lex gengtype-parse gengtype-state version \
++.for f in gengenrtl gengtype gengtype-lex gengtype-parse gengtype-state \
 +	genmodes gcov-iov gensupport read-rtl dummy-conditions
 +GCC13_BACKEND_${f:S,-,_,g}_SRC:=	${DIST}/gcc/${f}.c
 +.if !exists(${DIST}/gcc/${f}.c) && exists(${DIST}/gcc/${f}.cc)
@@ -33,7 +33,7 @@
 +gengtype-lex.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_gengtype_lex_SRC}
 +gengtype-parse.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_gengtype_parse_SRC}
 +gengtype-state.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_gengtype_state_SRC}
-+version.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_version_SRC}
++version.lo: ${HH} gtyp-gen.h config.h options.h version.c
  gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo build-errors.lo version.lo
  	${_MKTARGET_LINK}
  	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}

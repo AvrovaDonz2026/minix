@@ -1,0 +1,45 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -82,7 +82,7 @@
+ 		build-bitmap.cc build-ggc-none.cc \
+ 		gt-*.h *.o *.lo \
+ 		cs-config.h \
+-		gcov-iov gcov-iov.h version.h \
++		version.h \
+ 		gtype-go.h gtype.state
+ CLEANFILES+=	config.h
+ 
+@@ -299,14 +299,6 @@
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
+ 
+-gcov-iov.h: gcov-iov
+-	${_MKTARGET_CREATE}
+-	./gcov-iov "${BASEVER}" "${DEVPHASE}" >${.TARGET}
+-gcov-iov.lo: ${HH_NORTL} ${GCC13_BACKEND_gcov_iov_SRC}
+-gcov-iov: gcov-iov.lo
+-	${_MKTARGET_CREATE}
+-	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
+-
+ tm_p.h: Makefile tm-preds.h
+ 	${_MKTARGET_CREATE}
+ 	TARGET_CPU_DEFAULT="" \
+@@ -532,8 +524,8 @@
+ insn-attrtab.o: insn-config.h
+ insn-extract.o: insn-config.h
+ toplev.d toplev.o: options.h
+-coverage.d: gcov-iov.h
+-gcov-io.h: gcov-iov.h
++coverage.d: gcov-io.h
++gcov-io.h: version.h
+ alias.d alias.o: insn-constants.h tm_p.h
+ cgraph.d cgraphunit.d cgraphunit.o: gcov-io.h
+ vec.lo: gtype-desc.h
+@@ -543,7 +535,7 @@
+ asan.d asan.o: insn-opinit.h
+ data-streamer.d data-streamer-out.d coverage.d gcov-dump.d gcov-io.d gcov-iov.d gcov.d libgcov.d lto-cgraph.d mcf.d modulo-sched.d profile.d value-prof.d: gcov-io.h
+ data-streamer.o data-streamer-out.o coverage.o gcov-dump.o gcov-io.o gcov-iov.o gcov.o libgcov.o lto-cgraph.o mcf.o modulo-sched.o profile.o value-prof.o: gcov-io.h
+-gcov-io.h: gcov-iov.h
++gcov-io.h: version.h
+ df-scan.d df-scan.o: target-hooks-def.h
+ read-md.d read-md.o read-md.lo: auto-build.h insn-modes.h

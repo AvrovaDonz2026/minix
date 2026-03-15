@@ -1,0 +1,26 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -171,6 +171,12 @@
+ GCC13_BACKEND_G_BASIC_BLOCK_H:= ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${h}
+ .endif
+ .endfor
++
++GCC13_BACKEND_G_GTFILES=	${G_GTFILES}
++GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../libcpp/include,${DIST}/libcpp/include,g}
++GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
++GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
++
+ 
+ #
+ # Generate the various header files we need.
+@@ -277,7 +283,7 @@
+ 	echo "static const char *langs_for_lang_files[] = {"		; \
+ 	for f in $$empty $(G_GTFILES_FILES_LANGS); do echo "\"$$f\", "; done ; \
+ 	echo "NULL };"							; \
+-	echo "static const char *all_files[] = {"			; \
+-	for f in $$empty $(G_GTFILES); do echo "\"$$f\", "; done	; \
++	echo "static const char *all_files[] = {"			; \
++	for f in $$empty $(GCC13_BACKEND_G_GTFILES); do echo "\"$$f\", "; done ; \
+ 	echo " NULL };"							; \
+ 	echo "static const char *lang_dir_names[] = {"			; \
+ 	for f in c $(G_GTFILES_LANG_DIR_NAMES); do echo "\"$$f\", "; done ; \

@@ -1,0 +1,24 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -214,10 +214,12 @@
+ GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../libcpp/include,${DIST}/libcpp/include,g}
+ GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
+ GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
++GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:N${DIST}/libcpp/include/cpp-id-data.h}
+ 
+ G_GTFILES:=	${G_GTFILES:S,${DIST}/gcc/../libcpp/include,${DIST}/libcpp/include,g}
+ G_GTFILES:=	${G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
+ G_GTFILES:=	${G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
++G_GTFILES:=	${G_GTFILES:N${DIST}/libcpp/include/cpp-id-data.h}
+ 
+ 
+ #
+@@ -253,6 +255,7 @@
+ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
+ 	${TOOL_SED} -e 's#SRCDIR#${DIST}#' \
+ 	    -e 's#${G_GT_OUT_FILE}#${G_OUT_FILE_SRC}#' \
+	    -e 's#${DIST}/gcc/\\.\\./libcpp/include#${DIST}/libcpp/include#g' \
++	    -e '/cpp-id-data\.h$$/d' \
+	    -e 's#${DIST}/gcc/\\.\\./include#${DIST}/include#g' \
+ 	    -e 's#${G_out_file}#${G_OUT_FILE_SRC}#' < ${.ALLSRC} > ${.TARGET}
+ CLEANFILES+=	gtyp-input.list.tmp

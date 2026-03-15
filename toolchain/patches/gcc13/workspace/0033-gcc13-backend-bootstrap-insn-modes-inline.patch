@@ -1,0 +1,50 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -14,7 +14,8 @@
+ BOTH_CPPFLAGS+=	-I. -I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
+ CPPFLAGS+=	${BOTH_CPPFLAGS} -DTARGET_NAME=\"${MACHINE_GNU_PLATFORM}\"
+ HOST_CPPFLAGS+=	${BOTH_CPPFLAGS} -DGENERATOR_FILE
+-DPSRCS+=	insn-attr.h insn-codes.h insn-config.h insn-flags.h insn-modes.h tree-check.h
++DPSRCS+=	insn-attr.h insn-codes.h insn-config.h insn-flags.h insn-modes.h
++DPSRCS+=	insn-modes-inline.h tree-check.h
+ CPPFLAGS+=	-I${DIST}/libgcc
+ CPPFLAGS+=	-I${.CURDIR}/../../lib/libgcc/libgcov/arch/${MACHINE_ARCH}
+ 
+@@ -76,7 +77,8 @@
+ 		gencheck tree-check.h \
+ 		insn-preds.c genpreds tm-preds.h tm_p.h cs-tm_p.h \
+ 		genmodes insn-modes.c insn-modes.h min-insn-modes.c \
+-		auto-host.h build-print-rtl.cc \
++		insn-modes-inline.h \
++		auto-host.h build-print-rtl.cc \
+ 		build-rtl.cc build-errors.cc build-varray.c \
+ 		build-bitmap.cc build-ggc-none.cc \
+ 		gt-*.h *.o *.lo \
+@@ -103,7 +105,7 @@
+ # Headers that host objects depend on (except gen*rtl*)
+ G_BUILD_XM_HEADERS=	${G_build_xm_include_list:S,ansidecl.h,${DIST}/include/ansidecl.h,}
+ HH_NORTL=		${G_tm_file_list} ${G_BUILD_XM_HEADERS}
+-HH=		${HH_NORTL} genrtl.h insn-modes.h
++HH=		${HH_NORTL} genrtl.h insn-modes.h insn-modes-inline.h
+ 
+ TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+ TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
+@@ -295,6 +297,9 @@
+ insn-modes.h: genmodes
+ 	${_MKTARGET_CREATE}
+ 	./genmodes -h >${.TARGET}
++insn-modes-inline.h: genmodes
++	${_MKTARGET_CREATE}
++	./genmodes -i >${.TARGET}
+ min-insn-modes.c: genmodes
+ 	${_MKTARGET_CREATE}
+ 	./genmodes -m >${.TARGET}
+@@ -540,7 +545,7 @@
+ data-streamer.d data-streamer-out.d coverage.d gcov-dump.d gcov-io.d gcov-iov.d gcov.d libgcov.d lto-cgraph.d mcf.d modulo-sched.d profile.d value-prof.d: gcov-io.h
+ data-streamer.o data-streamer-out.o coverage.o gcov-dump.o gcov-io.o gcov-iov.o gcov.o libgcov.o lto-cgraph.o mcf.o modulo-sched.o profile.o value-prof.o: gcov-io.h
+ df-scan.d df-scan.o: target-hooks-def.h
+-read-md.d read-md.o read-md.lo: auto-build.h insn-modes.h
++read-md.d read-md.o read-md.lo: auto-build.h insn-modes.h insn-modes-inline.h
+ 
+ # XXX make all hooks generated for now.
+ final.o: target-hooks-def.h c-family/c-target-hooks-def.h common/common-target-hooks-def.h

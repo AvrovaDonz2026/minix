@@ -39,6 +39,7 @@ CPPFLAGS+=	-DPIC
 MKPIC:= no
 
 COPTS.unwind-dw2.c = -Wno-stack-protector
+COPTS.emutls.c = -Wno-builtin-declaration-mismatch
 
 .include <bsd.lib.mk>
 

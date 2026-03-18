@@ -7,6 +7,7 @@ INCSDIR=	/usr/include
 SRCS=		sqlite3.c
 
 CFLAGS+=	-DNDEBUG
+COPTS.sqlite3.c+=	-Wno-array-bounds
 
 FILES+=			sqlite3.pc
 FILESOWN_sqlite3.pc=	${BINOWN}

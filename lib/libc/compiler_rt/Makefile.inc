@@ -274,3 +274,9 @@ COPTS.${src}+=	-Wno-missing-prototypes \
 .    endif
 .  endif
 .endfor
+
+# GCC 13 can fold certain divide-by-zero-undefined paths in compiler_rt's
+# 128/64-bit helpers into trap sequences that the old in-tree RISC-V assembler
+# does not understand.  Dropping these two files to -O1 avoids that lowering.
+COPTS.udivmoddi4.c+=	-O1
+COPTS.udivmodti4.c+=	-O1

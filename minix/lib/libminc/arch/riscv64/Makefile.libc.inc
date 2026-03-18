@@ -67,6 +67,7 @@ CLEANFILES+= ${f:C/\.o/.bc/}
 .endif
 .if !exists(${LIBCARCHDIR}/gen/alloca.S)
 SRCS+=	alloca.c
+COPTS.alloca.c+=	-Wno-return-local-addr
 .endif
 
 .for f in \

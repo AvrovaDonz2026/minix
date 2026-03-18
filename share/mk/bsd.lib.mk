@@ -145,6 +145,9 @@ SHLIB_FULLVERSION=${SHLIB_MAJOR}
 # SHLIB_LDENDFILE:	support .o file, call C++ file-level destructors
 
 PICFLAGS ?= -fPIC
+.if ${MACHINE_CPU} == "riscv"
+PICFLAGS+= -mno-plt
+.endif
 
 .if ${MKPICLIB} != "no"
 CSHLIBFLAGS+= ${PICFLAGS}

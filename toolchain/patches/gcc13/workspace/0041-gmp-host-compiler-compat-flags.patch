@@ -1,0 +1,12 @@
+--- a/tools/gmp/Makefile
++++ b/tools/gmp/Makefile
+@@ -10,7 +10,8 @@
+ # Don't override CFLAGS and CXXFLAGS, it breaks ABI detection.
+ # PATH needs special treating since "make" tries to expand $PATH
+ # when variable is used.
+-CONFIGURE_ENV:=	${CONFIGURE_ENV:NPATH=*:NCFLAGS=*:NCXXFLAGS=*} \
++CONFIGURE_ENV:=	${CONFIGURE_ENV:NPATH=*:NCFLAGS=*:NCXXFLAGS=*} \
++		CC="${HOST_CC:Q} -Wno-implicit-int -Wno-implicit-function-declaration" \
+ 		PATH="${TOOLDIR:Q}/bin:$$$$PATH"
+ 
+ .if ${HOST_OSTYPE:C/\-.*//} != "Minix"

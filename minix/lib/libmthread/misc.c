@@ -3,6 +3,14 @@
 #include "global.h"
 #include "proto.h"
 
+#if defined(__riscv) || defined(__riscv__)
+#define MTHREAD_FAULT() \
+	__asm__ __volatile__("sw zero, 0(zero)" ::: "memory")
+#else
+#define MTHREAD_FAULT() \
+	(*((volatile int *) sf) = 1)
+#endif
+
 /*===========================================================================*
  *				mthread_debug_f				     *
  *===========================================================================*/
@@ -21,25 +29,27 @@ void mthread_debug_f(const char *file, int line, const char *msg)
 void mthread_panic_f(const char *file, int line, const char *msg)
 {
   /* Print panic message to stdout and exit */
+#if !defined(__riscv) && !defined(__riscv__)
   volatile int *sf;
-
   sf = NULL;
+#endif
 
   printf("mthread panic (%s:%d): ", file, line);
   printf("%s", msg);
   printf("\n");
   fflush(stdout);	/* Force debug print to screen */
-  *((int *) sf ) = 1;	/* Cause segfault to generate trace */
+  MTHREAD_FAULT();	/* Cause fault to generate trace */
   exit(1);
 }
 #else
 void mthread_panic_s(void)
 {
   /* Silent panic */
+#if !defined(__riscv) && !defined(__riscv__)
   volatile int *sf;
-
   sf = NULL;
-  *((volatile int *) sf ) = 1;	/* Cause segfault to generate trace */
+#endif
+  MTHREAD_FAULT();	/* Cause fault to generate trace */
   exit(1);
 }
 #endif

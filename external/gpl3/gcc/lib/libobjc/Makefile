@@ -56,7 +56,7 @@ COPTS.${f}=	-Wno-missing-noreturn
 COPTS+=		-fno-strict-aliasing -fexceptions
 OBJCOPTS+=	-fno-strict-aliasing -fexceptions
 
-OBJCOPTS.Object.m = -Wno-stack-protector
+OBJCOPTS.Object.m = -Wno-stack-protector -Wno-objc-root-class
 COPTS.sendmsg.c = -Wno-stack-protector
 COPTS.objc-act.c = -Wno-stack-protector
 

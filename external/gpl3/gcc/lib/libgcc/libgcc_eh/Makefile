@@ -17,6 +17,7 @@ LIB=		gcc_eh
 SRCS+=		${LIB2_EH} ${LIB2_EHASM} empty.c
 COPTS.c-typeck.c=	-Wno-stack-protector
 COPTS.unwind-dw2.c=	-Wno-stack-protector
+COPTS.emutls.c=		-Wno-builtin-declaration-mismatch
 
 MKPIC:=	no
 

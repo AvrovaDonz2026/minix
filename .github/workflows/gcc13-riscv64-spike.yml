@@ -244,7 +244,7 @@ jobs:
             "${OBJDIR}" "${MACHINE}" "obj.intrgcc"
 
           if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
-            ./build.sh -U -m "${MACHINE}" -O "${OBJDIR}" \
+            ./build.sh -U -j"$(nproc)" -m "${MACHINE}" -O "${OBJDIR}" \
               "${target_override_args[@]}" \
               -V AVAILABLE_COMPILER=gcc \
               -V ACTIVE_CC=gcc \

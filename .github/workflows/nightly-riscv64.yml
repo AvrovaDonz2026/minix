@@ -72,6 +72,26 @@ jobs:
             exit 1
           fi
 
+      - name: Resolve build parallelism
+        shell: bash
+        run: |
+          set -euo pipefail
+          cpus="$(nproc --all 2>/dev/null || nproc 2>/dev/null || getconf _NPROCESSORS_ONLN || echo 1)"
+          jobs="${BUILD_JOBS_OVERRIDE:-}"
+          if [[ -z "${jobs}" ]]; then
+            if (( cpus >= 32 )); then
+              jobs=$((cpus + cpus / 2))
+            else
+              jobs="${cpus}"
+            fi
+          fi
+          if (( jobs < 1 )); then
+            jobs=1
+          fi
+          echo "Runner CPUs: ${cpus}"
+          echo "Build jobs: ${jobs}"
+          echo "BUILD_JOBS=${jobs}" >>"${GITHUB_ENV}"
+
       - name: Resolve nightly metadata
         id: meta
         shell: bash
@@ -114,7 +134,7 @@ jobs:
           set -euo pipefail
           HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
           MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
-          ./build.sh -U -m "${MACHINE}" -O "${OBJDIR}" \
+          ./build.sh -U -j"${BUILD_JOBS}" -m "${MACHINE}" -O "${OBJDIR}" \
             -V AVAILABLE_COMPILER=gcc \
             -V ACTIVE_CC=gcc \
             -V ACTIVE_CPP=gcc \
@@ -206,7 +226,7 @@ jobs:
           set -euo pipefail
           HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
           MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
-          ./build.sh -U -u -j"$(nproc)" -m "${MACHINE}" -O "${OBJDIR}" \
+          ./build.sh -U -u -j"${BUILD_JOBS}" -m "${MACHINE}" -O "${OBJDIR}" \
             -V AVAILABLE_COMPILER=gcc \
             -V ACTIVE_CC=gcc \
             -V ACTIVE_CPP=gcc \

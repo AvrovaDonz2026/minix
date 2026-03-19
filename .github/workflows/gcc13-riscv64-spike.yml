@@ -127,9 +127,9 @@ jobs:
           trap 'rm -rf "${workdir}"' EXIT
 
           src_urls=(
+            "https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
             "https://ftp.gnu.org/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
             "https://ftpmirror.gnu.org/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
-            "https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
           )
           fetched=0
           for src_url in "${src_urls[@]}"; do

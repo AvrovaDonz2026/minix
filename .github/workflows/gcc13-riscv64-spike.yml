@@ -112,23 +112,48 @@ jobs:
         run: |
           set -euo pipefail
           visible_cpus="$(nproc --all 2>/dev/null || nproc 2>/dev/null || getconf _NPROCESSORS_ONLN || echo 1)"
-          jobs="${CPU_COUNT:-${NUMBER_OF_PROCESSORS:-${BUILD_JOBS_OVERRIDE:-}}}"
-          if [[ -z "${jobs}" ]]; then
-            jobs="${visible_cpus}"
+          requested_jobs="${CPU_COUNT:-${NUMBER_OF_PROCESSORS:-${BUILD_JOBS_OVERRIDE:-}}}"
+          if [[ -z "${requested_jobs}" ]]; then
+            requested_jobs="${visible_cpus}"
           fi
-          case "${jobs}" in
+          tools_jobs="${TOOLS_CPU_COUNT:-${visible_cpus}}"
+          world_jobs="${WORLD_CPU_COUNT:-${requested_jobs}}"
+
+          case "${requested_jobs}" in
             ''|*[!0-9]*)
-              echo "Invalid CPU_COUNT/NUMBER_OF_PROCESSORS/BUILD_JOBS_OVERRIDE: ${jobs}" >&2
+              echo "Invalid CPU_COUNT/NUMBER_OF_PROCESSORS/BUILD_JOBS_OVERRIDE: ${requested_jobs}" >&2
               exit 1
               ;;
           esac
-          if (( jobs < 1 )); then
-            jobs=1
+          case "${tools_jobs}" in
+            ''|*[!0-9]*)
+              echo "Invalid TOOLS_CPU_COUNT: ${tools_jobs}" >&2
+              exit 1
+              ;;
+          esac
+          case "${world_jobs}" in
+            ''|*[!0-9]*)
+              echo "Invalid WORLD_CPU_COUNT: ${world_jobs}" >&2
+              exit 1
+              ;;
+          esac
+
+          if (( requested_jobs < 1 )); then
+            requested_jobs=1
           fi
+          if (( tools_jobs < 1 )); then
+            tools_jobs=1
+          fi
+          if (( world_jobs < 1 )); then
+            world_jobs=1
+          fi
+
           echo "Visible runner CPUs: ${visible_cpus}"
           echo "Configured CPU_COUNT: ${CPU_COUNT:-unset}"
-          echo "Build jobs: ${jobs}"
-          echo "BUILD_JOBS=${jobs}" >>"${GITHUB_ENV}"
+          echo "Tools build jobs: ${tools_jobs}"
+          echo "World build jobs: ${world_jobs}"
+          echo "TOOLS_BUILD_JOBS=${tools_jobs}" >>"${GITHUB_ENV}"
+          echo "WORLD_BUILD_JOBS=${world_jobs}" >>"${GITHUB_ENV}"
 
       - name: Overlay GCC dist with upstream GCC 13
         shell: bash
@@ -271,7 +296,7 @@ jobs:
             "${OBJDIR}" "${MACHINE}" "obj.intrgcc"
 
           if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
-            ./build.sh -U -j"${BUILD_JOBS}" -m "${MACHINE}" -O "${OBJDIR}" \
+            ./build.sh -U -j"${TOOLS_BUILD_JOBS}" -m "${MACHINE}" -O "${OBJDIR}" \
               "${target_override_args[@]}" \
               -V AVAILABLE_COMPILER=gcc \
               -V ACTIVE_CC=gcc \
@@ -695,7 +720,7 @@ jobs:
           trap cleanup_as_watchers EXIT
 
           if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
-            ./build.sh -U -u -j"${BUILD_JOBS}" -m "${MACHINE}" -O "${OBJDIR}" \
+            ./build.sh -U -u -j"${WORLD_BUILD_JOBS}" -m "${MACHINE}" -O "${OBJDIR}" \
               "${target_override_args[@]}" \
               -V AVAILABLE_COMPILER=gcc \
               -V ACTIVE_CC=gcc \

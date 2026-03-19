@@ -163,7 +163,7 @@ jobs:
             if curl -L --fail --retry 5 --retry-delay 3 --retry-all-errors \
               --connect-timeout 20 --max-time 900 \
               -o "${workdir}/gcc.tar.xz" "${src_url}"; then
-              if xz -t "${workdir}/gcc.tar.xz"; then
+              if xz -dc "${workdir}/gcc.tar.xz" | tar -C "${workdir}" -tf - >/dev/null; then
                 fetched=1
                 break
               fi
@@ -178,7 +178,7 @@ jobs:
           fi
 
           echo "Extracting gcc-${gcc_ver}"
-          tar -C "${workdir}" -xf "${workdir}/gcc.tar.xz"
+          xz -dc "${workdir}/gcc.tar.xz" | tar -C "${workdir}" -xf -
           if [[ ! -d "${workdir}/gcc-${gcc_ver}" ]]; then
             echo "Missing extracted source dir: ${workdir}/gcc-${gcc_ver}" >&2
             exit 1

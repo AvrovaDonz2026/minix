@@ -2,7 +2,7 @@ diff --git a/gcc/config/riscv/minix.h b/gcc/config/riscv/minix.h
 index 1827ccad8..40d75c8a2 100644
 --- a/gcc/config/riscv/minix.h
 +++ b/gcc/config/riscv/minix.h
-@@ -20,8 +20,27 @@
+@@ -20,8 +20,29 @@
  #ifndef GCC_RISCV_MINIX_H
  #define GCC_RISCV_MINIX_H
  

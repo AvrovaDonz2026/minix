@@ -81,7 +81,13 @@ jobs:
           if [[ -z "${requested_jobs}" ]]; then
             requested_jobs="${visible_cpus}"
           fi
-          tools_jobs="${TOOLS_CPU_COUNT:-${visible_cpus}}"
+          tools_jobs="${TOOLS_CPU_COUNT:-}"
+          if [[ -z "${tools_jobs}" ]]; then
+            tools_jobs="${visible_cpus}"
+            if (( tools_jobs > 8 )); then
+              tools_jobs=8
+            fi
+          fi
           world_jobs="${WORLD_CPU_COUNT:-${requested_jobs}}"
 
           case "${requested_jobs}" in
@@ -115,6 +121,8 @@ jobs:
 
           echo "Visible runner CPUs: ${visible_cpus}"
           echo "Configured CPU_COUNT: ${CPU_COUNT:-unset}"
+          echo "Configured TOOLS_CPU_COUNT: ${TOOLS_CPU_COUNT:-unset}"
+          echo "Configured WORLD_CPU_COUNT: ${WORLD_CPU_COUNT:-unset}"
           echo "Tools build jobs: ${tools_jobs}"
           echo "World build jobs: ${world_jobs}"
           echo "TOOLS_BUILD_JOBS=${tools_jobs}" >>"${GITHUB_ENV}"

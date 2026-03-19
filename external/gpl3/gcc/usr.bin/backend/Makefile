@@ -183,7 +183,12 @@ auto-build.h: gmp.h Makefile
 			mv auto-host.h ../auto-build.h) && \
 		rm -rf .ab
 .if defined(__MINIX)
-	${TOOL_SED} -e 's/^#define HAVE_MADVISE 1$$/#define HAVE_MADVISE 0/' \
+	${TOOL_SED} \
+		-e 's/^#define HAVE_MADVISE 1$$/#define HAVE_MADVISE 0/' \
+		-e 's/^#define HAVE_DECL_BASENAME 0$$/#define HAVE_DECL_BASENAME 1/' \
+		-e 's/^#define HAVE_DECL_SBRK 0$$/#define HAVE_DECL_SBRK 1/' \
+		-e 's/^#define HAVE_DECL_STRSIGNAL 0$$/#define HAVE_DECL_STRSIGNAL 1/' \
+		-e 's/^#define HAVE_DECL_STRSTR 0$$/#define HAVE_DECL_STRSTR 1/' \
 		auto-build.h > auto-build.h.tmp
 	mv auto-build.h.tmp auto-build.h
 .endif

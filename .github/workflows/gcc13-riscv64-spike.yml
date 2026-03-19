@@ -91,7 +91,7 @@ jobs:
 
           for cmd in \
             autoconf automake bash bc bison byacc c++ cc curl file flex \
-            gawk gperf m4 make patch perl pkg-config python3 rsync tar texinfo; do
+            gawk gperf m4 make patch perl pkg-config python3 rsync tar makeinfo; do
             check_cmd "$cmd"
           done
 

@@ -55,7 +55,7 @@ jobs:
           for cmd in \
             autoconf automake bash bc bison byacc c++ cc curl file flex \
             gawk gperf m4 make mkimage parted patch perl pkg-config python3 \
-            qemu-system-riscv64 rsync tar texinfo; do
+            qemu-system-riscv64 rsync tar makeinfo; do
             check_cmd "$cmd"
           done
 

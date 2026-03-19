@@ -15,7 +15,8 @@ concurrency:
 
 jobs:
   build-nightly:
-    runs-on: ubuntu-24.04
+    runs-on:
+      - self-hosted
     timeout-minutes: 360
     env:
       DEBIAN_FRONTEND: noninteractive
@@ -27,65 +28,49 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Reclaim runner disk space
+      - name: Inspect self-hosted runner
         shell: bash
         run: |
           set -euo pipefail
-          echo "Disk usage before cleanup"
+          echo "Runner name: ${RUNNER_NAME:-unknown}"
+          echo "Runner OS: ${RUNNER_OS:-unknown}"
+          echo "Runner arch: ${RUNNER_ARCH:-unknown}"
+          uname -a
           df -h
 
-          sudo swapoff -a || true
-          sudo rm -f /swapfile || true
+      - name: Verify self-hosted prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
 
-          sudo rm -rf \
-            /usr/share/dotnet \
-            /usr/local/lib/android \
-            /opt/ghc \
-            /opt/hostedtoolcache/CodeQL || true
+          check_cmd() {
+            command -v "$1" >/dev/null 2>&1 || missing+=("cmd:$1")
+          }
 
-          if command -v docker >/dev/null 2>&1; then
-            sudo docker system prune -af || true
+          check_header() {
+            printf '#include <%s>\n' "$1" | cc -E -x c - >/dev/null 2>&1 || missing+=("header:$1")
+          }
+
+          for cmd in \
+            autoconf automake bash bc bison byacc c++ cc curl file flex \
+            gawk gperf m4 make mkimage parted patch perl pkg-config python3 \
+            qemu-system-riscv64 rsync tar texinfo; do
+            check_cmd "$cmd"
+          done
+
+          check_header libelf.h
+          check_header curses.h
+          check_header openssl/ssl.h
+
+          [[ -f /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf ]] || \
+            missing+=("file:/usr/lib/u-boot/qemu-riscv64_smode/uboot.elf")
+
+          if (( ${#missing[@]} > 0 )); then
+            printf 'Missing self-hosted runner prerequisites:\n' >&2
+            printf '  %s\n' "${missing[@]}" >&2
+            exit 1
           fi
-
-          sudo apt-get clean
-          sudo rm -rf /var/lib/apt/lists/*
-
-          echo "Disk usage after cleanup"
-          df -h
-
-      - name: Install host dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y \
-            autoconf \
-            automake \
-            bc \
-            bison \
-            build-essential \
-            byacc \
-            ca-certificates \
-            curl \
-            e2fsprogs \
-            file \
-            flex \
-            gawk \
-            gperf \
-            libelf-dev \
-            libncurses-dev \
-            libssl-dev \
-            m4 \
-            make \
-            parted \
-            pkg-config \
-            python3 \
-            python3-pip \
-            qemu-system-misc \
-            rsync \
-            texinfo \
-            u-boot-qemu \
-            u-boot-tools
 
       - name: Resolve nightly metadata
         id: meta

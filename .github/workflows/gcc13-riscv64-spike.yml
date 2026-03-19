@@ -160,27 +160,25 @@ jobs:
           for src_url in "${src_urls[@]}"; do
             echo "Fetching ${src_url}"
             rm -f "${workdir}/gcc.tar.xz"
+            rm -rf "${workdir}/gcc-${gcc_ver}"
             if curl -L --fail --retry 5 --retry-delay 3 --retry-all-errors \
               --connect-timeout 20 --max-time 900 \
               -o "${workdir}/gcc.tar.xz" "${src_url}"; then
-              if xz -dc "${workdir}/gcc.tar.xz" | tar -C "${workdir}" -tf - >/dev/null; then
-                fetched=1
-                break
+              echo "Extracting gcc-${gcc_ver}"
+              if xz -dc "${workdir}/gcc.tar.xz" | tar -C "${workdir}" -xf -; then
+                if [[ -d "${workdir}/gcc-${gcc_ver}" ]]; then
+                  fetched=1
+                  break
+                fi
+                echo "Missing extracted source dir after unpack: ${workdir}/gcc-${gcc_ver}" >&2
               fi
-              echo "Corrupt download from ${src_url}, trying next mirror..."
+              echo "Corrupt or incomplete archive from ${src_url}, trying next mirror..."
               continue
             fi
             echo "Fetch failed from ${src_url}, trying next mirror..."
           done
           if [[ "${fetched}" != "1" ]]; then
             echo "Failed to download gcc-${gcc_ver}.tar.xz from all mirrors" >&2
-            exit 1
-          fi
-
-          echo "Extracting gcc-${gcc_ver}"
-          xz -dc "${workdir}/gcc.tar.xz" | tar -C "${workdir}" -xf -
-          if [[ ! -d "${workdir}/gcc-${gcc_ver}" ]]; then
-            echo "Missing extracted source dir: ${workdir}/gcc-${gcc_ver}" >&2
             exit 1
           fi
 

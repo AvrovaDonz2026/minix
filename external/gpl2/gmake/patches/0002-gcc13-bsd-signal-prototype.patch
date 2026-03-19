@@ -1,7 +1,7 @@
 diff -rNU3 dist.orig/main.c dist/main.c
 --- dist.orig/main.c	2006-02-26 18:32:10.000000000 +0100
 +++ dist/main.c	2026-03-16 01:44:00.000000000 +0800
-@@ -511,6 +511,14 @@
+@@ -511,6 +511,15 @@
  # endif
  #endif
  

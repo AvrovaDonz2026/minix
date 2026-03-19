@@ -9,6 +9,8 @@ on:
       - "toolchain/patches/gcc13/**"
       - "toolchain/patches/gcc13/workspace/**"
       - "toolchain/patches/gcc13/scripts/**"
+      - "gnu/usr.bin/texinfo/patches/**"
+      - "external/gpl2/gmake/patches/**"
       - "external/gpl3/gcc/lib/**"
       - "lib/libc/arch/riscv/**"
       - "lib/libc/softfloat/**"

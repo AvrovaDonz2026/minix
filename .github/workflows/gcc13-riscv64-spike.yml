@@ -159,11 +159,16 @@ jobs:
           fetched=0
           for src_url in "${src_urls[@]}"; do
             echo "Fetching ${src_url}"
+            rm -f "${workdir}/gcc.tar.xz"
             if curl -L --fail --retry 5 --retry-delay 3 --retry-all-errors \
               --connect-timeout 20 --max-time 900 \
               -o "${workdir}/gcc.tar.xz" "${src_url}"; then
-              fetched=1
-              break
+              if xz -t "${workdir}/gcc.tar.xz"; then
+                fetched=1
+                break
+              fi
+              echo "Corrupt download from ${src_url}, trying next mirror..."
+              continue
             fi
             echo "Fetch failed from ${src_url}, trying next mirror..."
           done

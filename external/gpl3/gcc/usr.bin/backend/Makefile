@@ -14,7 +14,8 @@ SRCS=		${G_OBJS} ${G_OUT_FILE_SRC:T}
 BOTH_CPPFLAGS+=	-I. -I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 CPPFLAGS+=	${BOTH_CPPFLAGS} -DTARGET_NAME=\"${MACHINE_GNU_PLATFORM}\"
 HOST_CPPFLAGS+=	${BOTH_CPPFLAGS} -DGENERATOR_FILE
-DPSRCS+=	insn-attr.h insn-codes.h insn-config.h insn-flags.h tree-check.h
+DPSRCS+=	insn-attr.h insn-codes.h insn-config.h insn-flags.h insn-modes.h
+DPSRCS+=	insn-modes-inline.h tree-check.h
 CPPFLAGS+=	-I${DIST}/libgcc
 CPPFLAGS+=	-I${.CURDIR}/../../lib/libgcc/libgcov/arch/${MACHINE_ARCH}
 
@@ -23,6 +24,18 @@ CPPFLAGS.cppdefault.c+=	-DPREFIX=\"/usr\" \
 CPPFLAGS.cppdefault.cc+=	${CPPFLAGS.cppdefault.c}
 
 HOSTPROG_CXX=	1
+
+.include "../Makefile.inc"
+
+G_OUT_FILE_SRC=	${G_out_file}
+.if !exists(${G_out_file}) && exists(${G_out_file:S,.c,.cc,})
+G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
+.endif
+
+# Reseed the search path after Makefile.inc so GCCARCH and G_out_file
+# contribute their real directories before bsd.lib.mk consumes .depend.
+.PATH: ${DIST}/gcc ${DIST}/libiberty ${GCCARCH} ${G_out_file:H} ${DIST}/include
+.PATH: ${DIST}/gcc/config
 
 .include <bsd.lib.mk>
 
@@ -46,6 +59,7 @@ CLEANFILES+=	gengenrtl genrtl.h \
 		gencheck tree-check.h \
 		insn-preds.c genpreds tm-preds.h tm_p.h cs-tm_p.h \
 		genmodes insn-modes.c insn-modes.h min-insn-modes.c \
+		insn-modes-inline.h \
 		auto-host.h build-print-rtl.cc \
 		build-rtl.cc build-errors.cc build-varray.c \
 		build-bitmap.cc build-ggc-none.cc \
@@ -53,6 +67,7 @@ CLEANFILES+=	gengenrtl genrtl.h \
 		cs-config.h \
 		gcov-iov gcov-iov.h \
 		gtype-go.h gtype.state
+CLEANFILES+=	config.h
 
 # XXX
 COPTS.varasm.c=			-Wno-error
@@ -69,15 +84,133 @@ COPTS.varasm.c=			-Wno-error
 	mv ${.TARGET}.o ${.TARGET}
 
 # Headers that host objects depend on (except gen*rtl*)
-HH_NORTL=	${G_tm_file_list} ${G_build_xm_include_list}
-HH=		${HH_NORTL} genrtl.h insn-modes.h
+G_BUILD_XM_HEADERS=	${G_build_xm_include_list:S,ansidecl.h,${DIST}/include/ansidecl.h,}
+HH_NORTL=		${G_tm_file_list} ${G_BUILD_XM_HEADERS}
+HH=		${HH_NORTL} genrtl.h insn-modes.h insn-modes-inline.h
 
 TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 
+# GCC13 carries many backend helper prerequisites as bare basenames in the
+# generated defs. Canonicalize the source-tree headers here so host helper
+# rules do not depend on .PATH continuing to resolve each basename.
+GCC13_BACKEND_G_GCC_H_DIST=	gcc.h diagnostic-core.h input.h diagnostic.def
+GCC13_BACKEND_G_GCC_H_TOOLS=	version.h bversion.h
+GCC13_BACKEND_G_GCC_H=
+.for h in ${G_GCC_H}
+.if !empty(GCC13_BACKEND_G_GCC_H_DIST:M${h})
+GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${DIST}/gcc/${h}
+.elif !empty(GCC13_BACKEND_G_GCC_H_TOOLS:M${h})
+GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${TOOLSGCCBUILD}/${h}
+.else
+GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${h}
+.endif
+.endfor
+
+GCC13_BACKEND_G_RTL_H_DIST=	coretypes.h rtl.h rtl.def machmode.h mode-classes.def
+GCC13_BACKEND_G_RTL_H_DIST+=	reg-notes.def insn-notes.def input.h real.h
+GCC13_BACKEND_G_RTL_H_DIST+=	statistics.h vec.h ggc.h fixed-value.h
+GCC13_BACKEND_G_RTL_H_DIST+=	double-int.h alias.h flags.h flag-types.h
+GCC13_BACKEND_G_RTL_H=
+.for h in ${G_RTL_H}
+.if !empty(GCC13_BACKEND_G_RTL_H_DIST:M${h})
+GCC13_BACKEND_G_RTL_H:= ${GCC13_BACKEND_G_RTL_H} ${DIST}/gcc/${h}
+.else
+GCC13_BACKEND_G_RTL_H:= ${GCC13_BACKEND_G_RTL_H} ${h}
+.endif
+.endfor
+
+GCC13_BACKEND_G_RTL_BASE_H_DIST=	coretypes.h rtl.h rtl.def machmode.h
+GCC13_BACKEND_G_RTL_BASE_H_DIST+=	mode-classes.def reg-notes.def insn-notes.def
+GCC13_BACKEND_G_RTL_BASE_H_DIST+=	input.h real.h statistics.h vec.h ggc.h
+GCC13_BACKEND_G_RTL_BASE_H_DIST+=	fixed-value.h double-int.h alias.h
+GCC13_BACKEND_G_RTL_BASE_H=
+.for h in ${G_RTL_BASE_H}
+.if !empty(GCC13_BACKEND_G_RTL_BASE_H_DIST:M${h})
+GCC13_BACKEND_G_RTL_BASE_H:= ${GCC13_BACKEND_G_RTL_BASE_H} ${DIST}/gcc/${h}
+.else
+GCC13_BACKEND_G_RTL_BASE_H:= ${GCC13_BACKEND_G_RTL_BASE_H} ${h}
+.endif
+.endfor
+
+GCC13_BACKEND_G_TREE_H_DIST=	coretypes.h tree.h tree.def machmode.h mode-classes.def
+GCC13_BACKEND_G_TREE_H_DIST+=	builtins.def sync-builtins.def omp-builtins.def
+GCC13_BACKEND_G_TREE_H_DIST+=	gtm-builtins.def sanitizer.def input.h
+GCC13_BACKEND_G_TREE_H_DIST+=	c-family/c-common.def
+GCC13_BACKEND_G_TREE_H_DIST+=	statistics.h vec.h ggc.h treestruct.def
+GCC13_BACKEND_G_TREE_H_DIST+=	double-int.h alias.h flags.h flag-types.h
+GCC13_BACKEND_G_TREE_H_DIST+=	real.h fixed-value.h
+GCC13_BACKEND_G_TREE_H_ARCH=	all-tree.def
+GCC13_BACKEND_G_TREE_H=
+.for h in ${G_TREE_H}
+.if !empty(GCC13_BACKEND_G_TREE_H_DIST:M${h})
+GCC13_BACKEND_G_TREE_H:= ${GCC13_BACKEND_G_TREE_H} ${DIST}/gcc/${h}
+.elif !empty(GCC13_BACKEND_G_TREE_H_ARCH:M${h})
+GCC13_BACKEND_G_TREE_H:= ${GCC13_BACKEND_G_TREE_H} ${GCCARCH}/${h}
+.else
+GCC13_BACKEND_G_TREE_H:= ${GCC13_BACKEND_G_TREE_H} ${h}
+.endif
+.endfor
+
+GCC13_BACKEND_G_GTM_H_ARCH=	tm.h
+GCC13_BACKEND_G_GTM_H=
+.for h in ${G_GTM_H}
+.if !empty(GCC13_BACKEND_G_GTM_H_ARCH:M${h})
+GCC13_BACKEND_G_GTM_H:= ${GCC13_BACKEND_G_GTM_H} ${GCCARCH}/${h}
+.else
+GCC13_BACKEND_G_GTM_H:= ${GCC13_BACKEND_G_GTM_H} ${h}
+.endif
+.endfor
+
+GCC13_BACKEND_G_BASIC_BLOCK_H_DIST=	basic-block.h predict.h predict.def
+GCC13_BACKEND_G_BASIC_BLOCK_H_DIST+=	vec.h statistics.h ggc.h function.h
+GCC13_BACKEND_G_BASIC_BLOCK_H_DIST+=	hard-reg-set.h cfghooks.h machmode.h
+GCC13_BACKEND_G_BASIC_BLOCK_H_DIST+=	input.h mode-classes.def cfg-flags.def
+GCC13_BACKEND_G_BASIC_BLOCK_H_DIST+=	flag-types.h
+GCC13_BACKEND_G_BASIC_BLOCK_H_ARCH=	tm.h
+GCC13_BACKEND_G_BASIC_BLOCK_H=
+.for h in ${G_BASIC_BLOCK_H}
+.if !empty(GCC13_BACKEND_G_BASIC_BLOCK_H_DIST:M${h})
+GCC13_BACKEND_G_BASIC_BLOCK_H:= ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${DIST}/gcc/${h}
+.elif !empty(GCC13_BACKEND_G_BASIC_BLOCK_H_ARCH:M${h})
+GCC13_BACKEND_G_BASIC_BLOCK_H:= ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${GCCARCH}/${h}
+.else
+GCC13_BACKEND_G_BASIC_BLOCK_H:= ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${h}
+.endif
+.endfor
+
+GCC13_BACKEND_REGS_H_DIST=	regs.h machmode.h mode-classes.def hard-reg-set.h
+GCC13_BACKEND_REGS_H=
+.for h in ${REGS_H:U}
+.if !empty(GCC13_BACKEND_REGS_H_DIST:M${h})
+GCC13_BACKEND_REGS_H:= ${GCC13_BACKEND_REGS_H} ${DIST}/gcc/${h}
+.else
+GCC13_BACKEND_REGS_H:= ${GCC13_BACKEND_REGS_H} ${h}
+.endif
+.endfor
+
+GCC13_BACKEND_G_GTFILES=	${G_GTFILES}
+GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../libcpp/include,${DIST}/libcpp/include,g}
+GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
+GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
+GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:N${DIST}/libcpp/include/cpp-id-data.h}
+
+G_GTFILES:=	${G_GTFILES:S,${DIST}/gcc/../libcpp/include,${DIST}/libcpp/include,g}
+G_GTFILES:=	${G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
+G_GTFILES:=	${G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
+G_GTFILES:=	${G_GTFILES:N${DIST}/libcpp/include/cpp-id-data.h}
+
 #
 # Generate the various header files we need.
 #
+config.h: cs-config.h
+	@true
+cs-config.h: Makefile
+	${_MKTARGET_CREATE}
+	TARGET_CPU_DEFAULT="" \
+	HEADERS="$(G_host_xm_file)" DEFINES="$(G_host_xm_defines)" \
+	${HOST_SH} $(GNUHOSTDIST)/gcc/mkconfig.sh config.h
+
 genrtl.h: gengenrtl
 	${_MKTARGET_CREATE}
 	./gengenrtl >${.TARGET}
@@ -98,7 +231,12 @@ tm-constrs.h: genpreds ${G_md_file}
 
 # be nice to generate this entirely; but difficult.
 gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
-	sed s#SRCDIR#${DIST}# < ${.ALLSRC} > ${.TARGET}
+	${TOOL_SED} -e 's#SRCDIR#${DIST}#' \
+	    -e 's#${G_GT_OUT_FILE}#${G_OUT_FILE_SRC}#' \
+	    -e 's#${DIST}/gcc/\\.\\./libcpp/include#${DIST}/libcpp/include#g' \
+	    -e '/cpp-id-data\.h$$/d' \
+	    -e 's#${DIST}/gcc/\\.\\./include#${DIST}/include#g' \
+	    -e 's#${G_out_file}#${G_OUT_FILE_SRC}#' < ${.ALLSRC} > ${.TARGET}
 CLEANFILES+=	gtyp-input.list.tmp
 
 # XXX
@@ -135,7 +273,7 @@ gtyp-gen.h: Makefile
 	for f in $$empty $(G_GTFILES_FILES_LANGS); do echo "\"$$f\", "; done ; \
 	echo "NULL };"							; \
 	echo "static const char *all_files[] = {"			; \
-	for f in $$empty $(G_GTFILES); do echo "\"$$f\", "; done	; \
+	for f in $$empty $(GCC13_BACKEND_G_GTFILES); do echo "\"$$f\", "; done ; \
 	echo " NULL };"							; \
 	echo "static const char *lang_dir_names[] = {"			; \
 	for f in c $(G_GTFILES_LANG_DIR_NAMES); do echo "\"$$f\", "; done ; \
@@ -153,6 +291,9 @@ insn-modes.c: genmodes
 insn-modes.h: genmodes
 	${_MKTARGET_CREATE}
 	./genmodes -h >${.TARGET}
+insn-modes-inline.h: genmodes
+	${_MKTARGET_CREATE}
+	./genmodes -i >${.TARGET}
 min-insn-modes.c: genmodes
 	${_MKTARGET_CREATE}
 	./genmodes -m >${.TARGET}
@@ -191,7 +332,7 @@ auto-build.h: gmp.h Makefile
 	(cd .ab && \
 		AWK=${TOOL_AWK:Q} \
 		CC=${ORIGHOST_CC:Q} CFLAGS=${HOST_CFLAGS:Q} \
-		MAKE=${MAKE:Q} \
+		MAKE="${MAKE:Q} -m ${NETBSDSRCDIR}/share/mk" \
 		CONFIG_SHELL=${HOST_SH:Q} \
 		gcc_cv_ld=${LD} \
 		gcc_cv_as=${AS} \
@@ -208,6 +349,7 @@ auto-build.h: gmp.h Makefile
 		-e 's/^#define HAVE_DECL_BASENAME 0$$/#define HAVE_DECL_BASENAME 1/' \
 		-e 's/^#define HAVE_DECL_SBRK 0$$/#define HAVE_DECL_SBRK 1/' \
 		-e 's/^#define HAVE_DECL_STRSIGNAL 0$$/#define HAVE_DECL_STRSIGNAL 1/' \
+		-e 's/^#define rlim_t long$$/\/\* #undef rlim_t \*\//' \
 		-e 's/^#define HAVE_DECL_STRSTR 0$$/#define HAVE_DECL_STRSTR 1/' \
 		auto-build.h > auto-build.h.tmp
 	mv auto-build.h.tmp auto-build.h
@@ -219,7 +361,7 @@ auto-build.h: gmp.h Makefile
 #
 
 build-rtl.cc: ${DIST}/gcc/rtl.cc \
-  ${G_RTL_H} real.h ${G_GCC_H} errors.h gtype-desc.h
+  ${GCC13_BACKEND_G_RTL_H} ${DIST}/gcc/real.h ${GCC13_BACKEND_G_GCC_H} ${DIST}/gcc/errors.h gtype-desc.h
 	${_MKTARGET_CREATE}
 	rm -f build-rtl.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
@@ -227,40 +369,40 @@ build-rtl.cc: ${DIST}/gcc/rtl.cc \
 build-rtl.lo: ${HH} build-rtl.cc
 
 build-print-rtl.cc: ${DIST}/gcc/print-rtl.cc \
-  ${G_RTL_BASE_H} ${G_GTM_H} hard-reg-set.h
+  ${GCC13_BACKEND_G_RTL_BASE_H} ${GCC13_BACKEND_G_GTM_H} ${DIST}/gcc/hard-reg-set.h
 	${_MKTARGET_CREATE}
 	rm -f build-print-rtl.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
 		${GNUHOSTDIST}/gcc/print-rtl.cc >${.TARGET}
 build-print-rtl.lo: ${HH} build-print-rtl.cc
-build/print-rtl.o: ${DIST}/gcc/print-rtl.cc $(BCONFIG_H) $(SYSTEM_H) coretypes.h     \
-  $(GTM_H) $(RTL_BASE_H)
+build/print-rtl.o: ${DIST}/gcc/print-rtl.cc $(BCONFIG_H) $(SYSTEM_H) ${DIST}/gcc/coretypes.h     \
+  ${GCC13_BACKEND_G_GTM_H} ${GCC13_BACKEND_G_RTL_BASE_H}
 
 
 build-bitmap.cc: ${DIST}/gcc/bitmap.cc \
-  ${G_RTL_H} flags.h ${G_BASIC_BLOCK_H} ${REGS_H} ${G_GCC_H} gtype-desc.h
+  ${GCC13_BACKEND_G_RTL_H} ${DIST}/gcc/flags.h ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${GCC13_BACKEND_REGS_H} ${GCC13_BACKEND_G_GCC_H} gtype-desc.h
 	${_MKTARGET_CREATE}
 	rm -f build-bitmap.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
 		${GNUHOSTDIST}/gcc/bitmap.cc >${.TARGET}
 build-bitmap.lo: ${HH} build-bitmap.cc
 
-build-errors.cc: ${DIST}/gcc/errors.cc errors.h
+build-errors.cc: ${DIST}/gcc/errors.cc ${DIST}/gcc/errors.h
 	${_MKTARGET_CREATE}
 	rm -f build-errors.cc
 	cat ${GNUHOSTDIST}/gcc/errors.cc >${.TARGET}
 build-errors.lo: ${HH_NORTL} build-errors.cc
 
 build-varray.c: ${DIST}/gcc/varray.c \
-  ${G_RTL_H} ${G_GCC_H} ${TREE_H} bitmap.h errors.h
+  ${GCC13_BACKEND_G_RTL_H} ${GCC13_BACKEND_G_GCC_H} ${GCC13_BACKEND_G_TREE_H} ${DIST}/gcc/bitmap.h ${DIST}/gcc/errors.h
 	${_MKTARGET_CREATE}
 	rm -f build-varray.c
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
 		${GNUHOSTDIST}/gcc/varray.c >${.TARGET}
-build-varray.lo: ${HH} gtype-desc.h
+build-varray.lo: ${HH} gtype-desc.h build-varray.c
 
 build-ggc-none.cc: ${DIST}/gcc/ggc-none.cc \
-  ${G_GCC_H} gtype-desc.h
+  ${GCC13_BACKEND_G_GCC_H} gtype-desc.h
 	${_MKTARGET_CREATE}
 	rm -f build-ggc-none.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
@@ -408,7 +550,7 @@ data-streamer.d data-streamer-out.d coverage.d gcov-dump.d gcov-io.d gcov-iov.d 
 data-streamer.o data-streamer-out.o coverage.o gcov-dump.o gcov-io.o gcov-iov.o gcov.o libgcov.o lto-cgraph.o mcf.o modulo-sched.o profile.o value-prof.o: gcov-io.h
 gcov-io.h: gcov-iov.h
 df-scan.d df-scan.o: target-hooks-def.h
-read-md.d read-md.o read-md.lo: auto-build.h
+read-md.d read-md.o read-md.lo: auto-build.h insn-modes.h insn-modes-inline.h
 
 # XXX make all hooks generated for now.
 final.o: target-hooks-def.h c-family/c-target-hooks-def.h common/common-target-hooks-def.h

@@ -65,6 +65,9 @@ COPTS.varasm.c=			-Wno-error
 HH_NORTL=	${G_tm_file_list} ${G_build_xm_include_list}
 HH=		${HH_NORTL} genrtl.h insn-modes.h
 
+TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
+
 #
 # Generate the various header files we need.
 #
@@ -107,9 +110,9 @@ gtype-desc.h: gengtype gtyp-input.list.tmp
 	./gengtype -r gtype.state
 	# GCC 4.8 installs gtype-state and gengtype as a plugin
 
-# gengtype is the real need for options.h
-gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo version.lo: ${HH} gtyp-gen.h config.h options.h
-gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo build-errors.lo version.lo
+# GCC 13 replaced version.o with a generated version.h.
+gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo: ${HH} gtyp-gen.h config.h options.h version.h
+gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo build-errors.lo
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
 
@@ -131,6 +134,11 @@ gtyp-gen.h: Makefile
 	for f in c $(G_GTFILES_LANG_DIR_NAMES); do echo "\"$$f\", "; done ; \
 	echo "NULL };"							; \
 	) >${.TARGET}
+
+version.h: ${TOOLSGCCBUILD}/version.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
 
 insn-modes.c: genmodes
 	${_MKTARGET_CREATE}

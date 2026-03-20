@@ -251,7 +251,7 @@ build-ggc-none.lo: ${HH}
 # The normal insn-foo generators
 #
 .for f in gensupport.c read-rtl.c dummy-conditions.c
-${f:R}.lo: ${HH}
+${f:R}.lo: ${HH} gtype-desc.h
 .endfor
 
 #
@@ -269,7 +269,7 @@ GENPROG_RTL_DEPENDS=	${G_BUILD_RTL:.o=.lo} ${GENPROG_READER_DEPENDS} ${GENPROG_E
 #
 .for f in attr attr-common attrtab automata codes conditions config emit \
 	  extract flags opinit output peep preds recog mddump condmd
-gen${f}.lo: ${HH} gen${f}.c
+gen${f}.lo: ${HH} gen${f}.c gtype-desc.h
 gen${f}: gen${f}.lo ${GENPROG_RTL_DEPENDS} 
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
@@ -277,7 +277,7 @@ CLEANFILES+=	gen${f} gen${f}.lo
 .endfor
 
 .for f in mddeps constants enums
-gen${f}.lo: ${HH} gen${f}.c
+gen${f}.lo: ${HH} gen${f}.c gtype-desc.h
 gen${f}: gen${f}.lo ${GENPROG_READER_DEPENDS} 
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
@@ -285,7 +285,7 @@ CLEANFILES+=	gen${f} gen${f}.lo
 .endfor
 
 .for f in check checksum
-gen${f}.lo: ${HH} gen${f}.c
+gen${f}.lo: ${HH} gen${f}.c gtype-desc.h
 gen${f}: gen${f}.lo
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}

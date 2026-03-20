@@ -39,6 +39,8 @@ boot-evbriscv64-*.log
 build-*.log
 _tmp/*.log
 _tmp/
+.tmp-*/
+.ci-artifact-test/
 usr.bin/mdocml/man/*.7
 etc/passwd
 etc/pwd.db

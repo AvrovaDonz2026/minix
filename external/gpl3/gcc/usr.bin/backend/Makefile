@@ -39,9 +39,9 @@ CLEANFILES+=	gengenrtl genrtl.h \
 		gencheck tree-check.h \
 		insn-preds.c genpreds tm-preds.h tm_p.h cs-tm_p.h \
 		genmodes insn-modes.c insn-modes.h min-insn-modes.c \
-		auto-host.h build-print-rtl.c \
-		build-rtl.c build-errors.c build-varray.c \
-		build-bitmap.c build-ggc-none.c \
+		auto-host.h build-print-rtl.cc \
+		build-rtl.cc build-errors.cc build-varray.c \
+		build-bitmap.cc build-ggc-none.cc \
 		gt-*.h *.o *.lo \
 		cs-config.h \
 		gcov-iov gcov-iov.h \
@@ -52,6 +52,11 @@ COPTS.varasm.c=			-Wno-error
 
 # XXX Override the normal rule to use HOST_COMPILE.cc
 .c.lo:
+	${_MKTARGET_COMPILE}
+	${HOST_COMPILE.cc} -o ${.TARGET}.o ${COPTS.${.IMPSRC:T}} ${CPUFLAGS.${.IMPSRC:T}} ${CPPFLAGS.${.IMPSRC:T}} ${.IMPSRC}
+	mv ${.TARGET}.o ${.TARGET}
+
+.cc.lo:
 	${_MKTARGET_COMPILE}
 	${HOST_COMPILE.cc} -o ${.TARGET}.o ${COPTS.${.IMPSRC:T}} ${CPUFLAGS.${.IMPSRC:T}} ${CPPFLAGS.${.IMPSRC:T}} ${.IMPSRC}
 	mv ${.TARGET}.o ${.TARGET}
@@ -198,38 +203,38 @@ auto-build.h: gmp.h Makefile
 # by the genfoo programs.
 #
 
-build-rtl.c: ${DIST}/gcc/rtl.c \
+build-rtl.cc: ${DIST}/gcc/rtl.cc \
   ${G_RTL_H} real.h ${G_GCC_H} errors.h gtype-desc.h
 	${_MKTARGET_CREATE}
-	rm -f build-rtl.c
+	rm -f build-rtl.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
-		${GNUHOSTDIST}/gcc/rtl.c >${.TARGET}
-build-rtl.lo: ${HH}
+		${GNUHOSTDIST}/gcc/rtl.cc >${.TARGET}
+build-rtl.lo: ${HH} build-rtl.cc
 
-build-print-rtl.c: ${DIST}/gcc/print-rtl.c \
+build-print-rtl.cc: ${DIST}/gcc/print-rtl.cc \
   ${G_RTL_BASE_H} ${G_GTM_H} hard-reg-set.h
 	${_MKTARGET_CREATE}
-	rm -f build-print-rtl.c
+	rm -f build-print-rtl.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
-		${GNUHOSTDIST}/gcc/print-rtl.c >${.TARGET}
-build-print-rtl.lo: ${HH}
-build/print-rtl.o: ${DIST}/gcc/print-rtl.c $(BCONFIG_H) $(SYSTEM_H) coretypes.h     \
+		${GNUHOSTDIST}/gcc/print-rtl.cc >${.TARGET}
+build-print-rtl.lo: ${HH} build-print-rtl.cc
+build/print-rtl.o: ${DIST}/gcc/print-rtl.cc $(BCONFIG_H) $(SYSTEM_H) coretypes.h     \
   $(GTM_H) $(RTL_BASE_H)
 
 
-build-bitmap.c: ${DIST}/gcc/bitmap.c \
+build-bitmap.cc: ${DIST}/gcc/bitmap.cc \
   ${G_RTL_H} flags.h ${G_BASIC_BLOCK_H} ${REGS_H} ${G_GCC_H} gtype-desc.h
 	${_MKTARGET_CREATE}
-	rm -f build-bitmap.c
+	rm -f build-bitmap.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
-		${GNUHOSTDIST}/gcc/bitmap.c >${.TARGET}
-build-bitmap.lo: ${HH}
+		${GNUHOSTDIST}/gcc/bitmap.cc >${.TARGET}
+build-bitmap.lo: ${HH} build-bitmap.cc
 
-build-errors.c: ${DIST}/gcc/errors.c errors.h
+build-errors.cc: ${DIST}/gcc/errors.cc errors.h
 	${_MKTARGET_CREATE}
-	rm -f build-errors.c
-	cat ${GNUHOSTDIST}/gcc/errors.c >${.TARGET}
-build-errors.lo: ${HH_NORTL}
+	rm -f build-errors.cc
+	cat ${GNUHOSTDIST}/gcc/errors.cc >${.TARGET}
+build-errors.lo: ${HH_NORTL} build-errors.cc
 
 build-varray.c: ${DIST}/gcc/varray.c \
   ${G_RTL_H} ${G_GCC_H} ${TREE_H} bitmap.h errors.h
@@ -239,18 +244,18 @@ build-varray.c: ${DIST}/gcc/varray.c \
 		${GNUHOSTDIST}/gcc/varray.c >${.TARGET}
 build-varray.lo: ${HH} gtype-desc.h
 
-build-ggc-none.c: ${DIST}/gcc/ggc-none.c \
+build-ggc-none.cc: ${DIST}/gcc/ggc-none.cc \
   ${G_GCC_H} gtype-desc.h
 	${_MKTARGET_CREATE}
-	rm -f build-ggc-none.c
+	rm -f build-ggc-none.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
-		${GNUHOSTDIST}/gcc/ggc-none.c >${.TARGET}
-build-ggc-none.lo: ${HH}
+		${GNUHOSTDIST}/gcc/ggc-none.cc >${.TARGET}
+build-ggc-none.lo: ${HH} build-ggc-none.cc
 
 #
 # The normal insn-foo generators
 #
-.for f in gensupport.c read-rtl.c dummy-conditions.c
+.for f in gensupport.cc read-rtl.cc dummy-conditions.c
 ${f:R}.lo: ${HH} ${DIST}/gcc/${f} gtype-desc.h
 .endfor
 
@@ -269,7 +274,7 @@ GENPROG_RTL_DEPENDS=	${G_BUILD_RTL:.o=.lo} ${GENPROG_READER_DEPENDS} ${GENPROG_E
 #
 .for f in attr attr-common attrtab automata codes conditions config emit \
 	  extract flags opinit output peep preds recog mddump condmd
-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.c gtype-desc.h
+gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc gtype-desc.h
 gen${f}: gen${f}.lo ${GENPROG_RTL_DEPENDS} 
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
@@ -277,7 +282,7 @@ CLEANFILES+=	gen${f} gen${f}.lo
 .endfor
 
 .for f in mddeps constants enums
-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.c gtype-desc.h
+gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc gtype-desc.h
 gen${f}: gen${f}.lo ${GENPROG_READER_DEPENDS} 
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
@@ -285,7 +290,7 @@ CLEANFILES+=	gen${f} gen${f}.lo
 .endfor
 
 .for f in check checksum
-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.c gtype-desc.h
+gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc gtype-desc.h
 gen${f}: gen${f}.lo
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}

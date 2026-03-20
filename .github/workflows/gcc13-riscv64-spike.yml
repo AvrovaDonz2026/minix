@@ -11,6 +11,7 @@ on:
       - "toolchain/patches/gcc13/scripts/**"
       - "gnu/usr.bin/texinfo/patches/**"
       - "external/gpl2/gmake/patches/**"
+      - "external/gpl3/gcc/Makefile.hooks"
       - "external/gpl3/gcc/lib/**"
       - "external/gpl3/gcc/usr.bin/**"
       - "lib/libc/arch/riscv/**"

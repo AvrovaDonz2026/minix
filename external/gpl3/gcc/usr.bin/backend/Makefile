@@ -281,7 +281,7 @@ GENPROG_RTL_DEPENDS=	${G_BUILD_RTL:.o=.lo} ${GENPROG_READER_DEPENDS} ${GENPROG_E
 # First we generate the rules for the generators.
 #
 .for f in attr attr-common attrtab automata codes conditions config emit \
-	  extract flags opinit output peep preds recog mddump condmd
+	  extract flags opinit output peep preds recog mddump
 gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc gtype-desc.h
 gen${f}: gen${f}.lo ${GENPROG_RTL_DEPENDS} 
 	${_MKTARGET_LINK}
@@ -332,11 +332,17 @@ insn-${f}: gen${f:R} ${G_md_file}
 CLEANFILES+=	insn-${f}
 .endfor
 
-# genconditions outputs gencondmd.c
-gencondmd.c: genconditions ${G_md_file}
+# genconditions outputs gencondmd.cc
+gencondmd.cc: genconditions ${G_md_file}
 	${_MKTARGET_CREATE}
 	./genconditions ${G_md_file} >${.TARGET}
-CLEANFILES+=	gencondmd.c
+CLEANFILES+=	gencondmd.cc
+
+gencondmd.lo: ${HH} gencondmd.cc tm_p.h tm-constrs.h insn-constants.h
+gencondmd: gencondmd.lo build-errors.lo
+	${_MKTARGET_LINK}
+	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
+CLEANFILES+=	gencondmd gencondmd.lo
 
 # gencheck outputs tree-check.h
 tree-check.h: gencheck
@@ -372,7 +378,6 @@ CLEANFILES+=	insn-conditions.md
 # Required hard-coded dependancies.
 #
 genextract.lo: insn-config.h
-gencondmd.lo: tm_p.h tm-constrs.h
 read-rtl.lo gencodes.lo genattrtab.lo genautomata.lo: insn-constants.h
 genattr-common.lo gensupport.lo genconditions.lo: insn-constants.h
 genattr.lo genflags.lo genemit.lo genconfig.lo gencheck.lo: insn-constants.h

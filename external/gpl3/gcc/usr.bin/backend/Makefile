@@ -189,16 +189,20 @@ GCC13_BACKEND_REGS_H:= ${GCC13_BACKEND_REGS_H} ${h}
 .endif
 .endfor
 
-GCC13_BACKEND_G_GTFILES=	${G_GTFILES}
+GCC13_BACKEND_G_GTFILES=
+.for f in ${G_GTFILES}
+.if !empty(f:M*.c) && !exists(${f}) && exists(${f:S,.c,.cc,})
+GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${f:S,.c,.cc,}
+.else
+GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${f}
+.endif
+.endfor
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../libcpp/include,${DIST}/libcpp/include,g}
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:N${DIST}/libcpp/include/cpp-id-data.h}
 
-G_GTFILES:=	${G_GTFILES:S,${DIST}/gcc/../libcpp/include,${DIST}/libcpp/include,g}
-G_GTFILES:=	${G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
-G_GTFILES:=	${G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
-G_GTFILES:=	${G_GTFILES:N${DIST}/libcpp/include/cpp-id-data.h}
+G_GTFILES:=	${GCC13_BACKEND_G_GTFILES}
 
 #
 # Generate the various header files we need.
@@ -231,12 +235,21 @@ tm-constrs.h: genpreds ${G_md_file}
 
 # be nice to generate this entirely; but difficult.
 gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
-	${TOOL_SED} -e 's#SRCDIR#${DIST}#' \
-	    -e 's#${G_GT_OUT_FILE}#${G_OUT_FILE_SRC}#' \
-	    -e 's#${DIST}/gcc/\\.\\./libcpp/include#${DIST}/libcpp/include#g' \
-	    -e '/cpp-id-data\.h$$/d' \
-	    -e 's#${DIST}/gcc/\\.\\./include#${DIST}/include#g' \
-	    -e 's#${G_out_file}#${G_OUT_FILE_SRC}#' < ${.ALLSRC} > ${.TARGET}
+	{ \
+		while IFS= read -r f; do \
+			f=$$(printf '%s\n' "$$f" | ${TOOL_SED} \
+			    -e 's#SRCDIR#${DIST}#' \
+			    -e 's#${G_GT_OUT_FILE}#${G_OUT_FILE_SRC}#' \
+			    -e 's#${DIST}/gcc/\\.\\./libcpp/include#${DIST}/libcpp/include#g' \
+			    -e 's#${DIST}/gcc/\\.\\./include#${DIST}/include#g' \
+			    -e 's#${G_out_file}#${G_OUT_FILE_SRC}#'); \
+			case "$$f" in \
+			*cpp-id-data.h) continue ;; \
+			*.c) if [ ! -e "$$f" ] && [ -e "$${f%.c}.cc" ]; then f="$${f%.c}.cc"; fi ;; \
+			esac; \
+			printf '%s\n' "$$f"; \
+		done < ${.ALLSRC}; \
+	} > ${.TARGET}
 CLEANFILES+=	gtyp-input.list.tmp
 
 # XXX

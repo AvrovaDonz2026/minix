@@ -4,7 +4,12 @@ LIBISPRIVATE=	yes
 
 LIB=		backend
 
-SRCS=		${G_OBJS:.o=.c} ${G_out_file:T}
+G_OUT_FILE_SRC=	${G_out_file}
+.if !exists(${G_out_file}) && exists(${G_out_file:S,.c,.cc,})
+G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
+.endif
+
+SRCS=		${G_OBJS} ${G_OUT_FILE_SRC:T}
 
 BOTH_CPPFLAGS+=	-I. -I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 CPPFLAGS+=	${BOTH_CPPFLAGS} -DTARGET_NAME=\"${MACHINE_GNU_PLATFORM}\"
@@ -15,6 +20,7 @@ CPPFLAGS+=	-I${.CURDIR}/../../lib/libgcc/libgcov/arch/${MACHINE_ARCH}
 
 CPPFLAGS.cppdefault.c+=	-DPREFIX=\"/usr\" \
 			-DNATIVE_SYSTEM_HEADER_DIR=\"${G_NATIVE_SYSTEM_HEADER_DIR}\"
+CPPFLAGS.cppdefault.cc+=	${CPPFLAGS.cppdefault.c}
 
 HOSTPROG_CXX=	1
 
@@ -28,6 +34,7 @@ CFLAGS:=	${CXXFLAGS}
 
 # Check PREPROCESSOR_DEFINES for cppbuiltin.c and cppdefault.c
 CPPFLAGS.cppbuiltin.c+=	-DBASEVER="\"${BASEVER}"\"
+CPPFLAGS.cppbuiltin.cc+=	${CPPFLAGS.cppbuiltin.c}
 
 #
 # Independent generation programs.

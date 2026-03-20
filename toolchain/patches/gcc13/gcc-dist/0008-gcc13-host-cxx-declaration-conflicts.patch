@@ -1,0 +1,20 @@
+--- a/gcc/system.h
++++ b/gcc/system.h
+@@ -496,7 +496,7 @@
+ extern char *getwd (char *);
+ #endif
+ 
+-#if defined (HAVE_DECL_SBRK) && !HAVE_DECL_SBRK
++#if defined (HAVE_DECL_SBRK) && !HAVE_DECL_SBRK && !defined (__cplusplus)
+ extern void *sbrk (int);
+ #endif
+ 
+@@ -504,7 +504,7 @@
+ int setenv(const char *, const char *, int);
+ #endif
+ 
+-#if defined (HAVE_DECL_STRSTR) && !HAVE_DECL_STRSTR
++#if defined (HAVE_DECL_STRSTR) && !HAVE_DECL_STRSTR && !defined (__cplusplus)
+ extern char *strstr (const char *, const char *);
+ #endif
+ 

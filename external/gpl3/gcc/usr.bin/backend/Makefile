@@ -65,7 +65,7 @@ CLEANFILES+=	gengenrtl genrtl.h \
 		build-bitmap.cc build-ggc-none.cc \
 		gt-*.h *.o *.lo \
 		cs-config.h \
-		gcov-iov gcov-iov.h \
+		version.h \
 		gtype-go.h gtype.state
 CLEANFILES+=	config.h
 
@@ -214,7 +214,7 @@ cs-config.h: Makefile
 genrtl.h: gengenrtl
 	${_MKTARGET_CREATE}
 	./gengenrtl >${.TARGET}
-gengenrtl.lo: ${HH_NORTL}
+gengenrtl.lo: ${HH_NORTL} ${DIST}/gcc/gengenrtl.cc
 gengenrtl: gengenrtl.lo build-errors.lo
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
@@ -256,7 +256,10 @@ gtype-desc.h: gengtype gtyp-input.list.tmp
 	# GCC 4.8 installs gtype-state and gengtype as a plugin
 
 # GCC 13 replaced version.o with a generated version.h.
-gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo: ${HH} gtyp-gen.h config.h options.h version.h
+gengtype.lo: ${HH} gtyp-gen.h config.h options.h version.h ${DIST}/gcc/gengtype.cc
+gengtype-lex.lo: ${HH} gtyp-gen.h config.h options.h version.h ${DIST}/gcc/gengtype-lex.cc
+gengtype-parse.lo: ${HH} gtyp-gen.h config.h options.h version.h ${DIST}/gcc/gengtype-parse.cc
+gengtype-state.lo: ${HH} gtyp-gen.h config.h options.h version.h ${DIST}/gcc/gengtype-state.cc
 gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo build-errors.lo
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
@@ -297,17 +300,9 @@ insn-modes-inline.h: genmodes
 min-insn-modes.c: genmodes
 	${_MKTARGET_CREATE}
 	./genmodes -m >${.TARGET}
-genmodes.lo: ${HH_NORTL}
+genmodes.lo: ${HH_NORTL} ${DIST}/gcc/genmodes.cc
 genmodes: genmodes.lo build-errors.lo
 	${_MKTARGET_LINK}
-	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
-
-gcov-iov.h: gcov-iov
-	${_MKTARGET_CREATE}
-	./gcov-iov "${BASEVER}" "${DEVPHASE}" >${.TARGET}
-gcov-iov.lo: ${HH_NORTL}
-gcov-iov: gcov-iov.lo
-	${_MKTARGET_CREATE}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
 
 tm_p.h: Makefile tm-preds.h
@@ -537,8 +532,8 @@ ggc-none.o: gtype-desc.h
 insn-attrtab.o: insn-config.h
 insn-extract.o: insn-config.h
 toplev.d toplev.o: options.h
-coverage.d: gcov-iov.h
-gcov-io.h: gcov-iov.h
+coverage.d: gcov-io.h
+gcov-io.h: version.h
 alias.d alias.o: insn-constants.h tm_p.h
 cgraph.d cgraphunit.d cgraphunit.o: gcov-io.h
 vec.lo: gtype-desc.h
@@ -548,7 +543,7 @@ insn-attr.h: insn-attr-common.h
 asan.d asan.o: insn-opinit.h
 data-streamer.d data-streamer-out.d coverage.d gcov-dump.d gcov-io.d gcov-iov.d gcov.d libgcov.d lto-cgraph.d mcf.d modulo-sched.d profile.d value-prof.d: gcov-io.h
 data-streamer.o data-streamer-out.o coverage.o gcov-dump.o gcov-io.o gcov-iov.o gcov.o libgcov.o lto-cgraph.o mcf.o modulo-sched.o profile.o value-prof.o: gcov-io.h
-gcov-io.h: gcov-iov.h
+gcov-io.h: version.h
 df-scan.d df-scan.o: target-hooks-def.h
 read-md.d read-md.o read-md.lo: auto-build.h insn-modes.h insn-modes-inline.h
 

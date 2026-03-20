@@ -25,6 +25,10 @@ for p in "${patches[@]}"; do
     echo "Skipping shim-only workspace patch ${p} for native mode"
     continue
   fi
+  if [[ "${base}" =~ ^00(1[3-9]|2[0-9]|3[0-9])- ]]; then
+    echo "Skipping repo-integrated backend workspace patch ${p}"
+    continue
+  fi
   if patch --dry-run -p1 < "${p}" >/dev/null 2>&1; then
     echo "Applying workspace patch ${p}"
     patch -p1 < "${p}"

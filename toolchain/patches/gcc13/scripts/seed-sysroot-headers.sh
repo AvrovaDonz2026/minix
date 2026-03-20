@@ -13,6 +13,12 @@ if [[ -d "${seed_include}" ]]; then
   cp -a "${seed_include}/." "${destdir_root}/usr/include/"
 fi
 
+# GCC fixincludes traverses the sysroot header tree eagerly and aborts on
+# dangling symlinks.  The committed obj.intrgcc seed can legitimately carry
+# a broken link (currently sys/soundcard.h) without affecting normal builds,
+# so prune any dangling links from the temporary spike sysroot copy.
+find "${destdir_root}/usr/include" -xtype l -delete
+
 overlay_header() {
   local src="$1"
   local dst_rel="$2"

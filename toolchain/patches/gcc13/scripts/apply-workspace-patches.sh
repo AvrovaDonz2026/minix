@@ -25,6 +25,17 @@ for p in "${patches[@]}"; do
     echo "Skipping shim-only workspace patch ${p} for native mode"
     continue
   fi
-  echo "Applying workspace patch ${p}"
-  patch -p1 < "${p}"
+  if patch --dry-run -p1 < "${p}" >/dev/null 2>&1; then
+    echo "Applying workspace patch ${p}"
+    patch -p1 < "${p}"
+    continue
+  fi
+
+  if patch --dry-run -R -p1 < "${p}" >/dev/null 2>&1; then
+    echo "Skipping already-applied workspace patch ${p}"
+    continue
+  fi
+
+  echo "Workspace patch does not apply cleanly: ${p}" >&2
+  exit 1
 done

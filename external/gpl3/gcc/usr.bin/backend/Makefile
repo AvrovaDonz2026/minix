@@ -60,6 +60,7 @@ CLEANFILES+=	gengenrtl genrtl.h \
 		insn-preds.c genpreds tm-preds.h tm_p.h cs-tm_p.h \
 		genmodes insn-modes.c insn-modes.h min-insn-modes.c \
 		insn-modes-inline.h \
+		pass-instances.def case-cfn-macros.h cfn-operators.pd \
 		auto-host.h build-print-rtl.cc \
 		build-rtl.cc build-errors.cc build-varray.c \
 		build-bitmap.cc build-ggc-none.cc \
@@ -303,6 +304,21 @@ gtyp-gen.h: Makefile gtyp-input.list.tmp
 	) >${.TARGET}
 
 version.h: ${TOOLSGCCBUILD}/version.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+pass-instances.def: ${TOOLSGCCBUILD}/pass-instances.def
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+case-cfn-macros.h: ${TOOLSGCCBUILD}/case-cfn-macros.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+cfn-operators.pd: ${TOOLSGCCBUILD}/cfn-operators.pd
 	${_MKTARGET_CREATE}
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}

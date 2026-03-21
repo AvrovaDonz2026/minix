@@ -15,7 +15,7 @@ BOTH_CPPFLAGS+=	-I. -I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 CPPFLAGS+=	${BOTH_CPPFLAGS} -DTARGET_NAME=\"${MACHINE_GNU_PLATFORM}\"
 HOST_CPPFLAGS+=	${BOTH_CPPFLAGS} -DGENERATOR_FILE
 DPSRCS+=	insn-attr.h insn-codes.h insn-config.h insn-flags.h insn-modes.h
-DPSRCS+=	insn-modes-inline.h tree-check.h
+DPSRCS+=	insn-modes-inline.h tree-check.h pass-instances.def case-cfn-macros.h
 CPPFLAGS+=	-I${DIST}/libgcc
 CPPFLAGS+=	-I${.CURDIR}/../../lib/libgcc/libgcov/arch/${MACHINE_ARCH}
 
@@ -91,6 +91,7 @@ HH=		${HH_NORTL} genrtl.h insn-modes.h insn-modes-inline.h
 
 TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
+CPPFLAGS+=	-I${TOOLSGCCBUILD}
 
 # GCC13 carries many backend helper prerequisites as bare basenames in the
 # generated defs. Canonicalize the source-tree headers here so host helper

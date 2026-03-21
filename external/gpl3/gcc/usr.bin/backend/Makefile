@@ -262,7 +262,7 @@ CLEANFILES+=	gtyp-input.list.tmp
 CLEANFILES+=	gtype-lto.h gtype-objcp.h tm-constrs.h
 
 gtype-desc.c: gtype-desc.h
-gtype-desc.h: gengtype gtyp-input.list.tmp
+gtype-desc.h: gengtype gtyp-input.list.tmp insn-constants.h
 	${_MKTARGET_CREATE}
 	rm -f auto-host.h
 	ln -s ${.CURDIR}/../gcc/arch/${GCC_MACHINE_ARCH}/auto-host.h .
@@ -453,7 +453,7 @@ CLEANFILES+=	gen${f} gen${f}.lo
 .endfor
 
 .for f in mddeps constants enums
-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc gtype-desc.h
+gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc
 gen${f}: gen${f}.lo ${GENPROG_READER_DEPENDS} 
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}

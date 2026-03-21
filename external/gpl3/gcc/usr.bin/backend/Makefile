@@ -204,9 +204,6 @@ GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../libcpp/incl
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:N${DIST}/libcpp/include/cpp-id-data.h}
-GCC13_BACKEND_G_GTFILES_EXTRA=	${DIST}/gcc/function-abi.h ${DIST}/gcc/cfg.h
-GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES} ${GCC13_BACKEND_G_GTFILES_EXTRA}
-
 G_GTFILES:=	${GCC13_BACKEND_G_GTFILES}
 
 #
@@ -258,9 +255,6 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 			esac; \
 			printf '%s\n' "$$f"; \
 		done < ${.ALLSRC}; \
-		for f in ${GCC13_BACKEND_G_GTFILES_EXTRA}; do \
-			printf '%s\n' "$$f"; \
-		done; \
 	} > ${.TARGET}
 CLEANFILES+=	gtyp-input.list.tmp
 
@@ -289,22 +283,22 @@ gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo build-
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
 
-gtyp-gen.h: Makefile
+gtyp-gen.h: Makefile gtyp-input.list.tmp
 	${_MKTARGET_CREATE}
 	(\
 	unset empty							; \
 	echo "static const char *srcdir = \"$(G_GTFILES_SRCDIR)\";"	; \
 	echo "static const char *lang_files[] = {"			; \
-	for f in $$empty $(G_GTFILES_FILES_FILES); do echo "\"$$f\", "; done ; \
+	awk '/^\[/ { lang = substr($$0, 2, length($$0) - 2); next } lang != "" { printf "\"%s\",\\n", $$0 }' gtyp-input.list.tmp ; \
 	echo "NULL };"							; \
 	echo "static const char *langs_for_lang_files[] = {"		; \
-	for f in $$empty $(G_GTFILES_FILES_LANGS); do echo "\"$$f\", "; done ; \
+	awk '/^\[/ { lang = substr($$0, 2, length($$0) - 2); next } lang != "" { printf "\"%s\",\\n", lang }' gtyp-input.list.tmp ; \
 	echo "NULL };"							; \
 	echo "static const char *all_files[] = {"			; \
-	for f in $$empty $(GCC13_BACKEND_G_GTFILES); do echo "\"$$f\", "; done ; \
+	awk '!/^\[/ { printf "\"%s\",\\n", $$0 }' gtyp-input.list.tmp ; \
 	echo " NULL };"							; \
 	echo "static const char *lang_dir_names[] = {"			; \
-	for f in c $(G_GTFILES_LANG_DIR_NAMES); do echo "\"$$f\", "; done ; \
+	awk '/^\[/ { lang = substr($$0, 2, length($$0) - 2); if (!seen[lang]++) printf "\"%s\",\\n", lang }' gtyp-input.list.tmp ; \
 	echo "NULL };"							; \
 	) >${.TARGET}
 

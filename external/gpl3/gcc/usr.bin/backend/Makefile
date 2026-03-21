@@ -193,6 +193,7 @@ GCC13_BACKEND_G_GTFILES=
 .for f in ${G_GTFILES}
 .if !empty(f:M*.c) && !exists(${f}) && exists(${f:S,.c,.cc,})
 GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${f:S,.c,.cc,}
+.elif !empty(f:M${DIST}/*) && !exists(${f})
 .else
 GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${f}
 .endif
@@ -246,6 +247,9 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 			case "$$f" in \
 			*cpp-id-data.h) continue ;; \
 			*.c) if [ ! -e "$$f" ] && [ -e "$${f%.c}.cc" ]; then f="$${f%.c}.cc"; fi ;; \
+			esac; \
+			case "$$f" in \
+			${DIST}/*) [ -e "$$f" ] || continue ;; \
 			esac; \
 			printf '%s\n' "$$f"; \
 		done < ${.ALLSRC}; \

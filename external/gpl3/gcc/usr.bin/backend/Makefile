@@ -425,7 +425,7 @@ build-ggc-none.lo: ${HH} build-ggc-none.cc
 
 hash-table.lo: ${HH} ${DIST}/gcc/hash-table.cc gtype-desc.h
 sort.lo: ${HH_NORTL} ${DIST}/gcc/sort.cc
-inchash.lo: ${HH_NORTL} ${DIST}/gcc/inchash.cc
+inchash.lo: ${HH} ${DIST}/gcc/inchash.cc
 
 #
 # The normal insn-foo generators

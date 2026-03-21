@@ -5,7 +5,7 @@
 G_BUILD_EARLY_SUPPORT=
 G_BUILD_ERRORS=build-errors.o
 G_BUILD_PRINT=
-G_BUILD_RTL=build-rtl.o read-rtl.o build-ggc-none.o vec.o min-insn-modes.o gensupport.o build-print-rtl.o
+G_BUILD_RTL=build-rtl.o read-rtl.o build-ggc-none.o vec.o min-insn-modes.o gensupport.o build-print-rtl.o hash-table.o sort.o inchash.o
 G_BUILD_SUPPORT=
 G_BUILD_VARRAY=
 G_BUILD_MD=read-md.o

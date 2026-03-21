@@ -252,7 +252,6 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 			    -e 's#${DIST}/gcc/\\.\\./include#${DIST}/include#g' \
 			    -e 's#${G_out_file}#${G_OUT_FILE_SRC}#'); \
 			case "$$f" in \
-			'[c]') printf '%s\n' "$$f"; printf '%s\n' "${DIST}/gcc/c/c-parser.h"; continue ;; \
 			*cpp-id-data.h) continue ;; \
 			${DIST}/gcc/lto-symtab.c) if [ -e "${DIST}/gcc/lto/lto-symtab.cc" ]; then f="${DIST}/gcc/lto/lto-symtab.cc"; fi ;; \
 			*.c) if [ ! -e "$$f" ] && [ -e "$${f%.c}.cc" ]; then f="$${f%.c}.cc"; fi ;; \

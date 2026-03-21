@@ -36,6 +36,7 @@ G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
 # contribute their real directories before bsd.lib.mk consumes .depend.
 .PATH: ${DIST}/gcc ${DIST}/libiberty ${GCCARCH} ${G_out_file:H} ${DIST}/include
 .PATH: ${DIST}/gcc/config
+.NOPATH: auto-host.h config.h version.h pass-instances.def case-cfn-macros.h cfn-operators.pd
 
 .include <bsd.lib.mk>
 

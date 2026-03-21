@@ -208,7 +208,7 @@ GCC13_BACKEND_G_GTFILES_EXTRA=	${DIST}/gcc/wide-int.h ${DIST}/gcc/tree-core.h
 GCC13_BACKEND_G_GTFILES_EXTRA+=	${DIST}/gcc/function-abi.h ${DIST}/gcc/cfg.h
 GCC13_BACKEND_G_GTFILES_EXTRA+=	${DIST}/gcc/profile-count.h ${DIST}/gcc/gimple-ssa.h
 GCC13_BACKEND_G_GTFILES_EXTRA+=	${DIST}/gcc/tree-ssanames.h ${DIST}/gcc/value-range.h
-GCC13_BACKEND_G_GTFILES_EXTRA+=	${DIST}/gcc/value-range-storage.h ${DIST}/gcc/c/c-parser.h
+GCC13_BACKEND_G_GTFILES_EXTRA+=	${DIST}/gcc/value-range-storage.h
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES} ${GCC13_BACKEND_G_GTFILES_EXTRA}
 
 G_GTFILES:=	${GCC13_BACKEND_G_GTFILES}
@@ -253,6 +253,7 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 			    -e 's#${DIST}/gcc/\\.\\./include#${DIST}/include#g' \
 			    -e 's#${G_out_file}#${G_OUT_FILE_SRC}#'); \
 			case "$$f" in \
+			'[c]') printf '%s\n' "$$f"; printf '%s\n' "${DIST}/gcc/c/c-parser.h"; continue ;; \
 			*cpp-id-data.h) continue ;; \
 			${DIST}/gcc/lto-symtab.c) if [ -e "${DIST}/gcc/lto/lto-symtab.cc" ]; then f="${DIST}/gcc/lto/lto-symtab.cc"; fi ;; \
 			*.c) if [ ! -e "$$f" ] && [ -e "$${f%.c}.cc" ]; then f="$${f%.c}.cc"; fi ;; \

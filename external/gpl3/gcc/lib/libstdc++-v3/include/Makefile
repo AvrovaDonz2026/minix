@@ -14,7 +14,7 @@ DIST=		${GCCDIST}
 GNUHOSTDIST=	${DIST}
 
 # libsupc++
-INCS=		exception new typeinfo cxxabi.h initializer_list
+INCS=		exception new typeinfo cxxabi.h initializer_list compare
 
 # others
 INCS+=		cerrno

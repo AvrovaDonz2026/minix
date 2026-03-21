@@ -193,6 +193,8 @@ GCC13_BACKEND_G_GTFILES=
 .for f in ${G_GTFILES}
 .if !empty(f:M*.c) && !exists(${f}) && exists(${f:S,.c,.cc,})
 GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${f:S,.c,.cc,}
+.elif ${f} == ${DIST}/gcc/lto-symtab.c && exists(${DIST}/gcc/lto/lto-symtab.cc)
+GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${DIST}/gcc/lto/lto-symtab.cc
 .elif !empty(f:M${DIST}/*) && !exists(${f})
 .else
 GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${f}
@@ -202,6 +204,12 @@ GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../libcpp/incl
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:N${DIST}/libcpp/include/cpp-id-data.h}
+GCC13_BACKEND_G_GTFILES_EXTRA=	${DIST}/gcc/wide-int.h ${DIST}/gcc/tree-core.h
+GCC13_BACKEND_G_GTFILES_EXTRA+=	${DIST}/gcc/function-abi.h ${DIST}/gcc/cfg.h
+GCC13_BACKEND_G_GTFILES_EXTRA+=	${DIST}/gcc/profile-count.h ${DIST}/gcc/gimple-ssa.h
+GCC13_BACKEND_G_GTFILES_EXTRA+=	${DIST}/gcc/tree-ssanames.h ${DIST}/gcc/value-range.h
+GCC13_BACKEND_G_GTFILES_EXTRA+=	${DIST}/gcc/value-range-storage.h ${DIST}/gcc/c/c-parser.h
+GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES} ${GCC13_BACKEND_G_GTFILES_EXTRA}
 
 G_GTFILES:=	${GCC13_BACKEND_G_GTFILES}
 
@@ -246,6 +254,7 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 			    -e 's#${G_out_file}#${G_OUT_FILE_SRC}#'); \
 			case "$$f" in \
 			*cpp-id-data.h) continue ;; \
+			${DIST}/gcc/lto-symtab.c) if [ -e "${DIST}/gcc/lto/lto-symtab.cc" ]; then f="${DIST}/gcc/lto/lto-symtab.cc"; fi ;; \
 			*.c) if [ ! -e "$$f" ] && [ -e "$${f%.c}.cc" ]; then f="$${f%.c}.cc"; fi ;; \
 			esac; \
 			case "$$f" in \
@@ -253,6 +262,9 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 			esac; \
 			printf '%s\n' "$$f"; \
 		done < ${.ALLSRC}; \
+		for f in ${GCC13_BACKEND_G_GTFILES_EXTRA}; do \
+			printf '%s\n' "$$f"; \
+		done; \
 	} > ${.TARGET}
 CLEANFILES+=	gtyp-input.list.tmp
 

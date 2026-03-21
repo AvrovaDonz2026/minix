@@ -65,7 +65,6 @@ CLEANFILES+=	gengenrtl genrtl.h \
 		build-rtl.cc build-errors.cc build-varray.c \
 		build-bitmap.cc build-ggc-none.cc \
 		gt-*.h *.o *.lo \
-		cs-config.h \
 		version.h \
 		gtype-go.h gtype.state
 CLEANFILES+=	config.h
@@ -211,13 +210,10 @@ G_GTFILES:=	${GCC13_BACKEND_G_GTFILES}
 #
 # Generate the various header files we need.
 #
-config.h: cs-config.h
-	@true
-cs-config.h: Makefile
+config.h: ${TOOLSGCCBUILD}/config.h
 	${_MKTARGET_CREATE}
-	TARGET_CPU_DEFAULT="" \
-	HEADERS="$(G_host_xm_file)" DEFINES="$(G_host_xm_defines)" \
-	${HOST_SH} $(GNUHOSTDIST)/gcc/mkconfig.sh config.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
 
 genrtl.h: gengenrtl
 	${_MKTARGET_CREATE}

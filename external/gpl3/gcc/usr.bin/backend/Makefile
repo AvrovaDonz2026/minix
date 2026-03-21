@@ -15,7 +15,7 @@ BOTH_CPPFLAGS+=	-I. -I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 CPPFLAGS+=	${BOTH_CPPFLAGS} -DTARGET_NAME=\"${MACHINE_GNU_PLATFORM}\"
 HOST_CPPFLAGS+=	${BOTH_CPPFLAGS} -DGENERATOR_FILE
 DPSRCS+=	insn-attr.h insn-codes.h insn-config.h insn-flags.h insn-modes.h
-DPSRCS+=	insn-modes-inline.h tree-check.h pass-instances.def case-cfn-macros.h
+DPSRCS+=	insn-modes-inline.h tree-check.h auto-host.h pass-instances.def case-cfn-macros.h
 CPPFLAGS+=	-I${DIST}/libgcc
 CPPFLAGS+=	-I${.CURDIR}/../../lib/libgcc/libgcov/arch/${MACHINE_ARCH}
 
@@ -214,6 +214,22 @@ config.h: ${TOOLSGCCBUILD}/config.h
 	${_MKTARGET_CREATE}
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
+	{ \
+		echo '#ifndef CHECKING_P'; \
+		echo '#define CHECKING_P 0'; \
+		echo '#endif'; \
+		echo '#ifndef ENABLE_OFFLOADING'; \
+		echo '#define ENABLE_OFFLOADING 0'; \
+		echo '#endif'; \
+		echo '#ifndef HAVE_AS_LEB128'; \
+		echo '#define HAVE_AS_LEB128 0'; \
+		echo '#endif'; \
+	} >> ${.TARGET}
+
+auto-host.h: ${TOOLSGCCBUILD}/auto-host.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
 
 genrtl.h: gengenrtl
 	${_MKTARGET_CREATE}
@@ -260,10 +276,8 @@ CLEANFILES+=	gtyp-input.list.tmp
 CLEANFILES+=	gtype-lto.h gtype-objcp.h tm-constrs.h
 
 gtype-desc.c: gtype-desc.h
-gtype-desc.h: gengtype gtyp-input.list.tmp insn-constants.h
+gtype-desc.h: gengtype gtyp-input.list.tmp auto-host.h insn-constants.h
 	${_MKTARGET_CREATE}
-	rm -f auto-host.h
-	ln -s ${.CURDIR}/../gcc/arch/${GCC_MACHINE_ARCH}/auto-host.h .
 	if [ -f ${.CURDIR}/../gcc/arch/${GCC_MACHINE_ARCH}/sysroot-suffix.h ]; then \
 	  rm -f sysroot-suffix.h; \
 	  ln -s ${.CURDIR}/../gcc/arch/${GCC_MACHINE_ARCH}/sysroot-suffix.h ; \

@@ -56,7 +56,7 @@ CPPFLAGS.cppbuiltin.cc+=	${CPPFLAGS.cppbuiltin.c}
 # Independent generation programs.
 #
 CLEANFILES+=	gengenrtl genrtl.h \
-		gengtype gtyp-gen.h gtype-desc.c gtype-desc.h \
+		gengtype gtyp-gen.h gtype-desc.cc gtype-desc.h \
 		gtype-c.h gtype-cp.h gtype-f.h gtype-objc.h \
 		genflags genflags.h \
 		gencheck tree-check.h \
@@ -298,7 +298,7 @@ CLEANFILES+=	gtyp-input.list.tmp
 # XXX
 CLEANFILES+=	gtype-lto.h gtype-objcp.h tm-constrs.h
 
-gtype-desc.c: gtype-desc.h
+gtype-desc.cc: gtype-desc.h
 gtype-desc.h: gengtype gtyp-input.list.tmp auto-host.h insn-constants.h
 	${_MKTARGET_CREATE}
 	if [ -f ${.CURDIR}/../gcc/arch/${GCC_MACHINE_ARCH}/sysroot-suffix.h ]; then \
@@ -630,7 +630,7 @@ gcov-io.h: version.h
 alias.d alias.o: insn-constants.h tm_p.h
 cgraph.d cgraphunit.d cgraphunit.o: gcov-io.h
 vec.lo: gtype-desc.h
-gtype-desc.d gtype-desc.o: insn-constants.h
+gtype-desc.d gtype-desc.o: gtype-desc.cc insn-constants.h
 insn-emit.d insn-emit.o: tm-constrs.h
 insn-attr.h: insn-attr-common.h
 asan.d asan.o: insn-opinit.h

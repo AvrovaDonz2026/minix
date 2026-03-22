@@ -237,6 +237,7 @@ config.h: ${TOOLSGCCBUILD}/config.h
 		echo '#ifndef HAVE_AS_LEB128'; \
 		echo '#define HAVE_AS_LEB128 0'; \
 		echo '#endif'; \
+		echo '#undef HAVE_ZSTD_H'; \
 	} >> ${.TARGET}
 
 auto-host.h: ${TOOLSGCCBUILD}/auto-host.h

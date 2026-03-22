@@ -56,8 +56,7 @@ CPPFLAGS.cppbuiltin.cc+=	${CPPFLAGS.cppbuiltin.c}
 # Independent generation programs.
 #
 CLEANFILES+=	gengenrtl genrtl.h \
-		gengtype gtyp-gen.h gtype-desc.cc gtype-desc.h \
-		gtype-c.h gtype-cp.h gtype-f.h gtype-objc.h \
+		gengtype gtyp-gen.h \
 		genflags genflags.h \
 		gencheck tree-check.h \
 		insn-preds.c genpreds tm-preds.h tm_p.h cs-tm_p.h \
@@ -68,8 +67,7 @@ CLEANFILES+=	gengenrtl genrtl.h \
 		build-rtl.cc build-errors.cc build-varray.c \
 		build-bitmap.cc build-ggc-none.cc \
 		gt-*.h *.o *.lo \
-		version.h bversion.h plugin-version.h configargs.h multilib.h \
-		gtype-go.h gtype.state
+		version.h bversion.h plugin-version.h configargs.h multilib.h
 CLEANFILES+=	config.h
 
 # XXX
@@ -296,19 +294,29 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 	} > ${.TARGET}
 CLEANFILES+=	gtyp-input.list.tmp
 
-# XXX
-CLEANFILES+=	gtype-lto.h gtype-objcp.h tm-constrs.h
+GCC13_GTYPE_OUTPUTS= \
+		gtype-ada.h gtype-c.h gtype-cp.h gtype-d.h \
+		gtype-desc.cc gtype-desc.h gtype-fortran.h gtype-go.h \
+		gtype-jit.h gtype-lto.h gtype-m2.h gtype-objc.h \
+		gtype-objcp.h gtype-rust.h gtype.state
+CLEANFILES+=	${GCC13_GTYPE_OUTPUTS} s-gtype
+CLEANFILES+=	tm-constrs.h
 
-gtype-desc.cc: gtype-desc.h
-gtype-desc.h: gengtype gtyp-input.list.tmp auto-host.h insn-constants.h
+# GCC13 generates the entire GTY output set from a shared gengtype stamp.
+# Modeling only gtype-desc.h leaves the rest of the outputs invisible to make
+# and lets parallel object builds race ahead of file generation.
+${GCC13_GTYPE_OUTPUTS}: s-gtype ; @true
+s-gtype: gengtype gtyp-input.list.tmp auto-host.h insn-constants.h
 	${_MKTARGET_CREATE}
 	if [ -f ${.CURDIR}/../gcc/arch/${GCC_MACHINE_ARCH}/sysroot-suffix.h ]; then \
 	  rm -f sysroot-suffix.h; \
 	  ln -s ${.CURDIR}/../gcc/arch/${GCC_MACHINE_ARCH}/sysroot-suffix.h ; \
 	fi
-	./gengtype -S ${DIST}/gcc -I gtyp-input.list.tmp -w gtype.state
+	rm -f tmp-gtype.state
+	./gengtype -S ${DIST}/gcc -I gtyp-input.list.tmp -w tmp-gtype.state
+	mv -f tmp-gtype.state gtype.state
 	./gengtype -r gtype.state
-	# GCC 4.8 installs gtype-state and gengtype as a plugin
+	touch ${.TARGET}
 
 # GCC 13 replaced version.o with a generated version.h.
 gengtype.lo: ${HH} gtyp-gen.h config.h options.h version.h ${DIST}/gcc/gengtype.cc
@@ -631,7 +639,7 @@ gcov-io.h: version.h
 alias.d alias.o: insn-constants.h tm_p.h
 cgraph.d cgraphunit.d cgraphunit.o: gcov-io.h
 vec.lo: gtype-desc.h
-gtype-desc.d gtype-desc.o: gtype-desc.cc insn-constants.h
+gtype-desc.d gtype-desc.o: s-gtype insn-constants.h
 insn-emit.d insn-emit.o: tm-constrs.h
 insn-attr.h: insn-attr-common.h
 asan.d asan.o: insn-opinit.h

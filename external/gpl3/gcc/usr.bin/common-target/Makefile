@@ -7,7 +7,7 @@ LIBISPRIVATE=	yes
 
 LIB=		common-target
 
-SRCS=		prefix.cc opts.cc opts-common.cc options.c vec.cc \
+SRCS=		prefix.cc opts.cc opts-common.cc options.cc vec.cc \
 		hooks.cc common-targhooks.cc hash-table.cc file-find.cc \
 		spellcheck.cc selftest.cc opt-suggestions.cc \
 		${G_common_out_file:T}

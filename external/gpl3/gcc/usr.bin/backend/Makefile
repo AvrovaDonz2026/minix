@@ -101,6 +101,7 @@ CPPFLAGS+=	-I${TOOLSGCCBUILD}
 GCC13_TARGET_STDIO_UNLOCKED_MISSING= \
 	CLEARERR FEOF FERROR FFLUSH FGETC FGETS FILENO FPRINTF \
 	FPUTC FPUTS FREAD FWRITE
+GCC13_TARGET_MALLOC_INFO_MISSING=	MALLINFO MALLINFO2
 
 # GCC13 carries many backend helper prerequisites as bare basenames in the
 # generated defs. Canonicalize the source-tree headers here so host helper
@@ -244,6 +245,10 @@ auto-host.h: ${TOOLSGCCBUILD}/auto-host.h
 		for fn in ${GCC13_TARGET_STDIO_UNLOCKED_MISSING}; do \
 			echo "#undef HAVE_$${fn}_UNLOCKED"; \
 			echo "#undef HAVE_DECL_$${fn}_UNLOCKED"; \
+		done; \
+		for fn in ${GCC13_TARGET_MALLOC_INFO_MISSING}; do \
+			echo "#undef HAVE_$${fn}"; \
+			echo "#undef HAVE_DECL_$${fn}"; \
 		done; \
 	} >> ${.TARGET}
 

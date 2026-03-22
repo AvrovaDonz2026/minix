@@ -19,6 +19,10 @@ CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
 		-DCONFIGURE_SPECS="\"\"" \
 		-I${BACKENDOBJ}
 
+DPSRCS+=	options.h config.h auto-host.h version.h bversion.h
+.NOPATH:	config.h auto-host.h version.h bversion.h
+CLEANFILES+=	config.h auto-host.h version.h bversion.h
+
 COPTS.prefix.cc=	-Wno-stack-protector
 COPTS.opts-common.cc=	-Wno-stack-protector
 CPPFLAGS.prefix.cc+=	-DBASEVER=${BASEVERSTR}
@@ -30,10 +34,26 @@ GENPROG_ERROR_DEPENDS=errors.lo
 
 ${SRCS}: ${GCCARCH}/defs.mk
 
+config.h: ${BACKENDOBJ}/config.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+auto-host.h: ${BACKENDOBJ}/auto-host.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+version.h: ${BACKENDOBJ}/version.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+bversion.h: ${BACKENDOBJ}/bversion.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
 ${G_common_out_file:T:R}.o:  common/common-target-hooks-def.h
 prefix.d prefix.o: ${GNUHOSTDIST}/gcc/BASE-VER
-
-DPSRCS+=	options.h
+opts.d opts.o: version.h bversion.h
+${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: config.h auto-host.h
 
 HOST_CPPFLAGS+=	-I${BACKENDOBJ} -I${GCCARCH} -I. -I${DIST}/include -I${DIST}/gcc
 HOST_CPPFLAGS+=	-DGENERATOR_FILE

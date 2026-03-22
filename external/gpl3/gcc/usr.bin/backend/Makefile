@@ -16,6 +16,7 @@ CPPFLAGS+=	${BOTH_CPPFLAGS} -DTARGET_NAME=\"${MACHINE_GNU_PLATFORM}\"
 HOST_CPPFLAGS+=	${BOTH_CPPFLAGS} -DGENERATOR_FILE
 DPSRCS+=	insn-attr.h insn-codes.h insn-config.h insn-flags.h insn-modes.h
 DPSRCS+=	insn-modes-inline.h tree-check.h auto-host.h pass-instances.def case-cfn-macros.h
+DPSRCS+=	bversion.h plugin-version.h configargs.h multilib.h
 CPPFLAGS+=	-I${DIST}/libgcc
 CPPFLAGS+=	-I${.CURDIR}/../../lib/libgcc/libgcov/arch/${MACHINE_ARCH}
 
@@ -36,7 +37,8 @@ G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
 # contribute their real directories before bsd.lib.mk consumes .depend.
 .PATH: ${DIST}/gcc ${DIST}/libiberty ${GCCARCH} ${G_out_file:H} ${DIST}/include
 .PATH: ${DIST}/gcc/config
-.NOPATH: auto-host.h config.h version.h pass-instances.def case-cfn-macros.h cfn-operators.pd
+.NOPATH: auto-host.h config.h version.h bversion.h plugin-version.h
+.NOPATH: configargs.h multilib.h pass-instances.def case-cfn-macros.h cfn-operators.pd
 
 .include <bsd.lib.mk>
 
@@ -66,7 +68,7 @@ CLEANFILES+=	gengenrtl genrtl.h \
 		build-rtl.cc build-errors.cc build-varray.c \
 		build-bitmap.cc build-ggc-none.cc \
 		gt-*.h *.o *.lo \
-		version.h \
+		version.h bversion.h plugin-version.h configargs.h multilib.h \
 		gtype-go.h gtype.state
 CLEANFILES+=	config.h
 
@@ -336,6 +338,26 @@ gtyp-gen.h: Makefile gtyp-input.list.tmp
 	) >${.TARGET}
 
 version.h: ${TOOLSGCCBUILD}/version.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+bversion.h: ${TOOLSGCCBUILD}/bversion.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+plugin-version.h: ${TOOLSGCCBUILD}/plugin-version.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+configargs.h: ${TOOLSGCCBUILD}/configargs.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+multilib.h: ${TOOLSGCCBUILD}/multilib.h
 	${_MKTARGET_CREATE}
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}

@@ -17,6 +17,10 @@ CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
 		-DDEFAULT_TARGET_MACHINE=\"${MACHINE_GNU_PLATFORM}\" \
 		-DCONFIGURE_SPECS="\"\""
 
+DPSRCS+=	config.h auto-host.h version.h bversion.h
+.NOPATH:	config.h auto-host.h version.h bversion.h
+CLEANFILES+=	config.h auto-host.h version.h bversion.h
+
 MKPIC:=		no
 MKPICLIB:=	no
 
@@ -27,7 +31,24 @@ COPTS.intl.cc=		-Wno-stack-protector
 
 ${SRCS}: ${GCCARCH}/defs.mk
 
-diagnostic.d diagnostic.o: ${BACKENDOBJ}/version.h ${BACKENDOBJ}/bversion.h
+config.h: ${BACKENDOBJ}/config.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+auto-host.h: ${BACKENDOBJ}/auto-host.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+version.h: ${BACKENDOBJ}/version.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+bversion.h: ${BACKENDOBJ}/bversion.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+${SRCS:.cc=.d} ${SRCS:.cc=.o}: config.h auto-host.h
+diagnostic.d diagnostic.o: version.h bversion.h
 
 .include <bsd.lib.mk>
 

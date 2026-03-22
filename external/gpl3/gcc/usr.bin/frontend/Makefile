@@ -7,17 +7,17 @@ LIBISPRIVATE=	yes
 
 LIB=		frontend
 
-SRCS=		gcc.c version.c prefix.c
+SRCS=		gcc.cc prefix.cc
 
 HOSTPROG_CXX=	1
 
 # XXX
 .if ${GCC_MACHINE_ARCH} == "x86_64" || ${GCC_MACHINE_ARCH} == "i386"
-SRCS+=		driver-i386.c
+	SRCS+=		driver-i386.cc
 .PATH:		${DIST}/gcc/config/i386
 .endif
 .if ${GCC_MACHINE_ARCH} == "powerpc" || ${GCC_MACHINE_ARCH} == "powerpc64"
-SRCS+=		driver-rs6000.c
+	SRCS+=		driver-rs6000.cc
 .PATH:		${DIST}/gcc/config/rs6000
 .endif
 

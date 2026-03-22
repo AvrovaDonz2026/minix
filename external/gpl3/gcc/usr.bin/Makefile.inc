@@ -80,8 +80,6 @@ VER_CPPFLAGS=	-DBASEVER="\"${BASEVER}"\" \
 		-DPKGVERSION=$(G_PKGVERSION_s) \
 		-DBUGURL=$(G_BUGURL_s)
 
-CPPFLAGS.version.c+=	${VER_CPPFLAGS}
-version.c: ${GCCARCH}/defs.mk ${TOP}/tools/gcc/gcc-version.mk
 
 .include "${GCCARCH}/defs.mk"
 

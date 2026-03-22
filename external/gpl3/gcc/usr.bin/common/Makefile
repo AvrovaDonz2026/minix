@@ -7,7 +7,7 @@ LIBISPRIVATE=	yes
 
 LIB=		common
 
-SRCS=		diagnostic.c pretty-print.c intl.c input.c version.c
+SRCS=		diagnostic.cc pretty-print.cc intl.cc input.cc
 
 # XXX make sure this doesn't have more than it needs
 CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
@@ -22,8 +22,8 @@ MKPICLIB:=	no
 
 HOSTPROG_CXX=	1
 
-COPTS.diagnostic.c=	-Wno-stack-protector
-COPTS.intl.c=		-Wno-stack-protector
+COPTS.diagnostic.cc=	-Wno-stack-protector
+COPTS.intl.cc=		-Wno-stack-protector
 
 ${SRCS}: ${GCCARCH}/defs.mk
 

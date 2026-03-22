@@ -23,6 +23,7 @@ CPPFLAGS+=	-I${.CURDIR}/../../lib/libgcc/libgcov/arch/${MACHINE_ARCH}
 CPPFLAGS.cppdefault.c+=	-DPREFIX=\"/usr\" \
 			-DNATIVE_SYSTEM_HEADER_DIR=\"${G_NATIVE_SYSTEM_HEADER_DIR}\"
 CPPFLAGS.cppdefault.cc+=	${CPPFLAGS.cppdefault.c}
+CPPFLAGS.lto-streamer-in.cc+=	-DTARGET_MACHINE=\"${MACHINE_GNU_PLATFORM}\"
 
 HOSTPROG_CXX=	1
 

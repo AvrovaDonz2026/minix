@@ -32,6 +32,8 @@ CPPFLAGS.prefix.cc+=	-DBASEVER=${BASEVERSTR}
 
 DPSRCS+=	specs.h
 
+gcc.d gcc.o: specs.h ${BACKENDOBJ}/configargs.h
+
 ${SRCS}: ${GCCARCH}/defs.mk
 
 MKPIC:=		no
@@ -54,6 +56,6 @@ CPPFLAGS+=	-I../backend
 # Build the specs.h file
 CLEANFILES+=	specs.h
 specs.h: Makefile
-	for f in cp lto objc objcp; do \
-		echo "#include \"$$f/lang-specs.h\""; \
-	done > specs.h
+	lsf="${G_lang_specs_files}"; for f in $$lsf; do \
+		echo "#include \"$$f\""; \
+	done | sed 's|${DIST}/gcc/||' > specs.h

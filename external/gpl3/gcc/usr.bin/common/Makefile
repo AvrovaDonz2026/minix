@@ -27,6 +27,8 @@ COPTS.intl.cc=		-Wno-stack-protector
 
 ${SRCS}: ${GCCARCH}/defs.mk
 
+diagnostic.d diagnostic.o: ${BACKENDOBJ}/version.h ${BACKENDOBJ}/bversion.h
+
 .include <bsd.lib.mk>
 
 # Force using C++ for this

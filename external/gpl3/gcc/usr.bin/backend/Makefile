@@ -93,6 +93,15 @@ TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 CPPFLAGS+=	-I${TOOLSGCCBUILD}
 
+# GCC13's host auto-detection enables many stdio *_unlocked helpers from the
+# build host. The target/backend lane compiles with the MINIX target sysroot,
+# which only exposes getc/putc/getchar/putchar_unlocked and lacks the rest.
+# Trim the unavailable helpers here so gcc/system.h does not remap stdio calls
+# to undeclared target interfaces.
+GCC13_TARGET_STDIO_UNLOCKED_MISSING= \
+	CLEARERR FEOF FERROR FFLUSH FGETC FGETS FILENO FPRINTF \
+	FPUTC FPUTS FREAD FWRITE
+
 # GCC13 carries many backend helper prerequisites as bare basenames in the
 # generated defs. Canonicalize the source-tree headers here so host helper
 # rules do not depend on .PATH continuing to resolve each basename.
@@ -231,6 +240,12 @@ auto-host.h: ${TOOLSGCCBUILD}/auto-host.h
 	${_MKTARGET_CREATE}
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
+	{ \
+		for fn in ${GCC13_TARGET_STDIO_UNLOCKED_MISSING}; do \
+			echo "#undef HAVE_$${fn}_UNLOCKED"; \
+			echo "#undef HAVE_DECL_$${fn}_UNLOCKED"; \
+		done; \
+	} >> ${.TARGET}
 
 genrtl.h: gengenrtl
 	${_MKTARGET_CREATE}

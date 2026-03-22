@@ -5,12 +5,12 @@ SRCS=	gcc-ar.cc file-find.cc
 
 CPPFLAGS= \
 	-DPERSONALITY=\"${GCC_TOOL}\" \
-	-DSTANDARD_EXEC_PREFIX=\"/usr/bin\" \
-	-DSTANDARD_LIBEXEC_PREFIX=\"/usr/lib\" \
+	-DSTANDARD_EXEC_PREFIX=\"/usr/libexec/\" \
+	-DSTANDARD_LIBEXEC_PREFIX=\"/usr/libexec/\" \
 	-DSTANDARD_BINDIR_PREFIX=\"/usr/bin\" \
-	-DTOOLDIR_BASE_PREFIX=\"/usr/bin\" \
-	-DDEFAULT_TARGET_MACHINE=\"\" \
-	-DDEFAULT_TARGET_VERSION=\"\"
+	-DTOOLDIR_BASE_PREFIX=\"../\" \
+	-DDEFAULT_TARGET_MACHINE=\"${MACHINE_GNU_PLATFORM}\" \
+	-DDEFAULT_TARGET_VERSION=\"${G_version}\"
 
 # Skip these because we don't have them in paths.
 #	-DDEFAULT_TARGET_VERSION=\"${G_version}\"

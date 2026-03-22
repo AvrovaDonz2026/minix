@@ -31,7 +31,7 @@ G_GT_OUT_FILE=${G_out_file}
 .if !exists(${G_GT_OUT_FILE}) && exists(${G_GT_OUT_FILE:S,.c,.cc,})
 G_GT_OUT_FILE:=	${G_GT_OUT_FILE:S,.c,.cc,}
 .endif
-G_version=4.8.4
+G_version=13.2.0
 G_BUILD_PREFIX=
 G_RTL_H=coretypes.h rtl.h rtl.def machmode.h mode-classes.def insn-modes.h reg-notes.def insn-notes.def ${GNUHOSTDIST}/gcc/../libcpp/include/line-map.h input.h real.h machmode.h mode-classes.def insn-modes.h statistics.h vec.h statistics.h ggc.h gtype-desc.h statistics.h fixed-value.h machmode.h mode-classes.def insn-modes.h double-int.h alias.h ${GNUHOSTDIST}/gcc/../include/hashtab.h flags.h flag-types.h options.h flag-types.h  genrtl.h
 G_RTL_BASE_H=coretypes.h rtl.h rtl.def machmode.h mode-classes.def insn-modes.h reg-notes.def insn-notes.def ${GNUHOSTDIST}/gcc/../libcpp/include/line-map.h input.h real.h machmode.h mode-classes.def insn-modes.h statistics.h vec.h statistics.h ggc.h gtype-desc.h statistics.h fixed-value.h machmode.h mode-classes.def insn-modes.h double-int.h alias.h ${GNUHOSTDIST}/gcc/../include/hashtab.h

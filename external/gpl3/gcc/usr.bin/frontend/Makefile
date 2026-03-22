@@ -32,7 +32,8 @@ CPPFLAGS.prefix.cc+=	-DBASEVER=${BASEVERSTR}
 
 DPSRCS+=	specs.h
 
-gcc.d gcc.o: specs.h ${BACKENDOBJ}/configargs.h
+gcc.d gcc.o: specs.h ${BACKENDOBJ}/configargs.h ${GNUHOSTDIST}/gcc/BASE-VER
+prefix.d prefix.o: ${GNUHOSTDIST}/gcc/BASE-VER
 
 ${SRCS}: ${GCCARCH}/defs.mk
 

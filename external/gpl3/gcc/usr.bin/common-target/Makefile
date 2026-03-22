@@ -7,8 +7,8 @@ LIBISPRIVATE=	yes
 
 LIB=		common-target
 
-SRCS=		prefix.c params.c opts.c opts-common.c options.c vec.c \
-		hooks.c common-targhooks.c hash-table.c file-find.c \
+SRCS=		prefix.cc params.c opts.cc opts-common.cc options.c vec.cc \
+		hooks.cc common-targhooks.cc hash-table.cc file-find.cc \
 		${G_common_out_file:T}
 
 CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
@@ -19,8 +19,9 @@ CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
 		-DCONFIGURE_SPECS="\"\"" \
 		-I${BACKENDOBJ}
 
-COPTS.prefix.c=		-Wno-stack-protector
-COPTS.opts-common.c=	-Wno-stack-protector
+COPTS.prefix.cc=	-Wno-stack-protector
+COPTS.opts-common.cc=	-Wno-stack-protector
+CPPFLAGS.prefix.cc+=	-DBASEVER=${BASEVERSTR}
 
 GENPROG_ERROR_DEPENDS=errors.lo
 
@@ -30,6 +31,7 @@ GENPROG_ERROR_DEPENDS=errors.lo
 ${SRCS}: ${GCCARCH}/defs.mk
 
 ${G_common_out_file:T:R}.o:  common/common-target-hooks-def.h
+prefix.d prefix.o: ${GNUHOSTDIST}/gcc/BASE-VER
 
 DPSRCS+=	options.h
 

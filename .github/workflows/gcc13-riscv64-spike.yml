@@ -190,6 +190,7 @@ jobs:
             "https://mirrors.tuna.tsinghua.edu.cn/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
             "https://mirrors.ustc.edu.cn/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
             "https://mirrors.aliyun.com/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
+            "https://github.com/gcc-mirror/gcc/archive/refs/tags/releases/gcc-${gcc_ver}.tar.gz"
             "https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
             "https://sourceware.org/pub/gcc/releases/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
             "https://ftp.gnu.org/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
@@ -198,14 +199,28 @@ jobs:
           fetched=0
           for src_url in "${src_urls[@]}"; do
             echo "Fetching ${src_url}"
-            rm -f "${workdir}/gcc.tar.xz"
+            case "${src_url}" in
+              *.tar.gz) archive="${workdir}/gcc.tar.gz" ;;
+              *.tar.xz) archive="${workdir}/gcc.tar.xz" ;;
+              *)
+                echo "Unsupported archive format in ${src_url}" >&2
+                continue
+                ;;
+            esac
+            rm -f "${workdir}/gcc.tar.xz" "${workdir}/gcc.tar.gz"
             rm -rf "${workdir}/gcc-${gcc_ver}"
             if curl -L --fail --retry 5 --retry-delay 3 --retry-all-errors \
               --connect-timeout 60 --max-time 1800 \
-              -o "${workdir}/gcc.tar.xz" "${src_url}"; then
+              -o "${archive}" "${src_url}"; then
               echo "Extracting gcc-${gcc_ver}"
-              if xz -dc "${workdir}/gcc.tar.xz" | tar -C "${workdir}" -xf -; then
+              if tar -C "${workdir}" -xf "${archive}"; then
                 if [[ -d "${workdir}/gcc-${gcc_ver}" ]]; then
+                  fetched=1
+                  break
+                fi
+                extracted_dir="$(find "${workdir}" -mindepth 1 -maxdepth 1 -type d -name 'gcc-*' | head -n1)"
+                if [[ -n "${extracted_dir}" ]]; then
+                  mv "${extracted_dir}" "${workdir}/gcc-${gcc_ver}"
                   fetched=1
                   break
                 fi

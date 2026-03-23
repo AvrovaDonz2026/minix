@@ -22,6 +22,40 @@ HOSTPROG_CXX=	1
 
 .include <bsd.prog.mk>
 
+# GCC13 expects generated backend headers from the backend objdir, but these
+# programs still search GCCARCH first. Stage the generated headers locally so
+# they win deterministically during dep generation and compilation.
+DPSRCS+=	config.h auto-host.h tm.h options.h version.h bversion.h
+.NOPATH:	config.h auto-host.h tm.h options.h version.h bversion.h
+CLEANFILES+=	config.h auto-host.h tm.h options.h version.h bversion.h
+
+config.h: ${BACKENDOBJ}/config.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+auto-host.h: ${BACKENDOBJ}/auto-host.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+tm.h: ${BACKENDOBJ}/tm.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+options.h: ${BACKENDOBJ}/options.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+version.h: ${BACKENDOBJ}/version.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+bversion.h: ${BACKENDOBJ}/bversion.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: \
+	config.h auto-host.h tm.h options.h
+
 # Force using C++ for this
 HOST_CC:=	${HOST_CXX}
 CC:=		${CXX}

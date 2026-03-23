@@ -188,7 +188,10 @@ jobs:
 
           src_urls=(
             "https://mirrors.tuna.tsinghua.edu.cn/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
+            "https://mirrors.ustc.edu.cn/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
+            "https://mirrors.aliyun.com/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
             "https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
+            "https://sourceware.org/pub/gcc/releases/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
             "https://ftp.gnu.org/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
             "https://ftpmirror.gnu.org/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
           )
@@ -198,7 +201,7 @@ jobs:
             rm -f "${workdir}/gcc.tar.xz"
             rm -rf "${workdir}/gcc-${gcc_ver}"
             if curl -L --fail --retry 5 --retry-delay 3 --retry-all-errors \
-              --connect-timeout 20 --max-time 900 \
+              --connect-timeout 60 --max-time 1800 \
               -o "${workdir}/gcc.tar.xz" "${src_url}"; then
               echo "Extracting gcc-${gcc_ver}"
               if xz -dc "${workdir}/gcc.tar.xz" | tar -C "${workdir}" -xf -; then

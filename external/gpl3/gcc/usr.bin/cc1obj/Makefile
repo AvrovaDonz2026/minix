@@ -2,10 +2,10 @@
 
 MYOBJS=		${G_OBJC_OBJS} ${G_C_AND_OBJC_OBJS} 
 PROG=		cc1obj
-SRCS=		${MYOBJS:S,objc/,,:S,c-family/,,:S,c/,,:Nlibcpp.a:.o=.c} main.c ${PROG}-checksum.c
+SRCS=		${MYOBJS:S,objc/,,:S,c-family/,,:S,c/,,:Nlibcpp.a:.o=.cc} main.cc ${PROG}-checksum.c
 
 CPPFLAGS+=	-I${DIST}/gcc/objc
-CPPFLAGS.prefix.c+=	-DPREFIX=\"/usr\"
+CPPFLAGS.prefix.cc+=	-DPREFIX=\"/usr\"
 
 .include "../Makefile.backend"
 .include "../Makefile.backtrace"
@@ -32,21 +32,21 @@ CHECKSUM_OBJS=	${BACKENDOBJ}/libbackend.a \
 # LDFLAGS+=	-rdynamic
 
 # VER_CPPFLAGS from Makefile.inc
-CPPFLAGS.c-cppbuiltin.c=	${VER_CPPFLAGS}
-c-cppbuiltin.c: ${GCCARCH}/defs.mk
+CPPFLAGS.c-cppbuiltin.cc=	${VER_CPPFLAGS}
+c-cppbuiltin.cc: ${GCCARCH}/defs.mk
 
-COPTS.c-ada-spec.c+=			-Wno-stack-protector
-COPTS.c-aux-info.c+=			-Wno-stack-protector
-COPTS.c-common.c+=			-Wno-stack-protector
-COPTS.c-cppbuiltin.c+=			-Wno-stack-protector
-COPTS.c-format.c+=			-Wno-stack-protector
-COPTS.c-lex.c+=				-Wno-stack-protector
-COPTS.c-ppoutput.c+=			-Wno-stack-protector
-COPTS.c-pragma.c+=			-Wno-stack-protector
-COPTS.c-typeck.c+=			-Wno-stack-protector
-COPTS.objc-act.c+=			-Wno-stack-protector
-COPTS.objc-gnu-runtime-abi-01.c+=	-Wno-stack-protector
-COPTS.objc-next-runtime-abi-01.c+=	-Wno-stack-protector
+COPTS.c-ada-spec.cc+=			-Wno-stack-protector
+COPTS.c-aux-info.cc+=			-Wno-stack-protector
+COPTS.c-common.cc+=			-Wno-stack-protector
+COPTS.c-cppbuiltin.cc+=			-Wno-stack-protector
+COPTS.c-format.cc+=			-Wno-stack-protector
+COPTS.c-lex.cc+=				-Wno-stack-protector
+COPTS.c-ppoutput.cc+=			-Wno-stack-protector
+COPTS.c-pragma.cc+=			-Wno-stack-protector
+COPTS.c-typeck.cc+=			-Wno-stack-protector
+COPTS.objc-act.cc+=			-Wno-stack-protector
+COPTS.objc-gnu-runtime-abi-01.cc+=	-Wno-stack-protector
+COPTS.objc-next-runtime-abi-01.cc+=	-Wno-stack-protector
 
 .if defined(__MINIX)
 LDADD+=	${LIBMPC} ${LIBMPFR} ${LIBGMP} -lintl -lz -lm

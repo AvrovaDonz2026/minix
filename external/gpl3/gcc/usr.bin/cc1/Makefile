@@ -1,7 +1,7 @@
 #	$NetBSD: Makefile,v 1.9 2014/05/31 22:55:17 mrg Exp $
 
 PROG=		cc1
-SRCS=		${G_C_OBJS:S,c-family/,,:S,c/,,:Nlibcpp.a:.o=.c} main.c ${PROG}-checksum.c
+SRCS=		${G_C_OBJS:S,c-family/,,:S,c/,,:Nlibcpp.a:.o=.cc} main.cc ${PROG}-checksum.c
 CPPFLAGS+=	-DPREFIX=\"/usr\"
 
 .include "../Makefile.backend"
@@ -29,22 +29,22 @@ CHECKSUM_OBJS=	${BACKENDOBJ}/libbackend.a \
 # LDFLAGS+=	-rdynamic
 
 # VER_CPPFLAGS from Makefile.inc
-CPPFLAGS.c-cppbuiltin.c=	${VER_CPPFLAGS}
-c-cppbuiltin.c: ${GCCARCH}/defs.mk
+CPPFLAGS.c-cppbuiltin.cc=	${VER_CPPFLAGS}
+c-cppbuiltin.cc: ${GCCARCH}/defs.mk
 
-COPTS.c-ada-spec.c=	-Wno-stack-protector
-COPTS.c-aux-info.c=	-Wno-stack-protector
-COPTS.c-common.c=	-Wno-stack-protector
-COPTS.c-cppbuiltin.c=	-Wno-stack-protector
-COPTS.c-format.c=	-Wno-stack-protector
+COPTS.c-ada-spec.cc=	-Wno-stack-protector
+COPTS.c-aux-info.cc=	-Wno-stack-protector
+COPTS.c-common.cc=	-Wno-stack-protector
+COPTS.c-cppbuiltin.cc=	-Wno-stack-protector
+COPTS.c-format.cc=	-Wno-stack-protector
 COPTS.c-format.h=	-Wno-stack-protector
-COPTS.c-lex.c=		-Wno-stack-protector
-COPTS.c-opts.c=		-Wno-stack-protector
-COPTS.c-ppoutput.c=	-Wno-stack-protector
-COPTS.c-pragma.c=	-Wno-stack-protector
-COPTS.c-typeck.c=	-Wno-stack-protector
+COPTS.c-lex.cc=		-Wno-stack-protector
+COPTS.c-opts.cc=		-Wno-stack-protector
+COPTS.c-ppoutput.cc=	-Wno-stack-protector
+COPTS.c-pragma.cc=	-Wno-stack-protector
+COPTS.c-typeck.cc=	-Wno-stack-protector
 
-CPPFLAGS.default-c.c+=	-I${BACKENDOBJ}
+CPPFLAGS.default-c.cc+=	-I${BACKENDOBJ}
 
 .if defined(__MINIX)
 LDADD+=	${LIBMPC} ${LIBMPFR} ${LIBGMP} -lintl -lz -lm

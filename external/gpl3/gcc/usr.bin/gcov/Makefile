@@ -3,7 +3,7 @@
 .include <bsd.own.mk>
 
 PROG=           gcov
-SRCS=		${G_GCOV_OBJS:.o=.c}
+SRCS=		${G_GCOV_OBJS:.o=.cc}
 
 CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 

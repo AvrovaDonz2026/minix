@@ -4,7 +4,7 @@ LIBISPRIVATE=	yes
 
 LIB=		cpp
 
-SRCS=		${G_libcpp_a_OBJS:.o=.c}
+SRCS=		${G_libcpp_a_OBJS:.o=.cc}
 
 CPPFLAGS+=	-I${.CURDIR} -I${.CURDIR}/arch/${GCC_MACHINE_ARCH} \
 		-I${GCCARCH} -I${BACKENDOBJ} -I. \

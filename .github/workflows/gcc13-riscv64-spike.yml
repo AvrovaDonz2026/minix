@@ -213,7 +213,14 @@ jobs:
               --connect-timeout 60 --max-time 1800 \
               -o "${archive}" "${src_url}"; then
               echo "Extracting gcc-${gcc_ver}"
-              if tar -C "${workdir}" -xf "${archive}"; then
+              if tar -C "${workdir}" \
+                --exclude='*/testsuite' \
+                --exclude='*/testsuite/*' \
+                --exclude='*/doc/html' \
+                --exclude='*/doc/html/*' \
+                --exclude='*/doc/xml/images' \
+                --exclude='*/doc/xml/images/*' \
+                -xf "${archive}"; then
                 if [[ -d "${workdir}/gcc-${gcc_ver}" ]]; then
                   fetched=1
                   break

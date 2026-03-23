@@ -20,9 +20,13 @@ CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
 		-DCONFIGURE_SPECS="\"\"" \
 		-I${BACKENDOBJ}
 
+TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
+
 DPSRCS+=	options.h config.h auto-host.h version.h bversion.h
-.NOPATH:	config.h auto-host.h version.h bversion.h
-CLEANFILES+=	config.h auto-host.h version.h bversion.h
+DPSRCS+=	tm.h
+.NOPATH:	config.h auto-host.h version.h bversion.h tm.h
+CLEANFILES+=	config.h auto-host.h version.h bversion.h tm.h
 
 COPTS.prefix.cc=	-Wno-stack-protector
 COPTS.opts-common.cc=	-Wno-stack-protector
@@ -51,10 +55,14 @@ bversion.h: ${BACKENDOBJ}/bversion.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
+tm.h: ${TOOLSGCCBUILD}/tm.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
 ${G_common_out_file:T:R}.o:  common/common-target-hooks-def.h
 prefix.d prefix.o: ${GNUHOSTDIST}/gcc/BASE-VER
 opts.d opts.o: version.h bversion.h
-${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: config.h auto-host.h
+${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: config.h auto-host.h tm.h
 
 HOST_CPPFLAGS+=	-I${BACKENDOBJ} -I${GCCARCH} -I. -I${DIST}/include -I${DIST}/gcc
 HOST_CPPFLAGS+=	-DGENERATOR_FILE

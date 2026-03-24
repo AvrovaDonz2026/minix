@@ -34,6 +34,7 @@ CHECKSUM_OBJS=	${BACKENDOBJ}/libbackend.a \
 # VER_CPPFLAGS from Makefile.inc
 CPPFLAGS.c-cppbuiltin.cc=	${VER_CPPFLAGS}
 c-cppbuiltin.cc: ${GCCARCH}/defs.mk
+default-c.o: ${DIST}/gcc/config/default-c.cc
 
 COPTS.c-ada-spec.cc+=			-Wno-stack-protector
 COPTS.c-aux-info.cc+=			-Wno-stack-protector

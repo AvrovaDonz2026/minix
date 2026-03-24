@@ -34,6 +34,7 @@ CHECKSUM_OBJS= ${LIBBACKTRACEOBJ}/libbacktrace.a \
 ## VER_CPPFLAGS from Makefile.inc
 #CPPFLAGS.c-cppbuiltin.c=	${VER_CPPFLAGS}
 #c-cppbuiltin.c: ${GCCARCH}/defs.mk
+default-c.o: ${DIST}/gcc/config/default-c.cc
 
 # YUCK.  but see timevar.h:POP_TIMEVAR_AND_RETURN
 CFLAGS+=	-Wno-error # not good enough: -Wno-return-type

@@ -45,6 +45,7 @@ COPTS.c-pragma.cc=	-Wno-stack-protector
 COPTS.c-typeck.cc=	-Wno-stack-protector
 
 CPPFLAGS.default-c.cc+=	-I${BACKENDOBJ}
+default-c.o: ${DIST}/gcc/config/default-c.cc
 
 .if defined(__MINIX)
 LDADD+=	${LIBMPC} ${LIBMPFR} ${LIBGMP} -lintl -lz -lm

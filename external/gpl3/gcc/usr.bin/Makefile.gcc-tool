@@ -50,8 +50,6 @@ ${SRCS:.cc=.d} ${SRCS:.cc=.o}: config.h auto-host.h
 BINDIR=		/usr/bin
 NOMAN=		# defined
 
-.include <bsd.prog.mk>
-
 # Force using C++ for this
 HOST_CC:=	${HOST_CXX}
 CC:=		${CXX}
@@ -66,3 +64,5 @@ CFLAGS:=	${CXXFLAGS}
 COPTS+=		-Wno-stack-protector
 
 .PATH: ${DIST}/gcc
+
+.include <bsd.prog.mk>

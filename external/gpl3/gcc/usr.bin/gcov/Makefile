@@ -13,8 +13,6 @@ MAN=		gcov.1
 
 HOSTPROG_CXX=	1
 
-.include <bsd.prog.mk>
-
 TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 
@@ -69,3 +67,5 @@ LDADD+=		-lintl
 DPADD+=		${LIBINTL}
 
 .PATH: ${DIST}/gcc
+
+.include <bsd.prog.mk>

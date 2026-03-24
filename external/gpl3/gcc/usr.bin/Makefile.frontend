@@ -28,9 +28,9 @@ TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 
 # GCC13 frontends include generated backend headers directly (config.h, tm.h,
 # version.h, etc). Stage them locally so they win over stale GCCARCH copies.
-DPSRCS+=	config.h auto-host.h tm.h options.h version.h bversion.h
-.NOPATH:	config.h auto-host.h tm.h options.h version.h bversion.h
-CLEANFILES+=	config.h auto-host.h tm.h options.h version.h bversion.h
+DPSRCS+=	config.h auto-host.h tm.h options.h version.h bversion.h configargs.h
+.NOPATH:	config.h auto-host.h tm.h options.h version.h bversion.h configargs.h
+CLEANFILES+=	config.h auto-host.h tm.h options.h version.h bversion.h configargs.h
 
 config.h: ${TOOLSGCCBUILD}/config.h
 	rm -f ${.TARGET}
@@ -58,6 +58,10 @@ options.h: ${TOOLSGCCBUILD}/options.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
+configargs.h: ${TOOLSGCCBUILD}/configargs.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
 version.h: ${TOOLSGCCBUILD}/version.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
@@ -67,7 +71,7 @@ bversion.h: ${TOOLSGCCBUILD}/bversion.h
 	cp ${.ALLSRC} ${.TARGET}
 
 ${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: \
-	config.h auto-host.h tm.h options.h
+	config.h auto-host.h tm.h options.h configargs.h
 
 # Force using C++ for this
 HOST_CC:=	${HOST_CXX}

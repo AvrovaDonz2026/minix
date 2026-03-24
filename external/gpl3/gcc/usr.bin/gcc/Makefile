@@ -41,7 +41,7 @@ DPADD+=		${LIBINTL}
 .include "../Makefile.frontend"
 
 ${SRCS}: ${GCCARCH}/defs.mk
-gcc.d gcc.o: ${FRONTENDOBJ}/specs.h ${BACKENDOBJ}/configargs.h ${GNUHOSTDIST}/gcc/BASE-VER
+gcc.d gcc.o: ${FRONTENDOBJ}/specs.h ${FRONTENDOBJ}/configargs.h ${GNUHOSTDIST}/gcc/BASE-VER
 
 .include <bsd.info.mk>
 

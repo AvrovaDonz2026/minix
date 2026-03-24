@@ -46,6 +46,16 @@ config.h: ${TOOLSGCCBUILD}/config.h
 auto-host.h: ${TOOLSGCCBUILD}/auto-host.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
+	{ \
+		for fn in ${GCC13_TARGET_STDIO_UNLOCKED_MISSING}; do \
+			echo "#undef HAVE_$${fn}_UNLOCKED"; \
+			echo "#undef HAVE_DECL_$${fn}_UNLOCKED"; \
+		done; \
+		for fn in ${GCC13_TARGET_MALLOC_INFO_MISSING}; do \
+			echo "#undef HAVE_$${fn}"; \
+			echo "#undef HAVE_DECL_$${fn}"; \
+		done; \
+	} >> ${.TARGET}
 
 version.h: ${TOOLSGCCBUILD}/version.h
 	rm -f ${.TARGET}

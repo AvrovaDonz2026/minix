@@ -23,33 +23,36 @@ HOSTPROG_CXX=	1
 
 .include <bsd.prog.mk>
 
+TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
+
 # GCC13 frontends include generated backend headers directly (config.h, tm.h,
 # version.h, etc). Stage them locally so they win over stale GCCARCH copies.
 DPSRCS+=	config.h auto-host.h tm.h options.h version.h bversion.h
 .NOPATH:	config.h auto-host.h tm.h options.h version.h bversion.h
 CLEANFILES+=	config.h auto-host.h tm.h options.h version.h bversion.h
 
-config.h: ${BACKENDOBJ}/config.h
+config.h: ${TOOLSGCCBUILD}/config.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-auto-host.h: ${BACKENDOBJ}/auto-host.h
+auto-host.h: ${TOOLSGCCBUILD}/auto-host.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-tm.h: ${BACKENDOBJ}/tm.h
+tm.h: ${TOOLSGCCBUILD}/tm.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-options.h: ${BACKENDOBJ}/options.h
+options.h: ${TOOLSGCCBUILD}/options.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-version.h: ${BACKENDOBJ}/version.h
+version.h: ${TOOLSGCCBUILD}/version.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-bversion.h: ${BACKENDOBJ}/bversion.h
+bversion.h: ${TOOLSGCCBUILD}/bversion.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 

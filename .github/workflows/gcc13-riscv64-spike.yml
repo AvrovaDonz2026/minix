@@ -213,8 +213,6 @@ jobs:
           if [[ "${fetched:-0}" == "1" ]]; then
             rm -rf "${workdir}/gcc-${gcc_ver}"
             if ! tar -C "${workdir}" \
-              --exclude='*/testsuite' \
-              --exclude='*/testsuite/*' \
               --exclude='*/doc/html' \
               --exclude='*/doc/html/*' \
               --exclude='*/doc/xml/images' \
@@ -260,8 +258,6 @@ jobs:
               -o "${archive}" "${src_url}"; then
               echo "Extracting gcc-${gcc_ver}"
               if tar -C "${workdir}" \
-                --exclude='*/testsuite' \
-                --exclude='*/testsuite/*' \
                 --exclude='*/doc/html' \
                 --exclude='*/doc/html/*' \
                 --exclude='*/doc/xml/images' \

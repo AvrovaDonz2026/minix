@@ -11,6 +11,7 @@ CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} \
 		${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 
 .include <bsd.own.mk>
+.include "Makefile.hostprobes"
 
 DPADD+=			${BACKENDOBJ}/libbackend.a
 LDADD+=			${BACKENDOBJ}/libbackend.a

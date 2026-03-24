@@ -8,6 +8,7 @@ CPPFLAGS+=	-I${GCCARCH} -I${FRONTENDOBJ} \
 
 NOCTF=	# defined
 .include <bsd.own.mk>
+.include "Makefile.hostprobes"
 
 DPADD+=			${FRONTENDOBJ}/libfrontend.a
 LDADD+=			-L${FRONTENDOBJ} -lfrontend

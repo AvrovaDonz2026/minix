@@ -1,6 +1,7 @@
 #	$NetBSD: Makefile,v 1.5 2014/03/05 21:37:02 tron Exp $
 
 .include <bsd.own.mk>
+.include "../Makefile.hostprobes"
 
 PROG=           gcov
 SRCS=		${G_GCOV_OBJS:.o=.cc}

@@ -42,6 +42,7 @@ G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
 .NOPATH: configargs.h multilib.h pass-instances.def case-cfn-macros.h cfn-operators.pd
 
 .include <bsd.lib.mk>
+.include "../Makefile.hostprobes"
 
 # Force using C++ for this
 ORIGHOST_CC:=	${HOST_CC}
@@ -93,16 +94,6 @@ HH=		${HH_NORTL} genrtl.h insn-modes.h insn-modes-inline.h
 TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 CPPFLAGS+=	-I${TOOLSGCCBUILD}
-
-# GCC13's host auto-detection enables many stdio *_unlocked helpers from the
-# build host. The target/backend lane compiles with the MINIX target sysroot,
-# which only exposes getc/putc/getchar/putchar_unlocked and lacks the rest.
-# Trim the unavailable helpers here so gcc/system.h does not remap stdio calls
-# to undeclared target interfaces.
-GCC13_TARGET_STDIO_UNLOCKED_MISSING= \
-	CLEARERR FEOF FERROR FFLUSH FGETC FGETS FILENO FPRINTF \
-	FPUTC FPUTS FREAD FWRITE
-GCC13_TARGET_MALLOC_INFO_MISSING=	MALLINFO MALLINFO2 STRVERSCMP
 
 # GCC13 carries many backend helper prerequisites as bare basenames in the
 # generated defs. Canonicalize the source-tree headers here so host helper

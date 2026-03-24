@@ -4,6 +4,7 @@ LIBISPRIVATE=	yes
 
 # For ../Makefile.inc and bsd.own.mk
 .include <bsd.init.mk>
+.include "../Makefile.hostprobes"
 
 LIB=		common
 

@@ -19,6 +19,7 @@ CPPFLAGS= \
 # ${SRCS}: ${GCCARCH}/defs.mk
 
 CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
+.include "Makefile.hostprobes"
 
 TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc

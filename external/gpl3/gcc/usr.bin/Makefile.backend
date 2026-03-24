@@ -20,8 +20,6 @@ LDADD+=			${BACKENDOBJ}/libbackend.a
 
 HOSTPROG_CXX=	1
 
-.include <bsd.prog.mk>
-
 TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 
@@ -86,5 +84,7 @@ LIBMPCDIR!=	cd ${NETBSDSRCDIR}/external/lgpl3/mpc/lib/libmpc && ${PRINTOBJDIR}
 LIBGMP=		${LIBGMPDIR}/libgmp.a
 LIBMPFR=	${LIBMPFRDIR}/libmpfr.a
 LIBMPC=		${LIBMPCDIR}/libmpc.a
+
+.include <bsd.prog.mk>
 
 .endif

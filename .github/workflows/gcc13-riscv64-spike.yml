@@ -169,6 +169,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          find /tmp -mindepth 1 -maxdepth 1 \
+            \( -name 'gcc13-*' -o -name 'gcc-*' -o -name 'tmp.*' -o -name 'cc*' \) \
+            -exec rm -rf {} + 2>/dev/null || true
           build_tmp="${PWD}/.tmp-gcc13-run"
           log_dir="${PWD}/.tmp-gcc13-logs"
           mkdir -p "${build_tmp}"

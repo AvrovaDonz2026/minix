@@ -165,6 +165,17 @@ jobs:
           echo "TOOLS_BUILD_JOBS=${tools_jobs}" >>"${GITHUB_ENV}"
           echo "WORLD_BUILD_JOBS=${world_jobs}" >>"${GITHUB_ENV}"
 
+      - name: Prepare build tempdir
+        shell: bash
+        run: |
+          set -euo pipefail
+          build_tmp="${PWD}/.tmp-gcc13-run"
+          mkdir -p "${build_tmp}"
+          echo "TMPDIR=${build_tmp}" >>"${GITHUB_ENV}"
+          echo "TMP=${build_tmp}" >>"${GITHUB_ENV}"
+          echo "TEMP=${build_tmp}" >>"${GITHUB_ENV}"
+          echo "Using TMPDIR=${build_tmp}"
+
       - name: Overlay GCC dist with upstream GCC 13
         shell: bash
         run: |

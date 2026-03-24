@@ -1,7 +1,7 @@
 #	$NetBSD: Makefile.gcc-tool,v 1.2 2014/05/31 22:55:16 mrg Exp $
 
 PROG=	gcc-${GCC_TOOL}
-SRCS=	gcc-ar.cc file-find.cc
+SRCS=	gcc-${GCC_TOOL}.cc file-find.cc
 
 CPPFLAGS= \
 	-DPERSONALITY=\"${GCC_TOOL}\" \
@@ -26,6 +26,9 @@ TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 DPSRCS+=	config.h auto-host.h
 .NOPATH:	config.h auto-host.h
 CLEANFILES+=	config.h auto-host.h
+.if ${GCC_TOOL} != "ar"
+CLEANFILES+=	gcc-${GCC_TOOL}.cc
+.endif
 
 config.h: ${TOOLSGCCBUILD}/config.h
 	rm -f ${.TARGET}
@@ -44,6 +47,12 @@ auto-host.h: ${TOOLSGCCBUILD}/auto-host.h
 			echo "#undef HAVE_DECL_$${fn}"; \
 		done; \
 	} >> ${.TARGET}
+
+.if ${GCC_TOOL} != "ar"
+gcc-${GCC_TOOL}.cc: ${DIST}/gcc/gcc-ar.cc
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+.endif
 
 ${SRCS:.cc=.d} ${SRCS:.cc=.o}: config.h auto-host.h
 

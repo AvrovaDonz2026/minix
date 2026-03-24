@@ -28,20 +28,7 @@ CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
 		-DDEFAULT_TARGET_MACHINE=\"${MACHINE_GNU_PLATFORM}\" \
 		-DCONFIGURE_SPECS="\"\""
 HOST_CPPFLAGS+=	-I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
-FRONTEND_DRIVER_DEFINES= \
-		-DDEFAULT_REAL_TARGET_MACHINE=\"${MACHINE_GNU_PLATFORM}\" \
-		-DSTANDARD_LIBEXEC_PREFIX=\"/usr/libexec/\" \
-		-DSTANDARD_BINDIR_PREFIX=\"/usr/bin\" \
-		-DTOOLDIR_BASE_PREFIX=\"../\" \
-		-DACCEL_DIR_SUFFIX=\"\" \
-		-DENABLE_OFFLOADING=0 \
-		-DOFFLOAD_TARGETS=\"\"
-CPPFLAGS.gcc.cc+=	${FRONTEND_DRIVER_DEFINES} -DBASEVER=${BASEVERSTR}
 CPPFLAGS.prefix.cc+=	-DBASEVER=${BASEVERSTR}
-
-DPSRCS+=	specs.h
-
-gcc.d gcc.o: specs.h ${BACKENDOBJ}/configargs.h ${GNUHOSTDIST}/gcc/BASE-VER
 prefix.d prefix.o: ${GNUHOSTDIST}/gcc/BASE-VER
 
 ${SRCS}: ${GCCARCH}/defs.mk
@@ -62,10 +49,3 @@ CFLAGS+=	-Wno-stack-protector
 CPPFLAGS+=	-I../backend
 
 .PATH: ${DIST}/gcc ${DIST}/gcc/common
-
-# Build the specs.h file
-CLEANFILES+=	specs.h
-specs.h: Makefile
-	lsf="${G_lang_specs_files}"; for f in $$lsf; do \
-		echo "#include \"$$f\""; \
-	done | sed 's|${DIST}/gcc/||' > specs.h

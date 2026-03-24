@@ -185,6 +185,8 @@ jobs:
 
           workdir="$(mktemp -d)"
           trap 'rm -rf "${workdir}"' EXIT
+          cache_dir="${HOME}/.cache/minix-gcc-src"
+          mkdir -p "${cache_dir}"
 
           src_urls=(
             "https://mirrors.tuna.tsinghua.edu.cn/gnu/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
@@ -197,11 +199,55 @@ jobs:
             "https://ftpmirror.gnu.org/gcc/gcc-${gcc_ver}/gcc-${gcc_ver}.tar.xz"
           )
           fetched=0
+          for cached_archive in \
+            "${cache_dir}/gcc-${gcc_ver}.tar.xz" \
+            "${cache_dir}/gcc-${gcc_ver}.tar.gz"; do
+            if [[ -f "${cached_archive}" ]]; then
+              echo "Reusing cached GCC source archive ${cached_archive}"
+              archive="${workdir}/$(basename "${cached_archive}")"
+              cp -f "${cached_archive}" "${archive}"
+              fetched=1
+              break
+            fi
+          done
+          if [[ "${fetched:-0}" == "1" ]]; then
+            rm -rf "${workdir}/gcc-${gcc_ver}"
+            if ! tar -C "${workdir}" \
+              --exclude='*/testsuite' \
+              --exclude='*/testsuite/*' \
+              --exclude='*/doc/html' \
+              --exclude='*/doc/html/*' \
+              --exclude='*/doc/xml/images' \
+              --exclude='*/doc/xml/images/*' \
+              -xf "${archive}"; then
+              echo "Cached archive ${cached_archive} is corrupt; removing it" >&2
+              rm -f "${cached_archive}" "${archive}"
+              fetched=0
+            fi
+            if [[ "${fetched:-0}" == "1" && ! -d "${workdir}/gcc-${gcc_ver}" ]]; then
+              extracted_dir="$(find "${workdir}" -mindepth 1 -maxdepth 1 -type d -name 'gcc-*' | head -n1)"
+              if [[ -n "${extracted_dir}" ]]; then
+                mv "${extracted_dir}" "${workdir}/gcc-${gcc_ver}"
+              else
+                echo "Cached archive extracted without gcc-${gcc_ver} directory; ignoring cache" >&2
+                fetched=0
+              fi
+            fi
+          fi
           for src_url in "${src_urls[@]}"; do
+            if [[ "${fetched:-0}" == "1" ]]; then
+              break
+            fi
             echo "Fetching ${src_url}"
             case "${src_url}" in
-              *.tar.gz) archive="${workdir}/gcc.tar.gz" ;;
-              *.tar.xz) archive="${workdir}/gcc.tar.xz" ;;
+              *.tar.gz)
+                archive="${workdir}/gcc.tar.gz"
+                cache_archive="${cache_dir}/gcc-${gcc_ver}.tar.gz"
+                ;;
+              *.tar.xz)
+                archive="${workdir}/gcc.tar.xz"
+                cache_archive="${cache_dir}/gcc-${gcc_ver}.tar.xz"
+                ;;
               *)
                 echo "Unsupported archive format in ${src_url}" >&2
                 continue
@@ -222,12 +268,14 @@ jobs:
                 --exclude='*/doc/xml/images/*' \
                 -xf "${archive}"; then
                 if [[ -d "${workdir}/gcc-${gcc_ver}" ]]; then
+                  cp -f "${archive}" "${cache_archive}"
                   fetched=1
                   break
                 fi
                 extracted_dir="$(find "${workdir}" -mindepth 1 -maxdepth 1 -type d -name 'gcc-*' | head -n1)"
                 if [[ -n "${extracted_dir}" ]]; then
                   mv "${extracted_dir}" "${workdir}/gcc-${gcc_ver}"
+                  cp -f "${archive}" "${cache_archive}"
                   fetched=1
                   break
                 fi

@@ -39,19 +39,19 @@ GENPROG_ERROR_DEPENDS=errors.lo
 
 ${SRCS}: ${GCCARCH}/defs.mk
 
-config.h: ${BACKENDOBJ}/config.h
+config.h: ${TOOLSGCCBUILD}/config.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-auto-host.h: ${BACKENDOBJ}/auto-host.h
+auto-host.h: ${TOOLSGCCBUILD}/auto-host.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-version.h: ${BACKENDOBJ}/version.h
+version.h: ${TOOLSGCCBUILD}/version.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-bversion.h: ${BACKENDOBJ}/bversion.h
+bversion.h: ${TOOLSGCCBUILD}/bversion.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 

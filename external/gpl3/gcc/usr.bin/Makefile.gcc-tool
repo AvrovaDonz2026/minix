@@ -20,15 +20,18 @@ CPPFLAGS= \
 
 CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 
+TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
+
 DPSRCS+=	config.h auto-host.h
 .NOPATH:	config.h auto-host.h
 CLEANFILES+=	config.h auto-host.h
 
-config.h: ${BACKENDOBJ}/config.h
+config.h: ${TOOLSGCCBUILD}/config.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-auto-host.h: ${BACKENDOBJ}/auto-host.h
+auto-host.h: ${TOOLSGCCBUILD}/auto-host.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 

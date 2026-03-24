@@ -26,24 +26,27 @@ MKPICLIB:=	no
 
 HOSTPROG_CXX=	1
 
+TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
+
 COPTS.diagnostic.cc=	-Wno-stack-protector
 COPTS.intl.cc=		-Wno-stack-protector
 
 ${SRCS}: ${GCCARCH}/defs.mk
 
-config.h: ${BACKENDOBJ}/config.h
+config.h: ${TOOLSGCCBUILD}/config.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-auto-host.h: ${BACKENDOBJ}/auto-host.h
+auto-host.h: ${TOOLSGCCBUILD}/auto-host.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-version.h: ${BACKENDOBJ}/version.h
+version.h: ${TOOLSGCCBUILD}/version.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-bversion.h: ${BACKENDOBJ}/bversion.h
+bversion.h: ${TOOLSGCCBUILD}/bversion.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 

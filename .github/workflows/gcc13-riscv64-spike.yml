@@ -170,10 +170,13 @@ jobs:
         run: |
           set -euo pipefail
           build_tmp="${PWD}/.tmp-gcc13-run"
+          log_dir="${PWD}/.tmp-gcc13-logs"
           mkdir -p "${build_tmp}"
+          mkdir -p "${log_dir}"
           echo "TMPDIR=${build_tmp}" >>"${GITHUB_ENV}"
           echo "TMP=${build_tmp}" >>"${GITHUB_ENV}"
           echo "TEMP=${build_tmp}" >>"${GITHUB_ENV}"
+          echo "GCC13_SPIKE_LOG_DIR=${log_dir}" >>"${GITHUB_ENV}"
           echo "Using TMPDIR=${build_tmp}"
 
       - name: Overlay GCC dist with upstream GCC 13
@@ -399,11 +402,11 @@ jobs:
               -V MKCXX=yes \
               -V MKLIBSTDCXX=yes \
               -V GCC13_SPIKE=yes \
-              tools) 2>&1 | tee /tmp/gcc13-spike-tools.log; then
+              tools) 2>&1 | tee "${GCC13_SPIKE_LOG_DIR}/gcc13-spike-tools.log"; then
             if [[ -n "${linkwatch_pid}" ]]; then
               wait "${linkwatch_pid}" || true
             fi
-            echo "gcc13 spike build failed. Inspect /tmp/gcc13-spike-tools.log" >&2
+            echo "gcc13 spike build failed. Inspect ${GCC13_SPIKE_LOG_DIR}/gcc13-spike-tools.log" >&2
             exit 1
           fi
           if [[ -n "${linkwatch_pid}" ]]; then
@@ -838,8 +841,8 @@ jobs:
               -V MKATF=no \
               -V USE_PCI=no \
               -V CHECKFLIST_FLAGS='-m -e' \
-              distribution) 2>&1 | tee /tmp/gcc13-spike-distribution.log; then
-            echo "gcc13 spike distribution build failed. Inspect /tmp/gcc13-spike-distribution.log" >&2
+              distribution) 2>&1 | tee "${GCC13_SPIKE_LOG_DIR}/gcc13-spike-distribution.log"; then
+            echo "gcc13 spike distribution build failed. Inspect ${GCC13_SPIKE_LOG_DIR}/gcc13-spike-distribution.log" >&2
             exit 1
           fi
 
@@ -877,7 +880,7 @@ jobs:
               fi
             done
 
-            smoke_dir="/tmp/gcc13-bootstrap-smoke"
+            smoke_dir="${TMPDIR}/gcc13-bootstrap-smoke"
             rm -rf "${smoke_dir}"
             mkdir -p "${smoke_dir}"
 
@@ -895,7 +898,7 @@ jobs:
             "${cxx}" --sysroot="${destdir}" -I"${destdir}/usr/include" -I"${destdir}/usr/include/g++" -c "${smoke_dir}/hello.cpp" -o "${smoke_dir}/hello.cpp.o"
             "${readelf}" -h "${smoke_dir}/hello.c.o" > "${smoke_dir}/hello.readelf.txt"
             grep -E 'Machine:.*RISC-V' "${smoke_dir}/hello.readelf.txt" >/dev/null
-          } 2>&1 | tee /tmp/gcc13-spike-bootstrap.log
+          } 2>&1 | tee "${GCC13_SPIKE_LOG_DIR}/gcc13-spike-bootstrap.log"
 
       - name: Upload gcc13 spike log
         if: always()
@@ -904,6 +907,6 @@ jobs:
           name: riscv64-gcc13-spike-log-${{ github.run_id }}
           if-no-files-found: warn
           path: |
-            /tmp/gcc13-spike-tools.log
-            /tmp/gcc13-spike-distribution.log
-            /tmp/gcc13-spike-bootstrap.log
+            ${{ env.GCC13_SPIKE_LOG_DIR }}/gcc13-spike-tools.log
+            ${{ env.GCC13_SPIKE_LOG_DIR }}/gcc13-spike-distribution.log
+            ${{ env.GCC13_SPIKE_LOG_DIR }}/gcc13-spike-bootstrap.log

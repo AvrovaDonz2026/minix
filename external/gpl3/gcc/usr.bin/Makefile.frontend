@@ -79,10 +79,9 @@ bversion.h: ${TOOLSGCCBUILD}/bversion.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-specs.h: Makefile
-	lsf="${G_lang_specs_files}"; for f in $$lsf; do \
-		echo "#include \"$$f\""; \
-	done | sed 's|${DIST}/gcc/||' > specs.h
+specs.h: ${TOOLSGCCBUILD}/specs.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
 
 ${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: \
 	config.h auto-host.h tm.h options.h configargs.h

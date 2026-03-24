@@ -183,7 +183,9 @@ jobs:
               ;;
           esac
 
-          workdir="$(mktemp -d)"
+          tmp_root="${RUNNER_TEMP:-${PWD}/.tmp-gcc13-src}"
+          mkdir -p "${tmp_root}"
+          workdir="$(mktemp -d "${tmp_root}/gcc13-src.XXXXXX")"
           trap 'rm -rf "${workdir}"' EXIT
           cache_dir="${HOME}/.cache/minix-gcc-src"
           mkdir -p "${cache_dir}"

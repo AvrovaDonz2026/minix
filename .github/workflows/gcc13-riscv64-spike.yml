@@ -206,8 +206,7 @@ jobs:
             "${cache_dir}/gcc-${gcc_ver}.tar.gz"; do
             if [[ -f "${cached_archive}" ]]; then
               echo "Reusing cached GCC source archive ${cached_archive}"
-              archive="${workdir}/$(basename "${cached_archive}")"
-              cp -f "${cached_archive}" "${archive}"
+              archive="${cached_archive}"
               fetched=1
               break
             fi
@@ -221,7 +220,7 @@ jobs:
               --exclude='*/doc/xml/images/*' \
               -xf "${archive}"; then
               echo "Cached archive ${cached_archive} is corrupt; removing it" >&2
-              rm -f "${cached_archive}" "${archive}"
+              rm -f "${cached_archive}"
               fetched=0
             fi
             if [[ "${fetched:-0}" == "1" && ! -d "${workdir}/gcc-${gcc_ver}" ]]; then

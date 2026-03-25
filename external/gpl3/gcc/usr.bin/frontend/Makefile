@@ -30,7 +30,7 @@ CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
 		-DCONFIGURE_SPECS="\"\""
 HOST_CPPFLAGS+=	-I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 
-TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 
 DPSRCS+=	config.h auto-host.h tm.h options.h version.h bversion.h configargs.h specs.h

@@ -14,7 +14,7 @@ MAN=		gcov.1
 
 HOSTPROG_CXX=	1
 
-TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 
 DPSRCS+=	config.h auto-host.h tm.h version.h bversion.h

@@ -91,7 +91,7 @@ G_BUILD_XM_HEADERS=	${G_build_xm_include_list:S,ansidecl.h,${DIST}/include/ansid
 HH_NORTL=		${G_tm_file_list} ${G_BUILD_XM_HEADERS}
 HH=		${HH_NORTL} genrtl.h insn-modes.h insn-modes-inline.h
 
-TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 CPPFLAGS+=	-I${TOOLSGCCBUILD}
 

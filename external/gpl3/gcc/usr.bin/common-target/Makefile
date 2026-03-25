@@ -21,7 +21,7 @@ CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
 		-DCONFIGURE_SPECS="\"\"" \
 		-I${BACKENDOBJ}
 
-TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 
 DPSRCS+=	options.h config.h auto-host.h version.h bversion.h

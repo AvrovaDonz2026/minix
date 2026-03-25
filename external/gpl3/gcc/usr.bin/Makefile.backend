@@ -21,7 +21,7 @@ LDADD+=			${BACKENDOBJ}/libbackend.a
 
 HOSTPROG_CXX=	1
 
-TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 
 # GCC13 expects generated backend headers from the backend objdir, but these

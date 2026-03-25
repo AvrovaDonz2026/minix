@@ -27,7 +27,7 @@ MKPICLIB:=	no
 
 HOSTPROG_CXX=	1
 
-TOOLSGCCOBJ!=	cd ${TOP}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 
 COPTS.diagnostic.cc=	-Wno-stack-protector

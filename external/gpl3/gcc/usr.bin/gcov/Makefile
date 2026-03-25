@@ -37,6 +37,10 @@ auto-host.h: gcc13-auto-host-force ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../
 			echo "#undef HAVE_$${fn}"; \
 			echo "#undef HAVE_DECL_$${fn}"; \
 		done; \
+		for fn in ${GCC13_TARGET_DECL_FALLBACKS}; do \
+			echo "#undef HAVE_$${fn}"; \
+			echo "#define HAVE_DECL_$${fn} 0"; \
+		done; \
 	} >> ${.TARGET}
 
 tm.h: ${TOOLSGCCBUILD}/tm.h

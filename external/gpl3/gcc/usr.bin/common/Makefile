@@ -39,7 +39,7 @@ config.h: ${TOOLSGCCBUILD}/config.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-auto-host.h: ${TOOLSGCCBUILD}/auto-host.h
+auto-host.h: ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../Makefile.hostprobes
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 	{ \

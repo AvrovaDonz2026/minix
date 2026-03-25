@@ -32,6 +32,7 @@ HOST_CPPFLAGS+=	-I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 
 TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
+GCC_BASEVER_FILE=	${NETBSDSRCDIR}/external/gpl3/gcc/dist/gcc/BASE-VER
 
 DPSRCS+=	config.h auto-host.h tm.h options.h version.h bversion.h configargs.h specs.h
 .NOPATH:	config.h auto-host.h tm.h options.h version.h bversion.h configargs.h specs.h
@@ -96,8 +97,8 @@ CPPFLAGS.gcc.cc+=	${FRONTEND_DRIVER_DEFINES} -DBASEVER=${BASEVERSTR}
 CPPFLAGS.prefix.cc+=	-DBASEVER=${BASEVERSTR}
 
 ${SRCS:.cc=.d} ${SRCS:.cc=.o}: config.h auto-host.h tm.h options.h configargs.h
-gcc.d gcc.o: specs.h ${GNUHOSTDIST}/gcc/BASE-VER
-prefix.d prefix.o: ${GNUHOSTDIST}/gcc/BASE-VER
+gcc.d gcc.o: specs.h ${GCC_BASEVER_FILE}
+prefix.d prefix.o: ${GCC_BASEVER_FILE}
 
 ${SRCS}: ${GCCARCH}/defs.mk
 

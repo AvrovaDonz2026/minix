@@ -23,6 +23,7 @@ CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
 
 TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
+GCC_BASEVER_FILE=	${NETBSDSRCDIR}/external/gpl3/gcc/dist/gcc/BASE-VER
 
 DPSRCS+=	options.h config.h auto-host.h version.h bversion.h
 DPSRCS+=	tm.h
@@ -75,7 +76,7 @@ tm.h: ${TOOLSGCCBUILD}/tm.h
 	cp ${.ALLSRC} ${.TARGET}
 
 ${G_common_out_file:T:R}.o:  common/common-target-hooks-def.h
-prefix.d prefix.o: ${GNUHOSTDIST}/gcc/BASE-VER
+prefix.d prefix.o: ${GCC_BASEVER_FILE}
 opts.d opts.o: version.h bversion.h
 ${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: config.h auto-host.h tm.h
 

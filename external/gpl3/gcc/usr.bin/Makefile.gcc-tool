@@ -37,7 +37,7 @@ config.h: ${TOOLSGCCBUILD}/config.h
 
 auto-host.h: ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/Makefile.hostprobes
 	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
+	cp ${TOOLSGCCBUILD}/auto-host.h ${.TARGET}
 	{ \
 		for fn in ${GCC13_TARGET_STDIO_UNLOCKED_MISSING}; do \
 			echo "#undef HAVE_$${fn}_UNLOCKED"; \

@@ -32,8 +32,10 @@ CHECKSUM_OBJS= ${LIBBACKTRACEOBJ}/libbacktrace.a \
 # LDFLAGS+=   -rdynamic
 
 ## VER_CPPFLAGS from Makefile.inc
-#CPPFLAGS.c-cppbuiltin.c=	${VER_CPPFLAGS}
-#c-cppbuiltin.c: ${GCCARCH}/defs.mk
+CPPFLAGS.c-cppbuiltin.cc=	${VER_CPPFLAGS}
+c-cppbuiltin.cc: ${GCCARCH}/defs.mk
+c-cppbuiltin.d c-cppbuiltin.o: ${BACKENDOBJ}/tm_p.h ${BACKENDOBJ}/configargs.h \
+	${BACKENDOBJ}/gt-c-family-c-cppbuiltin.h
 default-c.o: ${DIST}/gcc/config/default-c.cc
 
 # YUCK.  but see timevar.h:POP_TIMEVAR_AND_RETURN

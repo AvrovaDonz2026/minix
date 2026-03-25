@@ -230,7 +230,7 @@ config.h: ${TOOLSGCCBUILD}/config.h
 		echo '#undef HAVE_ZSTD_H'; \
 	} >> ${.TARGET}
 
-auto-host.h: ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../Makefile.hostprobes
+auto-host.h: gcc13-auto-host-force ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../Makefile.hostprobes
 	${_MKTARGET_CREATE}
 	rm -f ${.TARGET}
 	cp ${TOOLSGCCBUILD}/auto-host.h ${.TARGET}

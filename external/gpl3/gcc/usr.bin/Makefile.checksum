@@ -10,7 +10,8 @@ CLEANFILES+=	${PROG}-checksum.c genchecksum genchecksum.lo checksum-options bcon
 DPSRCS+=	bconfig.h
 .NOPATH:	bconfig.h
 
-CPPFLAGS.genchecksum.c+=	-DGENERATOR_FILE -I${GCCARCH} -I${DIST}/include -I${BACKENDOBJ}
+CPPFLAGS.genchecksum.c+=	-DGENERATOR_FILE -I. -I${GCCARCH} -I${DIST}/include -I${BACKENDOBJ}
+CPPFLAGS.genchecksum.cc+=	${CPPFLAGS.genchecksum.c}
 
 bconfig.h: ${TOOLSGCCBUILD}/bconfig.h
 	rm -f ${.TARGET}

@@ -213,7 +213,7 @@ G_GTFILES:=	${GCC13_BACKEND_G_GTFILES}
 #
 # Generate the various header files we need.
 #
-config.h: ${TOOLSGCCBUILD}/config.h
+config.h: gcc13-config-force ${TOOLSGCCBUILD}/config.h ${.PARSEDIR}/../Makefile.hostprobes
 	${_MKTARGET_CREATE}
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}

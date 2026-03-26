@@ -21,9 +21,20 @@ DPSRCS+=	options.h config.h auto-host.h tm.h version.h bversion.h
 .NOPATH:	options.h config.h auto-host.h tm.h version.h bversion.h
 CLEANFILES+=	options.h config.h auto-host.h tm.h version.h bversion.h
 
-config.h: ${TOOLSGCCBUILD}/config.h
+config.h: gcc13-config-force ${TOOLSGCCBUILD}/config.h ${.PARSEDIR}/../Makefile.hostprobes
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
+	{ \
+		echo '#ifndef CHECKING_P'; \
+		echo '#define CHECKING_P 0'; \
+		echo '#endif'; \
+		echo '#ifndef ENABLE_OFFLOADING'; \
+		echo '#define ENABLE_OFFLOADING 0'; \
+		echo '#endif'; \
+		echo '#ifndef HAVE_AS_LEB128'; \
+		echo '#define HAVE_AS_LEB128 0'; \
+		echo '#endif'; \
+	} >> ${.TARGET}
 
 auto-host.h: gcc13-auto-host-force ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../Makefile.hostprobes
 	rm -f ${.TARGET}

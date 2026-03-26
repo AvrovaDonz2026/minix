@@ -11,4 +11,6 @@ GCC13_TARGET_MALLOC_INFO_MISSING=	MALLINFO MALLINFO2
 GCC13_TARGET_DECL_FALLBACKS=	STRVERSCMP
 
 .PHONY: gcc13-auto-host-force
+.PHONY: gcc13-config-force
 gcc13-auto-host-force:
+gcc13-config-force:

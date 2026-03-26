@@ -27,8 +27,8 @@ GCC_BASEVER_FILE=	${NETBSDSRCDIR}/external/gpl3/gcc/dist/gcc/BASE-VER
 
 DPSRCS+=	options.h config.h auto-host.h version.h bversion.h
 DPSRCS+=	tm.h
-.NOPATH:	config.h auto-host.h version.h bversion.h tm.h
-CLEANFILES+=	config.h auto-host.h version.h bversion.h tm.h
+.NOPATH:	options.h config.h auto-host.h version.h bversion.h tm.h
+CLEANFILES+=	options.h config.h auto-host.h version.h bversion.h tm.h
 
 COPTS.prefix.cc=	-Wno-stack-protector
 COPTS.opts-common.cc=	-Wno-stack-protector
@@ -75,10 +75,18 @@ tm.h: ${TOOLSGCCBUILD}/tm.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
+options.h: optionlist ${DIST}/gcc/opt-functions.awk ${DIST}/gcc/opt-read.awk \
+		      ${DIST}/gcc/opth-gen.awk
+	${TOOL_AWK} -f ${DIST}/gcc/opt-functions.awk \
+		    -f ${DIST}/gcc/opt-read.awk \
+		    -f ${DIST}/gcc/opth-gen.awk \
+		< optionlist > ${.TARGET}
+
 ${G_common_out_file:T:R}.o:  common/common-target-hooks-def.h
 prefix.d prefix.o: ${GCC_BASEVER_FILE}
 opts.d opts.o: version.h bversion.h
-${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: config.h auto-host.h tm.h
+${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: \
+	options.h config.h auto-host.h version.h bversion.h tm.h
 
 HOST_CPPFLAGS+=	-I${BACKENDOBJ} -I${GCCARCH} -I. -I${DIST}/include -I${DIST}/gcc
 HOST_CPPFLAGS+=	-DGENERATOR_FILE

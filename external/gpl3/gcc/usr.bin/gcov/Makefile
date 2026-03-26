@@ -17,9 +17,9 @@ HOSTPROG_CXX=	1
 TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
 TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 
-DPSRCS+=	config.h auto-host.h tm.h version.h bversion.h
-.NOPATH:	config.h auto-host.h tm.h version.h bversion.h
-CLEANFILES+=	config.h auto-host.h tm.h version.h bversion.h
+DPSRCS+=	options.h config.h auto-host.h tm.h version.h bversion.h
+.NOPATH:	options.h config.h auto-host.h tm.h version.h bversion.h
+CLEANFILES+=	options.h config.h auto-host.h tm.h version.h bversion.h
 
 config.h: ${TOOLSGCCBUILD}/config.h
 	rm -f ${.TARGET}
@@ -47,6 +47,10 @@ tm.h: ${TOOLSGCCBUILD}/tm.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
+options.h: ${TOOLSGCCBUILD}/options.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
 version.h: ${TOOLSGCCBUILD}/version.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
@@ -55,7 +59,7 @@ bversion.h: ${TOOLSGCCBUILD}/bversion.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-${SRCS:.cc=.d} ${SRCS:.cc=.o}: config.h auto-host.h tm.h version.h bversion.h
+${SRCS:.cc=.d} ${SRCS:.cc=.o}: options.h config.h auto-host.h tm.h version.h bversion.h
 
 # Force using C++ for this
 HOST_CC:=	${HOST_CXX}

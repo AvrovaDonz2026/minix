@@ -1,7 +1,7 @@
 #	$NetBSD: Makefile,v 1.6 2015/04/17 12:41:46 martin Exp $
 
 PROG=		gcc
-SRCS=		c/gccspec.cc ${G_GCC_OBJS:.o=.cc}
+SRCS=		gccspec.cc ${G_GCC_OBJS:.o=.cc}
 
 CPPFLAGS+=	-I${BACKENDOBJ}
 # GCC13's driver expects the same core driver defines that upstream threads

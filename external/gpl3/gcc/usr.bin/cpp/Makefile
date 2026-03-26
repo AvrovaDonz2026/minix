@@ -10,7 +10,7 @@ PROG=		gcpp
 .else
 PROG=		cpp
 .endif # defined(__MINIX)
-SRCS=		c-family/cppspec.cc ${G_GCC_OBJS:.o=.cc}
+SRCS=		cppspec.cc ${G_GCC_OBJS:.o=.cc}
 
 CPPFLAGS+=	-I${BACKENDOBJ}
 # XXX

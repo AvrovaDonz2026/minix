@@ -22,7 +22,7 @@ HOSTPROG_CXX=	1
 .PATH:		${DIST}/gcc/config/rs6000
 .endif
 
-CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
+CPPFLAGS+=	-I. -I${GCCARCH} -I${BACKENDOBJ} \
 		${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*} \
 		-DPREFIX=\"/usr\" \
 		-DDEFAULT_TARGET_VERSION=\"${G_version}\" \

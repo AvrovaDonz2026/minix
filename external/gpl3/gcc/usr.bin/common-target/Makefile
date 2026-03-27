@@ -13,7 +13,7 @@ SRCS=		prefix.cc opts.cc opts-common.cc options.cc vec.cc \
 		spellcheck.cc selftest.cc opt-suggestions.cc \
 		${G_common_out_file:T}
 
-CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
+CPPFLAGS+=	-I. -I${GCCARCH} -I${BACKENDOBJ} \
 		${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*} \
 		-DPREFIX=\"/usr\" \
 		-DDEFAULT_TARGET_VERSION=\"${G_version}\" \

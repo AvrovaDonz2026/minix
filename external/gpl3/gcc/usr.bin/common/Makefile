@@ -11,7 +11,7 @@ LIB=		common
 SRCS=		diagnostic.cc pretty-print.cc intl.cc input.cc
 
 # XXX make sure this doesn't have more than it needs
-CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
+CPPFLAGS+=	-I. -I${GCCARCH} -I${BACKENDOBJ} \
 		${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*} \
 		-DPREFIX=\"/usr\" \
 		-DDEFAULT_TARGET_VERSION=\"${G_version}\" \

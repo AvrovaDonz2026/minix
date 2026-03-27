@@ -7,7 +7,7 @@ NOMAN=		# defined
 NOCTF=		# defined
 BINDIR=		/usr/libexec
 
-CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} \
+CPPFLAGS+=	-I. -I${GCCARCH} -I${BACKENDOBJ} \
 		${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 
 .include <bsd.own.mk>

@@ -71,6 +71,8 @@ bversion.h: ${TOOLSGCCBUILD}/bversion.h
 	cp ${.ALLSRC} ${.TARGET}
 
 ${SRCS:.cc=.d} ${SRCS:.cc=.o}: options.h config.h auto-host.h tm.h version.h bversion.h
+gcov.d gcov.o: ${DIST}/gcc/gcov.cc
+json.d json.o: ${DIST}/gcc/json.cc
 
 # Force using C++ for this
 HOST_CC:=	${HOST_CXX}

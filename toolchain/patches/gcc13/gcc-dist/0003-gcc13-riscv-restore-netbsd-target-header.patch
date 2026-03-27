@@ -44,7 +44,7 @@ index 0000000..02b09ef
 +    /* The GNU C++ standard library requires this.  */		\
 +    if (c_dialect_cxx ())					\
 +      builtin_define ("_GNU_SOURCE");				\
-+    if (!TARGET_HARD_FLOAT_ABI)					\
++    if (!TARGET_HARD_FLOAT)					\
 +      builtin_define ("_SOFT_FLOAT");				\
 +  } while (0)
 +

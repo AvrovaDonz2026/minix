@@ -392,7 +392,8 @@ jobs:
           bash toolchain/patches/gcc13/scripts/seed-sysroot-headers.sh \
             "${OBJDIR}" "${MACHINE}" "obj.intrgcc"
 
-          if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
+          if ! (TMPDIR="${TMPDIR}" TMP="${TMP}" TEMP="${TEMP}" \
+            MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
             ./build.sh -U -j"${TOOLS_BUILD_JOBS}" -m "${MACHINE}" -O "${OBJDIR}" \
               "${target_override_args[@]}" \
               -V AVAILABLE_COMPILER=gcc \
@@ -821,7 +822,8 @@ jobs:
           }
           trap cleanup_as_watchers EXIT
 
-          if ! (MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
+          if ! (TMPDIR="${TMPDIR}" TMP="${TMP}" TEMP="${TEMP}" \
+            MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
             ./build.sh -U -u -j"${WORLD_BUILD_JOBS}" -m "${MACHINE}" -O "${OBJDIR}" \
               "${target_override_args[@]}" \
               -V AVAILABLE_COMPILER=gcc \

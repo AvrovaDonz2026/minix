@@ -216,7 +216,7 @@ G_GTFILES:=	${GCC13_BACKEND_G_GTFILES}
 config.h: gcc13-config-force ${TOOLSGCCBUILD}/config.h ${.PARSEDIR}/../Makefile.hostprobes
 	${_MKTARGET_CREATE}
 	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
+	cp ${TOOLSGCCBUILD}/config.h ${.TARGET}
 	{ \
 		echo '#ifndef CHECKING_P'; \
 		echo '#define CHECKING_P 0'; \

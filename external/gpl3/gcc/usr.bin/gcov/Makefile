@@ -23,7 +23,7 @@ CLEANFILES+=	options.h config.h auto-host.h tm.h version.h bversion.h
 
 config.h: gcc13-config-force ${TOOLSGCCBUILD}/config.h ${.PARSEDIR}/../Makefile.hostprobes
 	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
+	cp ${TOOLSGCCBUILD}/config.h ${.TARGET}
 	{ \
 		echo '#ifndef CHECKING_P'; \
 		echo '#define CHECKING_P 0'; \

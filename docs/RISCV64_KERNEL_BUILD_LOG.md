@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.36
+**Version / 版本**: 1.37
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1834,4 +1834,21 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `issue.md` `#54`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
 - `external/gpl3/gcc/usr.bin/Makefile.cc2c`
+
+### Entry 49 — G_GCC_H local version.h (2026-08-21) / G_GCC_H 改用本地 version.h
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32495453269` (`7c0b4cf15`) created local
+  `version.h` then failed looking for `tools/gcc/build/gcc/version.h`.
+
+**Fix / 修复**:
+- Cherry-pick `#55` (no virtio-net): `G_GCC_H` depends on the local stub
+  when the tools copy is missing.
+
+**Evidence / 证据**:
+- `issue.md` `#55`
+- GitHub Actions run `32495453269`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
 

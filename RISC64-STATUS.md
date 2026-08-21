@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.24
+**Version / 版本**: 1.25
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -22,7 +22,8 @@
   寄存器数组定义之后，修复 `Targets.cpp` 编译。`#52` 丢掉 4.8.5 没有的
   `gcc/common.md`。`#53`：tools gcc 4.8.5 不生成 `version.h` 时改为合成头文件。
   `#54`：4.8.5 `genmodes` 没有 `-i`，改为空的 `insn-modes-inline.h`；
-  frontend/cc1 的 `.cc` 映射到 `.c`。
+  frontend/cc1 的 `.cc` 映射到 `.c`。`#55`：`G_GCC_H` 在 tools 没有
+  `version.h` 时改依赖本地合成文件。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -87,7 +88,8 @@
   `gcc/common.md` when the 4.8.5 dist lacks it. `#53` synthesizes
   `version.h` when tools gcc 4.8.5 does not emit it. `#54` stubs
   `insn-modes-inline.h` because 4.8.5 `genmodes` has no `-i`, and maps
-  remaining frontend/cc1 `.cc` sources to `.c`.
+  remaining frontend/cc1 `.cc` sources to `.c`. `#55`: if tools gcc has
+  no `version.h`, `G_GCC_H` depends on the local stub.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

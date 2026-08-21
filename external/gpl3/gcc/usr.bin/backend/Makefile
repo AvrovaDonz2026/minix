@@ -364,15 +364,14 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 		done < ${.ALLSRC}; \
 	} > ${.TARGET}
 .else
+# .for inside a `{ \' recipe continuation is passed to the shell
+# (`sh: .for: not found`). Emit one quoted printf per G_GTFILES word.
 gtyp-input.list.tmp: Makefile ${GCCARCH}/defs.mk
 	${_MKTARGET_CREATE}
 	rm -f ${.TARGET}
-	{ \
 .for f in ${G_GTFILES}
-	printf '%s\n' '${f}'; \
+	printf '%s\n' '${f}' >> ${.TARGET}
 .endfor
-	true; \
-	} > ${.TARGET}
 .endif
 CLEANFILES+=	gtyp-input.list.tmp
 

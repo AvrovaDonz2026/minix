@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.21
+**Version / 版本**: 1.22
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -61,9 +61,12 @@
   binutils 前先生成 `bfd.h`；gcc 4.8.5 dist 上跳过 gcc13 才有的 libstdc++
   头文件名；full-suite 仅在 tools/distribution 成功后运行；net smoke 不再
   把 OpenSBI ASCII art 的 `\ ` 当成 shell prompt。
-- 本轮继续修 hosted packaging CI 的 distribution 失败（`issue.md` `#43` / `#44`）：
-  gcc 4.8.5 dist 上跳过 gcc13 才有的 `params.opt`；RISC-V `math.h` 声明
-  128 位 long double，补齐 libm 的 `_copysignl`。
+- 本轮继续修 hosted packaging CI 的 distribution 失败（`issue.md` `#43` / `#44` / `#48`）：
+  gcc 4.8.5 dist 上跳过 gcc13 才有的 `params.opt`。`#44` 曾把 RISC-V
+  long double 标成 128 位以补 `_copysignl`；gcc 4.8.5 实际是 64 位
+  （`__LDBL_MANT_DIG__==53`），nightly `32483868137` 在 `s_cbrtl.c`
+  失败。`#48` 去掉该标记，在 `s_copysign.S` / `s_fabs.S` / `s_fma.S`
+  上 alias `*l`。
 - `417e7bd94` 的 hosted tools 在 top-level configure 之后因
   `bfd Makefile missing after configure` 立刻失败（`issue.md` `#45`）。
   去掉过早的 nbmake `bfd.h` 依赖，改由宿主 GNU make 先 `configure-bfd`
@@ -71,6 +74,10 @@
 - 本轮继续按 FreeBSD `if_vtnet` 加深 virtio-net datapath（`issue.md` `#46`）：
   协商 MRG_RXBUF 与 EVENT_IDX，单缓冲 RX（头在缓冲区开头），环深 128，
   并 ACK GUEST_ANNOUNCE。
+- 本轮继续按 FreeBSD `if_vtnet` 加深 virtio-net（`issue.md` `#49`）：
+  RX/TX 环深 256，协商 `CTRL_MAC` / `CTRL_RX_EXTRA`，`ndr_set_hwaddr`
+  走 `CTRL_MAC_ADDR_SET`，并设置 `CTRL_RX_NOBCAST`。net smoke 要求
+  `rx 256`。
 - 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47`）：
   gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
@@ -146,9 +153,12 @@
   libstdc++ headers on the gcc 4.8.5 dist, run the full suite only after
   a successful tools/distribution path, and stop treating OpenSBI's `\ `
   banner as a MINIX shell prompt.
-- Hosted packaging CI after tools (`issue.md` `#43` / `#44`): skip gcc13-only
-  `params.opt` when gathering native gcc options on the gcc 4.8.5 dist,
-  and define RISC-V `__HAVE_LONG_DOUBLE 128` so libm exports `_copysignl`.
+- Hosted packaging CI after tools (`issue.md` `#43` / `#44` / `#48`): skip
+  gcc13-only `params.opt` on the gcc 4.8.5 dist. `#44` set
+  `__HAVE_LONG_DOUBLE 128` to export `_copysignl`; gcc 4.8.5 long double
+  is 64-bit (`__LDBL_MANT_DIG__==53`), and nightly `32483868137` failed
+  in `s_cbrtl.c`. `#48` drops that flag and aliases `*l` from the RISC-V
+  `.S` files that replace the C sources.
 - Hosted tools `417e7bd94` aborted after top-level configure looking for
   `build/bfd/Makefile` (`issue.md` `#45`). Tools binutils now runs GNU
   `configure-bfd` then `all-binutils` and does not depend on `bfd.h` at
@@ -156,6 +166,9 @@
 - This cycle deepens the userspace virtio-net datapath toward FreeBSD
   `if_vtnet` (`issue.md` `#46`): MRG_RXBUF, EVENT_IDX, 128-deep rings,
   header-at-start RX buffers, and GUEST_ANNOUNCE ACK.
+- Follow-up (`issue.md` `#49`): 256-slot RX/TX rings, `CTRL_MAC` /
+  `CTRL_RX_EXTRA`, `ndr_set_hwaddr` via `CTRL_MAC_ADDR_SET`, and
+  `CTRL_RX_NOBCAST`. Net smoke requires `rx 256`.
 - Native gcc on the gcc 4.8.5 dist (`issue.md` `#47`): gcov skips
   `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
 - Native toolchain work has entered Stage N1/N2 with both a build helper

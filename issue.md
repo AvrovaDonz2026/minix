@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.42
+**Version / 版本**: 1.43
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -42,6 +42,8 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   17) `[DONE]` `#45` hosted tools 在 top-level configure 之后立刻要求 `build/bfd/Makefile`，GNU `configure-bfd` 尚未运行就 abort
   18) `[DONE]` `#46` virtio-net-mmio 未协商 MRG_RXBUF/EVENT_IDX，RX/TX 环只有 32 槽，与 FreeBSD if_vtnet 的 mergeable RX 和 kick 抑制不一致
   19) `[DONE]` `#47` 原生 gcov/common-target 仍列出 gcc13 的 `json.cc`/`spellcheck.cc` 等，4.8.5 dist 上无法 make
+  20) `[DONE]` `#48` RISC-V `__HAVE_LONG_DOUBLE 128` 与 gcc 4.8.5 的 64 位 long double 冲突，`s_cbrtl.c` 因 `LDBL_MANT_DIG==53` 失败
+  21) `[DONE]` `#49` virtio-net-mmio 环深仍 128，未按 FreeBSD if_vtnet 做 CTRL_MAC 改址与 CTRL_RX_EXTRA NOBCAST
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1334,15 +1336,17 @@ This section archives items with code-level fixes landed (some may still require
   历史 P1 #43：原生 gcc `optionlist` 跳过 gcc 4.8.5 dist 没有的 option
   文件（riscv64 `defs.mk` 里的 `params.opt` 来自 gcc13 mknative）；
   hosted nightly `32479729555` 先死在这里。
-- Former P1 #44: RISC-V `machine/math.h` now defines
-  `__HAVE_LONG_DOUBLE 128`, so `s_copysignl.c` emits `_copysignl` for
-  binary128 long double. Hosted release `32479729556` failed linking
-  `lua` with `libm.so: undefined reference to _copysignl` because
-  `arch/riscv/s_copysign.S` replaced the C file that used to alias
-  `_copysignl` to `copysign` when long double was not 128-bit.
-  历史 P1 #44：RISC-V `math.h` 声明 128 位 long double，`s_copysignl.c`
-  生成 `_copysignl`。此前汇编 `s_copysign.S` 替换了会做 alias 的 C
-  文件，release `32479729556` 在链接 `lua` 时 `libm.so` 缺 `_copysignl`。
+- Former P1 #44: RISC-V `machine/math.h` briefly defined
+  `__HAVE_LONG_DOUBLE 128` so `s_copysignl.c` would emit `_copysignl`.
+  Hosted release `32479729556` failed linking `lua` with
+  `libm.so: undefined reference to _copysignl` because
+  `arch/riscv/s_copysign.S` replaced the C file that aliased
+  `_copysignl` to `copysign`. That 128-bit flag was the wrong ABI
+  for gcc 4.8.5; superseded by `#48`.
+  历史 P1 #44：为补 `_copysignl` 曾声明 128 位 long double。
+  汇编 `s_copysign.S` 替换了会做 alias 的 C 文件，release
+  `32479729556` 链接 `lua` 失败。该 128 位标记与 gcc 4.8.5 ABI
+  不符，由 `#48` 取代。
 - Former P1 #45: hosted tools `417e7bd94` aborted with
   `error: bfd Makefile missing after configure` (nightly `32482801846`,
   release `32482801856`). Top-level configure only writes `build/Makefile`.
@@ -1365,6 +1369,22 @@ This section archives items with code-level fixes landed (some may still require
   `opt-suggestions.cc`) or maps `.cc` to `.c` on the gcc 4.8.5 dist.
   历史 P1 #47：gcov 在 4.8.5 dist 上跳过 `json.cc`；common-target 跳过
   gcc13 才有的源文件，或把 `.cc` 映射到 `.c`。
+- Former P1 #48: hosted nightly `32483868137` (`2f74ddcdd`) passed
+  tools then failed distribution in `lib/libm` with
+  `s_cbrtl.c:128: error: Unsupported long double format`. In-tree
+  gcc 4.8.5 reports `__SIZEOF_LONG_DOUBLE__ 8` / `__LDBL_MANT_DIG__ 53`.
+  Drop `__HAVE_LONG_DOUBLE 128` and alias `copysignl` / `fabsl` /
+  `fmal` from the RISC-V `.S` files that replace the C sources.
+  历史 P1 #48：nightly `32483868137` 过了 tools，发行版在 `s_cbrtl.c`
+  因 long double 格式失败。gcc 4.8.5 的 long double 是 64 位；去掉
+  `__HAVE_LONG_DOUBLE 128`，在替换 C 源的 RISC-V 汇编里 alias `*l`。
+- Former P1 #49: virtio-net-mmio now fills 256-slot RX/TX rings (the
+  libvirtio_mmio queue cap), offers `VIRTIO_NET_F_CTRL_MAC` /
+  `CTRL_RX_EXTRA`, implements `ndr_set_hwaddr` via
+  `CTRL_MAC_ADDR_SET`, and sets `CTRL_RX_NOBCAST` like FreeBSD
+  if_vtnet. Net smoke requires `rx 256`.
+  历史 P1 #49：virtio-net-mmio 环深 256，按 FreeBSD if_vtnet 增加
+  CTRL_MAC 改址与 CTRL_RX_EXTRA NOBCAST；net smoke 要求 `rx 256`。
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the
   required S-mode U-Boot launch chain (`-bios default -kernel ..._smode/uboot.elf`);

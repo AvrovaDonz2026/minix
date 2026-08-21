@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.31
+**Version / 版本**: 1.32
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1929,5 +1929,32 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
 - `minix/lib/libvirtio_mmio/virtio_mmio.c`
 - `minix/tests/riscv64/qemu_net_smoke.py`
+
+### Entry 44 — 64-bit long double aliases and 256-slot if_vtnet (2026-08-21) / 64 位 long double alias 与 256 槽 if_vtnet
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Symptom / 现象**:
+- Nightly `32483868137` (`2f74ddcdd`) passed `Build tools` then failed
+  `Build distribution` in `lib/libm`:
+  `s_cbrtl.c:128: error: Unsupported long double format`.
+- In-tree gcc 4.8.5: `__SIZEOF_LONG_DOUBLE__==8`, `__LDBL_MANT_DIG__==53`.
+  `__HAVE_LONG_DOUBLE 128` compiled binary128 `s_cbrtl.c` against
+  `float.h` that defaults `LDBL_MANT_DIG` to 53.
+
+**Fix / 修复**:
+1. Drop `__HAVE_LONG_DOUBLE 128`. Alias `copysignl` / `fabsl` / `fmal`
+   from `arch/riscv` `.S` files that replace the C sources (`#48`).
+2. virtio-net-mmio: 256-slot RX/TX rings, `VIRTIO_NET_F_CTRL_MAC` /
+   `CTRL_RX_EXTRA`, `ndr_set_hwaddr` via `CTRL_MAC_ADDR_SET`,
+   `CTRL_RX_NOBCAST` (`#49`). Net smoke requires `rx 256`.
+
+**Evidence / 证据**:
+- `issue.md` `#48` `#49`
+- GitHub Actions run `32483868137`
+- `sys/arch/riscv/include/math.h`
+- `lib/libm/arch/riscv/s_copysign.S`
+- `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
 
 

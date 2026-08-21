@@ -48,7 +48,10 @@ CLEANFILES+=	options.h config.h auto-host.h version.h bversion.h tm.h
 
 COPTS.prefix.cc=	-Wno-stack-protector
 COPTS.opts-common.cc=	-Wno-stack-protector
+COPTS.prefix.c+=	${COPTS.prefix.cc}
+COPTS.opts-common.c+=	${COPTS.opts-common.cc}
 CPPFLAGS.prefix.cc+=	-DBASEVER=${BASEVERSTR}
+CPPFLAGS.prefix.c+=	${CPPFLAGS.prefix.cc}
 
 GENPROG_ERROR_DEPENDS=errors.lo
 

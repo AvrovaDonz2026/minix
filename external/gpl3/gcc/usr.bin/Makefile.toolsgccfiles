@@ -1,8 +1,8 @@
 # Copy generated headers from tools gcc, or synthesize gcc 4.8.5 stand-ins.
 #
 # Hosted packaging uses gcc 4.8.5. The GNU tools gcc build does not emit
-# gcc 13's version.h, pass-instances.def, case-cfn-macros.h, or
-# cfn-operators.pd. Copy those files when present; otherwise write a
+# gcc 13's version.h, specs.h, pass-instances.def, case-cfn-macros.h,
+# or cfn-operators.pd. Copy those files when present; otherwise write a
 # header the 4.8.5 native objects can include.
 
 .ifndef _EXTERNAL_GPL3_GCC_USR_BIN_MAKEFILE_TOOLSGCCFILES_
@@ -93,6 +93,22 @@ plugin-version.h:
 		echo "#define GCCPLUGIN_VERSION_MINOR $$min"; \
 		echo "#define GCCPLUGIN_VERSION_PATCHLEVEL $$pat"; \
 		echo '#define GCCPLUGIN_VERSION (GCCPLUGIN_VERSION_MAJOR * 1000 + GCCPLUGIN_VERSION_MINOR)'; \
+		echo '#endif'; \
+	} > ${.TARGET}
+.endif
+
+.if exists(${TOOLSGCCBUILD}/specs.h)
+specs.h: ${TOOLSGCCBUILD}/specs.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+.else
+specs.h:
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	{ \
+		echo '#ifndef GCC_SPECS_H'; \
+		echo '#define GCC_SPECS_H'; \
 		echo '#endif'; \
 	} > ${.TARGET}
 .endif

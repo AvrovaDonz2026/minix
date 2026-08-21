@@ -45,6 +45,7 @@ ${SRCS}: ${GCCARCH}/defs.mk
 .include <bsd.info.mk>
 
 COPTS.gcc.cc=	-Wno-stack-protector
+COPTS.gcc.c+=	${COPTS.gcc.cc}
 .if ${MACHINE_ARCH} == "vax"
 COPTS.dse.c=	-O1
 .endif

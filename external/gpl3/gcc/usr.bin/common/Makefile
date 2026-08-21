@@ -9,6 +9,7 @@ LIBISPRIVATE=	yes
 LIB=		common
 
 SRCS=		diagnostic.cc pretty-print.cc intl.cc input.cc
+.include "../Makefile.cc2c"
 
 # XXX make sure this doesn't have more than it needs
 CPPFLAGS+=	-I. -I${GCCARCH} -I${BACKENDOBJ} \
@@ -32,6 +33,8 @@ TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
 
 COPTS.diagnostic.cc=	-Wno-stack-protector
 COPTS.intl.cc=		-Wno-stack-protector
+COPTS.diagnostic.c+=	${COPTS.diagnostic.cc}
+COPTS.intl.c+=		${COPTS.intl.cc}
 
 ${SRCS}: ${GCCARCH}/defs.mk
 
@@ -70,7 +73,7 @@ auto-host.h: gcc13-auto-host-force ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../
 
 .include "../Makefile.toolsgccfiles"
 
-${SRCS:.cc=.d} ${SRCS:.cc=.o}: config.h auto-host.h
+${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: config.h auto-host.h
 diagnostic.d diagnostic.o: version.h bversion.h
 
 .include <bsd.lib.mk>

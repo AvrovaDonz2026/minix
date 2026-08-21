@@ -22,6 +22,8 @@ HOSTPROG_CXX=	1
 .PATH:		${DIST}/gcc/config/rs6000
 .endif
 
+.include "../Makefile.cc2c"
+
 CPPFLAGS+=	-I. -I${GCCARCH} -I${BACKENDOBJ} \
 		${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*} \
 		-DPREFIX=\"/usr\" \
@@ -94,14 +96,13 @@ configargs.h: ${TOOLSGCCBUILD}/configargs.h
 
 .include "../Makefile.toolsgccfiles"
 
-specs.h: ${TOOLSGCCBUILD}/specs.h
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
-
 CPPFLAGS.gcc.cc+=	${FRONTEND_DRIVER_DEFINES} -DBASEVER=${BASEVERSTR}
+CPPFLAGS.gcc.c+=	${CPPFLAGS.gcc.cc}
 CPPFLAGS.prefix.cc+=	-DBASEVER=${BASEVERSTR}
+CPPFLAGS.prefix.c+=	${CPPFLAGS.prefix.cc}
 
-${SRCS:.cc=.d} ${SRCS:.cc=.o}: config.h auto-host.h tm.h options.h configargs.h
+${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: \
+	config.h auto-host.h tm.h options.h configargs.h
 gcc.d gcc.o: specs.h ${GCC_BASEVER_FILE}
 prefix.d prefix.o: ${GCC_BASEVER_FILE}
 

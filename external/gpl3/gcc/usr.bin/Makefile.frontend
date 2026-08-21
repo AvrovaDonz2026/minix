@@ -87,15 +87,13 @@ configargs.h: ${TOOLSGCCBUILD}/configargs.h
 	cp ${.ALLSRC} ${.TARGET}
 
 .include "Makefile.toolsgccfiles"
-
-specs.h: ${TOOLSGCCBUILD}/specs.h
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
+.include "Makefile.cc2c"
 
 ${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: \
 	config.h auto-host.h tm.h options.h configargs.h
 gcc.d gcc.o: specs.h ${GCC_BASEVER_FILE}
 CPPFLAGS.gcc.cc+=	${FRONTEND_DRIVER_DEFINES} -DBASEVER=${BASEVERSTR}
+CPPFLAGS.gcc.c+=	${CPPFLAGS.gcc.cc}
 
 # Force using C++ for this
 HOST_CC:=	${HOST_CXX}

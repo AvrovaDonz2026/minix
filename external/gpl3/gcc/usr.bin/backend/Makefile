@@ -442,9 +442,22 @@ insn-modes.c: genmodes
 insn-modes.h: genmodes
 	${_MKTARGET_CREATE}
 	./genmodes -h >${.TARGET}
+# gcc 13 genmodes -i writes insn-modes-inline.h. gcc 4.8.5 only
+# accepts -h|-m, and machmode.h does not include that header.
+.if exists(${DIST}/gcc/genmodes.cc)
 insn-modes-inline.h: genmodes
 	${_MKTARGET_CREATE}
 	./genmodes -i >${.TARGET}
+.else
+insn-modes-inline.h:
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	{ \
+		echo '#ifndef GCC_INSN_MODES_INLINE_H'; \
+		echo '#define GCC_INSN_MODES_INLINE_H'; \
+		echo '#endif'; \
+	} > ${.TARGET}
+.endif
 min-insn-modes.c: genmodes
 	${_MKTARGET_CREATE}
 	./genmodes -m >${.TARGET}

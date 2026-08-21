@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.26
+**Version / 版本**: 1.27
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -24,7 +24,8 @@
   `#54`：4.8.5 `genmodes` 没有 `-i`，改为空的 `insn-modes-inline.h`；
   frontend/cc1 的 `.cc` 映射到 `.c`。`#55`：`G_GCC_H` 在 tools 没有
   `version.h` 时改依赖本地合成文件。`#56`：从网络分支拣入
-  `Makefile.hooks` 的 `genhooks.cc`/`genhooks.c` 映射。
+  `Makefile.hooks` 的 `genhooks.cc`/`genhooks.c` 映射。`#57`：从网络
+  分支拣入 gengtype 对 4.8.5 `version.c` 的链接。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -91,7 +92,8 @@
   `insn-modes-inline.h` because 4.8.5 `genmodes` has no `-i`, and maps
   remaining frontend/cc1 `.cc` sources to `.c`. `#55`: if tools gcc has
   no `version.h`, `G_GCC_H` depends on the local stub. `#56` maps
-  gcc13 `genhooks.cc` to gcc 4.8.5 `genhooks.c`.
+  gcc13 `genhooks.cc` to gcc 4.8.5 `genhooks.c`. `#57` links 4.8.5
+  `version.c` into native `gengtype`.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

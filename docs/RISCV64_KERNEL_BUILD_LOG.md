@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.37
+**Version / 版本**: 1.38
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2038,5 +2038,18 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#55`
 - GitHub Actions run `32495453269`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+## Entry 50 — 2026-08-21 15:50 UTC
+
+**Change / 变更**: Hosted nightly `32497228532` (`744e854c3`) passed tools then failed native backend looking for `genhooks.cc`. `#50` mapped other generators; `Makefile.hooks` still hardcoded the gcc13 name. gcc 4.8.5 ships `genhooks.c`. Resolve `.cc` or `.c` from dist. Leave the `"Target Hook"` argv as-is; 4.8.5 `genhooks` accepts it.
+
+**Issue ID**: `#56`
+
+**Result / 结果**: Local Makefile review against gcc 4.8.5 `genhooks.c`. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#56`
+- GitHub Actions run `32497228532`
+- `external/gpl3/gcc/Makefile.hooks`
 
 

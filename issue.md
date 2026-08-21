@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.48
+**Version / 版本**: 1.49
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -49,6 +49,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   24) `[DONE]` `#53` 原生 backend 依赖 tools gcc 的 `build/gcc/version.h`，4.8.5 GNU 构建不生成该文件
   25) `[DONE]` `#54` 原生 backend 调用 gcc13 的 `genmodes -i`，4.8.5 只接受 `-h|-m`；frontend/cc1 仍列出 `.cc`
   26) `[DONE]` `#55` `#53` 合成了本地 `version.h` 后，backend `G_GCC_H` 仍依赖 tools 路径上的同一文件
+  27) `[DONE]` `#56` 原生 `Makefile.hooks` 写死 gcc13 的 `genhooks.cc`，4.8.5 dist 上 `don't know how to make genhooks.cc`
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1426,6 +1427,14 @@ This section archives items with code-level fixes landed (some may still require
   `tools/gcc/build/gcc/version.h`. `G_GCC_H` still listed the tools
   path. Depend on the local stub when the tools copy is missing.
   历史 P1 #55：本地 `version.h` 合成之后，backend 不再依赖 tools 路径。
+- Former P1 #56: hosted nightly `32497228532` (`744e854c3`) passed tools
+  then failed native backend with
+  `don't know how to make .../gcc/genhooks.cc`. `#50` mapped other
+  generators; `Makefile.hooks` still hardcoded the gcc13 name. gcc 4.8.5
+  ships `genhooks.c`. Resolve `.cc` or `.c` from dist. The 4.8.5 CLI
+  still takes `"Target Hook"` as argv[1].
+  历史 P1 #56：发行版在 backend 因 gcc13 的 `genhooks.cc` 失败。按 dist
+  映射到 `genhooks.c`。
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the
   required S-mode U-Boot launch chain (`-bios default -kernel ..._smode/uboot.elf`);

@@ -29,6 +29,7 @@ INIT_MARKER = "virtio-net-mmio: initialized"
 HDR_MARKER = "virtio-net-mmio: hdr 12"
 MRG_MARKER = "mrg on"
 EVENT_IDX_MARKER = "event_idx on"
+RX_RING_MARKER = "rx 256"
 
 
 def log(msg: str) -> None:
@@ -238,6 +239,12 @@ def main() -> int:
             log(f"FAIL: {EVENT_IDX_MARKER} not found")
             return 1
         log(f"[PASS] {EVENT_IDX_MARKER}")
+
+        if RX_RING_MARKER not in boot:
+            log_tail(boot, "Missing 256-slot RX ring marker")
+            log(f"FAIL: {RX_RING_MARKER} not found")
+            return 1
+        log(f"[PASS] {RX_RING_MARKER}")
 
         commands: list[tuple[str, str]] = [
             (

@@ -22,7 +22,11 @@ enum {
 	VTNET_HDR_MODERN_OK =
 	    1 / (sizeof(struct virtio_net_hdr_mrg_rxbuf) == 12),
 	VTNET_HDR_NUM_BUFFERS_OFF_OK =
-	    1 / (offsetof(struct virtio_net_hdr_mrg_rxbuf, num_buffers) == 10)
+	    1 / (offsetof(struct virtio_net_hdr_mrg_rxbuf, num_buffers) == 10),
+	VTNET_CTRL_MAC_ADDR_SET_OK =
+	    1 / (VIRTIO_NET_CTRL_MAC_ADDR_SET == 1),
+	VTNET_F_CTRL_MAC_OK =
+	    1 / (VIRTIO_NET_F_CTRL_MAC == 23)
 };
 
 int
@@ -31,6 +35,8 @@ virtio_net_hdr_layout_ok(void)
 
 	return VTNET_HDR_LEGACY_OK && VTNET_HDR_MODERN_OK &&
 	    VTNET_HDR_NUM_BUFFERS_OFF_OK &&
+	    VTNET_CTRL_MAC_ADDR_SET_OK &&
+	    VTNET_F_CTRL_MAC_OK &&
 	    VIRTIO_NET_HDR_SIZE_LEGACY == 10 &&
 	    VIRTIO_NET_HDR_SIZE_MODERN == 12;
 }

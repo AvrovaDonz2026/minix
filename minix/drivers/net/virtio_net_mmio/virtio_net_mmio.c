@@ -42,8 +42,8 @@ static struct virtio_mmio_dev *net_dev;
 
 enum queue {RX_Q, TX_Q, CTRL_Q};
 
-#define RX_PACKETS		128
-#define TX_PACKETS		128
+#define RX_PACKETS		256
+#define TX_PACKETS		256
 #define BUF_PACKETS		(RX_PACKETS + TX_PACKETS)
 #define MAX_PACK_SIZE		NDEV_ETH_PACKET_MAX
 #define PACKET_BUF_SZ		(BUF_PACKETS * pkt_slot_sz)
@@ -61,6 +61,7 @@ enum queue {RX_Q, TX_Q, CTRL_Q};
 #define CTRL_HDR_OFF		0
 #define CTRL_ACK_OFF		2
 #define CTRL_BYTE_OFF		4
+#define CTRL_MACADDR_OFF	8
 #define CTRL_UNI_OFF		16
 #define CTRL_MULTI_OFF		32
 #define CTRL_MCAST_MAX		16
@@ -87,6 +88,8 @@ static netdriver_addr_t hwaddr;
 static uint8_t *ctrl_vir;
 static phys_bytes ctrl_phys;
 static int have_ctrl;
+static int have_rx_extra;
+static int have_mac_ctrl;
 static int have_mrg;
 static int have_announce;
 
@@ -113,6 +116,7 @@ static void virtio_net_intr(unsigned int mask);
 static void virtio_net_set_mode(unsigned int mode,
 	const netdriver_addr_t * mcast_list, unsigned int mcast_count);
 static void virtio_net_set_caps(uint32_t caps);
+static void virtio_net_set_hwaddr(const netdriver_addr_t * addr);
 
 static const struct netdriver virtio_net_table = {
 	.ndr_name	= "vio",
@@ -120,6 +124,7 @@ static const struct netdriver virtio_net_table = {
 	.ndr_stop	= virtio_net_stop,
 	.ndr_set_mode	= virtio_net_set_mode,
 	.ndr_set_caps	= virtio_net_set_caps,
+	.ndr_set_hwaddr	= virtio_net_set_hwaddr,
 	.ndr_recv	= virtio_net_recv,
 	.ndr_send	= virtio_net_send,
 	.ndr_get_link	= virtio_net_get_link,
@@ -139,6 +144,8 @@ static struct virtio_feature netf[] = {
 	{ "merge rx",		VIRTIO_NET_F_MRG_RXBUF,	0,	1	},
 	{ "control channel",	VIRTIO_NET_F_CTRL_VQ,	0,	1	},
 	{ "control channel rx",	VIRTIO_NET_F_CTRL_RX,	0,	1	},
+	{ "ctrl rx extra",	VIRTIO_NET_F_CTRL_RX_EXTRA, 0,	1	},
+	{ "control mac",	VIRTIO_NET_F_CTRL_MAC,	0,	1	},
 	{ "guest announce",	VIRTIO_NET_F_GUEST_ANNOUNCE, 0,	1	}
 };
 
@@ -471,6 +478,27 @@ virtio_net_ctrl_mac_table(const netdriver_addr_t * mcast_list,
 }
 
 static int
+virtio_net_ctrl_mac_addr(const netdriver_addr_t * addr)
+{
+	struct vumap_phys phys[3];
+	struct virtio_net_ctrl_hdr *ch;
+
+	ch = (struct virtio_net_ctrl_hdr *)(ctrl_vir + CTRL_HDR_OFF);
+	ch->class = VIRTIO_NET_CTRL_MAC;
+	ch->cmd = VIRTIO_NET_CTRL_MAC_ADDR_SET;
+	memcpy(ctrl_vir + CTRL_MACADDR_OFF, addr->na_addr, 6);
+
+	phys[0].vp_addr = ctrl_phys + CTRL_HDR_OFF;
+	phys[0].vp_size = sizeof(*ch);
+	phys[1].vp_addr = ctrl_phys + CTRL_MACADDR_OFF;
+	phys[1].vp_size = 6;
+	phys[2].vp_addr = (ctrl_phys + CTRL_ACK_OFF) | 1;
+	phys[2].vp_size = 1;
+
+	return virtio_net_ctrl_exec(phys, 3);
+}
+
+static int
 virtio_net_ctrl_announce(void)
 {
 	struct vumap_phys phys[2];
@@ -520,6 +548,21 @@ virtio_net_set_caps(uint32_t caps)
 }
 
 static void
+virtio_net_set_hwaddr(const netdriver_addr_t * addr)
+{
+	int r;
+
+	memcpy(&hwaddr, addr, sizeof(hwaddr));
+	if (!have_mac_ctrl || ctrl_vir == NULL)
+		return;
+
+	r = virtio_net_ctrl_mac_addr(addr);
+	if (r != OK)
+		printf("%s: CTRL_MAC addr failed (%d)\n",
+		    netdriver_name(), r);
+}
+
+static void
 virtio_net_set_mode(unsigned int mode,
 	const netdriver_addr_t * mcast_list, unsigned int mcast_count)
 {
@@ -539,6 +582,14 @@ virtio_net_set_mode(unsigned int mode,
 	if (r != OK)
 		printf("%s: CTRL_RX allmulti failed (%d)\n",
 		    netdriver_name(), r);
+
+	if (have_rx_extra) {
+		r = virtio_net_ctrl_rx_mode(VIRTIO_NET_CTRL_RX_NOBCAST,
+		    (mode & (NDEV_MODE_BCAST | NDEV_MODE_PROMISC)) == 0);
+		if (r != OK)
+			printf("%s: CTRL_RX nobcast failed (%d)\n",
+			    netdriver_name(), r);
+	}
 
 	if (mcast_list == NULL)
 		mcast_count = 0;
@@ -839,6 +890,11 @@ virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
 	have_mrg = virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_MRG_RXBUF);
 	have_ctrl = virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CTRL_VQ) &&
 	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CTRL_RX);
+	have_rx_extra = have_ctrl &&
+	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CTRL_RX_EXTRA);
+	have_mac_ctrl =
+	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CTRL_VQ) &&
+	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CTRL_MAC);
 	have_announce =
 	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CTRL_VQ) &&
 	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_GUEST_ANNOUNCE);
@@ -850,6 +906,10 @@ virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
 
 	if (have_ctrl && ctrl_vir == NULL)
 		have_ctrl = 0;
+	if (have_rx_extra && !have_ctrl)
+		have_rx_extra = 0;
+	if (have_mac_ctrl && ctrl_vir == NULL)
+		have_mac_ctrl = 0;
 	if (have_announce && ctrl_vir == NULL)
 		have_announce = 0;
 
@@ -865,15 +925,18 @@ virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
 	virtio_net_refill_rx_queue();
 
 	printf("virtio-net-mmio: initialized\n");
-	printf("virtio-net-mmio: hdr %zu csum %s ctrl_rx %s mrg %s event_idx %s\n",
+	printf("virtio-net-mmio: hdr %zu csum %s ctrl_rx %s mrg %s event_idx %s rx %u tx %u\n",
 	    net_hdr_size,
 	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CSUM) ?
 		"on" : "off",
 	    have_ctrl ? "on" : "off",
 	    have_mrg ? "on" : "off",
-	    virtio_mmio_has_event_idx(net_dev) ? "on" : "off");
+	    virtio_mmio_has_event_idx(net_dev) ? "on" : "off",
+	    (unsigned int)RX_PACKETS, (unsigned int)TX_PACKETS);
 
 	*caps = NDEV_CAP_MCAST | NDEV_CAP_BCAST;
+	if (have_mac_ctrl)
+		*caps |= NDEV_CAP_HWADDR;
 	if (virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CSUM))
 		*caps |= NDEV_CAP_CS_TCP_TX | NDEV_CAP_CS_UDP_TX;
 	if (virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_GUEST_CSUM))

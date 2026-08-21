@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.23
+**Version / 版本**: 1.24
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -78,10 +78,11 @@
   RX/TX 环深 256，协商 `CTRL_MAC` / `CTRL_RX_EXTRA`，`ndr_set_hwaddr`
   走 `CTRL_MAC_ADDR_SET`，并设置 `CTRL_RX_NOBCAST`。net smoke 要求
   `rx 256`。
-- 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50`）：
+- 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52`）：
   gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
   `#50`：backend 生成器按 dist 选择 `.cc`/`.c`，跳过 `gengtype-state` 等
-  gcc13 才有的文件；4.8.5 的 gengtype 不走 state 文件。
+  gcc13 才有的文件；4.8.5 的 gengtype 不走 state 文件。`#52`：丢掉 4.8.5
+  没有的 `gcc/common.md`，只把存在的 `.md` 传给生成器。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
@@ -171,10 +172,11 @@
 - Follow-up (`issue.md` `#49`): 256-slot RX/TX rings, `CTRL_MAC` /
   `CTRL_RX_EXTRA`, `ndr_set_hwaddr` via `CTRL_MAC_ADDR_SET`, and
   `CTRL_RX_NOBCAST`. Net smoke requires `rx 256`.
-- Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50`): gcov skips
+- Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52`): gcov skips
   `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
   `#50`: backend generators resolve `.cc`/`.c` from dist, skip gcc13-only
   files such as `gengtype-state`, and run 4.8.5 `gengtype` without state files.
+  `#52`: drop gcc13 `gcc/common.md` when the 4.8.5 dist lacks it.
 - Native toolchain work has entered Stage N1/N2 with both a build helper
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate

@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.33
+**Version / 版本**: 1.34
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1978,6 +1978,26 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 **Evidence / 证据**:
 - `issue.md` `#50`
 - GitHub Actions run `32486378021`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+### Entry 46 — skip gcc13 common.md on 4.8.5 (2026-08-21) / 4.8.5 上跳过 gcc13 common.md
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Symptom / 现象**:
+- Nightly `32488937725` (`5fe3792d1`) passed `Build tools` then failed
+  `Build distribution` in `external/gpl3/gcc/usr.bin/backend`:
+  `don't know how to make .../gcc/common.md`.
+- `#50` unblocked `gengenrtl.c`. riscv64 `defs.mk` still lists gcc13
+  `common.md`, which gcc 4.8.5 does not ship.
+
+**Fix / 修复**:
+- Keep only existing paths in `G_md_file` (typically `config/riscv/riscv.md`).
+
+**Evidence / 证据**:
+- `issue.md` `#52`
+- GitHub Actions run `32488937725`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
 
 

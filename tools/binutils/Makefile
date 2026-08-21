@@ -71,21 +71,18 @@ MAKE_PROGRAM!=	command -v gmake || command -v make || echo make
 .include "${.CURDIR}/../Makefile.gnuhost"
 
 .if defined(__MINIX)
-BUILD_COMMAND=	${BUILD_ENV} MAKE=${MAKE_PROGRAM:Q} ${MAKE_PROGRAM} \
-		${MAKEFLAGS:[*]:M*-j*:C/.*(-j ?[0-9]*).*/\1/W} \
+# Top-level configure only writes build/Makefile. GNU make configure-bfd
+# creates build/bfd/Makefile, then all-bfd honors stmp-bfd-h.
+# Do not add an nbmake bfd.h prerequisite after .configure_done: that
+# tested for bfd/Makefile too early and aborted hosted tools
+# (c2e1100aa / 417e7bd94, "bfd Makefile missing after configure").
+GMAKE_J_ARGS?=	${MAKEFLAGS:[*]:M*-j*:C/.*(-j ?[0-9]*).*/\1/W}
+BUILD_COMMAND=	/usr/bin/env -i ${BUILD_ENV} MAKE=${MAKE_PROGRAM:Q} \
+		${MAKE_PROGRAM} configure-bfd && \
+		/usr/bin/env -i ${BUILD_ENV} MAKE=${MAKE_PROGRAM:Q} \
+		${MAKE_PROGRAM} ${GMAKE_J_ARGS} -e \
 		MACHINE= MAKEINFO=${TOOL_MAKEINFO:Q} \
 		BISON=true DESTDIR= INSTALL=${HOST_INSTALL_FILE:Q}
-
-${.OBJDIR}/build/bfd/bfd.h: .configure_done
-	@mkdir -p ${.OBJDIR}/build/bfd
-	@if [ ! -f ${.OBJDIR}/build/bfd/Makefile ]; then \
-		echo "error: bfd Makefile missing after configure" >&2; \
-		exit 1; \
-	fi
-	@(cd ${.OBJDIR}/build/bfd && MAKE=${MAKE_PROGRAM} ${MAKE_PROGRAM} bfd.h bfdver.h)
-	@test -f ${.TARGET}
-
-.build_done: ${.OBJDIR}/build/bfd/bfd.h
 .endif
 
 CCADDFLAGS=	-I${DESTDIR}/usr/include -L${DESTDIR}/lib -L${DESTDIR}/usr/lib -B${DESTDIR}/usr/lib/

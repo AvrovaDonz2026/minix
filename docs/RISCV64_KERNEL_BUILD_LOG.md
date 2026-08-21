@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.29
+**Version / 版本**: 1.30
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1866,5 +1866,29 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 **Evidence / 证据**:
 - `issue.md` `#43` `#44`
 - GitHub Actions runs `32479729555` (nightly) and `32479729556` (release)
+
+### Entry 41 — Drop premature bfd.h check (2026-08-21) / 去掉过早的 bfd.h 检查
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`  
+**Commit / 提交**: `417e7bd94` (failed)
+
+**Symptom / 现象**:
+- Nightly `32482801846` and release `32482801856` failed in `Build tools`
+  right after top-level configure:
+  `error: bfd Makefile missing after configure`.
+- `.configure_done` only writes `build/Makefile`. The extra nbmake
+  `bfd.h` prerequisite tested `build/bfd/Makefile` before GNU make
+  `configure-bfd` ran.
+
+**Fix / 修复**:
+1. Remove the nbmake `build/bfd/bfd.h` prerequisite of `.build_done`.
+2. `BUILD_COMMAND` is host GNU make `configure-bfd`, then GNU make
+   `all-binutils all-gas all-ld` with a cleaned environment (`env -i`).
+
+**Evidence / 证据**:
+- `issue.md` `#45`
+- `tools/binutils/Makefile`
+- GitHub Actions runs `32482801846` (nightly) and `32482801856` (release)
 
 

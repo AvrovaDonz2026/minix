@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.56
+**Version / 版本**: 1.57
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -55,6 +55,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   30) `[DONE]` `#63` 原生 libcpp Makefile 把 `G_libcpp_a_OBJS` 写成 `.cc`，4.8.5 dist 上 `don't know how to make charset.cc`
   31) `[DONE]` `#64` 4.8.5 `gcov-io.h` 包含 `gcov-iov.h`，原生 gcov/cc1 未加入 libgcov arch `-I`
   32) `[DONE]` `#65` `#64` 的 `${.PARSEDIR}` `-I` 展开为空，编译行变成 `-I/../lib/...`
+  33) `[DONE]` `#66` LLVM packaging 编 libstdc++ 时 `compatibility-atomic-c++0x.cc` 踩单线程 `<atomic>` `#error`
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1134,6 +1135,11 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     nbmake `bfd.h` prerequisite ran right after top-level configure,
     which only writes `build/Makefile`. `#45` drops that prerequisite
     and lets GNU make run `configure-bfd` then `all-binutils`.
+  - This branch `MKCXX=yes`, so distribution builds libstdc++. HEAD
+    `adc524d54` (`32521564417`) failed in `compatibility-atomic-c++0x.cc`
+    (`<atomic>` is not supported on this single threaded system). `#66`
+    skips that source on riscv64. Do not mix onto the network PR
+    (`MKCXX=no`).
 - Priority / 优先级: P2 (toolchain completeness; gated by packaging CI)
 
 ### 38) [DONE] release-riscv64 libstdc++ `functexcept` no-future gate stabilization / release-riscv64 中 libstdc++ `functexcept` no-future 门禁稳定化（已完成）
@@ -1464,6 +1470,16 @@ This section archives items with code-level fixes landed (some may still require
   libstdc++ `<atomic>` (`MKCXX=yes`) and did not re-hit gcov.
   历史 P1 #65：从网络分支拣入 `gcov-iov.h` `-I` 改从 `NETBSDSRCDIR`
   解析。
+- Former P1 #66: LLVM packaging `32521564417` (`adc524d54`) failed
+  during `lib` compiling `compatibility-atomic-c++0x.cc`:
+  `usr/include/c++/atomic:537: #error <atomic> is not supported on
+  this single threaded system`. riscv64 `c++config.h` leaves
+  `_GLIBCXX_HAS_GTHREADS` and `_GLIBCXX_ATOMIC_BUILTINS` undefined.
+  Skip that compat source next to the existing
+  `compatibility-thread-c++0x.cc` skip. LLVM-only (`MKCXX=yes`); do
+  not mix onto the network PR.
+  历史 P1 #66：riscv64 libstdc++ 跳过 `compatibility-atomic-c++0x.cc`
+  （单线程 `<atomic>`）。仅本 LLVM 分支。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

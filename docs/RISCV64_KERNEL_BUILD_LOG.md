@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.47
+**Version / 版本**: 1.48
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2031,4 +2031,27 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `issue.md` `#65`
 - GitHub Actions run `32521377902`
 - `external/gpl3/gcc/usr.bin/Makefile.inc`
+
+### Entry 60 — libstdc++ skip atomic compatibility (2026-08-21) / libstdc++ 跳过 atomic 兼容源
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- LLVM packaging `32521564417` (`adc524d54`) failed during `lib` with
+  `usr/include/c++/atomic:537: #error <atomic> is not supported on
+  this single threaded system` compiling
+  `compatibility-atomic-c++0x.cc`.
+- Nightly/network packaging uses `MKCXX=no` and never enters this
+  directory.
+
+**Fix / 修复**:
+- `#66` (LLVM-only, no virtio-net): skip
+  `compatibility-atomic-c++0x.cc` in riscv64 `defs.mk`, next to the
+  existing `compatibility-thread-c++0x.cc` skip. Do not enable fake
+  gthreads.
+
+**Evidence / 证据**:
+- `issue.md` `#66`
+- GitHub Actions run `32521564417`
+- `external/gpl3/gcc/lib/libstdc++-v3/arch/riscv64/defs.mk`
 

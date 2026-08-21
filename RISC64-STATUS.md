@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.35
+**Version / 版本**: 1.36
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -36,6 +36,9 @@
   `#64`：从网络分支拣入 usr.bin 的 libgcov arch `-I`，让 gcov/cc1
   找到 `gcov-iov.h`。`#65`：从网络分支拣入把该 `-I` 改从
   `NETBSDSRCDIR` 解析；`#64` 的 `${.PARSEDIR}` 在 hosted CI 展开为空。
+  `#66`（仅本 LLVM 分支）：`MKCXX=yes` 会编 libstdc++，`adc524d54`
+  （`32521564417`）在 `compatibility-atomic-c++0x.cc` 踩单线程
+  `<atomic>` `#error`；riscv64 与已有 thread skip 一样丢掉该源。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -113,6 +116,11 @@
   `#64` adds the libgcov arch `-I` so native gcov/cc1 find `gcov-iov.h`.
   `#65` resolves that `-I` from `NETBSDSRCDIR`; `#64` `${.PARSEDIR}`
   expanded empty on hosted CI.
+  `#66` (this LLVM branch only): `MKCXX=yes` builds libstdc++;
+  `adc524d54` (`32521564417`) failed compiling
+  `compatibility-atomic-c++0x.cc` (`<atomic>` is not supported on
+  this single threaded system). Skip that source next to the existing
+  thread skip. Do not mix onto the network PR.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

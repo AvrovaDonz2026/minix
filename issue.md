@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.38
+**Version / 版本**: 1.39
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -36,6 +36,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   11) `[DONE]` `#36` `lwip.conf` 与 RISC-V `system.conf` 的 IPC 策略漂移，可能在特定启动路径复现 `Permission denied`
   12) `[DONE]` `#39` `virtio_net_mmio.conf` 覆盖 RISC-V `system.conf` 后缺少 `PRIVCTL`/IRQ/完整 MMIO 窗口，磁盘轮廓网卡无法映射
   13) `[DONE]` `#40` VirtIO 1.0 仍按 10 字节 `virtio_net_hdr` 收包，modern 12 字节头导致 RX 错位；未按 FreeBSD `if_vtnet` 做 checksum/CTRL_RX
+  14) `[DONE]` `#41` GitHub-hosted packaging CI 使用仓库内带 `/home/donz/minix` 路径的 `obj.intrgcc/tools` 与 `tooldir.*`，binutils 缺 `bfd.h`；full-suite 在 tools 失败后仍跑；net smoke 把 OpenSBI 的 `\ ` 当成 shell prompt
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1306,6 +1307,16 @@ This section archives items with code-level fixes landed (some may still require
   历史 P1 #40：virtio-net-mmio 用户态 datapath 已按 FreeBSD `if_vtnet`
   对齐：VirtIO 1.0 的 12 字节头、独立 RX/TX 环、TX/RX checksum offload、
   CTRL_VQ 收包过滤、config ISR 链路状态；冒烟要求 `hdr 12`。
+- Former P1 #41: GitHub-hosted `ubuntu-24.04` packaging CI now wipes
+  tracked `obj.intrgcc/tooldir.*` and `obj.intrgcc/tools` before `build.sh
+  tools`, exports the runner-built `TOOLDIR`, and runs the full suite only
+  after a successful tools/distribution/package path. `qemu_net_smoke.py`
+  waits for `login:` or a real `# ` prompt (OpenSBI's `\ ` is not a shell),
+  and both smoke scripts treat PTY `EIO` as QEMU exit instead of crashing.
+  历史 P1 #41：GitHub-hosted packaging CI 在 `tools` 前丢掉带宿主机路径的
+  `obj.intrgcc/tooldir.*` / `tools`，导出本次构建的 `TOOLDIR`，并仅在
+  tools/distribution 成功后跑完整套件。net smoke 等待真正的 `login:` / `# `
+  提示符，不再把 OpenSBI 的 `\ ` 当成 shell；PTY `EIO` 视为 QEMU 退出。
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the
   required S-mode U-Boot launch chain (`-bios default -kernel ..._smode/uboot.elf`);

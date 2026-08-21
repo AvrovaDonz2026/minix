@@ -86,15 +86,23 @@ def read_until(
 
     while time.time() < deadline:
         rlist, _, _ = select.select([io.read_fd], [], [], 0.2)
-        if io.read_fd in rlist:
-            data = os.read(io.read_fd, 4096)
-            if not data:
+        if io.read_fd not in rlist:
+            if io.proc.poll() is not None:
                 break
-            chunk = data.decode(errors="ignore")
-            buf += chunk
-            for pat in patterns:
-                if pat.search(buf):
-                    return buf, pat
+            continue
+        try:
+            data = os.read(io.read_fd, 4096)
+        except BlockingIOError:
+            continue
+        except OSError:
+            # Dead PTY after QEMU exits (EIO on Linux).
+            break
+        if not data:
+            break
+        buf += data.decode(errors="ignore")
+        for pat in patterns:
+            if pat.search(buf):
+                return buf, pat
     return buf, None
 
 
@@ -172,7 +180,8 @@ def main() -> int:
     try:
         login_pat = re.compile(r"login:", re.IGNORECASE)
         passwd_pat = re.compile(r"password:", re.IGNORECASE)
-        prompt_pat = re.compile(r"\n.*[#\\$] ")
+        # OpenSBI's banner contains `\ ` which a loose `[#$] ` prompt matches.
+        prompt_pat = re.compile(r"(?:^|\r?\n)# ")
 
         boot = ""
         buf, _ = read_until(io, [login_pat, prompt_pat, FATAL_RE], args.timeout)

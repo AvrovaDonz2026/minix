@@ -92,14 +92,27 @@ if ! git ls-files --error-unmatch external/gpl3/binutils/patches/0011-riscv-rela
 fi
 
 find_riscv_tooldir() {
-    local d
+    local d best="" best_mt=0 mt
+
+    if [ -n "${TOOLDIR:-}" ] && [ -x "${TOOLDIR}/bin/riscv64-elf32-minix-readelf" ]; then
+        echo "$TOOLDIR"
+        return 0
+    fi
 
     for d in "$MINIX_ROOT/$OBJDIR"/tooldir.*; do
-        if [ -x "$d/bin/riscv64-elf32-minix-readelf" ]; then
-            echo "$d"
-            return 0
+        if [ -x "$d/bin/riscv64-elf32-minix-readelf" ] && [ -x "$d/bin/nbmake" ]; then
+            mt=$(stat -c %Y "$d" 2>/dev/null || echo 0)
+            if [ -z "$best" ] || [ "$mt" -ge "$best_mt" ]; then
+                best="$d"
+                best_mt="$mt"
+            fi
         fi
     done
+
+    if [ -n "$best" ]; then
+        echo "$best"
+        return 0
+    fi
 
     return 1
 }

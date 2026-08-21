@@ -232,6 +232,14 @@ jobs:
         run: |
           set -euo pipefail
           echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
+
+          # obj.intrgcc tracks a host tooldir (Linux-6.12.63+deb13, paths
+          # under /home/donz/minix) plus tools/ stamps. Incremental rebuild
+          # on ubuntu-24.04 then compiles binutils before regenerating
+          # bfd.h. Drop those trees so this runner gets a clean TOOLDIR.
+          echo "Dropping host-specific tool objects under ${OBJDIR}"
+          rm -rf "${OBJDIR}/tooldir."* "${OBJDIR}/tools"
+
           HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
           MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
           ./build.sh -U -j"${TOOLS_BUILD_JOBS}" -m "${MACHINE}" -O "${OBJDIR}" \
@@ -245,6 +253,25 @@ jobs:
             -V MKCXX=yes \
             -V MKLIBSTDCXX=yes \
             tools
+
+          tooldir=""
+          newest=0
+          for d in "${OBJDIR}"/tooldir.*; do
+            [[ -d "${d}" ]] || continue
+            [[ -x "${d}/bin/nbmake" && -x "${d}/bin/riscv64-elf32-minix-gcc" ]] || continue
+            mt="$(stat -c %Y "${d}")"
+            if (( mt >= newest )); then
+              newest="${mt}"
+              tooldir="$(cd "${d}" && pwd)"
+            fi
+          done
+          if [[ -z "${tooldir}" ]]; then
+            echo "No usable tooldir under ${OBJDIR} after tools build" >&2
+            ls -ld "${OBJDIR}"/tooldir.* >&2 || true
+            exit 1
+          fi
+          echo "TOOLDIR=${tooldir}" >>"${GITHUB_ENV}"
+          echo "TOOLDIR=${tooldir}"
 
       - name: Prepare GCC include install dirs (obj.intrgcc)
         shell: bash
@@ -703,7 +730,7 @@ jobs:
 
       - name: Full riscv64 test suite (blocking)
         id: full_suite
-        if: always()
+        if: success()
         shell: bash
         run: |
           set -euo pipefail

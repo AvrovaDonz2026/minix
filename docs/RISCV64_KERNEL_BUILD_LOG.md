@@ -1796,3 +1796,37 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `minix/tests/riscv64/qemu_net_smoke.py`
 - `minix/tests/riscv64/test_virtio_net_hdr.c`
 
+### Entry 39 — Unblock GitHub-hosted packaging CI (2026-08-21) / 修复 GitHub-hosted 打包 CI
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Symptom / 现象**:
+- Nightly/release on `ubuntu-24.04` failed in `Build tools`:
+  `bfd.h: No such file or directory` while compiling `elfxx-riscv.c`.
+  Tracked `obj.intrgcc/tools` stamps plus a `tooldir.Linux-6.12.63+deb13`
+  wrapper that still points at `/home/donz/minix`.
+- Full suite used `if: always()`, so kernel tests still ran after tools
+  failed. `nbmake-evbriscv64` exec'd the missing Donz `nbmake`.
+- `qemu_net_smoke.py` treated OpenSBI's `\ ` ASCII art as a `#/$` prompt
+  and failed with `virtio-net-mmio: initialized not found` before boot.
+
+**Fix / 修复**:
+1. Wipe `${OBJDIR}/tooldir.*` and `${OBJDIR}/tools` before `build.sh tools`.
+2. Export the runner-built `TOOLDIR` via `GITHUB_ENV`.
+3. Run the full suite only after a successful tools/distribution/package
+   path (`if: success()`). Log uploads stay `always()`.
+4. `run_tests.sh` prefers a tooldir with a real `nbmake` binary, rewrites
+   wrappers whose `NETBSDSRCDIR` is missing, and picks the newest tree.
+5. Net smoke waits for `login:` or `(?:^|\\n)# `; both smoke scripts
+   treat PTY `EIO` as QEMU exit.
+
+**Evidence / 证据**:
+- `issue.md` `#41`
+- `.github/workflows/nightly-riscv64.yml`
+- `.github/workflows/release-riscv64.yml`
+- `minix/tests/riscv64/run_tests.sh`
+- `minix/tests/riscv64/qemu_net_smoke.py`
+- `minix/tests/riscv64/qemu_io_smoke.py`
+- GitHub Actions runs `32476453612` / `32476453658`
+

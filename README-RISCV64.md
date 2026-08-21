@@ -846,6 +846,12 @@ reproducibility.
 - `shortsha` 来自当前构建提交（release: `--short=11`；nightly: `--short=12`）。
 - Runner 使用 GitHub-hosted `ubuntu-24.04`（不再依赖 self-hosted）。作业开始时清盘并
   `apt` 安装 `qemu-system-misc` / `u-boot-qemu` / 构建依赖。
+- `Build tools` 会先删掉仓库里带宿主机路径的 `obj.intrgcc/tooldir.*` 与
+  `obj.intrgcc/tools`（否则 binutils 增量编译会报 `bfd.h: No such file`），
+  并导出本次 runner 生成的 `TOOLDIR`。完整测试套件仅在 tools/distribution/
+  打包成功后运行（`if: success()`）；日志上传仍是 `if: always()`。
+- `qemu_net_smoke.py` 等待 `login:` 或真正的 `# ` 提示符。OpenSBI 横幅里的
+  `\ ` 不是 shell，不能当 prompt。
 - 构建时间较长（完整 `distribution`）；feature 分支/PR 上的审查 run 可在合并前验证
   完整性与可复现性，正式发布仍通过 `v*` tag 或 `workflow_dispatch` 触发。
 - `SOURCE_DATE_EPOCH`、`BUILDINFO.txt` 与 `SHA256SUMS` 共同构成可复现性记录。
@@ -944,6 +950,8 @@ Nightly 产物命名 / Nightly asset naming:
 说明 / Notes:
 - Runner 使用 GitHub-hosted `ubuntu-24.04`（不再依赖 self-hosted），并在构建前清盘、
   安装 QEMU/U-Boot 与宿主工具链依赖。
+- `Build tools` 同样先丢掉带 `/home/donz/minix` 路径的 `obj.intrgcc/tooldir.*`
+  与 `obj.intrgcc/tools`，并只在 tools/distribution 成功后跑完整套件。
 - 发布 run 会把上述产物同时放入：
   1) Actions workflow artifacts；2) GitHub Release（prerelease）资产。
 - 审查 run 仅上传 workflow artifacts，不触碰 GitHub Release / nightly tag。

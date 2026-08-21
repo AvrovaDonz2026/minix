@@ -27,18 +27,68 @@ passed=0
 failed=0
 skipped=0
 
-TOOLDIR_DEFAULT=""
 DESTDIR_DEFAULT=""
-for d in "$MINIX_ROOT"/obj.intrgcc/tooldir.* "$MINIX_ROOT"/obj/tooldir.*; do
-    if [ -x "$d/bin/riscv64-elf32-minix-gcc" ]; then
-        TOOLDIR_DEFAULT="$d"
-        break
-    fi
-done
 if [ -d "$MINIX_ROOT/obj.intrgcc/destdir.evbriscv64" ]; then
     DESTDIR_DEFAULT="$MINIX_ROOT/obj.intrgcc/destdir.evbriscv64"
 elif [ -d "$MINIX_ROOT/obj/destdir.evbriscv64" ]; then
     DESTDIR_DEFAULT="$MINIX_ROOT/obj/destdir.evbriscv64"
+fi
+
+# Tracked obj.intrgcc/tooldir.* wrappers hardcode /home/donz/minix. On GitHub
+# hosted runners that path does not exist, so nbmake-evbriscv64 execs a
+# missing nbmake. Prefer a tooldir whose nbmake binary is present, rewrite
+# wrappers only when the recorded srcdir is gone, and pick the newest tree
+# so a freshly built Azure tooldir wins over the checked-in Debian one.
+fix_nbmake_wrapper() {
+    local wrap="$1"
+    local tooldir="$2"
+    local old_src tmp
+
+    [ -f "$wrap" ] || return 0
+    old_src=$(sed -n 's/^NETBSDSRCDIR=\([^;]*\);.*/\1/p' "$wrap" | head -n 1)
+    old_src=${old_src#\'}
+    old_src=${old_src%\'}
+    [ -n "$old_src" ] || return 0
+    [ -d "$old_src" ] && return 0
+
+    echo "[INFO] Rewriting missing host path in $wrap ($old_src -> $MINIX_ROOT)"
+    tmp=$(mktemp)
+    sed -e "s|$old_src|$MINIX_ROOT|g" \
+        -e "s|^TOOLDIR=.*|TOOLDIR='$tooldir'; export TOOLDIR|" \
+        "$wrap" >"$tmp"
+    cat "$tmp" >"$wrap"
+    rm -f "$tmp"
+    chmod +x "$wrap"
+}
+
+pick_best_tooldir() {
+    local best="" best_mt=0 d mt wrap
+
+    for d in "$@"; do
+        [ -x "$d/bin/riscv64-elf32-minix-gcc" ] || continue
+        [ -x "$d/bin/nbmake" ] || continue
+        wrap="$d/bin/nbmake-evbriscv64"
+        if [ -f "$wrap" ]; then
+            fix_nbmake_wrapper "$wrap" "$d"
+        fi
+        mt=$(stat -c %Y "$d" 2>/dev/null || echo 0)
+        if [ -z "$best" ] || [ "$mt" -ge "$best_mt" ]; then
+            best="$d"
+            best_mt="$mt"
+        fi
+    done
+    printf '%s' "$best"
+}
+
+TOOLDIR_DEFAULT=""
+if [ -n "${TOOLDIR:-}" ] && [ -x "${TOOLDIR}/bin/riscv64-elf32-minix-gcc" ] && \
+   [ -x "${TOOLDIR}/bin/nbmake" ]; then
+    TOOLDIR_DEFAULT="$TOOLDIR"
+    fix_nbmake_wrapper "$TOOLDIR_DEFAULT/bin/nbmake-evbriscv64" "$TOOLDIR_DEFAULT"
+else
+    TOOLDIR_DEFAULT=$(pick_best_tooldir \
+        "$MINIX_ROOT"/obj.intrgcc/tooldir.* \
+        "$MINIX_ROOT"/obj/tooldir.*)
 fi
 NBMAKE_DEFAULT=""
 if [ -n "$TOOLDIR_DEFAULT" ] && [ -x "$TOOLDIR_DEFAULT/bin/nbmake-evbriscv64" ]; then

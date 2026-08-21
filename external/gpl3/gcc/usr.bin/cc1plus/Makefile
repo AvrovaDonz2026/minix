@@ -2,6 +2,7 @@
 
 PROG=		cc1plus
 SRCS=		${G_CXX_OBJS:S,c-family/,,:S,cp/,,:Nlibcpp.a:.o=.cc} main.cc ${PROG}-checksum.c
+.include "../Makefile.cc2c"
 
 # XXX
 NOMAN=	1
@@ -33,10 +34,16 @@ CHECKSUM_OBJS= ${LIBBACKTRACEOBJ}/libbacktrace.a \
 
 ## VER_CPPFLAGS from Makefile.inc
 CPPFLAGS.c-cppbuiltin.cc=	${VER_CPPFLAGS}
+CPPFLAGS.c-cppbuiltin.c+=	${CPPFLAGS.c-cppbuiltin.cc}
 c-cppbuiltin.cc: ${GCCARCH}/defs.mk
+c-cppbuiltin.c: ${GCCARCH}/defs.mk
 c-cppbuiltin.d c-cppbuiltin.o: ${BACKENDOBJ}/tm_p.h ${BACKENDOBJ}/configargs.h \
 	${BACKENDOBJ}/gt-c-family-c-cppbuiltin.h
+.if exists(${DIST}/gcc/config/default-c.cc)
 default-c.o: ${DIST}/gcc/config/default-c.cc
+.elif exists(${DIST}/gcc/config/default-c.c)
+default-c.o: ${DIST}/gcc/config/default-c.c
+.endif
 
 # YUCK.  but see timevar.h:POP_TIMEVAR_AND_RETURN
 CFLAGS+=	-Wno-error # not good enough: -Wno-return-type

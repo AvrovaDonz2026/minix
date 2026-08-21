@@ -2,11 +2,14 @@
 
 PROG=		lto1
 SRCS=		lto-partition.cc lto-object.cc lto.cc lto-lang.cc attribs.cc main.cc
+.include "../Makefile.cc2c"
 
 CPPFLAGS+=	-DPREFIX=\"/usr\"
 
 COPTS.lto.cc+=		-Wno-stack-protector
 COPTS.lto-lang.cc+=	-Wno-stack-protector
+COPTS.lto.c+=		${COPTS.lto.cc}
+COPTS.lto-lang.c+=	${COPTS.lto-lang.cc}
 
 .include "../Makefile.backend"
 .include "../Makefile.backtrace"

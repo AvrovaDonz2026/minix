@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.42
+**Version / 版本**: 1.43
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1938,5 +1938,23 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 **Evidence / 证据**:
 - `issue.md` `#60`
 - GitHub Actions run `32508128890`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+### Entry 55 — gcc 4.8.5 cpp-id-data.h (2026-08-21) / gcc 4.8.5 cpp-id-data.h
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32511340050` (`bfb31c72d`) echoed a well-formed
+  `G_GTFILES` list, then `gengtype -r` aborted on undefined `answer` /
+  `cpp_macro`.
+
+**Fix / 修复**:
+- Cherry-pick `#61` (no virtio-net): keep `cpp-id-data.h` when the
+  file exists.
+
+**Evidence / 证据**:
+- `issue.md` `#61`
+- GitHub Actions run `32511340050`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
 

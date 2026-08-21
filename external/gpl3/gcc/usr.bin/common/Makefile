@@ -8,8 +8,23 @@ LIBISPRIVATE=	yes
 
 LIB=		common
 
-SRCS=		diagnostic.cc pretty-print.cc intl.cc input.cc
-.include "../Makefile.cc2c"
+# gcc 4.8.5 libcommon is diagnostic.c pretty-print.c intl.c input.c
+# version.c. gcc 13 lists .cc names and dropped version.c. Do not use
+# Makefile.cc2c here: nightly 32524763481 archived libcommon.a from
+# input.o only, then native gcov failed to link fnotice/fancy_abort/
+# version_string. Map each basename the same way common-target does.
+_COMMON_SRCS=	diagnostic.cc pretty-print.cc intl.cc input.cc version.cc
+SRCS=
+.for f in ${_COMMON_SRCS}
+.if exists(${DIST}/gcc/${f})
+SRCS+=		${f}
+.elif exists(${DIST}/gcc/${f:S/.cc/.c/})
+SRCS+=		${f:S/.cc/.c/}
+.endif
+.endfor
+.if empty(SRCS)
+SRCS=		${_COMMON_SRCS}
+.endif
 
 # XXX make sure this doesn't have more than it needs
 CPPFLAGS+=	-I. -I${GCCARCH} -I${BACKENDOBJ} \
@@ -35,6 +50,8 @@ COPTS.diagnostic.cc=	-Wno-stack-protector
 COPTS.intl.cc=		-Wno-stack-protector
 COPTS.diagnostic.c+=	${COPTS.diagnostic.cc}
 COPTS.intl.c+=		${COPTS.intl.cc}
+CPPFLAGS.version.c+=	${VER_CPPFLAGS}
+CPPFLAGS.version.cc+=	${VER_CPPFLAGS}
 
 ${SRCS}: ${GCCARCH}/defs.mk
 
@@ -75,6 +92,7 @@ auto-host.h: gcc13-auto-host-force ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../
 
 ${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: config.h auto-host.h
 diagnostic.d diagnostic.o: version.h bversion.h
+version.d version.o: version.h bversion.h
 
 .include <bsd.lib.mk>
 

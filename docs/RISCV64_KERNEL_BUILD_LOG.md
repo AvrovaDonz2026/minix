@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.51
+**Version / 版本**: 1.52
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2224,6 +2224,19 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `external/gpl3/gcc/usr.bin/cc1/Makefile`
 - `external/gpl3/gcc/usr.bin/cc1obj/Makefile`
 - `external/gpl3/gcc/usr.bin/cc1plus/Makefile`
+
+## Entry 64 — 2026-08-21 23:30 UTC
+
+**Change / 变更**: Hosted nightly `32534503524` (`88ec45927`) linked native `lto1` (`#70` held), then failed with undefined `pointer_set_create`, `lto_symtab_prevailing_decl`, `dump_insn_slim`, `insn_data` / `gen_*` / `lookup_constraint`, GTY `gt_ggc_r_gt_dbxout_h`, and `madvise`. `libbackend.a` started at `ggc-page.o` with no `insn-*.o`. `#47` used `!empty(_b:Mininsn-*)`; that is `:M` + `ininsn-*`, so every generated `insn-*.o` was dropped (source lives in OBJDIR, not dist). gcc13 `G_OBJS` also omits 4.8.5 `pointer-set.o`, `lto-symtab.o`, `sched-vis.o` (`dump_insn_slim`), `dbxout.o` / `sdbout.o` / `tree-nomudflap.o`. Use `:Minsn-*` and add those objects when the dist source exists. Undef `HAVE_MADVISE` in native `config.h` so `ggc-page.c` does not call `madvise` (tools `config.h` is the Linux host).
+
+**Issue ID**: `#71`
+
+**Result / 结果**: Native libbackend keeps generated `insn-*.o` and 4.8.5-only objects gcc13 `G_OBJS` dropped. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#71`
+- GitHub Actions run `32534503524`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
 
 
 

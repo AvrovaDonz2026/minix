@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.62
+**Version / 版本**: 1.63
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -63,6 +63,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   38) `[DONE]` `#68` `#67` 之后原生 cpp 把 gcpp 链成三份 `ggc-none.o`，缺 `main`
   39) `[DONE]` `#69` `#68` 之后 gcpp 缺 `params.c` 的 `global_init_params`，且 `-lintl` 在 libcpp 之前
   40) `[DONE]` `#70` `#54` 在 `NOMAN` 之前 include `Makefile.cc2c`，`bsd.own.mk` 把 `MKMAN` 钉成 yes，dependall 要 `lto1.1`
+  41) `[DONE]` `#71` backend `:Mininsn-*` 匹配 `ininsn-*`，`insn-*.o` 未进 `libbackend.a`；gcc13 `G_OBJS` 还少 4.8.5 的 `pointer-set` / `sched-vis` / `lto-symtab`
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1564,6 +1565,21 @@ This section archives items with code-level fixes landed (some may still require
   历史 P1 #70：在 `Makefile.cc2c` 拉入 `bsd.own.mk` 之前设置
   `NOMAN`，避免 `MKMAN=yes` 去要 gcc 4.8.5 没有的 `lto1.1` /
   `cc1.1` / `cc1obj.1` / `cc1plus.1`。
+- Former P1 #71: hosted nightly `32534503524` (`88ec45927`) linked
+  native `lto1` then failed with undefined `pointer_set_create`,
+  `lto_symtab_prevailing_decl`, `dump_insn_slim`, `insn_data` /
+  `gen_*` / `lookup_constraint`, GTY `gt_ggc_r_gt_dbxout_h`, and
+  `madvise`. `libbackend.a` started at `ggc-page.o` with no
+  `insn-*.o`. `#47` used `!empty(_b:Mininsn-*)`; that is `:M` +
+  `ininsn-*`, so every generated `insn-*.o` was dropped (source
+  lives in OBJDIR, not dist). gcc13 `G_OBJS` also omits 4.8.5
+  `pointer-set.o`, `lto-symtab.o`, `sched-vis.o` (`dump_insn_slim`),
+  `dbxout.o` / `sdbout.o` / `tree-nomudflap.o`. Fix the `:M` pattern
+  to `:Minsn-*` and add those objects when the dist source exists.
+  Undef `HAVE_MADVISE` in native `config.h` so `ggc-page.c` does
+  not call `madvise` (tools `config.h` is the Linux host).
+  历史 P1 #71：backend `:Minsn-*` 保留生成的 `insn-*.o`，并补回
+  gcc13 `G_OBJS` 丢掉的 4.8.5 对象；MINIX 上关掉 `HAVE_MADVISE`。
 
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the

@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.54
+**Version / 版本**: 1.55
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -53,6 +53,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   28) `[DONE]` `#61` gcc13 路径无条件丢掉 `cpp-id-data.h`，4.8.5 上 `answer` / `cpp_macro` 未定义，`gengtype -r` abort
   29) `[DONE]` `#62` 4.8.5 `hash-table.c` 无条件 `#include "config.h"`，`-DGENERATOR_FILE` 下 host `config.h` 报 `#error` 并中止 `hash-table.lo`
   30) `[DONE]` `#63` 原生 libcpp Makefile 把 `G_libcpp_a_OBJS` 写成 `.cc`，4.8.5 dist 上 `don't know how to make charset.cc`
+  31) `[DONE]` `#64` 4.8.5 `gcov-io.h` 包含 `gcov-iov.h`，原生 gcov/cc1 未加入 libgcov arch `-I`
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1449,6 +1450,11 @@ This section archives items with code-level fixes landed (some may still require
   `G_libcpp_a_OBJS` onto `libcpp/*.c` when the dist has no `.cc`
   (no virtio-net).
   历史 P1 #63：从网络分支拣入 libcpp `.cc` 到 4.8.5 `.c` 映射。
+- Former P1 #64: hosted nightly `32519022725` (`445b0e907`) built
+  `libcpp.a`, then failed native gcov/cc1 with
+  `gcov-io.h:292:22: fatal error: gcov-iov.h`. Cherry-picked the
+  libgcov arch `-I` in `usr.bin/Makefile.inc` (no virtio-net).
+  历史 P1 #64：从网络分支拣入 usr.bin 的 `gcov-iov.h` 搜索路径。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

@@ -1820,6 +1820,11 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
    wrappers whose `NETBSDSRCDIR` is missing, and picks the newest tree.
 5. Net smoke waits for `login:` or `(?:^|\\n)# `; both smoke scripts
    treat PTY `EIO` as QEMU exit.
+6. After GNU binutils configure, generate `build/bfd/bfd.h` with host
+   `make` before the parallel `all-binutils` so `elfxx-riscv.lo` cannot
+   start without the header.
+7. libstdc++ `includes` skips gcc13-only names (`compare`, `any`, ...)
+   when `external/gpl3/gcc/dist` is the fetched gcc 4.8.5 snapshot.
 
 **Evidence / 证据**:
 - `issue.md` `#41`
@@ -1828,5 +1833,7 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `minix/tests/riscv64/run_tests.sh`
 - `minix/tests/riscv64/qemu_net_smoke.py`
 - `minix/tests/riscv64/qemu_io_smoke.py`
-- GitHub Actions runs `32476453612` / `32476453658`
+- `tools/binutils/Makefile`
+- `external/gpl3/gcc/lib/libstdc++-v3/include/Makefile`
+- GitHub Actions runs `32476453612` / `32476453658` / `32478447982` / `32478447998`
 

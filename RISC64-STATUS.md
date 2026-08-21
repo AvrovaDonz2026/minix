@@ -57,9 +57,10 @@
   VirtIO 1.0 使用 12 字节 `virtio_net_hdr`，独立 RX/TX 缓冲，协商 CSUM/
   GUEST_CSUM/CTRL_RX，并处理 config ISR 链路变化。
 - 本轮修复 GitHub-hosted packaging CI（`issue.md` `#41`）：`tools` 前丢掉
-  带 `/home/donz/minix` 路径的 `obj.intrgcc/tooldir.*` 与 `tools`，避免
-  binutils 增量编译缺 `bfd.h`；full-suite 仅在 tools/distribution 成功后运行；
-  net smoke 不再把 OpenSBI ASCII art 的 `\ ` 当成 shell prompt。
+  带 `/home/donz/minix` 路径的 `obj.intrgcc/tooldir.*` 与 `tools`；并行
+  binutils 前先生成 `bfd.h`；gcc 4.8.5 dist 上跳过 gcc13 才有的 libstdc++
+  头文件名；full-suite 仅在 tools/distribution 成功后运行；net smoke 不再
+  把 OpenSBI ASCII art 的 `\ ` 当成 shell prompt。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
@@ -129,8 +130,10 @@
   RX/TX rings, CSUM/GUEST_CSUM/CTRL_RX, and config-change link status.
 - This cycle unblocks GitHub-hosted packaging CI (`issue.md` `#41`): wipe
   tracked host `obj.intrgcc/tooldir.*` and `tools` before `build.sh tools`,
-  run the full suite only after a successful tools/distribution path, and
-  stop treating OpenSBI's `\ ` banner as a MINIX shell prompt.
+  generate `bfd.h` before parallel RISC-V binutils, skip gcc13-only
+  libstdc++ headers on the gcc 4.8.5 dist, run the full suite only after
+  a successful tools/distribution path, and stop treating OpenSBI's `\ `
+  banner as a MINIX shell prompt.
 - Native toolchain work has entered Stage N1/N2 with both a build helper
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate

@@ -62,6 +62,19 @@ CONFIGURE_ARGS+= \
 .endif # defined(__MINIX)
 .include "${.CURDIR}/../Makefile.gnuhost"
 
+.if defined(__MINIX)
+# nbmake + Makefile.gnuwrap races RISC-V bfd objects against stmp-bfd-h,
+# so elfxx-riscv.lo can compile before bfd.h exists. Materialize the
+# header with host GNU make after configure, before parallel all.
+${.OBJDIR}/build/bfd/bfd.h: .configure_done
+	@mkdir -p ${.OBJDIR}/build/bfd
+	@if [ -f ${.OBJDIR}/build/bfd/Makefile ]; then \
+		(cd ${.OBJDIR}/build/bfd && make bfd.h bfdver.h); \
+	fi
+
+.build_done: ${.OBJDIR}/build/bfd/bfd.h
+.endif
+
 CCADDFLAGS=	-I${DESTDIR}/usr/include -L${DESTDIR}/lib -L${DESTDIR}/usr/lib -B${DESTDIR}/usr/lib/
 
 # Force avoiding possibly non-executable install-sh.

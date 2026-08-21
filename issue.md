@@ -1313,10 +1313,15 @@ This section archives items with code-level fixes landed (some may still require
   after a successful tools/distribution/package path. `qemu_net_smoke.py`
   waits for `login:` or a real `# ` prompt (OpenSBI's `\ ` is not a shell),
   and both smoke scripts treat PTY `EIO` as QEMU exit instead of crashing.
+  Hosted follow-up: generate `bfd.h` before parallel RISC-V bfd objects,
+  and skip gcc13-only libstdc++ names (`compare`, `any`, ...) when the
+  fetched dist is gcc 4.8.5.
   历史 P1 #41：GitHub-hosted packaging CI 在 `tools` 前丢掉带宿主机路径的
   `obj.intrgcc/tooldir.*` / `tools`，导出本次构建的 `TOOLDIR`，并仅在
   tools/distribution 成功后跑完整套件。net smoke 等待真正的 `login:` / `# `
   提示符，不再把 OpenSBI 的 `\ ` 当成 shell；PTY `EIO` 视为 QEMU 退出。
+  后续：并行 binutils 前先生成 `bfd.h`；gcc 4.8.5 dist 上跳过 gcc13 才有的
+  libstdc++ 头文件名。
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the
   required S-mode U-Boot launch chain (`-bios default -kernel ..._smode/uboot.elf`);

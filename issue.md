@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.57
+**Version / 版本**: 1.58
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -56,6 +56,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   31) `[DONE]` `#64` 4.8.5 `gcov-io.h` 包含 `gcov-iov.h`，原生 gcov/cc1 未加入 libgcov arch `-I`
   32) `[DONE]` `#65` `#64` 的 `${.PARSEDIR}` `-I` 展开为空，编译行变成 `-I/../lib/...`
   33) `[DONE]` `#66` LLVM packaging 编 libstdc++ 时 `compatibility-atomic-c++0x.cc` 踩单线程 `<atomic>` `#error`
+  34) `[DONE]` `#67` `#65` 编过 gcov.c 后，libcommon.a 只有 `input.o`，链接缺 `fnotice` / `version_string`
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1139,7 +1140,8 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     `adc524d54` (`32521564417`) failed in `compatibility-atomic-c++0x.cc`
     (`<atomic>` is not supported on this single threaded system). `#66`
     skips that source on riscv64. Do not mix onto the network PR
-    (`MKCXX=no`).
+    (`MKCXX=no`). After `#66`, this branch reaches native gcov; `#67`
+    maps libcommon onto gcc 4.8.5 diagnostic/`version.c` sources.
 - Priority / 优先级: P2 (toolchain completeness; gated by packaging CI)
 
 ### 38) [DONE] release-riscv64 libstdc++ `functexcept` no-future gate stabilization / release-riscv64 中 libstdc++ `functexcept` no-future 门禁稳定化（已完成）
@@ -1480,6 +1482,15 @@ This section archives items with code-level fixes landed (some may still require
   not mix onto the network PR.
   历史 P1 #66：riscv64 libstdc++ 跳过 `compatibility-atomic-c++0x.cc`
   （单线程 `<atomic>`）。仅本 LLVM 分支。
+- Former P1 #67: hosted nightly `32524763481` (`7014a3bb6`) compiled
+  native gcov.c, then linking gcov failed with undefined `fnotice`,
+  `fancy_abort`, `diagnostic_initialize`, `version_string`,
+  `pkgversion_string`, and `bug_report_url`. Cherry-picked mapping
+  libcommon diagnostic/pretty-print/intl/input/version onto gcc 4.8.5
+  `.c` and restoring `version.c` (no virtio-net). This branch's HEAD
+  died in libstdc++ until `#66`, so it may not have re-hit gcov yet.
+  历史 P1 #67：从网络分支拣入 libcommon 按 dist 映射 diagnostic/
+  pretty-print/intl/input/version，补回 gcc13 丢掉的 `version.c`。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.48
+**Version / 版本**: 1.49
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2054,4 +2054,28 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `issue.md` `#66`
 - GitHub Actions run `32521564417`
 - `external/gpl3/gcc/lib/libstdc++-v3/arch/riscv64/defs.mk`
+
+### Entry 61 — gcc 4.8.5 libcommon diagnostic sources (2026-08-21) / gcc 4.8.5 libcommon 诊断源
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32524763481` (`7014a3bb6`) compiled native
+  gcov.c, then linking gcov failed with undefined `fnotice`,
+  `fancy_abort`, `diagnostic_initialize`, `version_string`,
+  `pkgversion_string`, and `bug_report_url`. `libcommon.a` archived
+  only `input.o`.
+- This branch died in libstdc++ until `#66` and may not have re-hit
+  gcov yet.
+
+**Fix / 修复**:
+- Cherry-pick `#67` (no virtio-net): map libcommon
+  diagnostic/pretty-print/intl/input/version onto gcc 4.8.5 `.c` like
+  common-target, and restore `version.c` that gcc13 dropped. Do not
+  use `Makefile.cc2c` here.
+
+**Evidence / 证据**:
+- `issue.md` `#67`
+- GitHub Actions run `32524763481`
+- `external/gpl3/gcc/usr.bin/common/Makefile`
 

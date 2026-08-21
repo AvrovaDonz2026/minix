@@ -3,13 +3,23 @@
 #
 # Makefile fragment to build genhooks and *target-hooks*.h
 #
+# Packaging CI fetches gcc 4.8.5 (genhooks.c). gcc 13 native
+# Makefiles list genhooks.cc.
+#
 
 .for f in hooks
-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc
+.if exists(${DIST}/gcc/gen${f}.cc)
+GCC_DIST_SRC.gen${f}=	${DIST}/gcc/gen${f}.cc
+.elif exists(${DIST}/gcc/gen${f}.c)
+GCC_DIST_SRC.gen${f}=	${DIST}/gcc/gen${f}.c
+.endif
+.if defined(GCC_DIST_SRC.gen${f})
+gen${f}.lo: ${HH} ${GCC_DIST_SRC.gen${f}}
 gen${f}: gen${f}.lo ${GENPROG_ERROR_DEPENDS} 
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
 CLEANFILES+=	genhooks
+.endif
 .endfor
 
 # and now the outputs of genhooks

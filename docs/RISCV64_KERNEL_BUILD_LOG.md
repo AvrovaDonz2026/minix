@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.46
+**Version / 版本**: 1.47
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2154,6 +2154,19 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 **Evidence / 证据**:
 - `issue.md` `#64`
 - GitHub Actions run `32519022725`
+- `external/gpl3/gcc/usr.bin/Makefile.inc`
+
+## Entry 59 — 2026-08-21 20:35 UTC
+
+**Change / 变更**: Hosted nightly `32521377902` (`6358e38bb`) still failed native gcov/cc1 with `gcov-io.h:292:22: fatal error: gcov-iov.h: No such file or directory`. `#64` added `-I${.PARSEDIR}/../lib/libgcc/libgcov/arch/${GCC_MACHINE_ARCH}`; `.PARSEDIR` expanded empty, so the compile line was `-I/../lib/libgcc/libgcov/arch/riscv64`. Resolve the path from `NETBSDSRCDIR`.
+
+**Issue ID**: `#65`
+
+**Result / 结果**: Native gcov/cc1 `-I` for `gcov-iov.h` is an absolute src path. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#65`
+- GitHub Actions run `32521377902`
 - `external/gpl3/gcc/usr.bin/Makefile.inc`
 
 

@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.36
+**Version / 版本**: 1.37
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -78,7 +78,7 @@
   RX/TX 环深 256，协商 `CTRL_MAC` / `CTRL_RX_EXTRA`，`ndr_set_hwaddr`
   走 `CTRL_MAC_ADDR_SET`，并设置 `CTRL_RX_NOBCAST`。net smoke 要求
   `rx 256`。
-- 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64`）：
+- 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65`）：
   gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
   `#50`：backend 生成器按 dist 选择 `.cc`/`.c`。`#52`：丢掉 4.8.5
   没有的 `gcc/common.md`，只把存在的 `.md` 传给生成器。`#53`：tools gcc
@@ -99,7 +99,8 @@
   后，libcpp 仍按 gcc13 要 `charset.cc`；4.8.5 只有 `libcpp/*.c`，按
   dist 把 `G_libcpp_a_OBJS` 映射到 `.c`。`#64`：`#63` 编出 `libcpp.a`
   后，4.8.5 `gcov-io.h` 仍要 `gcov-iov.h`；usr.bin 补上 libgcov arch 的
-  `-I`，与 backend 一致。
+  `-I`，与 backend 一致。`#65`：`#64` 的 `${.PARSEDIR}` 展开为空，编译
+  行变成 `-I/../lib/...`；改为从 `NETBSDSRCDIR` 解析绝对路径。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
@@ -189,7 +190,7 @@
 - Follow-up (`issue.md` `#49`): 256-slot RX/TX rings, `CTRL_MAC` /
   `CTRL_RX_EXTRA`, `ndr_set_hwaddr` via `CTRL_MAC_ADDR_SET`, and
   `CTRL_RX_NOBCAST`. Net smoke requires `rx 256`.
-- Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64`): gcov skips
+- Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65`): gcov skips
   `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
   `#50`: backend generators resolve `.cc`/`.c` from dist.
   `#52`: drop gcc13 `gcc/common.md` when the 4.8.5 dist lacks it.
@@ -218,6 +219,8 @@
   `#64`: after `#63` built `libcpp.a`, 4.8.5 `gcov-io.h` still
   includes `gcov-iov.h`; add the libgcov arch `-I` in usr.bin so
   gcov and cc1 see the mknative header.
+  `#65`: `#64` `${.PARSEDIR}` expanded empty (`-I/../lib/...`);
+  resolve the include from `NETBSDSRCDIR` instead.
 - Native toolchain work has entered Stage N1/N2 with both a build helper
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate

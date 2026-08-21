@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.22
+**Version / 版本**: 1.23
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -20,7 +20,7 @@
   `.S` 上 alias `*l`。`#50` 把 backend 生成器从 gcc13 的 `.cc` 映射到
   4.8.5 的 `.c`。`#51` 把 `RISCVTargetInfo::array_lengthof` 移到完整
   寄存器数组定义之后，修复 `Targets.cpp` 编译。`#52` 丢掉 4.8.5 没有的
-  `gcc/common.md`。
+  `gcc/common.md`。`#53`：tools gcc 4.8.5 不生成 `version.h` 时改为合成头文件。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -82,7 +82,8 @@
   `#50` maps backend generators from gcc13 `.cc` to gcc 4.8.5 `.c`.
   `#51` moves `RISCVTargetInfo` `array_lengthof` after the complete
   register arrays so `Targets.cpp` compiles. `#52` drops gcc13
-  `gcc/common.md` when the 4.8.5 dist lacks it.
+  `gcc/common.md` when the 4.8.5 dist lacks it. `#53` synthesizes
+  `version.h` when tools gcc 4.8.5 does not emit it.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

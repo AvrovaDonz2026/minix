@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.43
+**Version / 版本**: 1.44
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -42,6 +42,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   17) `[DONE]` `#50` 原生 backend Makefile 写死 gcc13 的 `gengenrtl.cc` 等生成器，4.8.5 dist 上 `don't know how to make gengenrtl.cc`
   18) `[DONE]` `#51` LLVM 3.6.1 `RISCVTargetInfo` 在不完整静态数组上调用 `array_lengthof`，tools 编译 `Targets.cpp` 失败
   19) `[DONE]` `#52` 原生 backend 依赖 gcc13 的 `gcc/common.md`，4.8.5 dist 上 `don't know how to make common.md`
+  20) `[DONE]` `#53` 原生 backend 依赖 tools gcc 的 `build/gcc/version.h`，4.8.5 GNU 构建不生成该文件
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1383,6 +1384,14 @@ This section archives items with code-level fixes landed (some may still require
   looking for gcc13 `common.md` on gcc 4.8.5. Cherry-picked the
   `G_md_file` exists() filter (no virtio-net).
   历史 P1 #52：从网络分支拣入 `G_md_file` 存在性过滤。
+- Former P1 #53: hosted nightly `32491621998` (`6aa93380c`) passed tools
+  then failed backend with
+  `don't know how to make .../tools/gcc/build/gcc/version.h`. gcc 13
+  native Makefiles copy `version.h` from the GNU tools gcc build; gcc
+  4.8.5 does not emit it. Cherry-picked `Makefile.toolsgccfiles` (no
+  virtio-net): copy when present, otherwise synthesize `version.h` /
+  `bversion.h` / `plugin-version.h` and stub gcc13-only pass/cfn files.
+  历史 P1 #53：从网络分支拣入 tools gcc `version.h` 合成。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

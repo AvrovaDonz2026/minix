@@ -52,12 +52,14 @@ GCC_DIST_SRC.${_n}=	${DIST}/gcc/${_n}.c
 
 # Keep generated insn-* / gtype-desc / options-save; drop objects whose
 # .cc/.c is missing from this dist. insn-enums needs genenums (gcc 5+).
+# :Minsn-* is :M + insn-*. :Mininsn-* matches ininsn-* and dropped
+# every insn-*.o (nightly 32534503524 archived libbackend without them).
 GCC_BACKEND_OBJS=
 .for o in ${G_OBJS}
 _b:=	${o:R}
 .if ${_b} == "insn-enums" && !defined(GCC_DIST_SRC.genenums)
 # gcc 4.8.5 has no genenums; drop insn-enums.o
-.elif ${_b} == "gtype-desc" || ${_b} == "options-save" || !empty(_b:Mininsn-*)
+.elif ${_b} == "gtype-desc" || ${_b} == "options-save" || !empty(_b:Minsn-*)
 GCC_BACKEND_OBJS+=	${o}
 .elif exists(${DIST}/gcc/${_b}.cc) || exists(${DIST}/gcc/${_b}.c) || \
       exists(${DIST}/gcc/config/${_b}.cc) || exists(${DIST}/gcc/config/${_b}.c) || \
@@ -68,6 +70,20 @@ GCC_BACKEND_OBJS+=	${o}
 .endif
 .endfor
 G_OBJS:=	${GCC_BACKEND_OBJS}
+
+# gcc 13 mknative dropped 4.8.5-only backend objects. Add them when
+# the dist still has the source (pointer-set, lto-symtab, sched-vis
+# dump_insn_slim, dbxout/sdbout/tree-nomudflap GTY, older graphite).
+.for _n in pointer-set lto-symtab sched-vis dbxout sdbout tree-nomudflap \
+	bt-load loop-unswitch omega regmove tree-optimize \
+	tree-ssa-copyrename graphite-blocking graphite-clast-to-gimple \
+	graphite-interchange
+.if empty(G_OBJS:M${_n}.o)
+.if exists(${DIST}/gcc/${_n}.c) || exists(${DIST}/gcc/${_n}.cc)
+G_OBJS+=	${_n}.o
+.endif
+.endif
+.endfor
 
 GCC_BACKEND_BUILD_RTL=
 .for o in ${G_BUILD_RTL}
@@ -305,6 +321,12 @@ config.h: gcc13-config-force ${TOOLSGCCBUILD}/config.h ${.PARSEDIR}/../Makefile.
 		echo '#undef HAVE_ZSTD_H'; \
 		echo '#endif'; \
 	} > ${.TARGET}
+.if defined(__MINIX)
+# tools gcc config.h is the Linux host (HAVE_MADVISE 1). Native
+# ggc-page.c would then call madvise, which MINIX libc lacks
+# (nightly 32534503524).
+	echo '#undef HAVE_MADVISE' >> ${.TARGET}
+.endif
 
 auto-host.h: gcc13-auto-host-force ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../Makefile.hostprobes
 	${_MKTARGET_CREATE}

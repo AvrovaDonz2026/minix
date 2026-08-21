@@ -160,7 +160,12 @@ GCC13_BACKEND_G_GCC_H=
 .if !empty(GCC13_BACKEND_G_GCC_H_DIST:M${h})
 GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${DIST}/gcc/${h}
 .elif !empty(GCC13_BACKEND_G_GCC_H_TOOLS:M${h})
+.if exists(${TOOLSGCCBUILD}/${h})
 GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${TOOLSGCCBUILD}/${h}
+.else
+# gcc 4.8.5 tools gcc does not emit these; depend on the local stub.
+GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${h}
+.endif
 .else
 GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${h}
 .endif

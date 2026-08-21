@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.38
+**Version / 版本**: 1.39
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2051,5 +2051,18 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#56`
 - GitHub Actions run `32497228532`
 - `external/gpl3/gcc/Makefile.hooks`
+
+## Entry 51 — 2026-08-21 16:15 UTC
+
+**Change / 变更**: Hosted nightly `32499756350` (`e0766af8e`) compiled `genhooks.c` then failed linking `gengtype` with undefined `version_string`. gcc 4.8.5 still ships `version.c` and `gengtype-state.c`; gcc 13 dropped `version.o`. Link `version.lo` into `gengtype` with `VER_CPPFLAGS`. Treat `gtype-desc.c` as the 4.8.5 GTY output instead of gcc13 `gtype-desc.cc`.
+
+**Issue ID**: `#57`
+
+**Result / 结果**: Local Makefile review against gcc 4.8.5 `Makefile.in` (`build/gengtype` links `build/version.o`). CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#57`
+- GitHub Actions run `32499756350`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
 
 

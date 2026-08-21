@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.28
+**Version / 版本**: 1.29
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -78,16 +78,16 @@
   RX/TX 环深 256，协商 `CTRL_MAC` / `CTRL_RX_EXTRA`，`ndr_set_hwaddr`
   走 `CTRL_MAC_ADDR_SET`，并设置 `CTRL_RX_NOBCAST`。net smoke 要求
   `rx 256`。
-- 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56`）：
+- 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57`）：
   gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
-  `#50`：backend 生成器按 dist 选择 `.cc`/`.c`，跳过 `gengtype-state` 等
-  gcc13 才有的文件；4.8.5 的 gengtype 不走 state 文件。`#52`：丢掉 4.8.5
+  `#50`：backend 生成器按 dist 选择 `.cc`/`.c`。`#52`：丢掉 4.8.5
   没有的 `gcc/common.md`，只把存在的 `.md` 传给生成器。`#53`：tools gcc
   4.8.5 不生成 `version.h` 时改为合成头文件。`#54`：4.8.5 `genmodes` 没有
   `-i`，改为空的 `insn-modes-inline.h`；frontend/cc1 的 `.cc` 映射到 `.c`。
   `#55`：`G_GCC_H` 在 tools 没有 `version.h` 时改依赖本地合成文件。
   `#56`：`Makefile.hooks` 把 gcc13 的 `genhooks.cc` 映射到 4.8.5 的
-  `genhooks.c`。
+  `genhooks.c`。`#57`：4.8.5 的 gengtype 仍链 `version.c`，并且有
+  `gengtype-state.c`；GTY 产出是 `gtype-desc.c` 而不是 gcc13 的 `.cc`。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
@@ -177,16 +177,17 @@
 - Follow-up (`issue.md` `#49`): 256-slot RX/TX rings, `CTRL_MAC` /
   `CTRL_RX_EXTRA`, `ndr_set_hwaddr` via `CTRL_MAC_ADDR_SET`, and
   `CTRL_RX_NOBCAST`. Net smoke requires `rx 256`.
-- Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56`): gcov skips
+- Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57`): gcov skips
   `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
-  `#50`: backend generators resolve `.cc`/`.c` from dist, skip gcc13-only
-  files such as `gengtype-state`, and run 4.8.5 `gengtype` without state files.
+  `#50`: backend generators resolve `.cc`/`.c` from dist.
   `#52`: drop gcc13 `gcc/common.md` when the 4.8.5 dist lacks it.
   `#53`: synthesize `version.h` when tools gcc 4.8.5 does not emit it.
   `#54`: stub `insn-modes-inline.h` because 4.8.5 `genmodes` has no `-i`,
   and map remaining frontend/cc1 `.cc` sources to `.c`.
   `#55`: if tools gcc has no `version.h`, `G_GCC_H` depends on the local stub.
   `#56`: `Makefile.hooks` maps gcc13 `genhooks.cc` to gcc 4.8.5 `genhooks.c`.
+  `#57`: 4.8.5 `gengtype` still links `version.c` and has `gengtype-state.c`;
+  GTY output is `gtype-desc.c`, not gcc13 `.cc`.
 - Native toolchain work has entered Stage N1/N2 with both a build helper
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate

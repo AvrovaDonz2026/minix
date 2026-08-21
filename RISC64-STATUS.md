@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.40
+**Version / 版本**: 1.41
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -57,6 +57,11 @@
   `32532469511`（`9cb398c22`）链上 `gcpp` 后报 `don't know how
   to make lto1.1`。本分支仍死在 libstdc++ `functexcept.cc` /
   `pthread.h`，不要把 pthread 修到网络 PR。
+  `#71`：从网络分支拣入 `:Minsn-*`（不是 `:Mininsn-*`）并补回
+  gcc13 `G_OBJS` 丢掉的 4.8.5 对象。网络 nightly
+  `32534503524`（`88ec45927`）链上 `lto1` 后缺 `pointer_set_*` /
+  `insn_data`。本分支仍死在 `pthread.h`，不要把 pthread 修到
+  网络 PR。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -161,6 +166,11 @@
   lto1.1` after `#69` linked `gcpp`. This branch still dies in
   libstdc++ `functexcept.cc` / `pthread.h` until a later
   LLVM-only fix. Do not mix pthread onto the network PR.
+  `#71`: cherry-pick `:Minsn-*` (not `:Mininsn-*`) and 4.8.5-only
+  backend objects (no virtio-net). Network nightly `32534503524`
+  (`88ec45927`) linked `lto1` then missed `pointer_set_*` /
+  `insn_data`. This branch still dies in `pthread.h`. Do not
+  mix pthread onto the network PR.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

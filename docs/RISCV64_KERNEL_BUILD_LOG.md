@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.52
+**Version / 版本**: 1.53
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2154,4 +2154,32 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `external/gpl3/gcc/usr.bin/cc1/Makefile`
 - `external/gpl3/gcc/usr.bin/cc1obj/Makefile`
 - `external/gpl3/gcc/usr.bin/cc1plus/Makefile`
+
+### Entry 65 — insn-* :M typo and 4.8.5 backend objects (2026-08-21) / insn-* :M 笔误与 4.8.5 backend 对象
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32534503524` (`88ec45927`) linked native
+  `lto1`, then failed with undefined `pointer_set_create`,
+  `lto_symtab_prevailing_decl`, `dump_insn_slim`, `insn_data` /
+  `gen_*`, and `madvise`.
+- `#47` used `!empty(_b:Mininsn-*)`; that is `:M` + `ininsn-*`,
+  so generated `insn-*.o` never entered `libbackend.a`.
+- gcc13 `G_OBJS` also omits 4.8.5 `pointer-set.o`, `lto-symtab.o`,
+  `sched-vis.o`, `dbxout.o` / `sdbout.o` / `tree-nomudflap.o`.
+- This branch still dies in libstdc++ `functexcept.cc`
+  (`pthread.h` missing). That is LLVM-only and is not this
+  cherry-pick.
+
+**Fix / 修复**:
+- Cherry-pick `#71` (no virtio-net): use `:Minsn-*`, add 4.8.5-only
+  backend objects when the dist source exists, and undef
+  `HAVE_MADVISE` in native `config.h`. Do not mix the LLVM
+  `pthread.h` / `functexcept` residual onto the network PR.
+
+**Evidence / 证据**:
+- `issue.md` `#71`
+- GitHub Actions run `32534503524`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
 

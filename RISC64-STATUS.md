@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.32
+**Version / 版本**: 1.33
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -32,6 +32,7 @@
   recipe 里的 `printf '%s\n'`，避免 make 把 `\n` 拆成真换行。`#61`：
   从网络分支拣入 4.8.5 `cpp-id-data.h` 保留，只在文件不存在时丢掉。`#62`：
   从网络分支拣入 `GENERATOR_FILE` 下 `config.h` 转到 arch `bconfig.h`。
+  `#63`：从网络分支拣入 libcpp 的 `.cc` 源按 dist 映射到 4.8.5 的 `.c`。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -105,6 +106,7 @@
   `#60` echoes each `G_GTFILES` word so make does not split `printf '%s\n'`.
   `#61` keeps `cpp-id-data.h` on gcc 4.8.5; only drops it when absent.
   `#62` wraps `config.h` so `-DGENERATOR_FILE` includes arch `bconfig.h`.
+  `#63` maps native libcpp `.cc` SRCS onto gcc 4.8.5 `libcpp/*.c`.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

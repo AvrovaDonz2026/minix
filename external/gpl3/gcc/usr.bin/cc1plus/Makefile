@@ -1,11 +1,11 @@
 #	$NetBSD: Makefile,v 1.9 2014/05/31 22:55:17 mrg Exp $
 
+# Set NOMAN before Makefile.cc2c pulls bsd.own.mk. See lto1/Makefile.
+NOMAN=		# defined
+
 PROG=		cc1plus
 SRCS=		${G_CXX_OBJS:S,c-family/,,:S,cp/,,:Nlibcpp.a:.o=.cc} main.cc ${PROG}-checksum.c
 .include "../Makefile.cc2c"
-
-# XXX
-NOMAN=	1
 
 CPPFLAGS+=	-I${DIST}/gcc/cp
 CPPFLAGS.prefix.cc+=     -DPREFIX=\"/usr\"

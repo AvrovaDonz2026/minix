@@ -1,5 +1,8 @@
 #	$NetBSD: Makefile,v 1.8 2014/05/31 22:55:17 mrg Exp $
 
+# Set NOMAN before Makefile.cc2c pulls bsd.own.mk. See lto1/Makefile.
+NOMAN=		# defined
+
 MYOBJS=		${G_OBJC_OBJS} ${G_C_AND_OBJC_OBJS} 
 PROG=		cc1obj
 SRCS=		${MYOBJS:S,objc/,,:S,c-family/,,:S,c/,,:Nlibcpp.a:.o=.cc} main.cc ${PROG}-checksum.c

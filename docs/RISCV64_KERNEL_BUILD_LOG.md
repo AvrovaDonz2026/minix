@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.40
+**Version / 版本**: 1.41
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2076,6 +2076,19 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 **Evidence / 证据**:
 - `issue.md` `#58`
 - GitHub Actions run `32502264930`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+## Entry 53 — 2026-08-21 17:20 UTC
+
+**Change / 变更**: Hosted nightly `32505629389` (`d93d49dcb`) failed `gtyp-input.list.tmp` with `sh: .for: not found` (exit 127). `#58` put `.for` inside a `{ \' recipe continuation, so nbmake passed it to the shell. Emit one quoted `printf` per `G_GTFILES` word as its own recipe line.
+
+**Issue ID**: `#59`
+
+**Result / 结果**: Makefile recipe now expands `.for` at parse time. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#59`
+- GitHub Actions run `32505629389`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
 
 

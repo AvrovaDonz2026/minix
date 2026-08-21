@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.49
+**Version / 版本**: 1.50
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2194,6 +2194,21 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#68`
 - GitHub Actions run `32527820716`
 - `external/gpl3/gcc/usr.bin/Makefile.cc2c`
+
+## Entry 62 — 2026-08-21 22:20 UTC
+
+**Change / 变更**: Hosted nightly `32530101083` (`92237adf3`) linked native `gcpp` as `cppspec.o gcc.o ggc-none.o` (`#68` held), then failed with undefined `global_init_params` / `compiler_params` from gcc 4.8.5 `params.c`, and `dgettext` / `bindtextdomain` from libcpp. gcc13 dropped `params.cc` from common-target; map it back onto `params.c`. Repeat `-lintl` after frontend archives so the static RISC-V link sees libintl after libcpp.a.
+
+**Issue ID**: `#69`
+
+**Result / 结果**: libcommon-target includes 4.8.5 `params.c`; frontend drivers relink `-lintl` after archives. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#69`
+- GitHub Actions run `32530101083`
+- `external/gpl3/gcc/usr.bin/common-target/Makefile`
+- `external/gpl3/gcc/usr.bin/Makefile.frontend`
+
 
 
 

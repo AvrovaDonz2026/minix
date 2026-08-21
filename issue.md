@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.60
+**Version / 版本**: 1.61
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -61,6 +61,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   36) `[DONE]` `#65` `#64` 的 `${.PARSEDIR}` `-I` 展开为空，编译行变成 `-I/../lib/...`
   37) `[DONE]` `#67` `#65` 编过 gcov.c 后，libcommon.a 只有 `input.o`，链接缺 `fnotice` / `version_string`
   38) `[DONE]` `#68` `#67` 之后原生 cpp 把 gcpp 链成三份 `ggc-none.o`，缺 `main`
+  39) `[DONE]` `#69` `#68` 之后 gcpp 缺 `params.c` 的 `global_init_params`，且 `-lintl` 在 libcpp 之前
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1535,6 +1536,15 @@ This section archives items with code-level fixes landed (some may still require
   `${s:R}.c` directly, like common-target.
   历史 P1 #68：`Makefile.cc2c` 直接追加循环变量，避免 bmake 把所有
   `.cc` 收成最后一个匹配。
+- Former P1 #69: hosted nightly `32530101083` (`92237adf3`) linked
+  native `gcpp` as `cppspec.o gcc.o ggc-none.o` (`#68` held), then
+  failed with undefined `global_init_params` / `compiler_params`
+  from gcc 4.8.5 `params.c`, and `dgettext` / `bindtextdomain` from
+  libcpp. gcc13 dropped `params.cc` from common-target; map it back
+  onto `params.c`. Repeat `-lintl` after frontend archives so the
+  static RISC-V link sees libintl after libcpp.a.
+  历史 P1 #69：common-target 补回 4.8.5 的 `params.c`，frontend 在
+  静态库后再链一次 `-lintl`。
 
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the

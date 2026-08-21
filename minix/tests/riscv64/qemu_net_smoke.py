@@ -27,6 +27,8 @@ FATAL_RE = re.compile(
 
 INIT_MARKER = "virtio-net-mmio: initialized"
 HDR_MARKER = "virtio-net-mmio: hdr 12"
+MRG_MARKER = "mrg on"
+EVENT_IDX_MARKER = "event_idx on"
 
 
 def log(msg: str) -> None:
@@ -224,6 +226,18 @@ def main() -> int:
             log(f"FAIL: {HDR_MARKER} not found")
             return 1
         log(f"[PASS] {HDR_MARKER}")
+
+        if MRG_MARKER not in boot:
+            log_tail(boot, "Missing mergeable RX marker")
+            log(f"FAIL: {MRG_MARKER} not found")
+            return 1
+        log(f"[PASS] {MRG_MARKER}")
+
+        if EVENT_IDX_MARKER not in boot:
+            log_tail(boot, "Missing EVENT_IDX marker")
+            log(f"FAIL: {EVENT_IDX_MARKER} not found")
+            return 1
+        log(f"[PASS] {EVENT_IDX_MARKER}")
 
         commands: list[tuple[str, str]] = [
             (

@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.20
+**Version / 版本**: 1.21
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -68,6 +68,11 @@
   `bfd Makefile missing after configure` 立刻失败（`issue.md` `#45`）。
   去掉过早的 nbmake `bfd.h` 依赖，改由宿主 GNU make 先 `configure-bfd`
   再编 `all-binutils`。
+- 本轮继续按 FreeBSD `if_vtnet` 加深 virtio-net datapath（`issue.md` `#46`）：
+  协商 MRG_RXBUF 与 EVENT_IDX，单缓冲 RX（头在缓冲区开头），环深 128，
+  并 ACK GUEST_ANNOUNCE。
+- 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47`）：
+  gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
@@ -148,6 +153,11 @@
   `build/bfd/Makefile` (`issue.md` `#45`). Tools binutils now runs GNU
   `configure-bfd` then `all-binutils` and does not depend on `bfd.h` at
   that point.
+- This cycle deepens the userspace virtio-net datapath toward FreeBSD
+  `if_vtnet` (`issue.md` `#46`): MRG_RXBUF, EVENT_IDX, 128-deep rings,
+  header-at-start RX buffers, and GUEST_ANNOUNCE ACK.
+- Native gcc on the gcc 4.8.5 dist (`issue.md` `#47`): gcov skips
+  `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
 - Native toolchain work has entered Stage N1/N2 with both a build helper
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate

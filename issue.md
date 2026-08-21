@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.41
+**Version / 版本**: 1.42
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -40,6 +40,8 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   15) `[DONE]` `#43` 原生 gcc `optionlist` 依赖 gcc13 的 `params.opt`，4.8.5 dist 上 `don't know how to make params.opt`
   16) `[DONE]` `#44` RISC-V `libm` 未定义 `_copysignl`：`math.h` 缺 `__HAVE_LONG_DOUBLE 128`，`s_copysign.S` 替换了会做 alias 的 C 文件
   17) `[DONE]` `#45` hosted tools 在 top-level configure 之后立刻要求 `build/bfd/Makefile`，GNU `configure-bfd` 尚未运行就 abort
+  18) `[DONE]` `#46` virtio-net-mmio 未协商 MRG_RXBUF/EVENT_IDX，RX/TX 环只有 32 槽，与 FreeBSD if_vtnet 的 mergeable RX 和 kick 抑制不一致
+  19) `[DONE]` `#47` 原生 gcov/common-target 仍列出 gcc13 的 `json.cc`/`spellcheck.cc` 等，4.8.5 dist 上无法 make
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1350,6 +1352,19 @@ This section archives items with code-level fixes landed (some may still require
   历史 P1 #45：`417e7bd94` 的 hosted tools 在 top-level configure 之后因
   `bfd Makefile missing after configure` 立刻失败。去掉过早的 nbmake
   `bfd.h` 依赖，改由宿主 GNU make 先 `configure-bfd` 再编 `all-binutils`。
+- Former P1 #46: virtio-net-mmio now follows FreeBSD if_vtnet more closely:
+  mergeable RX (`VIRTIO_NET_F_MRG_RXBUF`, header at the start of each
+  buffer, `num_buffers` concat), 128-deep RX/TX rings, CTRL_ANNOUNCE ACK,
+  and transport `VIRTIO_RING_F_EVENT_IDX` kicks. Net smoke requires
+  `hdr 12`, `mrg on`, and `event_idx on`.
+  历史 P1 #46：virtio-net-mmio 按 FreeBSD if_vtnet 协商 MRG_RXBUF 与
+  EVENT_IDX，单缓冲 RX（头在缓冲区开头），环深 128，并 ACK
+  GUEST_ANNOUNCE。
+- Former P1 #47: native gcov drops `json.o` when `json.cc` is absent, and
+  common-target skips gcc13-only sources (`spellcheck.cc`, `selftest.cc`,
+  `opt-suggestions.cc`) or maps `.cc` to `.c` on the gcc 4.8.5 dist.
+  历史 P1 #47：gcov 在 4.8.5 dist 上跳过 `json.cc`；common-target 跳过
+  gcc13 才有的源文件，或把 `.cc` 映射到 `.c`。
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the
   required S-mode U-Boot launch chain (`-bios default -kernel ..._smode/uboot.elf`);

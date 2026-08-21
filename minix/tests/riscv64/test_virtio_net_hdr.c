@@ -7,6 +7,7 @@
  */
 
 #include <stdint.h>
+#include <stddef.h>
 
 typedef uint8_t u8_t;
 typedef uint16_t u16_t;
@@ -19,7 +20,9 @@ enum {
 	VTNET_HDR_LEGACY_OK =
 	    1 / (sizeof(struct virtio_net_hdr) == 10),
 	VTNET_HDR_MODERN_OK =
-	    1 / (sizeof(struct virtio_net_hdr_mrg_rxbuf) == 12)
+	    1 / (sizeof(struct virtio_net_hdr_mrg_rxbuf) == 12),
+	VTNET_HDR_NUM_BUFFERS_OFF_OK =
+	    1 / (offsetof(struct virtio_net_hdr_mrg_rxbuf, num_buffers) == 10)
 };
 
 int
@@ -27,6 +30,7 @@ virtio_net_hdr_layout_ok(void)
 {
 
 	return VTNET_HDR_LEGACY_OK && VTNET_HDR_MODERN_OK &&
+	    VTNET_HDR_NUM_BUFFERS_OFF_OK &&
 	    VIRTIO_NET_HDR_SIZE_LEGACY == 10 &&
 	    VIRTIO_NET_HDR_SIZE_MODERN == 12;
 }

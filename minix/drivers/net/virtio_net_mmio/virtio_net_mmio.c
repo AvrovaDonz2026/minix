@@ -3,8 +3,9 @@
  * Copyright (c) 2013, A. Welzel, <arne.welzel@gmail.com>
  *
  * Datapath follows FreeBSD if_vtnet: modern virtio_net_hdr (12 bytes
- * when VIRTIO_F_VERSION_1), TX partial checksum, RX NEEDS_CSUM fixup,
- * CTRL_VQ RX filter, and config-change link status.
+ * when VIRTIO_F_VERSION_1), mergeable RX buffers, TX partial checksum,
+ * RX NEEDS_CSUM fixup, CTRL_VQ RX filter / announce, config-change
+ * link status, and VIRTIO_RING_F_EVENT_IDX kicks.
  *
  * This software is released under the BSD license. See the LICENSE file
  * included in the main directory of this source distribution for the
@@ -12,6 +13,7 @@
  */
 
 #include <assert.h>
+#include <string.h>
 #include <sys/types.h>
 
 #include <minix/drivers.h>
@@ -40,11 +42,11 @@ static struct virtio_mmio_dev *net_dev;
 
 enum queue {RX_Q, TX_Q, CTRL_Q};
 
-#define RX_PACKETS		32
-#define TX_PACKETS		32
+#define RX_PACKETS		128
+#define TX_PACKETS		128
 #define BUF_PACKETS		(RX_PACKETS + TX_PACKETS)
 #define MAX_PACK_SIZE		NDEV_ETH_PACKET_MAX
-#define PACKET_BUF_SZ		(BUF_PACKETS * MAX_PACK_SIZE)
+#define PACKET_BUF_SZ		(BUF_PACKETS * pkt_slot_sz)
 
 #define ETHER_HDR_LEN		14
 #define ETHERTYPE_IP		0x0800
@@ -66,26 +68,27 @@ enum queue {RX_Q, TX_Q, CTRL_Q};
 
 struct packet {
 	int idx;
+	char *vbuf;
+	phys_bytes pbuf;
 	struct virtio_net_hdr *vhdr;
-	phys_bytes phdr;
 	char *vdata;
-	phys_bytes pdata;
 	size_t len;
 	STAILQ_ENTRY(packet) next;
 };
 
 static char *data_vir;
 static phys_bytes data_phys;
-static struct virtio_net_hdr_mrg_rxbuf *hdrs_vir;
-static phys_bytes hdrs_phys;
 static struct packet *packets;
 static int in_rx;
 static size_t net_hdr_size;
+static size_t pkt_slot_sz;
 static uint32_t enabled_caps;
 static netdriver_addr_t hwaddr;
 static uint8_t *ctrl_vir;
 static phys_bytes ctrl_phys;
 static int have_ctrl;
+static int have_mrg;
+static int have_announce;
 
 static STAILQ_HEAD(pkt_list, packet) rx_free, tx_free, recv_list;
 
@@ -125,15 +128,18 @@ static const struct netdriver virtio_net_table = {
 
 /*
  * Guest bits are offers; host_supports() after setup is the negotiated set.
- * Do not offer MRG_RXBUF: we post one full-frame buffer per RX slot.
+ * MRG_RXBUF matches FreeBSD if_vtnet: one buffer per RX slot, header at
+ * the start of the buffer, num_buffers for multi-slot frames.
  */
 static struct virtio_feature netf[] = {
 	{ "partial csum",	VIRTIO_NET_F_CSUM,	0,	1	},
 	{ "guest csum",		VIRTIO_NET_F_GUEST_CSUM, 0,	1	},
 	{ "given mac",		VIRTIO_NET_F_MAC,	0,	1	},
 	{ "status",		VIRTIO_NET_F_STATUS,	0,	1	},
+	{ "merge rx",		VIRTIO_NET_F_MRG_RXBUF,	0,	1	},
 	{ "control channel",	VIRTIO_NET_F_CTRL_VQ,	0,	1	},
-	{ "control channel rx",	VIRTIO_NET_F_CTRL_RX,	0,	1	}
+	{ "control channel rx",	VIRTIO_NET_F_CTRL_RX,	0,	1	},
+	{ "guest announce",	VIRTIO_NET_F_GUEST_ANNOUNCE, 0,	1	}
 };
 
 static int
@@ -199,6 +205,9 @@ virtio_net_config(netdriver_addr_t * addr)
 
 	if (virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CTRL_RX))
 		dput(("Host supports control channel for RX"));
+
+	if (virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_MRG_RXBUF))
+		dput(("Host supports mergeable RX buffers"));
 }
 
 static unsigned int
@@ -461,6 +470,48 @@ virtio_net_ctrl_mac_table(const netdriver_addr_t * mcast_list,
 	return virtio_net_ctrl_exec(phys, 4);
 }
 
+static int
+virtio_net_ctrl_announce(void)
+{
+	struct vumap_phys phys[2];
+	struct virtio_net_ctrl_hdr *ch;
+
+	if (!have_announce || ctrl_vir == NULL)
+		return OK;
+
+	ch = (struct virtio_net_ctrl_hdr *)(ctrl_vir + CTRL_HDR_OFF);
+	ch->class = VIRTIO_NET_CTRL_ANNOUNCE;
+	ch->cmd = VIRTIO_NET_CTRL_ANNOUNCE_ACK;
+
+	phys[0].vp_addr = ctrl_phys + CTRL_HDR_OFF;
+	phys[0].vp_size = sizeof(*ch);
+	phys[1].vp_addr = (ctrl_phys + CTRL_ACK_OFF) | 1;
+	phys[1].vp_size = 1;
+
+	return virtio_net_ctrl_exec(phys, 2);
+}
+
+static void
+virtio_net_check_announce(void)
+{
+	u16_t status;
+	int r;
+
+	if (!have_announce)
+		return;
+	if (!virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_STATUS))
+		return;
+
+	status = virtio_mmio_config_read16(net_dev, 6);
+	if (!(status & VIRTIO_NET_S_ANNOUNCE))
+		return;
+
+	r = virtio_net_ctrl_announce();
+	if (r != OK)
+		printf("%s: CTRL_ANNOUNCE ack failed (%d)\n",
+		    netdriver_name(), r);
+}
+
 static void
 virtio_net_set_caps(uint32_t caps)
 {
@@ -500,24 +551,16 @@ virtio_net_set_mode(unsigned int mode,
 static int
 virtio_net_alloc_bufs(void)
 {
+
 	data_vir = alloc_contig(PACKET_BUF_SZ, 0, &data_phys);
 
 	if (!data_vir)
 		return ENOMEM;
 
-	hdrs_vir = alloc_contig(BUF_PACKETS * sizeof(hdrs_vir[0]),
-				 0, &hdrs_phys);
-
-	if (!hdrs_vir) {
-		free_contig(data_vir, PACKET_BUF_SZ);
-		return ENOMEM;
-	}
-
 	packets = malloc(BUF_PACKETS * sizeof(packets[0]));
 
 	if (!packets) {
 		free_contig(data_vir, PACKET_BUF_SZ);
-		free_contig(hdrs_vir, BUF_PACKETS * sizeof(hdrs_vir[0]));
 		return ENOMEM;
 	}
 
@@ -528,15 +571,12 @@ virtio_net_alloc_bufs(void)
 		if (ctrl_vir == NULL) {
 			free(packets);
 			free_contig(data_vir, PACKET_BUF_SZ);
-			free_contig(hdrs_vir,
-			    BUF_PACKETS * sizeof(hdrs_vir[0]));
 			return ENOMEM;
 		}
 		memset(ctrl_vir, 0, CTRL_MEM_SZ);
 	}
 
 	memset(data_vir, 0, PACKET_BUF_SZ);
-	memset(hdrs_vir, 0, BUF_PACKETS * sizeof(hdrs_vir[0]));
 	memset(packets, 0, BUF_PACKETS * sizeof(packets[0]));
 
 	return OK;
@@ -553,10 +593,10 @@ virtio_net_init_queues(void)
 
 	for (i = 0; i < BUF_PACKETS; i++) {
 		packets[i].idx = i;
-		packets[i].vhdr = &hdrs_vir[i].hdr;
-		packets[i].phdr = hdrs_phys + i * sizeof(hdrs_vir[i]);
-		packets[i].vdata = data_vir + i * MAX_PACK_SIZE;
-		packets[i].pdata = data_phys + i * MAX_PACK_SIZE;
+		packets[i].vbuf = data_vir + i * pkt_slot_sz;
+		packets[i].pbuf = data_phys + i * pkt_slot_sz;
+		packets[i].vhdr = (struct virtio_net_hdr *)packets[i].vbuf;
+		packets[i].vdata = packets[i].vbuf + net_hdr_size;
 		if (i < RX_PACKETS)
 			STAILQ_INSERT_HEAD(&rx_free, &packets[i], next);
 		else
@@ -567,26 +607,19 @@ virtio_net_init_queues(void)
 static void
 virtio_net_refill_rx_queue(void)
 {
-	struct vumap_phys phys[2];
+	struct vumap_phys phys[1];
 	struct packet *p;
 
 	while (!STAILQ_EMPTY(&rx_free)) {
 		p = STAILQ_FIRST(&rx_free);
 		STAILQ_REMOVE_HEAD(&rx_free, next);
 
-		phys[0].vp_addr = p->phdr;
+		phys[0].vp_addr = p->pbuf;
 		assert(!(phys[0].vp_addr & 1));
-		phys[0].vp_size = net_hdr_size;
-
-		phys[1].vp_addr = p->pdata;
-		assert(!(phys[1].vp_addr & 1));
-		phys[1].vp_size = MAX_PACK_SIZE;
-
-		/* RX queue needs write */
+		phys[0].vp_size = pkt_slot_sz;
 		phys[0].vp_addr |= 1;
-		phys[1].vp_addr |= 1;
 
-		if (virtio_mmio_to_queue(net_dev, RX_Q, phys, 2, p) != OK) {
+		if (virtio_mmio_to_queue(net_dev, RX_Q, phys, 1, p) != OK) {
 			STAILQ_INSERT_HEAD(&rx_free, p, next);
 			break;
 		}
@@ -610,7 +643,7 @@ virtio_net_check_queues(void)
 	}
 
 	while (virtio_mmio_from_queue(net_dev, TX_Q, (void **)&p, NULL) == 0) {
-		memset(p->vhdr, 0, net_hdr_size);
+		memset(p->vbuf, 0, pkt_slot_sz);
 		STAILQ_INSERT_HEAD(&tx_free, p, next);
 	}
 }
@@ -633,8 +666,10 @@ virtio_net_intr(unsigned int __unused mask)
 
 	status = virtio_mmio_had_irq(net_dev);
 	if (status) {
-		if (status & VIRTIO_MMIO_INT_CONFIG)
+		if (status & VIRTIO_MMIO_INT_CONFIG) {
+			virtio_net_check_announce();
 			netdriver_link();
+		}
 		if (status & VIRTIO_MMIO_INT_VRING)
 			virtio_net_check_queues();
 	} else {
@@ -654,7 +689,7 @@ virtio_net_intr(unsigned int __unused mask)
 static int
 virtio_net_send(struct netdriver_data * data, size_t len)
 {
-	struct vumap_phys phys[2];
+	struct vumap_phys phys[1];
 	struct packet *p;
 
 	if (STAILQ_EMPTY(&tx_free))
@@ -670,14 +705,59 @@ virtio_net_send(struct netdriver_data * data, size_t len)
 	netdriver_copyin(data, 0, p->vdata, len);
 	virtio_net_tx_offload(p, len);
 
-	phys[0].vp_addr = p->phdr;
+	phys[0].vp_addr = p->pbuf;
 	assert(!(phys[0].vp_addr & 1));
-	phys[0].vp_size = net_hdr_size;
-	phys[1].vp_addr = p->pdata;
-	assert(!(phys[1].vp_addr & 1));
-	phys[1].vp_size = len;
-	virtio_mmio_to_queue(net_dev, TX_Q, phys, 2, p);
+	phys[0].vp_size = net_hdr_size + len;
+	virtio_mmio_to_queue(net_dev, TX_Q, phys, 1, p);
 
+	return OK;
+}
+
+static void
+virtio_net_recycle_rx(struct packet *p)
+{
+
+	memset(p->vbuf, 0, pkt_slot_sz);
+	STAILQ_INSERT_HEAD(&rx_free, p, next);
+}
+
+/*
+ * FreeBSD if_vtnet mergeable RX: num_buffers counts consecutive used
+ * buffers.  Only the first carries virtio_net_hdr; the rest are payload.
+ */
+static int
+virtio_net_merge_rx(struct packet *p, size_t *payload_len)
+{
+	struct virtio_net_hdr_mrg_rxbuf *mh;
+	unsigned int nbuf, i;
+	size_t len = *payload_len;
+
+	if (!have_mrg)
+		return OK;
+
+	mh = (struct virtio_net_hdr_mrg_rxbuf *)p->vhdr;
+	nbuf = mh->num_buffers;
+	if (nbuf <= 1)
+		return OK;
+
+	for (i = 1; i < nbuf; i++) {
+		struct packet *extra;
+		size_t elen;
+
+		if (STAILQ_EMPTY(&recv_list))
+			return EINVAL;
+		extra = STAILQ_FIRST(&recv_list);
+		STAILQ_REMOVE_HEAD(&recv_list, next);
+		elen = extra->len;
+		if (len + elen > MAX_PACK_SIZE) {
+			virtio_net_recycle_rx(extra);
+			return EINVAL;
+		}
+		memcpy(p->vdata + len, extra->vbuf, elen);
+		len += elen;
+		virtio_net_recycle_rx(extra);
+	}
+	*payload_len = len;
 	return OK;
 }
 
@@ -686,6 +766,7 @@ virtio_net_recv(struct netdriver_data * data, size_t max)
 {
 	struct packet *p;
 	ssize_t len;
+	size_t payload;
 
 	for (;;) {
 		if (STAILQ_EMPTY(&recv_list))
@@ -694,17 +775,26 @@ virtio_net_recv(struct netdriver_data * data, size_t max)
 		p = STAILQ_FIRST(&recv_list);
 		STAILQ_REMOVE_HEAD(&recv_list, next);
 
-		if (p->len < net_hdr_size)
-			panic("received packet does not have virtio header");
-		len = p->len - net_hdr_size;
-		if ((size_t)len > max)
-			len = (ssize_t)max;
+		if (p->len < net_hdr_size) {
+			netdriver_stat_ierror(1);
+			virtio_net_recycle_rx(p);
+			virtio_net_refill_rx_queue();
+			continue;
+		}
+		payload = p->len - net_hdr_size;
+		if (virtio_net_merge_rx(p, &payload) != OK) {
+			netdriver_stat_ierror(1);
+			virtio_net_recycle_rx(p);
+			virtio_net_refill_rx_queue();
+			continue;
+		}
+		if (payload > max)
+			payload = max;
+		len = (ssize_t)payload;
 
 		if (virtio_net_rx_fixup_csum(p, (size_t)len) != OK) {
 			netdriver_stat_ierror(1);
-			memset(p->vhdr, 0, net_hdr_size);
-			memset(p->vdata, 0, MAX_PACK_SIZE);
-			STAILQ_INSERT_HEAD(&rx_free, p, next);
+			virtio_net_recycle_rx(p);
 			virtio_net_refill_rx_queue();
 			continue;
 		}
@@ -723,9 +813,7 @@ virtio_net_recv(struct netdriver_data * data, size_t max)
 
 	netdriver_copyout(data, 0, p->vdata, len);
 
-	memset(p->vhdr, 0, net_hdr_size);
-	memset(p->vdata, 0, MAX_PACK_SIZE);
-	STAILQ_INSERT_HEAD(&rx_free, p, next);
+	virtio_net_recycle_rx(p);
 
 	virtio_net_refill_rx_queue();
 
@@ -747,8 +835,13 @@ virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
 	else
 		net_hdr_size = VIRTIO_NET_HDR_SIZE_LEGACY;
 
+	pkt_slot_sz = net_hdr_size + MAX_PACK_SIZE;
+	have_mrg = virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_MRG_RXBUF);
 	have_ctrl = virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CTRL_VQ) &&
 	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CTRL_RX);
+	have_announce =
+	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CTRL_VQ) &&
+	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_GUEST_ANNOUNCE);
 
 	virtio_net_config(addr);
 
@@ -757,6 +850,8 @@ virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
 
 	if (have_ctrl && ctrl_vir == NULL)
 		have_ctrl = 0;
+	if (have_announce && ctrl_vir == NULL)
+		have_announce = 0;
 
 	virtio_net_init_queues();
 
@@ -770,11 +865,13 @@ virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
 	virtio_net_refill_rx_queue();
 
 	printf("virtio-net-mmio: initialized\n");
-	printf("virtio-net-mmio: hdr %zu csum %s ctrl_rx %s\n",
+	printf("virtio-net-mmio: hdr %zu csum %s ctrl_rx %s mrg %s event_idx %s\n",
 	    net_hdr_size,
 	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CSUM) ?
 		"on" : "off",
-	    have_ctrl ? "on" : "off");
+	    have_ctrl ? "on" : "off",
+	    have_mrg ? "on" : "off",
+	    virtio_mmio_has_event_idx(net_dev) ? "on" : "off");
 
 	*caps = NDEV_CAP_MCAST | NDEV_CAP_BCAST;
 	if (virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CSUM))
@@ -791,7 +888,6 @@ virtio_net_stop(void)
 	dput(("Terminating"));
 
 	free_contig(data_vir, PACKET_BUF_SZ);
-	free_contig(hdrs_vir, BUF_PACKETS * sizeof(hdrs_vir[0]));
 	if (ctrl_vir != NULL)
 		free_contig(ctrl_vir, CTRL_MEM_SZ);
 	free(packets);

@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.30
+**Version / 版本**: 1.31
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1890,5 +1890,44 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#45`
 - `tools/binutils/Makefile`
 - GitHub Actions runs `32482801846` (nightly) and `32482801856` (release)
+
+### Entry 42 — Skip gcc13 gcov/common-target sources (2026-08-21) / 跳过 gcc13 的 gcov 与 common-target 源
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Symptom / 现象**:
+- After params.opt, native gcc `gcov` still lists `json.o` / `json.cc`
+  (gcc 13) against the fetched gcc 4.8.5 dist. common-target lists
+  `spellcheck.cc`, `selftest.cc`, `opt-suggestions.cc`.
+
+**Fix / 修复**:
+1. gcov: drop `json.o` when `json.cc` is missing; use `gcov.c` on 4.8.5.
+2. common-target: keep a source only if the `.cc` or `.c` exists in dist.
+
+**Evidence / 证据**:
+- `issue.md` `#47`
+- `external/gpl3/gcc/usr.bin/gcov/Makefile`
+- `external/gpl3/gcc/usr.bin/common-target/Makefile`
+
+### Entry 43 — FreeBSD-style mergeable RX and EVENT_IDX (2026-08-21) / 按 FreeBSD 做 mergeable RX 与 EVENT_IDX
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Change / 改动**:
+1. Offer `VIRTIO_NET_F_MRG_RXBUF` and `VIRTIO_NET_F_GUEST_ANNOUNCE`.
+2. Post one RX/TX buffer per slot with the virtio-net header at the
+   start of the buffer; concatenate `num_buffers` used slots on RX.
+3. Grow rings from 32+32 to 128+128.
+4. Negotiate `VIRTIO_RING_F_EVENT_IDX` on virtio-mmio and suppress
+   kicks with `vring_need_event`.
+5. Net smoke requires `hdr 12`, `mrg on`, and `event_idx on`.
+
+**Evidence / 证据**:
+- `issue.md` `#46`
+- `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
+- `minix/lib/libvirtio_mmio/virtio_mmio.c`
+- `minix/tests/riscv64/qemu_net_smoke.py`
 
 

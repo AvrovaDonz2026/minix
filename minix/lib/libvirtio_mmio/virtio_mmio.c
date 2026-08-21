@@ -52,6 +52,7 @@ struct virtio_mmio_dev {
     int irq_hook;
     int threads;
     int version;                /* VirtIO version (1 or 2) */
+    u8_t event_idx;             /* VIRTIO_RING_F_EVENT_IDX negotiated */
 };
 
 static int virtio_mmio_allow_mem(void)
@@ -149,6 +150,16 @@ static int exchange_features(struct virtio_mmio_dev *dev)
     /* VirtIO 1.0 devices require VIRTIO_F_VERSION_1 (bit 32). */
     if (dev->version >= 2 && (host_features_hi & 1U))
         guest_features_hi |= 1U;
+
+    /*
+     * EVENT_IDX is a transport feature.  Negotiate it whenever the
+     * host offers it so kicks and used-ring interrupts can be delayed
+     * the same way FreeBSD's virtio(4) does.
+     */
+    if (host_features_lo & (1U << VIRTIO_RING_F_EVENT_IDX)) {
+        guest_features_lo |= (1U << VIRTIO_RING_F_EVENT_IDX);
+        dev->event_idx = 1;
+    }
 
     /* Write guest features */
     virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES_SEL, 0);
@@ -504,6 +515,11 @@ int virtio_mmio_version(struct virtio_mmio_dev *dev)
     return dev->version;
 }
 
+int virtio_mmio_has_event_idx(struct virtio_mmio_dev *dev)
+{
+    return dev->event_idx != 0;
+}
+
 /*
  * Add buffers to queue
  */
@@ -548,11 +564,19 @@ int virtio_mmio_to_queue(struct virtio_mmio_dev *dev, int qidx,
     virtio_wmb();
     q->vring.avail->ring[q->vring.avail->idx % q->num] = head;
     virtio_wmb();
-    q->vring.avail->idx++;
-    virtio_wmb();
+    {
+        u16_t old_idx = q->vring.avail->idx;
 
-    /* Notify device */
-    virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_NOTIFY, qidx);
+        q->vring.avail->idx++;
+        virtio_wmb();
+
+        if (dev->event_idx) {
+            if (vring_need_event(vring_avail_event(&q->vring),
+                q->vring.avail->idx, old_idx))
+                virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_NOTIFY, qidx);
+        } else if (!(q->vring.used->flags & VRING_USED_F_NO_NOTIFY))
+            virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_NOTIFY, qidx);
+    }
 
     return OK;
 }
@@ -593,6 +617,8 @@ int virtio_mmio_from_queue(struct virtio_mmio_dev *dev, int qidx,
     q->free_head = head;
 
     q->last_used++;
+    if (dev->event_idx)
+        vring_used_event(&q->vring) = q->last_used;
 
     return 0;
 }

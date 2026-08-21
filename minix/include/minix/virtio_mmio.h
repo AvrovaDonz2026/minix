@@ -123,6 +123,7 @@ void virtio_mmio_free(struct virtio_mmio_dev *dev);
 int virtio_mmio_host_supports(struct virtio_mmio_dev *dev, int bit);
 int virtio_mmio_guest_supports(struct virtio_mmio_dev *dev, int bit);
 int virtio_mmio_version(struct virtio_mmio_dev *dev);
+int virtio_mmio_has_event_idx(struct virtio_mmio_dev *dev);
 
 /* Queue operations */
 int virtio_mmio_to_queue(struct virtio_mmio_dev *dev, int qidx,

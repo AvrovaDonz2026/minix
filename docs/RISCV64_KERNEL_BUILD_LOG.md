@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.41
+**Version / 版本**: 1.42
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2089,6 +2089,19 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 **Evidence / 证据**:
 - `issue.md` `#59`
 - GitHub Actions run `32505629389`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+## Entry 54 — 2026-08-21 18:00 UTC
+
+**Change / 变更**: Hosted nightly `32508128890` (`f074b4a56`) expanded `.for`, then make split the standalone recipe `printf '%s\n'` so the format string became a real newline. `gtyp-input.list.tmp` was garbage; `gengtype -r` warned `structure 'answer' used but not defined` and aborted in `error_at_line`. Echo one `G_GTFILES` word per line so make never sees `\n`.
+
+**Issue ID**: `#60`
+
+**Result / 结果**: Makefile recipe uses `echo` instead of `printf '%s\n'`. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#60`
+- GitHub Actions run `32508128890`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
 
 

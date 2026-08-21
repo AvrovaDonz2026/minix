@@ -6559,16 +6559,9 @@ public:
   StringRef getABI() const override { return ABI; }
 
   void getGCCRegNames(const char *const *&Names,
-                      unsigned &NumNames) const override {
-    Names = GCCRegNames;
-    NumNames = llvm::array_lengthof(GCCRegNames);
-  }
-
+                      unsigned &NumNames) const override;
   void getGCCRegAliases(const GCCRegAlias *&Aliases,
-                        unsigned &NumAliases) const override {
-    Aliases = GCCRegAliases;
-    NumAliases = llvm::array_lengthof(GCCRegAliases);
-  }
+                        unsigned &NumAliases) const override;
 
   bool validateAsmConstraint(const char *&Name,
                              TargetInfo::ConstraintInfo &Info) const override {
@@ -6614,6 +6607,18 @@ const TargetInfo::GCCRegAlias RISCVTargetInfo::GCCRegAliases[] = {
     {{"s7"}, "x23"},  {{"s8"}, "x24"}, {{"s9"}, "x25"}, {{"s10"}, "x26"},
     {{"s11"}, "x27"}, {{"t3"}, "x28"}, {{"t4"}, "x29"}, {{"t5"}, "x30"},
     {{"t6"}, "x31"}};
+
+void RISCVTargetInfo::getGCCRegNames(const char *const *&Names,
+                                     unsigned &NumNames) const {
+  Names = GCCRegNames;
+  NumNames = llvm::array_lengthof(GCCRegNames);
+}
+
+void RISCVTargetInfo::getGCCRegAliases(const GCCRegAlias *&Aliases,
+                                       unsigned &NumAliases) const {
+  Aliases = GCCRegAliases;
+  NumAliases = llvm::array_lengthof(GCCRegAliases);
+}
 } // end anonymous namespace.
 
 //===----------------------------------------------------------------------===//

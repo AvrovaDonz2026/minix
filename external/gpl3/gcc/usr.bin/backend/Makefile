@@ -42,7 +42,7 @@ G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
 	genattr genattr-common genattrtab genautomata gencodes genconditions \
 	genconfig genemit genextract genflags genopinit genoutput genpeep \
 	genpreds genrecog genmddump genmddeps genconstants genenums \
-	gencheck genchecksum genhooks
+	gencheck genchecksum genhooks version
 .if exists(${DIST}/gcc/${_n}.cc)
 GCC_DIST_SRC.${_n}=	${DIST}/gcc/${_n}.cc
 .elif exists(${DIST}/gcc/${_n}.c)
@@ -352,14 +352,14 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 	} > ${.TARGET}
 CLEANFILES+=	gtyp-input.list.tmp
 
-.if defined(GCC_DIST_SRC.gengtype-state)
+.if exists(${DIST}/gcc/gengtype.cc)
 GCC13_GTYPE_OUTPUTS= \
 		gtype-ada.h gtype-c.h gtype-cp.h gtype-d.h \
 		gtype-desc.cc gtype-desc.h gtype-fortran.h gtype-go.h \
 		gtype-jit.h gtype-lto.h gtype-m2.h gtype-objc.h \
 		gtype-objcp.h gtype-rust.h gtype.state
 .else
-# gcc 4.8.5 gengtype writes gtype-desc.c and gt-*.h; no state file.
+# gcc 4.8.5 gengtype writes gtype-desc.c and gt-*.h.
 GCC13_GTYPE_OUTPUTS= \
 		gtype-desc.c gtype-desc.h
 .endif
@@ -389,7 +389,17 @@ s-gtype: gengtype gtyp-gen.h gtyp-input.list.tmp auto-host.h
 	touch ${.TARGET}
 .endif
 
-# GCC 13 replaced version.o with a generated version.h.
+# GCC 13 replaced version.o with a generated version.h. gcc 4.8.5
+# gengtype still links version.o (version_string, pkgversion_string,
+# bug_report_url). 4.8.5 also has gengtype-state.c and uses -S/-I/-w.
+.if defined(GCC_DIST_SRC.version)
+GENGTYPE_VERSION_LO=	version.lo
+version.lo: ${GCC_DIST_SRC.version}
+CPPFLAGS.version.c+=	${VER_CPPFLAGS}
+CPPFLAGS.version.cc+=	${VER_CPPFLAGS}
+.else
+GENGTYPE_VERSION_LO=
+.endif
 .if defined(GCC_DIST_SRC.gengtype)
 gengtype.lo: ${HH} gtyp-gen.h config.h options.h version.h ${GCC_DIST_SRC.gengtype}
 .endif
@@ -401,11 +411,11 @@ gengtype-parse.lo: ${HH} gtyp-gen.h config.h options.h version.h ${GCC_DIST_SRC.
 .endif
 .if defined(GCC_DIST_SRC.gengtype-state)
 gengtype-state.lo: ${HH} gtyp-gen.h config.h options.h version.h ${GCC_DIST_SRC.gengtype-state}
-gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo build-errors.lo
+gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo build-errors.lo ${GENGTYPE_VERSION_LO}
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
 .else
-gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo build-errors.lo
+gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo build-errors.lo ${GENGTYPE_VERSION_LO}
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
 .endif

@@ -57,6 +57,9 @@
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
   `as/ld/ar/ranlib` 与本地 `hello.c` 编译运行闭环。
 - 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）。
+- Nightly 与 Release 两条 OS 打包 CI 现已在每次提交时运行，作为完整性与可复现性
+  门禁；GitHub Release / nightly tag 发布仍仅限官方触发（tag、`workflow_dispatch`、
+  nightly 的 schedule / `master` push）。
 
 **English**
 - Build passes with GCC + workaround flags; see `README-RISCV64.md` for exact commands.
@@ -116,6 +119,10 @@
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate
   `as/ld/ar/ranlib` and native `hello.c` compile-and-run closure.
 - Remaining open risk: procfs safecopy retry noise (#17).
+- Nightly and Release OS packaging CIs now run on every commit as
+  completeness/reproducibility gates; GitHub Release / nightly tag publish
+  remains gated to official triggers (tag, `workflow_dispatch`, nightly
+  schedule / `master` push).
 
 ## Build Status / 构建状态
 

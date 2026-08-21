@@ -1653,3 +1653,37 @@ minix/tests/riscv64/run_tests.sh native
 - `README-RISCV64.md`
 - `https://github.com/AvrovaDonz2026/minix/actions/runs/22249826170`
 - `https://github.com/AvrovaDonz2026/minix/actions/runs/22250528261`
+
+### Entry 36 — Per-Commit Packaging CI Gates + Reproducibility Record (2026-08-21) / 每次提交打包 CI 门禁 + 可复现性记录
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Change / 变更**:
+- `release-riscv64.yml` 与 `nightly-riscv64.yml` 同为 OS 打包 CI；二者现均在每次提交时
+  运行（任意分支 `push` + `pull_request`），审查 OS 完整性与打包可复现性。
+- Nightly 保留 UTC `20 18 * * *` cron 与 `workflow_dispatch`；`tags-ignore` 避免与
+  release-on-tag 重复。
+- Release 仍仅在 `v*` tag push 与 `workflow_dispatch` 时发布 GitHub Release。
+- 发布门禁：
+  - nightly tag / GitHub Release 发布：仅 `schedule`、`workflow_dispatch`、或 `master`
+    `push`
+  - release 发布：仅 `v*` tag 或 `workflow_dispatch`
+  - feature 分支 / `pull_request` run 为审查 run：上传 workflow artifacts，不发布
+    GitHub Release / nightly tag
+- 两条流水线均从 git 提交时间戳固定 `SOURCE_DATE_EPOCH`，压缩使用 `gzip -n`，并生成
+  `BUILDINFO.txt` 与 `SHA256SUMS` 作为可复现性记录。
+- Payload 完整性预检新增 destdir 必含项：`virtio_net_mmio`、`lwip`、`ifconfig`、
+  `ping`、`ping6`（与 native 工具链预检并存）。
+- 两条流水线仍执行 `tools -> distribution`、`mkdisk`、QEMU `neofetch`/shutdown smoke，
+  以及阻断式完整测试套件（`build -> user -> native -> kernel -> gate`）。
+
+**Commands / 命令**:
+- 本地无需额外命令；下一次验证为该分支上的 GitHub Actions 运行结果。
+
+**Evidence / 证据**:
+- `.github/workflows/release-riscv64.yml`
+- `.github/workflows/nightly-riscv64.yml`
+- `README-RISCV64.md`
+- `README.md`
+- `RISC64-STATUS.md`

@@ -20,8 +20,9 @@ HOST_CPPFLAGS+=	-I${.CURDIR}/..
 
 # gcc 4.8.5 gcov-io.h includes "gcov-iov.h". That header lives in the
 # libgcov arch dir (mknative), not the gcc dist. Native gcov/cc1 need
-# the same -I backend already uses.
-CPPFLAGS+=	-I${.PARSEDIR}/../lib/libgcc/libgcov/arch/${GCC_MACHINE_ARCH}
+# the same -I backend already uses. ${.PARSEDIR} in this Makefile.inc
+# expands empty (hosted CI: -I/../lib/...), so walk from NETBSDSRCDIR.
+CPPFLAGS+=	-I${NETBSDSRCDIR}/external/gpl3/gcc/lib/libgcc/libgcov/arch/${GCC_MACHINE_ARCH}
 
 # Link in the GMP/MPFR/MPC headers since we don't install them
 BUILDSYMLINKS+=	${NETBSDSRCDIR}/external/lgpl3/gmp/lib/libgmp/arch/${GMP_MACHINE_ARCH}/gmp.h gmp.h

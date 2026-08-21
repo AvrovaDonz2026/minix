@@ -3,41 +3,42 @@
 # Hosted packaging fetches gcc 4.8.5. Native Makefiles still list gcc 13
 # .cc objects. Keep generated options.cc. Rewrite each other .cc to .c
 # when that basename exists in dist; drop it when neither exists.
+#
+# Do not stash the mapped name in _gcc_cc2c and then
+# GCC_SRCS_MAPPED+= ${_gcc_cc2c}. bmake delays that expansion, so
+# SRCS:= ${GCC_SRCS_MAPPED} repeats the last match. Nightly
+# 32527820716 linked gcpp as ggc-none.o ggc-none.o ggc-none.o
+# (cppspec.cc gcc.cc ggc-none.cc). Add the .for variable / :R.c
+# directly, like common-target.
 
 .include "${.PARSEDIR}/Makefile.inc"
-
-GCC_CC2C_DIRS= \
-	${DIST}/gcc \
-	${DIST}/gcc/c \
-	${DIST}/gcc/c-family \
-	${DIST}/gcc/cp \
-	${DIST}/gcc/objc \
-	${DIST}/gcc/lto \
-	${DIST}/gcc/common \
-	${DIST}/gcc/config \
-	${DIST}/libiberty
 
 GCC_SRCS_MAPPED=
 .for s in ${SRCS}
 .if ${s:E} != "cc"
 GCC_SRCS_MAPPED+=	${s}
-.else
-_gcc_cc2c=
-.for d in ${GCC_CC2C_DIRS}
-.if empty(_gcc_cc2c)
-.if exists(${d}/${s})
-_gcc_cc2c=	${s}
-.elif exists(${d}/${s:R}.c)
-_gcc_cc2c=	${s:R}.c
-.endif
-.endif
-.endfor
-.if empty(_gcc_cc2c) && ${s} == "options.cc"
-_gcc_cc2c=	${s}
-.endif
-.if !empty(_gcc_cc2c)
-GCC_SRCS_MAPPED+=	${_gcc_cc2c}
-.endif
+.elif exists(${DIST}/gcc/${s}) || \
+      exists(${DIST}/gcc/c/${s}) || \
+      exists(${DIST}/gcc/c-family/${s}) || \
+      exists(${DIST}/gcc/cp/${s}) || \
+      exists(${DIST}/gcc/objc/${s}) || \
+      exists(${DIST}/gcc/lto/${s}) || \
+      exists(${DIST}/gcc/common/${s}) || \
+      exists(${DIST}/gcc/config/${s}) || \
+      exists(${DIST}/libiberty/${s})
+GCC_SRCS_MAPPED+=	${s}
+.elif exists(${DIST}/gcc/${s:R}.c) || \
+      exists(${DIST}/gcc/c/${s:R}.c) || \
+      exists(${DIST}/gcc/c-family/${s:R}.c) || \
+      exists(${DIST}/gcc/cp/${s:R}.c) || \
+      exists(${DIST}/gcc/objc/${s:R}.c) || \
+      exists(${DIST}/gcc/lto/${s:R}.c) || \
+      exists(${DIST}/gcc/common/${s:R}.c) || \
+      exists(${DIST}/gcc/config/${s:R}.c) || \
+      exists(${DIST}/libiberty/${s:R}.c)
+GCC_SRCS_MAPPED+=	${s:R}.c
+.elif ${s} == "options.cc"
+GCC_SRCS_MAPPED+=	${s}
 .endif
 .endfor
 SRCS:=			${GCC_SRCS_MAPPED}

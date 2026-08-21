@@ -257,8 +257,12 @@ GCC13_BACKEND_G_GTFILES=
 .for f in ${G_GTFILES}
 .if !empty(f:M*.c) && !exists(${f}) && exists(${f:S,.c,.cc,})
 GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${f:S,.c,.cc,}
+.elif !empty(f:M*.cc) && !exists(${f}) && exists(${f:S,.cc,.c,})
+GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${f:S,.cc,.c,}
 .elif ${f} == ${DIST}/gcc/lto-symtab.c && exists(${DIST}/gcc/lto/lto-symtab.cc)
 GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${DIST}/gcc/lto/lto-symtab.cc
+.elif ${f} == ${DIST}/gcc/lto/lto-symtab.cc && exists(${DIST}/gcc/lto-symtab.c)
+GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${DIST}/gcc/lto-symtab.c
 .elif !empty(f:M${DIST}/*) && !exists(${f})
 .else
 GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${f}
@@ -330,6 +334,13 @@ tm-constrs.h: genpreds ${G_md_file}
 	./genpreds -c ${G_md_file} >${.TARGET}
 
 # be nice to generate this entirely; but difficult.
+#
+# riscv64 gtyp-input.list is gcc13 (.cc names). defs.mk G_GTFILES is the
+# 4.8.5 GTFILES list (gimple.c, tree-flow.h, tree-mudflap.c, ...).
+# Feeding the .cc list to 4.8.5 gengtype drops every missing .cc, then
+# gengtype -r aborts in error_at_line on GTY types whose defining .c
+# was never parsed.
+.if exists(${DIST}/gcc/gengtype.cc)
 gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 	{ \
 		while IFS= read -r f; do \
@@ -342,6 +353,8 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 			case "$$f" in \
 			*cpp-id-data.h) continue ;; \
 			${DIST}/gcc/lto-symtab.c) if [ -e "${DIST}/gcc/lto/lto-symtab.cc" ]; then f="${DIST}/gcc/lto/lto-symtab.cc"; fi ;; \
+			${DIST}/gcc/lto/lto-symtab.cc) if [ ! -e "$$f" ] && [ -e "${DIST}/gcc/lto-symtab.c" ]; then f="${DIST}/gcc/lto-symtab.c"; fi ;; \
+			*.cc) if [ ! -e "$$f" ] && [ -e "$${f%.cc}.c" ]; then f="$${f%.cc}.c"; fi ;; \
 			*.c) if [ ! -e "$$f" ] && [ -e "$${f%.c}.cc" ]; then f="$${f%.c}.cc"; fi ;; \
 			esac; \
 			case "$$f" in \
@@ -350,6 +363,17 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 			printf '%s\n' "$$f"; \
 		done < ${.ALLSRC}; \
 	} > ${.TARGET}
+.else
+gtyp-input.list.tmp: Makefile ${GCCARCH}/defs.mk
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	{ \
+.for f in ${G_GTFILES}
+	printf '%s\n' '${f}'; \
+.endfor
+	true; \
+	} > ${.TARGET}
+.endif
 CLEANFILES+=	gtyp-input.list.tmp
 
 .if exists(${DIST}/gcc/gengtype.cc)

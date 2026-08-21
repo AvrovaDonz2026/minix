@@ -499,6 +499,11 @@ int virtio_mmio_guest_supports(struct virtio_mmio_dev *dev, int bit)
     return 0;
 }
 
+int virtio_mmio_version(struct virtio_mmio_dev *dev)
+{
+    return dev->version;
+}
+
 /*
  * Add buffers to queue
  */
@@ -609,10 +614,8 @@ int virtio_mmio_had_irq(struct virtio_mmio_dev *dev)
 {
     u32_t status = virtio_mmio_read32(dev, VIRTIO_MMIO_INTERRUPT_STATUS);
 
-    if (status) {
+    if (status)
         virtio_mmio_write32(dev, VIRTIO_MMIO_INTERRUPT_ACK, status);
-        return 1;
-    }
 
-    return 0;
+    return (int)status;
 }

@@ -1748,3 +1748,51 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `.github/workflows/release-riscv64.yml`
 - `.github/workflows/gcc13-riscv64-spike.yml`
 - `README-RISCV64.md`
+
+### Entry 38 — Align virtio-net MMIO with FreeBSD if_vtnet (2026-08-21) / 按 FreeBSD if_vtnet 对齐 virtio-net MMIO
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Symptom / 现象**:
+- QEMU virtio-mmio is VirtIO 1.0 (`VIRTIO_F_VERSION_1`). The on-wire
+  `virtio_net_hdr` is 12 bytes (`num_buffers`). The driver posted a
+  10-byte header descriptor, so RX ethernet frames were shifted by two
+  bytes and `ping 10.0.2.2` showed TX with 0 RX.
+- Feature bits for CSUM / GUEST_CSUM / CTRL_RX were ignored
+  (`TODO: Features are pretty much ignored`).
+- RX and TX shared one 64-packet pool, so TX could starve RX.
+
+**Fix / 修复** (userspace, FreeBSD `if_vtnet` model; not a kernel stack port):
+1. Select 12-byte modern header when MMIO version >= 2.
+2. Dedicated RX/TX rings (32+32).
+3. Negotiate `VIRTIO_NET_F_CSUM`, `GUEST_CSUM`, `CTRL_RX`; advertise
+   `NDEV_CAP_CS_TCP/UDP_{TX,RX}`; TX installs pseudo-header + `NEEDS_CSUM`;
+   RX completes `NEEDS_CSUM` so lwIP can verify.
+4. CTRL_VQ RX filter (promisc / allmulti / MAC table).
+5. Config ISR reports link via `netdriver_link()`.
+6. `qemu_net_smoke.py` requires `virtio-net-mmio: hdr 12`.
+7. Host compile test `test_virtio_net_hdr.c` locks 10/12-byte sizes.
+
+**Commands / 命令**:
+```bash
+NBMAKE=obj.intrgcc/tooldir.*/bin/nbmake-evbriscv64
+export MKPCI=no
+export MAKEOBJDIR='${.CURDIR:C,^/workspace,/workspace/obj.intrgcc,:C,^/home/donz/minix,/workspace/obj.intrgcc,}'
+"$NBMAKE" -C minix/lib/libvirtio_mmio all install
+"$NBMAKE" -C minix/drivers/net/virtio_net_mmio all install
+"$NBMAKE" -C minix/drivers/storage/ramdisk RAMDISK_TESTS=1 image
+"$NBMAKE" -C minix/drivers/storage/memory RAMDISK_TESTS=1 all install
+NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
+  --qemu-script minix/scripts/qemu-riscv64.sh \
+  --kernel obj.intrgcc/minix/kernel/kernel \
+  --destdir obj.intrgcc/destdir.evbriscv64
+```
+
+**Evidence / 证据**:
+- `issue.md` `#40`
+- `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
+- `minix/lib/libvirtio_mmio/virtio_mmio.c`
+- `minix/tests/riscv64/qemu_net_smoke.py`
+- `minix/tests/riscv64/test_virtio_net_hdr.c`
+

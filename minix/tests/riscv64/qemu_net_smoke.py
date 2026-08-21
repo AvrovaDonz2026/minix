@@ -26,6 +26,7 @@ FATAL_RE = re.compile(
 )
 
 INIT_MARKER = "virtio-net-mmio: initialized"
+HDR_MARKER = "virtio-net-mmio: hdr 12"
 
 
 def log(msg: str) -> None:
@@ -208,6 +209,12 @@ def main() -> int:
             log(f"FAIL: {INIT_MARKER} not found")
             return 1
         log(f"[PASS] {INIT_MARKER}")
+
+        if HDR_MARKER not in boot:
+            log_tail(boot, "Missing modern virtio-net header marker")
+            log(f"FAIL: {HDR_MARKER} not found")
+            return 1
+        log(f"[PASS] {HDR_MARKER}")
 
         commands: list[tuple[str, str]] = [
             (

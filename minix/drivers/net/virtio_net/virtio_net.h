@@ -80,14 +80,23 @@ struct virtio_net_hdr {
 	u16_t gso_size;		/* Bytes to append to hdr_len per frame */
 	u16_t csum_start;	/* Position to start checksumming from */
 	u16_t csum_offset;	/* Offset after that to place checksum */
-};
+} __attribute__((packed));
 
 /* This is the version of the header to use when the MRG_RXBUF
  * feature has been negotiated. */
 struct virtio_net_hdr_mrg_rxbuf {
 	struct virtio_net_hdr hdr;
 	u16_t num_buffers;	/* Number of merged rx buffers */
-};
+} __attribute__((packed));
+
+/*
+ * Header size.  VirtIO 1.0 (VIRTIO_F_VERSION_1) always presents
+ * num_buffers, matching VIRTIO_NET_F_MRG_RXBUF.  Legacy devices
+ * without those features use the 10-byte header.  FreeBSD if_vtnet
+ * selects the same way.
+ */
+#define VIRTIO_NET_HDR_SIZE_LEGACY	sizeof(struct virtio_net_hdr)
+#define VIRTIO_NET_HDR_SIZE_MODERN	sizeof(struct virtio_net_hdr_mrg_rxbuf)
 
 /*
  * Control virtqueue data structures

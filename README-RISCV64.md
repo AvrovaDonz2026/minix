@@ -700,6 +700,12 @@ cd minix/tests/riscv64
 - 默认 `qemu-riscv64.sh -n` 使用 user-net（slirp），可先用于公网连通性验收。
   Default `qemu-riscv64.sh -n` uses user-net (slirp), which is suitable for
   first-pass public reachability checks.
+- virtio-net-mmio datapath follows FreeBSD `if_vtnet` in userspace: VirtIO 1.0
+  12-byte `virtio_net_hdr`, dedicated RX/TX rings, checksum offload, CTRL_VQ
+  RX filter. The stack remains lwIP in userspace (not a FreeBSD kernel port).
+  virtio-net-mmio 用户态 datapath 参照 FreeBSD `if_vtnet`：VirtIO 1.0 的
+  12 字节头、独立收发环、checksum offload、CTRL_VQ 过滤；协议栈仍是用户态
+  lwIP，而不是把 FreeBSD 内核协议栈搬进微内核。
 - 若出现 `hostfwd=tcp::2222-:22` 端口占用，设置 `NET_HOSTFWD=none` 再跑
   `qemu-riscv64.sh -n`（网络冒烟默认如此）。
   If `hostfwd=tcp::2222-:22` conflicts, rerun `qemu-riscv64.sh -n` with

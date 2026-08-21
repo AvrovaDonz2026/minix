@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.16
+**Version / 版本**: 1.17
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -53,6 +53,9 @@
 - 本轮网络子系统修复（`issue.md` `#39`）：`virtio_net_mmio.conf` 已与 RISC-V
   `system.conf` 对齐（`PRIVCTL`、IRQ 1-8、完整 MMIO 窗口），磁盘轮廓也能映射
   网卡；QEMU `-n` 支持 `NET_HOSTFWD=none`，并新增 `qemu_net_smoke.py`。
+- 本轮按 FreeBSD `if_vtnet` 对齐用户态 virtio-net datapath（`issue.md` `#40`）：
+  VirtIO 1.0 使用 12 字节 `virtio_net_hdr`，独立 RX/TX 缓冲，协商 CSUM/
+  GUEST_CSUM/CTRL_RX，并处理 config ISR 链路变化。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
@@ -117,6 +120,9 @@
   `virtio_net_mmio.conf` now matches RISC-V `system.conf` (`PRIVCTL`, IRQs
   1-8, full MMIO window). QEMU `-n` honors `NET_HOSTFWD=none`, and
   `qemu_net_smoke.py` covers `vio0` / `ping`.
+- This cycle aligns the userspace virtio-net datapath with FreeBSD
+  `if_vtnet` (`issue.md` `#40`): VirtIO 1.0 12-byte headers, dedicated
+  RX/TX rings, CSUM/GUEST_CSUM/CTRL_RX, and config-change link status.
 - Native toolchain work has entered Stage N1/N2 with both a build helper
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate

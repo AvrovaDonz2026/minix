@@ -424,20 +424,7 @@ gtyp-gen.h: Makefile gtyp-input.list.tmp
 	echo "NULL };"							; \
 	) >${.TARGET}
 
-version.h: ${TOOLSGCCBUILD}/version.h
-	${_MKTARGET_CREATE}
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
-
-bversion.h: ${TOOLSGCCBUILD}/bversion.h
-	${_MKTARGET_CREATE}
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
-
-plugin-version.h: ${TOOLSGCCBUILD}/plugin-version.h
-	${_MKTARGET_CREATE}
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
+.include "../Makefile.toolsgccfiles"
 
 configargs.h: ${TOOLSGCCBUILD}/configargs.h
 	${_MKTARGET_CREATE}
@@ -445,21 +432,6 @@ configargs.h: ${TOOLSGCCBUILD}/configargs.h
 	cp ${.ALLSRC} ${.TARGET}
 
 multilib.h: ${TOOLSGCCBUILD}/multilib.h
-	${_MKTARGET_CREATE}
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
-
-pass-instances.def: ${TOOLSGCCBUILD}/pass-instances.def
-	${_MKTARGET_CREATE}
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
-
-case-cfn-macros.h: ${TOOLSGCCBUILD}/case-cfn-macros.h
-	${_MKTARGET_CREATE}
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
-
-cfn-operators.pd: ${TOOLSGCCBUILD}/cfn-operators.pd
 	${_MKTARGET_CREATE}
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}

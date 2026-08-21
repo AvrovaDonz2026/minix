@@ -1,0 +1,114 @@
+# Copy generated headers from tools gcc, or synthesize gcc 4.8.5 stand-ins.
+#
+# Hosted packaging uses gcc 4.8.5. The GNU tools gcc build does not emit
+# gcc 13's version.h, pass-instances.def, case-cfn-macros.h, or
+# cfn-operators.pd. Copy those files when present; otherwise write a
+# header the 4.8.5 native objects can include.
+
+.ifndef _EXTERNAL_GPL3_GCC_USR_BIN_MAKEFILE_TOOLSGCCFILES_
+_EXTERNAL_GPL3_GCC_USR_BIN_MAKEFILE_TOOLSGCCFILES_=1
+
+.if !defined(TOOLSGCCBUILD)
+TOOLSGCCOBJ!=		cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCBUILD=		${TOOLSGCCOBJ}/build/gcc
+.endif
+
+.if !defined(BASEVER)
+.if exists(${NETBSDSRCDIR}/external/gpl3/gcc/dist/gcc/BASE-VER)
+BASEVER!=		cat ${NETBSDSRCDIR}/external/gpl3/gcc/dist/gcc/BASE-VER
+.else
+BASEVER=		4.8.5
+.endif
+.endif
+
+.if defined(G_PKGVERSION_s)
+GCC_STUB_PKGVERSION=	${G_PKGVERSION_s}
+.else
+GCC_STUB_PKGVERSION=	"\"\""
+.endif
+.if defined(G_BUGURL_s)
+GCC_STUB_BUGURL=	${G_BUGURL_s}
+.else
+GCC_STUB_BUGURL=	"\"\""
+.endif
+
+.if exists(${TOOLSGCCBUILD}/version.h)
+version.h: ${TOOLSGCCBUILD}/version.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+.else
+version.h:
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	{ \
+		echo '#ifndef GCC_VERSION_H'; \
+		echo '#define GCC_VERSION_H'; \
+		echo '#define BASEVER "${BASEVER}"'; \
+		echo '#define DATESTAMP ""'; \
+		echo '#define DEVPHASE ""'; \
+		echo '#define REVISION ""'; \
+		echo '#define PKGVERSION ${GCC_STUB_PKGVERSION}'; \
+		echo '#define BUGURL ${GCC_STUB_BUGURL}'; \
+		echo '#endif'; \
+	} > ${.TARGET}
+.endif
+
+.if exists(${TOOLSGCCBUILD}/bversion.h)
+bversion.h: ${TOOLSGCCBUILD}/bversion.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+.else
+bversion.h:
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	{ \
+		maj=`echo ${BASEVER} | cut -d. -f1`; \
+		min=`echo ${BASEVER} | cut -d. -f2`; \
+		pat=`echo ${BASEVER} | cut -d. -f3`; \
+		echo "#define BUILDING_GCC_MAJOR $$maj"; \
+		echo "#define BUILDING_GCC_MINOR $$min"; \
+		echo "#define BUILDING_GCC_PATCHLEVEL $$pat"; \
+		echo "#define BUILDING_GCC_VERSION (BUILDING_GCC_MAJOR * 1000 + BUILDING_GCC_MINOR)"; \
+	} > ${.TARGET}
+.endif
+
+.if exists(${TOOLSGCCBUILD}/plugin-version.h)
+plugin-version.h: ${TOOLSGCCBUILD}/plugin-version.h
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+.else
+plugin-version.h:
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	{ \
+		maj=`echo ${BASEVER} | cut -d. -f1`; \
+		min=`echo ${BASEVER} | cut -d. -f2`; \
+		pat=`echo ${BASEVER} | cut -d. -f3`; \
+		echo '#ifndef GCC_PLUGIN_VERSION_H'; \
+		echo '#define GCC_PLUGIN_VERSION_H'; \
+		echo "#define GCCPLUGIN_VERSION_MAJOR $$maj"; \
+		echo "#define GCCPLUGIN_VERSION_MINOR $$min"; \
+		echo "#define GCCPLUGIN_VERSION_PATCHLEVEL $$pat"; \
+		echo '#define GCCPLUGIN_VERSION (GCCPLUGIN_VERSION_MAJOR * 1000 + GCCPLUGIN_VERSION_MINOR)'; \
+		echo '#endif'; \
+	} > ${.TARGET}
+.endif
+
+.for f in pass-instances.def case-cfn-macros.h cfn-operators.pd
+.if exists(${TOOLSGCCBUILD}/${f})
+${f}: ${TOOLSGCCBUILD}/${f}
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+.else
+${f}:
+	${_MKTARGET_CREATE}
+	rm -f ${.TARGET}
+	echo '/* gcc 4.8.5: tools gcc does not emit ${f} */' > ${.TARGET}
+.endif
+.endfor
+
+.endif

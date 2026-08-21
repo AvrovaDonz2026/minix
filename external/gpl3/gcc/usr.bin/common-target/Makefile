@@ -90,13 +90,7 @@ auto-host.h: gcc13-auto-host-force ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../
 		done; \
 	} >> ${.TARGET}
 
-version.h: ${TOOLSGCCBUILD}/version.h
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
-
-bversion.h: ${TOOLSGCCBUILD}/bversion.h
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
+.include "../Makefile.toolsgccfiles"
 
 tm.h: ${TOOLSGCCBUILD}/tm.h
 	rm -f ${.TARGET}

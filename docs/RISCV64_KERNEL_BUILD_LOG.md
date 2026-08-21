@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.47
+**Version / 版本**: 1.48
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2168,5 +2168,18 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#65`
 - GitHub Actions run `32521377902`
 - `external/gpl3/gcc/usr.bin/Makefile.inc`
+
+## Entry 60 — 2026-08-21 21:10 UTC
+
+**Change / 变更**: Hosted nightly `32524763481` (`7014a3bb6`) compiled native gcov.c, then linking gcov failed with undefined `fnotice`, `fancy_abort`, `diagnostic_initialize`, `version_string`, `pkgversion_string`, and `bug_report_url`. `usr.bin/common` listed gcc13 `.cc` names; `Makefile.cc2c` kept only `input.c`, so `libcommon.a` was archived from `input.o`. Map diagnostic/pretty-print/intl/input/version like common-target and restore `version.c`.
+
+**Issue ID**: `#67`
+
+**Result / 结果**: Native libcommon SRCS resolve the gcc 4.8.5 diagnostic objects including `version.c`. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#67`
+- GitHub Actions run `32524763481`
+- `external/gpl3/gcc/usr.bin/common/Makefile`
 
 

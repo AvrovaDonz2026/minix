@@ -282,11 +282,17 @@ G_GTFILES:=	${GCC13_BACKEND_G_GTFILES}
 #
 # Generate the various header files we need.
 #
+# tools gcc config.h errors if GENERATOR_FILE is set (host vs build).
+# gcc 4.8.5 hash-table.c includes config.h unconditionally, so generator
+# .lo objects abort. Redirect that case to arch bconfig.h (auto-build.h).
 config.h: gcc13-config-force ${TOOLSGCCBUILD}/config.h ${.PARSEDIR}/../Makefile.hostprobes
 	${_MKTARGET_CREATE}
 	rm -f ${.TARGET}
-	cp ${TOOLSGCCBUILD}/config.h ${.TARGET}
 	{ \
+		echo '#ifdef GENERATOR_FILE'; \
+		echo '#include "bconfig.h"'; \
+		echo '#else'; \
+		cat ${TOOLSGCCBUILD}/config.h; \
 		echo '#ifndef CHECKING_P'; \
 		echo '#define CHECKING_P 0'; \
 		echo '#endif'; \
@@ -297,7 +303,8 @@ config.h: gcc13-config-force ${TOOLSGCCBUILD}/config.h ${.PARSEDIR}/../Makefile.
 		echo '#define HAVE_AS_LEB128 0'; \
 		echo '#endif'; \
 		echo '#undef HAVE_ZSTD_H'; \
-	} >> ${.TARGET}
+		echo '#endif'; \
+	} > ${.TARGET}
 
 auto-host.h: gcc13-auto-host-force ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../Makefile.hostprobes
 	${_MKTARGET_CREATE}

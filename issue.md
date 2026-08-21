@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.59
+**Version / 版本**: 1.60
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -58,6 +58,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   33) `[DONE]` `#66` LLVM packaging 编 libstdc++ 时 `compatibility-atomic-c++0x.cc` 踩单线程 `<atomic>` `#error`
   34) `[DONE]` `#67` `#65` 编过 gcov.c 后，libcommon.a 只有 `input.o`，链接缺 `fnotice` / `version_string`
   35) `[DONE]` `#68` `#67` 之后原生 cpp 把 gcpp 链成三份 `ggc-none.o`，缺 `main`
+  36) `[DONE]` `#69` `#68` 之后 gcpp 缺 `params.c` 的 `global_init_params`，且 `-lintl` 在 libcpp 之前
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1145,7 +1146,12 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     maps libcommon onto gcc 4.8.5 diagnostic/`version.c` sources.
     `#68` expands `Makefile.cc2c` mapped names immediately so cpp/gcc
     keep `cppspec.c`/`gcc.c`/`ggc-none.c` instead of three copies of
-    the last match.
+    the last match. `#69` restores gcc 4.8.5 `params.c` in
+    common-target and repeats `-lintl` after frontend archives.
+    LLVM packaging `32530212770` (`7cd93be42`) got past `#66` then
+    failed compiling `functexcept.cc`:
+    `usr/include/c++/__mutex_base:17:21: fatal error: pthread.h`.
+    That is LLVM-only (`MKCXX=yes`); do not mix onto the network PR.
 - Priority / 优先级: P2 (toolchain completeness; gated by packaging CI)
 
 ### 38) [DONE] release-riscv64 libstdc++ `functexcept` no-future gate stabilization / release-riscv64 中 libstdc++ `functexcept` no-future 门禁稳定化（已完成）
@@ -1503,6 +1509,16 @@ This section archives items with code-level fixes landed (some may still require
   branch may still be in libstdc++ until `#66` lands.
   历史 P1 #68：从网络分支拣入 `Makefile.cc2c` 直接追加 `${s}` /
   `${s:R}.c`，避免 bmake 延迟展开 `_gcc_cc2c`。
+- Former P1 #69: hosted nightly `32530101083` (`92237adf3`) linked
+  native `gcpp` as `cppspec.o gcc.o ggc-none.o`, then failed with
+  undefined `global_init_params` / `compiler_params` and
+  `dgettext` / `bindtextdomain`. Cherry-picked mapping `params.cc`
+  onto gcc 4.8.5 `params.c` and repeating `-lintl` after frontend
+  archives (no virtio-net). This branch's HEAD `7cd93be42`
+  (`32530212770`) got past `#66` then died in libstdc++
+  `functexcept.cc` (`pthread.h` missing).
+  历史 P1 #69：从网络分支拣入 4.8.5 `params.c` 与 frontend 档案后
+  再链 `-lintl`。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

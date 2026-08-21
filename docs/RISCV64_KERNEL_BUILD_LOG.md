@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.50
+**Version / 版本**: 1.51
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2100,4 +2100,28 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `issue.md` `#68`
 - GitHub Actions run `32527820716`
 - `external/gpl3/gcc/usr.bin/Makefile.cc2c`
+
+### Entry 63 — gcc 4.8.5 params.c and libintl (2026-08-21) / gcc 4.8.5 params.c 与 libintl
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32530101083` (`92237adf3`) linked native
+  `gcpp` as `cppspec.o gcc.o ggc-none.o`, then failed with
+  undefined `global_init_params` / `compiler_params` and
+  `dgettext` / `bindtextdomain`.
+- This branch `7cd93be42` (`32530212770`) got past `#66` then
+  failed compiling `functexcept.cc` (`pthread.h` missing). That
+  is LLVM-only and is not this cherry-pick.
+
+**Fix / 修复**:
+- Cherry-pick `#69` (no virtio-net): map `params.cc` onto gcc
+  4.8.5 `params.c` in common-target, and repeat `-lintl` after
+  frontend archives.
+
+**Evidence / 证据**:
+- `issue.md` `#69`
+- GitHub Actions run `32530101083`
+- `external/gpl3/gcc/usr.bin/common-target/Makefile`
+- `external/gpl3/gcc/usr.bin/Makefile.frontend`
 

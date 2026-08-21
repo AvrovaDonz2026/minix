@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.38
+**Version / 版本**: 1.39
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -46,6 +46,12 @@
   `#68`：从网络分支拣入 `Makefile.cc2c` 直接追加 `${s}` / `${s:R}.c`；
   网络 nightly `32527820716`（`c952fa0c1`）把 gcpp 链成三份
   `ggc-none.o`。本分支在 `#66` 落地前可能尚未重踩 native cpp。
+  `#69`：从网络分支拣入 common-target 的 4.8.5 `params.c`，以及
+  frontend 档案后再链 `-lintl`。网络 nightly `32530101083`
+  （`92237adf3`）链上 `cppspec.o gcc.o ggc-none.o` 后缺
+  `global_init_params` / `dgettext`。本分支 `7cd93be42`
+  （`32530212770`）已过 `#66`，死在 libstdc++ `functexcept.cc`
+  缺 `pthread.h`（仅本 LLVM 分支）。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -138,6 +144,12 @@
   (`c952fa0c1`) linked gcpp as `ggc-none.o` three times. This
   branch may not have re-hit native cpp until `#66` clears
   libstdc++.
+  `#69`: cherry-pick gcc 4.8.5 `params.c` in common-target and
+  `-lintl` after frontend archives (no virtio-net). Network
+  nightly `32530101083` (`92237adf3`) missed
+  `global_init_params` / `dgettext`. This branch `7cd93be42`
+  (`32530212770`) got past `#66` then died in libstdc++
+  `functexcept.cc` (`pthread.h` missing). LLVM-only.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

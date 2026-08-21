@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.36
+**Version / 版本**: 1.37
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2025,5 +2025,18 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#54`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
 - `external/gpl3/gcc/usr.bin/Makefile.cc2c`
+
+## Entry 49 — 2026-08-21 15:25 UTC
+
+**Change / 变更**: Hosted nightly `32495453269` created local `version.h` then failed on `tools/gcc/build/gcc/version.h`. `G_GCC_H` listed that tools path as a host-helper prerequisite. Use the local stub when the tools copy is missing.
+
+**Issue ID**: `#55`
+
+**Result / 结果**: Local Makefile review. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#55`
+- GitHub Actions run `32495453269`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
 
 

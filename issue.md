@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.40
+**Version / 版本**: 1.41
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -38,6 +38,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   13) `[DONE]` `#44` RISC-V `libm` 未定义 `_copysignl`（缺 `__HAVE_LONG_DOUBLE 128`）
   14) `[DONE]` `#45` hosted tools 在 top-level configure 之后立刻要求 `build/bfd/Makefile`，GNU `configure-bfd` 尚未运行就 abort
   15) `[DONE]` `#47` 原生 gcov/common-target 仍列出 gcc13 的 `json.cc`/`spellcheck.cc` 等，4.8.5 dist 上无法 make
+  16) `[DONE]` `#48` RISC-V `__HAVE_LONG_DOUBLE 128` 与 gcc 4.8.5 的 64 位 long double 冲突，`s_cbrtl.c` 因 `LDBL_MANT_DIG==53` 失败
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1346,9 +1347,10 @@ This section archives items with code-level fixes landed (some may still require
   `defs.mk`).
   历史 P1 #43：原生 gcc `optionlist` 跳过 gcc 4.8.5 dist 没有的 option
   文件。
-- Former P1 #44: RISC-V `machine/math.h` defines `__HAVE_LONG_DOUBLE 128`
-  so `s_copysignl.c` emits `_copysignl`.
-  历史 P1 #44：RISC-V `math.h` 声明 128 位 long double，生成 `_copysignl`。
+- Former P1 #44: RISC-V `machine/math.h` briefly defined
+  `__HAVE_LONG_DOUBLE 128` so `s_copysignl.c` would emit `_copysignl`.
+  That 128-bit flag was the wrong ABI for gcc 4.8.5; superseded by `#48`.
+  历史 P1 #44：为补 `_copysignl` 曾声明 128 位 long double，由 `#48` 取代。
 - Former P1 #45: tools binutils no longer has an nbmake `bfd.h`
   prerequisite on `.configure_done`. Host GNU make runs `configure-bfd`
   then `all-binutils` so `build/bfd/Makefile` exists before `elfxx-riscv.lo`.
@@ -1358,6 +1360,12 @@ This section archives items with code-level fixes landed (some may still require
   common-target skips gcc13-only sources or maps `.cc` to `.c` on gcc 4.8.5.
   历史 P1 #47：gcov 在 4.8.5 dist 上跳过 `json.cc`；common-target 跳过
   gcc13 才有的源文件，或把 `.cc` 映射到 `.c`。
+- Former P1 #48: nightly `32483868137` on the packaging branch passed
+  tools then failed `s_cbrtl.c` (`Unsupported long double format`).
+  gcc 4.8.5 long double is 64-bit. Drop `__HAVE_LONG_DOUBLE 128` and
+  alias `copysignl` / `fabsl` / `fmal` from the RISC-V `.S` files.
+  历史 P1 #48：发行版在 `s_cbrtl.c` 因 long double 格式失败。去掉
+  `__HAVE_LONG_DOUBLE 128`，在替换 C 源的 RISC-V 汇编里 alias `*l`。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

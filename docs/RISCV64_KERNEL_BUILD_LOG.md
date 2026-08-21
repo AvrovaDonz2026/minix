@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.31
+**Version / 版本**: 1.32
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1743,4 +1743,22 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `issue.md` `#47`
 - `external/gpl3/gcc/usr.bin/gcov/Makefile`
 - `external/gpl3/gcc/usr.bin/common-target/Makefile`
+
+### Entry 44 — 64-bit long double aliases (2026-08-21) / 64 位 long double alias
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Shared packaging nightly `32483868137` failed `s_cbrtl.c` after
+  `__HAVE_LONG_DOUBLE 128`. gcc 4.8.5 long double is 64-bit.
+
+**Fix / 修复**:
+- Drop `__HAVE_LONG_DOUBLE 128`. Alias `copysignl` / `fabsl` / `fmal`
+  from `arch/riscv` `.S` files (`issue.md` `#48`). Cherry-picked from
+  the network packaging branch; no virtio-net changes.
+
+**Evidence / 证据**:
+- `issue.md` `#48`
+- `sys/arch/riscv/include/math.h`
+- `lib/libm/arch/riscv/s_copysign.S`
 

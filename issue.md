@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.37
+**Version / 版本**: 1.38
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -34,6 +34,8 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   9) `[DONE]` `#34` lwIP raw socket 权限检查因 IPC 白名单缺失 `pm` 导致误拒绝（`ping/ping6` `Permission denied`）
   10) `[DONE]` `#35` `ping6 fe80::...%vio0` 在用户态崩溃（SIGSEGV，`bad addr 0x0`）
   11) `[DONE]` `#36` `lwip.conf` 与 RISC-V `system.conf` 的 IPC 策略漂移，可能在特定启动路径复现 `Permission denied`
+  12) `[DONE]` `#43` 原生 gcc `optionlist` 依赖 gcc13 的 `params.opt`，4.8.5 dist 上无法 make
+  13) `[DONE]` `#44` RISC-V `libm` 未定义 `_copysignl`（缺 `__HAVE_LONG_DOUBLE 128`）
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失

@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.28
+**Version / 版本**: 1.29
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1684,3 +1684,26 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no MKLLVM=yes \
 ```
 **Result / 结果**: Source changes landed; full tools+distribution is gated by
 GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
+
+### Entry 41 — LLVM tools bfd.h race and shared dist gaps (2026-08-21) / LLVM tools 的 bfd.h 竞态与共享 dist 缺口
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Push `32481413772` / PR `32481430489` failed in `Build tools` with
+  `fatal error: bfd.h: No such file or directory` while compiling
+  `elfxx-riscv.c`. Pre-touching `bfd.h` was not enough: nbmake+gnuwrap
+  `all-bfd` still raced `stmp-bfd-h`.
+- GCC packaging on the network branch then showed the next two dist
+  failures this branch will hit after tools: gcc13 `params.opt` and
+  libm `_copysignl`.
+
+**Fix / 修复**:
+1. Configure and build tools binutils with host GNU make.
+2. Skip missing gcc option files (`params.opt`) on the gcc 4.8.5 dist.
+3. RISC-V `math.h`: `__HAVE_LONG_DOUBLE 128` so `_copysignl` exists.
+
+**Evidence / 证据**:
+- GitHub Actions `32481413772` / `32481430489`
+- `issue.md` `#42` `#43` `#44`
+

@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.16
+**Version / 版本**: 1.17
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -10,7 +10,9 @@
 **中文**
 - 构建可通过（GCC + workaround 组合），详见 `README-RISCV64.md`。
 - LLVM/clang 由独立 packaging CI（`packaging-riscv64-llvm.yml`，`MKLLVM=yes`）门禁；
-  世界仍用 GCC，见 `issue.md` `#42`。
+  世界仍用 GCC，见 `issue.md` `#42`。首次 `build-llvm`（`32481413772`）仍在
+  tools/binutils 上因 `bfd.h` 竞态失败；本轮改用宿主 GNU make，并带上 gcc
+  4.8.5 `params.opt` 跳过与 RISC-V `_copysignl`（`#43`/`#44`）。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。

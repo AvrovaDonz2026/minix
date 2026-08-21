@@ -60,17 +60,30 @@ CONFIGURE_ARGS+= \
 	--enable-gold=yes
 .endif # ${MKBITCODE:Uno} == "yes"
 .endif # defined(__MINIX)
+
+.if defined(__MINIX)
+# Host GNU make understands bfd's stmp-bfd-h order. nbmake + Makefile.gnuwrap
+# compiles elfxx-riscv.lo before bfd.h exists, and pre-touching the header is
+# not enough because wrapped all-bfd still regenerates it in parallel.
+MAKE_PROGRAM!=	command -v gmake || command -v make || echo make
+.endif
+
 .include "${.CURDIR}/../Makefile.gnuhost"
 
 .if defined(__MINIX)
-# nbmake + Makefile.gnuwrap races RISC-V bfd objects against stmp-bfd-h,
-# so elfxx-riscv.lo can compile before bfd.h exists. Materialize the
-# header with host GNU make after configure, before parallel all.
+BUILD_COMMAND=	${BUILD_ENV} MAKE=${MAKE_PROGRAM:Q} ${MAKE_PROGRAM} \
+		${MAKEFLAGS:[*]:M*-j*:C/.*(-j ?[0-9]*).*/\1/W} \
+		MACHINE= MAKEINFO=${TOOL_MAKEINFO:Q} \
+		BISON=true DESTDIR= INSTALL=${HOST_INSTALL_FILE:Q}
+
 ${.OBJDIR}/build/bfd/bfd.h: .configure_done
 	@mkdir -p ${.OBJDIR}/build/bfd
-	@if [ -f ${.OBJDIR}/build/bfd/Makefile ]; then \
-		(cd ${.OBJDIR}/build/bfd && make bfd.h bfdver.h); \
+	@if [ ! -f ${.OBJDIR}/build/bfd/Makefile ]; then \
+		echo "error: bfd Makefile missing after configure" >&2; \
+		exit 1; \
 	fi
+	@(cd ${.OBJDIR}/build/bfd && MAKE=${MAKE_PROGRAM} ${MAKE_PROGRAM} bfd.h bfdver.h)
+	@test -f ${.TARGET}
 
 .build_done: ${.OBJDIR}/build/bfd/bfd.h
 .endif

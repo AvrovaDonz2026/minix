@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.30
+**Version / 版本**: 1.31
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1729,4 +1729,18 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - GitHub Actions `32482987335` / `32482990730`
 - `issue.md` `#45`
 - `tools/binutils/Makefile`
+
+### Entry 43 — Skip gcc13 gcov/common-target sources (2026-08-21) / 跳过 gcc13 的 gcov 与 common-target 源
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Fix / 修复**:
+1. gcov: drop `json.o` when `json.cc` is missing; use `gcov.c` on 4.8.5.
+2. common-target: keep a source only if the `.cc` or `.c` exists in dist;
+   keep generated `options.cc`.
+
+**Evidence / 证据**:
+- `issue.md` `#47`
+- `external/gpl3/gcc/usr.bin/gcov/Makefile`
+- `external/gpl3/gcc/usr.bin/common-target/Makefile`
 

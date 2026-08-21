@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.18
+**Version / 版本**: 1.19
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -14,7 +14,8 @@
   在 top-level configure 之后因 `bfd Makefile missing after configure` 立刻失败
   （`#45`）。本轮去掉过早的 nbmake `bfd.h` 依赖，让宿主 GNU make 先
   `configure-bfd` 再编 `all-binutils`；gcc 4.8.5 `params.opt` 跳过与 RISC-V
-  `_copysignl` 仍在（`#43`/`#44`）。
+  `_copysignl` 仍在（`#43`/`#44`）。gcov 跳过 gcc13 的 `json.cc`，
+  common-target 跳过 `spellcheck.cc` 等（`#47`）。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -70,7 +71,8 @@
   tools `c2e1100aa` aborted after top-level configure looking for
   `build/bfd/Makefile` (#45). Tools binutils now runs GNU `configure-bfd`
   then `all-binutils`; gcc 4.8.5 still skips `params.opt` and RISC-V libm
-  still defines `_copysignl` (#43/#44).
+  still defines `_copysignl` (#43/#44). gcov skips `json.cc` and
+  common-target skips gcc13-only sources (#47).
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

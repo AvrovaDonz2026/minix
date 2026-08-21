@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.44
+**Version / 版本**: 1.45
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2129,5 +2129,18 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#62`
 - GitHub Actions run `32513249750`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+## Entry 57 — 2026-08-21 19:25 UTC
+
+**Change / 变更**: Hosted nightly `32516002843` (`086dbe436`) compiled `hash-table.lo`, then failed native `external/gpl3/gcc/usr.bin/libcpp` with `don't know how to make charset.cc`. gcc 4.8.5 ships `libcpp/*.c`; riscv64 `defs.mk` `G_libcpp_a_OBJS` is gcc 13 mknative and the Makefile rewrites those objects to `.cc`. Map each name onto `libcpp/*.c` when the dist has no `.cc`.
+
+**Issue ID**: `#63`
+
+**Result / 结果**: Native libcpp SRCS resolve `.cc` or `.c` from dist. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#63`
+- GitHub Actions run `32516002843`
+- `external/gpl3/gcc/usr.bin/libcpp/Makefile`
 
 

@@ -793,35 +793,54 @@ SMOKE_DISK_IMAGE=$PWD/.ci-artifact-test/minix-native-toolchain.img \
 仓库已提供自动构建并发布到 GitHub Release 的流水线：  
 `/.github/workflows/release-riscv64.yml`
 
+`release-riscv64.yml` 与 `nightly-riscv64.yml` 同为 OS 打包 CI；二者均在每次提交时运行
+（任意分支 `push` + `pull_request`），用于审查 OS 完整性与打包可复现性。  
+`release-riscv64.yml` and `nightly-riscv64.yml` are the two OS packaging CIs; both run on
+every commit (`push` to any branch + `pull_request`) to review OS completeness and packaging
+reproducibility.
+
 触发方式 / Triggers:
-- `push` 到 tag（模式：`v*`）
-- 手动触发 `workflow_dispatch`（需输入 tag）
+- `push` 到任意分支 + `pull_request`（每次提交审查 run；**不**创建 GitHub Release）
+- `push` 到 tag（模式：`v*`）— 官方发布 run
+- 手动触发 `workflow_dispatch`（需输入 tag）— 官方发布 run
+
+审查 run vs 发布 run / Review-only vs publish runs:
+- **审查 run**（feature 分支 `push` / `pull_request`）：执行完整打包链路与门禁，上传
+  workflow artifacts，**不**创建或更新 GitHub Release。
+- **发布 run**（`v*` tag push 或 `workflow_dispatch`）：同上，并在通过后创建/更新
+  GitHub Release 并上传资产。
 
 流水线行为 / Pipeline behavior:
 1. 安装宿主依赖并按 `obj.intrgcc` 基线执行 `tools -> distribution`
-2. 调用 `minix/releasetools/riscv64/mkdisk.sh` 生成磁盘镜像并压缩
-3. 导出内核 ELF 与开发用 sysroot（头文件/库）
-4. 生成统一 `SHA256SUMS.txt`
-5. 预检 native payload（`DESTDIR` 中 `cc/gcc/c++/g++/binutils`、
+2. 从 git 提交时间戳固定 `SOURCE_DATE_EPOCH`；压缩使用 `gzip -n`
+3. 调用 `minix/releasetools/riscv64/mkdisk.sh` 生成磁盘镜像并压缩
+4. 导出内核 ELF 与开发用 sysroot（头文件/库）
+5. 生成 `BUILDINFO.txt` 与 `SHA256SUMS`（可复现性记录）
+6. 预检 payload 完整性（`DESTDIR` 中 native 工具链 **以及**
+   `virtio_net_mmio`、`lwip`、`ifconfig`、`ping`、`ping6` 必须齐全）
+7. 预检 native payload（`cc/gcc/c++/g++/binutils`、
    `libgcc.a/libgcc_eh.a/libstdc++.a`、关键头文件）
-6. 执行 QEMU 交互式 gate（`neofetch` + 关机链），失败则阻断发布
-7. 执行分阶段完整测试（阻断式）：
+8. 执行 QEMU 交互式 gate（`neofetch` + 关机链），失败则阻断
+9. 执行分阶段完整测试（阻断式）：
    `build -> user -> native -> kernel -> gate(timeout 900s)`
-8. 上传 full-suite 日志到 workflow artifact（步骤 `if: always()`）
-9. 自动创建/更新 GitHub Release 并上传以下产物
+10. 上传 full-suite 日志到 workflow artifact（步骤 `if: always()`）
+11. **仅发布 run**：自动创建/更新 GitHub Release 并上传以下产物
 
 构建产物命名规范（含构建提交 hash）/ Artifact naming (with commit hash):
 - `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>.img`
 - `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>.img.gz`
 - `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>.elf`
 - `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>-sysroot.tar.gz`
-- `SHA256SUMS.txt`
+- `BUILDINFO.txt`
+- `SHA256SUMS`
 
 注意 / Notes:
 - Release workflow 依赖 GitHub Actions 默认 `GITHUB_TOKEN`（`contents: write`）。
 - 若首次启用失败，请确认仓库 Actions 权限允许 workflow 写 Release。
 - `shortsha` 来自当前构建提交（release: `--short=11`；nightly: `--short=12`）。
-- 构建时间较长（完整 `distribution`），建议通过 tag 触发正式发布。
+- 构建时间较长（完整 `distribution`）；feature 分支/PR 上的审查 run 可在合并前验证
+  完整性与可复现性，正式发布仍通过 `v*` tag 或 `workflow_dispatch` 触发。
+- `SOURCE_DATE_EPOCH`、`BUILDINFO.txt` 与 `SHA256SUMS` 共同构成可复现性记录。
 - 若发布在 QEMU gate 阶段失败，请优先下载
   `riscv64-qemu-smoke-log-<tag>-<sha>` 排查来宾输出。
 - 为降低 GitHub hosted runner 磁盘不足风险，workflow 在安装依赖前会执行
@@ -871,20 +890,36 @@ SMOKE_DISK_IMAGE=$PWD/.ci-artifact-test/minix-native-toolchain.img \
 
 Nightly workflow 文件：`/.github/workflows/nightly-riscv64.yml`
 
+与 release 同为 OS 打包 CI；二者均在每次提交时运行（任意分支 `push` +
+`pull_request`），用于审查 OS 完整性与打包可复现性。  
+Same as release: an OS packaging CI that also runs on every commit (`push` to any branch +
+`pull_request`) for completeness and reproducibility review.
+
 触发方式 / Triggers:
-- `schedule`（UTC `20 18 * * *`，每日一次）
-- 手动触发 `workflow_dispatch`
+- `push` 到任意分支 + `pull_request`（每次提交审查 run；**不**发布 nightly tag /
+  GitHub Release）
+- `schedule`（UTC `20 18 * * *`，每日一次）— 可发布 run
+- 手动触发 `workflow_dispatch` — 可发布 run
+- `push` 到 tag 被忽略（`tags-ignore`），避免与 release-on-tag 重复
+
+审查 run vs 发布 run / Review-only vs publish runs:
+- **审查 run**（feature 分支 `push` / `pull_request`）：执行完整打包链路与门禁，上传
+  workflow artifacts，**不**创建 nightly tag 或 GitHub Release。
+- **发布 run**（`schedule`、`workflow_dispatch`、或 `master` 分支 `push`）：同上，并在
+  通过后创建 nightly tag 并发布 prerelease 资产。
 
 Nightly 行为 / Pipeline behavior:
 1. 与 release 相同的 `obj.intrgcc` 基线构建：`tools -> distribution`
-2. 产出并打包 5 件标准产物（`img/img.gz/elf/sysroot/SHA256SUMS`）
-3. 预检 native payload（阻断式）
-4. 执行 QEMU 交互式 gate（`neofetch` + 关机链）
-5. 执行分阶段完整测试（阻断式）：
+2. 从 git 提交时间戳固定 `SOURCE_DATE_EPOCH`；压缩使用 `gzip -n`
+3. 产出并打包标准产物（`img/img.gz/elf/sysroot/BUILDINFO.txt/SHA256SUMS`）
+4. 预检 payload 完整性（`virtio_net_mmio`、`lwip`、`ifconfig`、`ping`、`ping6` 等）
+5. 预检 native payload（阻断式）
+6. 执行 QEMU 交互式 gate（`neofetch` + 关机链）
+7. 执行分阶段完整测试（阻断式）：
    `build -> user -> native -> kernel -> gate(timeout 900s)`
-6. 上传 full-suite 日志 artifact
-7. 上传构建产物 artifact：`riscv64-nightly-<date>-<sha>`
-8. 创建 nightly tag 并发布 prerelease
+8. 上传 full-suite 日志 artifact
+9. 上传构建产物 artifact：`riscv64-nightly-<date>-<sha>`
+10. **仅发布 run**：创建 nightly tag 并发布 prerelease
 
 Nightly tag 规则 / Nightly tag format:
 - `nightly-master-riscv64-YYYYMMDD-<shortsha>`
@@ -895,11 +930,14 @@ Nightly 产物命名 / Nightly asset naming:
 - `minix-cat-nightly-master-riscv64-<YYYYMMDD>-<shortsha>-ci-<UTCYYYYMMDDhhmmss>.img.gz`
 - `minix-cat-nightly-master-riscv64-<YYYYMMDD>-<shortsha>-ci-<UTCYYYYMMDDhhmmss>.elf`
 - `minix-cat-nightly-master-riscv64-<YYYYMMDD>-<shortsha>-ci-<UTCYYYYMMDDhhmmss>-sysroot.tar.gz`
-- `SHA256SUMS.txt`
+- `BUILDINFO.txt`
+- `SHA256SUMS`
 
 说明 / Notes:
-- Nightly 会把上述 5 件产物同时放入：
+- 发布 run 会把上述产物同时放入：
   1) Actions workflow artifacts；2) GitHub Release（prerelease）资产。
+- 审查 run 仅上传 workflow artifacts，不触碰 GitHub Release / nightly tag。
+- `SOURCE_DATE_EPOCH`、`BUILDINFO.txt` 与 `SHA256SUMS` 共同构成可复现性记录。
 - 若出现“某次 nightly 没有产物”，先确认该 run 是否被取消；取消的 run 可能显示
   `0 artifact`，不代表成功 run 未上传。
 

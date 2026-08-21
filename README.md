@@ -18,9 +18,12 @@ This repository contains the full MINIX 3 source tree plus an active RISC-V 64-b
   `as/ld/ar/ranlib` and `cc -c` pass under automated gate.
   本地工具链：在 fresh 镜像上 N1/N2 已闭环；来宾侧 `as/ld/ar/ranlib` 与 `cc -c`
   已通过自动门禁。
-- CI policy: native toolchain runtime gate is blocking in both release/nightly
-  workflows.
-  CI 策略：release/nightly 两条流水线的 native toolchain 运行时门禁均为阻断式。
+- CI policy: both packaging workflows (`release-riscv64.yml`, `nightly-riscv64.yml`)
+  run on every commit for OS completeness and packaging reproducibility review;
+  GitHub Release / nightly tag publish remains gated to official triggers.
+  CI 策略：`release-riscv64.yml` 与 `nightly-riscv64.yml` 两条打包流水线均在每次提交时
+  运行，用于 OS 完整性与打包可复现性审查；GitHub Release / nightly tag 发布仍受
+  官方触发条件门禁。
 - Memory probe fix: RV64 FDT boot-pointer bridge is in place; boot log shows
   `Memory: 0x80000000 - 0x90000000` and `neofetch` reports full-range `Mem(raw)`.
   内存识别修复：RV64 FDT 启动指针桥接已合入；启动日志恢复
@@ -41,8 +44,8 @@ This repository contains the full MINIX 3 source tree plus an active RISC-V 64-b
 - `docs/RISCV64_KERNEL_BUILD_LOG.md` — build log and commands / 构建日志与命令记录
 - `docs/RISCV64_PORT_PLAN.md` — plan and checklist / 计划与检查清单
 - `docs/RISCV64_NATIVE_TOOLCHAIN_GUIDE.md` — native toolchain stage model and validation / 本地工具链阶段模型与验收
-- `.github/workflows/release-riscv64.yml` — release pipeline / 发布流水线
-- `.github/workflows/nightly-riscv64.yml` — nightly pipeline / 夜间流水线
+- `.github/workflows/release-riscv64.yml` — release pipeline (packaging CI; per-commit review) / 发布流水线（打包 CI；每次提交审查）
+- `.github/workflows/nightly-riscv64.yml` — nightly pipeline (packaging CI; per-commit review) / 夜间流水线（打包 CI；每次提交审查）
 
 ## Repository Layout / 目录结构
 

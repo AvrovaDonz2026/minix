@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.33
+**Version / 版本**: 1.34
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1783,4 +1783,20 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - GitHub Actions runs `32486378021` / `32486375962`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
 - `external/bsd/llvm/dist/clang/lib/Basic/Targets.cpp`
+
+### Entry 46 — skip gcc13 common.md on 4.8.5 (2026-08-21) / 4.8.5 上跳过 gcc13 common.md
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32488937725` (`5fe3792d1`) failed native backend
+  on gcc13 `gcc/common.md` after `#50` unblocked `gengenrtl.c`.
+
+**Fix / 修复**:
+- Cherry-pick `G_md_file` exists() filter (`#52`). No virtio-net.
+
+**Evidence / 证据**:
+- `issue.md` `#52`
+- GitHub Actions run `32488937725`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
 

@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.38
+**Version / 版本**: 1.39
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -36,6 +36,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   11) `[DONE]` `#36` `lwip.conf` 与 RISC-V `system.conf` 的 IPC 策略漂移，可能在特定启动路径复现 `Permission denied`
   12) `[DONE]` `#43` 原生 gcc `optionlist` 依赖 gcc13 的 `params.opt`，4.8.5 dist 上无法 make
   13) `[DONE]` `#44` RISC-V `libm` 未定义 `_copysignl`（缺 `__HAVE_LONG_DOUBLE 128`）
+  14) `[DONE]` `#45` hosted tools 在 top-level configure 之后立刻要求 `build/bfd/Makefile`，GNU `configure-bfd` 尚未运行就 abort
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1110,6 +1111,11 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - No in-tree RISC-V LLVM backend, so `clang -c` for RV64 still cannot
     emit code. Guest native compile stays on gcc until a later backend
     import.
+  - Push `c2e1100aa` (`32482987335` / `32482990730`) still aborted in
+    tools with `error: bfd Makefile missing after configure`. The extra
+    nbmake `bfd.h` prerequisite ran right after top-level configure,
+    which only writes `build/Makefile`. `#45` drops that prerequisite
+    and lets GNU make run `configure-bfd` then `all-binutils`.
 - Priority / 优先级: P2 (toolchain completeness; gated by packaging CI)
 
 ### 38) [DONE] release-riscv64 libstdc++ `functexcept` no-future gate stabilization / release-riscv64 中 libstdc++ `functexcept` no-future 门禁稳定化（已完成）
@@ -1334,6 +1340,19 @@ This section archives items with code-level fixes landed (some may still require
   `minix/tests/riscv64/qemu_runtime_probe.py` 接入
   `minix/tests/riscv64/multi_smoke_gate.sh`，默认覆盖
   `meminfo/ps/srv_status`，并在带盘轮次校验 `/dev/c0d0` 存在性。
+- Former P1 #43: native gcc `optionlist` skips option files missing from
+  the fetched gcc 4.8.5 dist (`params.opt` is gcc13-only in riscv64
+  `defs.mk`).
+  历史 P1 #43：原生 gcc `optionlist` 跳过 gcc 4.8.5 dist 没有的 option
+  文件。
+- Former P1 #44: RISC-V `machine/math.h` defines `__HAVE_LONG_DOUBLE 128`
+  so `s_copysignl.c` emits `_copysignl`.
+  历史 P1 #44：RISC-V `math.h` 声明 128 位 long double，生成 `_copysignl`。
+- Former P1 #45: tools binutils no longer has an nbmake `bfd.h`
+  prerequisite on `.configure_done`. Host GNU make runs `configure-bfd`
+  then `all-binutils` so `build/bfd/Makefile` exists before `elfxx-riscv.lo`.
+  历史 P1 #45：去掉 configure 之后立刻检查 `bfd/Makefile` 的 nbmake 依赖；
+  改由宿主 GNU make 先 `configure-bfd` 再编 `all-binutils`。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

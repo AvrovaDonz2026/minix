@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.17
+**Version / 版本**: 1.18
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -10,9 +10,11 @@
 **中文**
 - 构建可通过（GCC + workaround 组合），详见 `README-RISCV64.md`。
 - LLVM/clang 由独立 packaging CI（`packaging-riscv64-llvm.yml`，`MKLLVM=yes`）门禁；
-  世界仍用 GCC，见 `issue.md` `#42`。首次 `build-llvm`（`32481413772`）仍在
-  tools/binutils 上因 `bfd.h` 竞态失败；本轮改用宿主 GNU make，并带上 gcc
-  4.8.5 `params.opt` 跳过与 RISC-V `_copysignl`（`#43`/`#44`）。
+  世界仍用 GCC，见 `issue.md` `#42`。`c2e1100aa` 的 `build-llvm`（`32482987335`）
+  在 top-level configure 之后因 `bfd Makefile missing after configure` 立刻失败
+  （`#45`）。本轮去掉过早的 nbmake `bfd.h` 依赖，让宿主 GNU make 先
+  `configure-bfd` 再编 `all-binutils`；gcc 4.8.5 `params.opt` 跳过与 RISC-V
+  `_copysignl` 仍在（`#43`/`#44`）。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -64,6 +66,11 @@
 
 **English**
 - Build passes with GCC + workaround flags; see `README-RISCV64.md` for exact commands.
+- LLVM is gated by packaging CI with `MKLLVM=yes` (`issue.md` #42). Hosted
+  tools `c2e1100aa` aborted after top-level configure looking for
+  `build/bfd/Makefile` (#45). Tools binutils now runs GNU `configure-bfd`
+  then `all-binutils`; gcc 4.8.5 still skips `params.opt` and RISC-V libm
+  still defines `_copysignl` (#43/#44).
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

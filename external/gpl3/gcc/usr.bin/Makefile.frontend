@@ -20,6 +20,12 @@ LDADD+=			-L${FRONTENDOBJ} -lfrontend
 .include "../Makefile.libiberty"
 .include "../Makefile.libdecnumber"
 
+# Driver Makefiles put -lintl in LDADD before this file. Static RISC-V
+# links then see -lintl before libcpp.a, so dgettext in libcpp is
+# unresolved (nightly 32530101083). Repeat -lintl after the archives.
+LDADD+=			-lintl
+DPADD+=			${LIBINTL}
+
 HOSTPROG_CXX=	1
 
 TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}

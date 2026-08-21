@@ -271,7 +271,12 @@ GCC13_BACKEND_G_GTFILES:= ${GCC13_BACKEND_G_GTFILES} ${f}
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../libcpp/include,${DIST}/libcpp/include,g}
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
+# gcc13 moved GTY struct answer / cpp_macro into cpplib.h and dropped
+# cpp-id-data.h. gcc 4.8.5 still defines those types in cpp-id-data.h;
+# dropping it makes gengtype -r abort in error_at_line.
+.if !exists(${DIST}/libcpp/include/cpp-id-data.h)
 GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:N${DIST}/libcpp/include/cpp-id-data.h}
+.endif
 G_GTFILES:=	${GCC13_BACKEND_G_GTFILES}
 
 #

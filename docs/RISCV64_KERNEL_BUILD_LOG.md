@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.48
+**Version / 版本**: 1.49
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2181,5 +2181,19 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#67`
 - GitHub Actions run `32524763481`
 - `external/gpl3/gcc/usr.bin/common/Makefile`
+
+## Entry 61 — 2026-08-21 21:45 UTC
+
+**Change / 变更**: Hosted nightly `32527820716` (`c952fa0c1`) compiled native gcov, then linking `usr.bin/cpp` `gcpp` failed with multiple `ggc_free` definitions and undefined `main`. The link line was `ggc-none.o ggc-none.o ggc-none.o`. `#54` `Makefile.cc2c` did `GCC_SRCS_MAPPED+= ${_gcc_cc2c}`; bmake delays that expansion, so `SRCS:=` repeated the last match (`ggc-none.c` for `cppspec.cc gcc.cc ggc-none.cc`). Add `${s}` / `${s:R}.c` directly, like common-target.
+
+**Issue ID**: `#68`
+
+**Result / 结果**: Native frontend/cc1/cpp/gcc SRCS keep one mapped basename per input. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#68`
+- GitHub Actions run `32527820716`
+- `external/gpl3/gcc/usr.bin/Makefile.cc2c`
+
 
 

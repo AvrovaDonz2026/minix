@@ -428,14 +428,17 @@ virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
 
 	virtio_net_init_queues();
 
+	/*
+	 * Mark the device DRIVER_OK before posting RX buffers.  QEMU's
+	 * virtio-mmio transport ignores queue notifies until DRIVER_OK, so
+	 * a pre-ready refill can leave the RX ring silent and drop replies.
+	 */
+	virtio_mmio_device_ready(net_dev);
+
 	/* Add packets to the receive queue. */
 	virtio_net_refill_rx_queue();
 
-	virtio_mmio_device_ready(net_dev);
-
 	printf("virtio-net-mmio: initialized\n");
-
-	virtio_mmio_irq_enable(net_dev);
 
 	*caps = NDEV_CAP_MCAST | NDEV_CAP_BCAST;
 	return OK;

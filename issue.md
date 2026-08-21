@@ -995,6 +995,9 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - Program modern virtqueue DESC/AVAIL/USED addresses from `vring_init`
     pointers; initialize `irq_hook` to `-1`; report NIC link from
     `VIRTIO_NET_F_STATUS`; print `virtio-net-mmio: initialized`.
+  - Post RX buffers only after `DRIVER_OK`. QEMU virtio-mmio ignores
+    queue notifies until the device is ready, so a pre-ready refill
+    left the RX ring silent (`ping` TX with 0 replies).
   - QEMU `-n` keeps user-net, adds `ipv6=on` and a stable MAC, and honors
     `NET_HOSTFWD=none` so smoke/CI does not bind host port 2222.
   - Add `minix/tests/riscv64/qemu_net_smoke.py` and wire it into

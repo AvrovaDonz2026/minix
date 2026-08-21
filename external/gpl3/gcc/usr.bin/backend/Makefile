@@ -42,7 +42,7 @@ G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
 	genattr genattr-common genattrtab genautomata gencodes genconditions \
 	genconfig genemit genextract genflags genopinit genoutput genpeep \
 	genpreds genrecog genmddump genmddeps genconstants genenums \
-	gencheck genchecksum
+	gencheck genchecksum genhooks
 .if exists(${DIST}/gcc/${_n}.cc)
 GCC_DIST_SRC.${_n}=	${DIST}/gcc/${_n}.cc
 .elif exists(${DIST}/gcc/${_n}.c)

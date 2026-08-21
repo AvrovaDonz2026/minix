@@ -72,13 +72,7 @@ options.h: ${TOOLSGCCBUILD}/options.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-version.h: ${TOOLSGCCBUILD}/version.h
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
-
-bversion.h: ${TOOLSGCCBUILD}/bversion.h
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
+.include "../Makefile.toolsgccfiles"
 
 ${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: options.h config.h auto-host.h tm.h version.h bversion.h
 .if exists(${DIST}/gcc/gcov.cc)

@@ -86,13 +86,7 @@ configargs.h: ${TOOLSGCCBUILD}/configargs.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-version.h: ${TOOLSGCCBUILD}/version.h
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
-
-bversion.h: ${TOOLSGCCBUILD}/bversion.h
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
+.include "Makefile.toolsgccfiles"
 
 specs.h: ${TOOLSGCCBUILD}/specs.h
 	rm -f ${.TARGET}

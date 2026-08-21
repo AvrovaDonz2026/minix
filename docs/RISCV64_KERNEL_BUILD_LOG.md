@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.45
+**Version / 版本**: 1.46
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2142,5 +2142,18 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#63`
 - GitHub Actions run `32516002843`
 - `external/gpl3/gcc/usr.bin/libcpp/Makefile`
+
+## Entry 58 — 2026-08-21 19:55 UTC
+
+**Change / 变更**: Hosted nightly `32519022725` (`445b0e907`) built `libcpp.a`, then failed native gcov/cc1 with `gcov-io.h:292:22: fatal error: gcov-iov.h: No such file or directory`. gcc 4.8.5 `gcov-io.h` includes that header; mknative ships it under `lib/libgcc/libgcov/arch`. Backend already passed `-I` there; add the same path in `usr.bin/Makefile.inc`.
+
+**Issue ID**: `#64`
+
+**Result / 结果**: Native gcov/cc1 search the libgcov arch dir for `gcov-iov.h`. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#64`
+- GitHub Actions run `32519022725`
+- `external/gpl3/gcc/usr.bin/Makefile.inc`
 
 

@@ -1,5 +1,10 @@
 #	$NetBSD: Makefile,v 1.2 2015/01/14 20:26:41 tron Exp $
 
+# Set NOMAN before Makefile.cc2c pulls bsd.own.mk. Otherwise MKMAN stays
+# yes (bsd.own.mk is include-guarded) and dependall wants lto1.1, which
+# gcc 4.8.5 does not ship (nightly 32532469511).
+NOMAN=		# defined
+
 PROG=		lto1
 SRCS=		lto-partition.cc lto-object.cc lto.cc lto-lang.cc attribs.cc main.cc
 .include "../Makefile.cc2c"

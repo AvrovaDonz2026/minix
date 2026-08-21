@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.32
+**Version / 版本**: 1.33
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1956,5 +1956,28 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `sys/arch/riscv/include/math.h`
 - `lib/libm/arch/riscv/s_copysign.S`
 - `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
+
+### Entry 45 — gcc 4.8.5 backend generator sources (2026-08-21) / 4.8.5 backend 生成器源
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Symptom / 现象**:
+- Nightly/release `32486378021` (`a4d3a69ff`) passed `Build tools` then
+  failed `Build distribution` in `external/gpl3/gcc/usr.bin/backend`:
+  `don't know how to make .../gcc/gengenrtl.cc`.
+- gcc 4.8.5 ships `gengenrtl.c`. RISC-V `defs.mk` is gcc 13.2.0 mknative
+  and the backend Makefile hardcoded `.cc` generator paths.
+
+**Fix / 修复**:
+1. Resolve each dist/gcc generator basename to `.cc` or `.c`.
+2. Drop gcc13-only objects/generators (`gengtype-state`, `hash-table`,
+   `sort`, `inchash`, `genenums`) when the dist lacks them.
+3. On 4.8.5, run `./gengtype` without `-S/-w/-r` state files.
+
+**Evidence / 证据**:
+- `issue.md` `#50`
+- GitHub Actions run `32486378021`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
 
 

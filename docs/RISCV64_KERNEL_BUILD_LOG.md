@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.51
+**Version / 版本**: 1.52
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2124,4 +2124,34 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - GitHub Actions run `32530101083`
 - `external/gpl3/gcc/usr.bin/common-target/Makefile`
 - `external/gpl3/gcc/usr.bin/Makefile.frontend`
+
+### Entry 64 — NOMAN before Makefile.cc2c (2026-08-21) / Makefile.cc2c 前设置 NOMAN
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32532469511` (`9cb398c22`) linked native
+  `gcpp` with `-lintl` after `libdecnumber.a`, then died
+  `nbmake: don't know how to make lto1.1` in
+  `external/gpl3/gcc/usr.bin/lto1` after `.depend`.
+- `#54` put `.include "../Makefile.cc2c"` at the top of `lto1` /
+  `cc1` / `cc1obj` / `cc1plus`, so `bsd.own.mk` ran before
+  `NOMAN` and `MKMAN` stayed yes.
+- This branch `7cd93be42` (`32530212770`) got past `#66` then
+  failed compiling `functexcept.cc` (`pthread.h` missing). That
+  is LLVM-only and is not this cherry-pick.
+
+**Fix / 修复**:
+- Cherry-pick `#70` (no virtio-net): set `NOMAN` in `lto1` /
+  `cc1` / `cc1obj` / `cc1plus` before `Makefile.cc2c`, matching
+  `lto-wrapper`. Do not mix the LLVM `pthread.h` / `functexcept`
+  residual onto the network PR.
+
+**Evidence / 证据**:
+- `issue.md` `#70`
+- GitHub Actions run `32532469511`
+- `external/gpl3/gcc/usr.bin/lto1/Makefile`
+- `external/gpl3/gcc/usr.bin/cc1/Makefile`
+- `external/gpl3/gcc/usr.bin/cc1obj/Makefile`
+- `external/gpl3/gcc/usr.bin/cc1plus/Makefile`
 

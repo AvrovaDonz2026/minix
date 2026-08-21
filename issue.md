@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.60
+**Version / 版本**: 1.61
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -59,6 +59,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   34) `[DONE]` `#67` `#65` 编过 gcov.c 后，libcommon.a 只有 `input.o`，链接缺 `fnotice` / `version_string`
   35) `[DONE]` `#68` `#67` 之后原生 cpp 把 gcpp 链成三份 `ggc-none.o`，缺 `main`
   36) `[DONE]` `#69` `#68` 之后 gcpp 缺 `params.c` 的 `global_init_params`，且 `-lintl` 在 libcpp 之前
+  37) `[DONE]` `#70` `#54` 在 `NOMAN` 之前 include `Makefile.cc2c`，`bsd.own.mk` 把 `MKMAN` 钉成 yes，dependall 要 `lto1.1`
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1148,8 +1149,11 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     keep `cppspec.c`/`gcc.c`/`ggc-none.c` instead of three copies of
     the last match. `#69` restores gcc 4.8.5 `params.c` in
     common-target and repeats `-lintl` after frontend archives.
-    LLVM packaging `32530212770` (`7cd93be42`) got past `#66` then
-    failed compiling `functexcept.cc`:
+    `#70` sets `NOMAN` before `Makefile.cc2c` so `bsd.own.mk` does
+    not leave `MKMAN=yes` for `lto1` / `cc1` / `cc1obj` / `cc1plus`
+    (network nightly `32532469511` died `don't know how to make
+    lto1.1`). LLVM packaging `32530212770` (`7cd93be42`) got past
+    `#66` then failed compiling `functexcept.cc`:
     `usr/include/c++/__mutex_base:17:21: fatal error: pthread.h`.
     That is LLVM-only (`MKCXX=yes`); do not mix onto the network PR.
 - Priority / 优先级: P2 (toolchain completeness; gated by packaging CI)
@@ -1519,6 +1523,17 @@ This section archives items with code-level fixes landed (some may still require
   `functexcept.cc` (`pthread.h` missing).
   历史 P1 #69：从网络分支拣入 4.8.5 `params.c` 与 frontend 档案后
   再链 `-lintl`。
+- Former P1 #70: hosted nightly `32532469511` (`9cb398c22`) linked
+  native `gcpp` with `-lintl` after `libdecnumber.a`, then died
+  `nbmake: don't know how to make lto1.1`. Cherry-picked setting
+  `NOMAN` in `lto1` / `cc1` / `cc1obj` / `cc1plus` before
+  `Makefile.cc2c` (no virtio-net). `#54` parsed `bsd.own.mk`
+  before `NOMAN`, so `MKMAN` stayed yes and `bsd.prog.mk` wanted
+  pages gcc 4.8.5 does not ship. This branch still dies in
+  libstdc++ `functexcept.cc` / `pthread.h` (`32530212770` on
+  `7cd93be42`) until a later LLVM-only fix.
+  历史 P1 #70：从网络分支拣入在 `Makefile.cc2c` 之前设置 `NOMAN`，
+  避免 `MKMAN=yes` 去要 gcc 4.8.5 没有的 `lto1.1`。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

@@ -34,6 +34,52 @@ G_OUT_FILE_SRC=	${G_out_file}
 G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
 .endif
 
+# Packaging CI fetches gcc 4.8.5 (gengenrtl.c). riscv64 defs.mk is gcc
+# 13.2.0 mknative and lists .cc generators plus gcc13-only objects.
+.for _n in gengenrtl gengtype gengtype-lex gengtype-parse gengtype-state \
+	genmodes rtl print-rtl bitmap errors ggc-none hash-table sort inchash \
+	gensupport read-rtl dummy-conditions vec read-md \
+	genattr genattr-common genattrtab genautomata gencodes genconditions \
+	genconfig genemit genextract genflags genopinit genoutput genpeep \
+	genpreds genrecog genmddump genmddeps genconstants genenums \
+	gencheck genchecksum
+.if exists(${DIST}/gcc/${_n}.cc)
+GCC_DIST_SRC.${_n}=	${DIST}/gcc/${_n}.cc
+.elif exists(${DIST}/gcc/${_n}.c)
+GCC_DIST_SRC.${_n}=	${DIST}/gcc/${_n}.c
+.endif
+.endfor
+
+# Keep generated insn-* / gtype-desc / options-save; drop objects whose
+# .cc/.c is missing from this dist. insn-enums needs genenums (gcc 5+).
+GCC_BACKEND_OBJS=
+.for o in ${G_OBJS}
+_b:=	${o:R}
+.if ${_b} == "insn-enums" && !defined(GCC_DIST_SRC.genenums)
+# gcc 4.8.5 has no genenums; drop insn-enums.o
+.elif ${_b} == "gtype-desc" || ${_b} == "options-save" || !empty(_b:Mininsn-*)
+GCC_BACKEND_OBJS+=	${o}
+.elif exists(${DIST}/gcc/${_b}.cc) || exists(${DIST}/gcc/${_b}.c) || \
+      exists(${DIST}/gcc/config/${_b}.cc) || exists(${DIST}/gcc/config/${_b}.c) || \
+      exists(${DIST}/gcc/common/${_b}.cc) || exists(${DIST}/gcc/common/${_b}.c) || \
+      exists(${G_out_file:H}/${_b}.c) || exists(${G_out_file:H}/${_b}.cc) || \
+      exists(${DIST}/libiberty/${_b}.c)
+GCC_BACKEND_OBJS+=	${o}
+.endif
+.endfor
+G_OBJS:=	${GCC_BACKEND_OBJS}
+
+GCC_BACKEND_BUILD_RTL=
+.for o in ${G_BUILD_RTL}
+_b:=	${o:R}
+.if !empty(_b:Mbuild-*) || ${_b} == "min-insn-modes"
+GCC_BACKEND_BUILD_RTL+=	${o}
+.elif exists(${DIST}/gcc/${_b}.cc) || exists(${DIST}/gcc/${_b}.c)
+GCC_BACKEND_BUILD_RTL+=	${o}
+.endif
+.endfor
+G_BUILD_RTL:=	${GCC_BACKEND_BUILD_RTL}
+
 # Reseed the search path after Makefile.inc so GCCARCH and G_out_file
 # contribute their real directories before bsd.lib.mk consumes .depend.
 .PATH: ${DIST}/gcc ${DIST}/libiberty ${GCCARCH} ${G_out_file:H} ${DIST}/include
@@ -252,7 +298,9 @@ auto-host.h: gcc13-auto-host-force ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../
 genrtl.h: gengenrtl
 	${_MKTARGET_CREATE}
 	./gengenrtl >${.TARGET}
-gengenrtl.lo: ${HH_NORTL} ${DIST}/gcc/gengenrtl.cc
+.if defined(GCC_DIST_SRC.gengenrtl)
+gengenrtl.lo: ${HH_NORTL} ${GCC_DIST_SRC.gengenrtl}
+.endif
 gengenrtl: gengenrtl.lo build-errors.lo
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
@@ -290,11 +338,17 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 	} > ${.TARGET}
 CLEANFILES+=	gtyp-input.list.tmp
 
+.if defined(GCC_DIST_SRC.gengtype-state)
 GCC13_GTYPE_OUTPUTS= \
 		gtype-ada.h gtype-c.h gtype-cp.h gtype-d.h \
 		gtype-desc.cc gtype-desc.h gtype-fortran.h gtype-go.h \
 		gtype-jit.h gtype-lto.h gtype-m2.h gtype-objc.h \
 		gtype-objcp.h gtype-rust.h gtype.state
+.else
+# gcc 4.8.5 gengtype writes gtype-desc.c and gt-*.h; no state file.
+GCC13_GTYPE_OUTPUTS= \
+		gtype-desc.c gtype-desc.h
+.endif
 CLEANFILES+=	${GCC13_GTYPE_OUTPUTS} s-gtype
 CLEANFILES+=	tm-constrs.h
 
@@ -302,6 +356,7 @@ CLEANFILES+=	tm-constrs.h
 # Modeling only gtype-desc.h leaves the rest of the outputs invisible to make
 # and lets parallel object builds race ahead of file generation.
 ${GCC13_GTYPE_OUTPUTS}: s-gtype ; @true
+.if defined(GCC_DIST_SRC.gengtype-state)
 s-gtype: gengtype gtyp-input.list.tmp auto-host.h insn-constants.h
 	${_MKTARGET_CREATE}
 	if [ -f ${.CURDIR}/../gcc/arch/${GCC_MACHINE_ARCH}/sysroot-suffix.h ]; then \
@@ -313,15 +368,33 @@ s-gtype: gengtype gtyp-input.list.tmp auto-host.h insn-constants.h
 	mv -f tmp-gtype.state gtype.state
 	./gengtype -r gtype.state
 	touch ${.TARGET}
+.else
+s-gtype: gengtype gtyp-gen.h gtyp-input.list.tmp auto-host.h
+	${_MKTARGET_CREATE}
+	./gengtype
+	touch ${.TARGET}
+.endif
 
 # GCC 13 replaced version.o with a generated version.h.
-gengtype.lo: ${HH} gtyp-gen.h config.h options.h version.h ${DIST}/gcc/gengtype.cc
-gengtype-lex.lo: ${HH} gtyp-gen.h config.h options.h version.h ${DIST}/gcc/gengtype-lex.cc
-gengtype-parse.lo: ${HH} gtyp-gen.h config.h options.h version.h ${DIST}/gcc/gengtype-parse.cc
-gengtype-state.lo: ${HH} gtyp-gen.h config.h options.h version.h ${DIST}/gcc/gengtype-state.cc
+.if defined(GCC_DIST_SRC.gengtype)
+gengtype.lo: ${HH} gtyp-gen.h config.h options.h version.h ${GCC_DIST_SRC.gengtype}
+.endif
+.if defined(GCC_DIST_SRC.gengtype-lex)
+gengtype-lex.lo: ${HH} gtyp-gen.h config.h options.h version.h ${GCC_DIST_SRC.gengtype-lex}
+.endif
+.if defined(GCC_DIST_SRC.gengtype-parse)
+gengtype-parse.lo: ${HH} gtyp-gen.h config.h options.h version.h ${GCC_DIST_SRC.gengtype-parse}
+.endif
+.if defined(GCC_DIST_SRC.gengtype-state)
+gengtype-state.lo: ${HH} gtyp-gen.h config.h options.h version.h ${GCC_DIST_SRC.gengtype-state}
 gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo build-errors.lo
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
+.else
+gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo build-errors.lo
+	${_MKTARGET_LINK}
+	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
+.endif
 
 gtyp-gen.h: Makefile gtyp-input.list.tmp
 	${_MKTARGET_CREATE}
@@ -394,7 +467,9 @@ insn-modes-inline.h: genmodes
 min-insn-modes.c: genmodes
 	${_MKTARGET_CREATE}
 	./genmodes -m >${.TARGET}
-genmodes.lo: ${HH_NORTL} ${DIST}/gcc/genmodes.cc
+.if defined(GCC_DIST_SRC.genmodes)
+genmodes.lo: ${HH_NORTL} ${GCC_DIST_SRC.genmodes}
+.endif
 genmodes: genmodes.lo build-errors.lo
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
@@ -449,38 +524,46 @@ auto-build.h: gmp.h Makefile
 # by the genfoo programs.
 #
 
-build-rtl.cc: ${DIST}/gcc/rtl.cc \
+.if defined(GCC_DIST_SRC.rtl)
+build-rtl.cc: ${GCC_DIST_SRC.rtl} \
   ${GCC13_BACKEND_G_RTL_H} ${DIST}/gcc/real.h ${GCC13_BACKEND_G_GCC_H} ${DIST}/gcc/errors.h gtype-desc.h
 	${_MKTARGET_CREATE}
 	rm -f build-rtl.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
-		${GNUHOSTDIST}/gcc/rtl.cc >${.TARGET}
+		${GCC_DIST_SRC.rtl} >${.TARGET}
 build-rtl.lo: ${HH} build-rtl.cc
+.endif
 
-build-print-rtl.cc: ${DIST}/gcc/print-rtl.cc \
+.if defined(GCC_DIST_SRC.print-rtl)
+build-print-rtl.cc: ${GCC_DIST_SRC.print-rtl} \
   ${GCC13_BACKEND_G_RTL_BASE_H} ${GCC13_BACKEND_G_GTM_H} ${DIST}/gcc/hard-reg-set.h
 	${_MKTARGET_CREATE}
 	rm -f build-print-rtl.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
-		${GNUHOSTDIST}/gcc/print-rtl.cc >${.TARGET}
+		${GCC_DIST_SRC.print-rtl} >${.TARGET}
 build-print-rtl.lo: ${HH} build-print-rtl.cc
-build/print-rtl.o: ${DIST}/gcc/print-rtl.cc $(BCONFIG_H) $(SYSTEM_H) ${DIST}/gcc/coretypes.h     \
+build/print-rtl.o: ${GCC_DIST_SRC.print-rtl} $(BCONFIG_H) $(SYSTEM_H) ${DIST}/gcc/coretypes.h     \
   ${GCC13_BACKEND_G_GTM_H} ${GCC13_BACKEND_G_RTL_BASE_H}
+.endif
 
 
-build-bitmap.cc: ${DIST}/gcc/bitmap.cc \
+.if defined(GCC_DIST_SRC.bitmap)
+build-bitmap.cc: ${GCC_DIST_SRC.bitmap} \
   ${GCC13_BACKEND_G_RTL_H} ${DIST}/gcc/flags.h ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${GCC13_BACKEND_REGS_H} ${GCC13_BACKEND_G_GCC_H} gtype-desc.h
 	${_MKTARGET_CREATE}
 	rm -f build-bitmap.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
-		${GNUHOSTDIST}/gcc/bitmap.cc >${.TARGET}
+		${GCC_DIST_SRC.bitmap} >${.TARGET}
 build-bitmap.lo: ${HH} build-bitmap.cc
+.endif
 
-build-errors.cc: ${DIST}/gcc/errors.cc ${DIST}/gcc/errors.h
+.if defined(GCC_DIST_SRC.errors)
+build-errors.cc: ${GCC_DIST_SRC.errors} ${DIST}/gcc/errors.h
 	${_MKTARGET_CREATE}
 	rm -f build-errors.cc
-	cat ${GNUHOSTDIST}/gcc/errors.cc >${.TARGET}
+	cat ${GCC_DIST_SRC.errors} >${.TARGET}
 build-errors.lo: ${HH_NORTL} build-errors.cc
+.endif
 
 build-varray.c: ${DIST}/gcc/varray.c \
   ${GCC13_BACKEND_G_RTL_H} ${GCC13_BACKEND_G_GCC_H} ${GCC13_BACKEND_G_TREE_H} ${DIST}/gcc/bitmap.h ${DIST}/gcc/errors.h
@@ -490,23 +573,33 @@ build-varray.c: ${DIST}/gcc/varray.c \
 		${GNUHOSTDIST}/gcc/varray.c >${.TARGET}
 build-varray.lo: ${HH} gtype-desc.h build-varray.c
 
-build-ggc-none.cc: ${DIST}/gcc/ggc-none.cc \
+.if defined(GCC_DIST_SRC.ggc-none)
+build-ggc-none.cc: ${GCC_DIST_SRC.ggc-none} \
   ${GCC13_BACKEND_G_GCC_H} gtype-desc.h
 	${_MKTARGET_CREATE}
 	rm -f build-ggc-none.cc
 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
-		${GNUHOSTDIST}/gcc/ggc-none.cc >${.TARGET}
+		${GCC_DIST_SRC.ggc-none} >${.TARGET}
 build-ggc-none.lo: ${HH} build-ggc-none.cc
+.endif
 
-hash-table.lo: ${HH} ${DIST}/gcc/hash-table.cc gtype-desc.h
-sort.lo: ${HH_NORTL} ${DIST}/gcc/sort.cc
-inchash.lo: ${HH} ${DIST}/gcc/inchash.cc
+.if defined(GCC_DIST_SRC.hash-table)
+hash-table.lo: ${HH} ${GCC_DIST_SRC.hash-table} gtype-desc.h
+.endif
+.if defined(GCC_DIST_SRC.sort)
+sort.lo: ${HH_NORTL} ${GCC_DIST_SRC.sort}
+.endif
+.if defined(GCC_DIST_SRC.inchash)
+inchash.lo: ${HH} ${GCC_DIST_SRC.inchash}
+.endif
 
 #
 # The normal insn-foo generators
 #
-.for f in gensupport.cc read-rtl.cc dummy-conditions.c
-${f:R}.lo: ${HH} ${DIST}/gcc/${f} gtype-desc.h
+.for f in gensupport read-rtl dummy-conditions
+.if defined(GCC_DIST_SRC.${f})
+${f}.lo: ${HH} ${GCC_DIST_SRC.${f}} gtype-desc.h
+.endif
 .endfor
 
 #
@@ -524,27 +617,33 @@ GENPROG_RTL_DEPENDS=	${G_BUILD_RTL:.o=.lo} ${GENPROG_READER_DEPENDS} ${GENPROG_E
 #
 .for f in attr attr-common attrtab automata codes conditions config emit \
 	  extract flags opinit output peep preds recog mddump
-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc gtype-desc.h
+.if defined(GCC_DIST_SRC.gen${f})
+gen${f}.lo: ${HH} ${GCC_DIST_SRC.gen${f}} gtype-desc.h
 gen${f}: gen${f}.lo ${GENPROG_RTL_DEPENDS} 
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
 CLEANFILES+=	gen${f} gen${f}.lo
+.endif
 .endfor
 
 .for f in mddeps constants enums
-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc
+.if defined(GCC_DIST_SRC.gen${f})
+gen${f}.lo: ${HH} ${GCC_DIST_SRC.gen${f}}
 gen${f}: gen${f}.lo ${GENPROG_READER_DEPENDS} 
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
 CLEANFILES+=	gen${f} gen${f}.lo
+.endif
 .endfor
 
 .for f in check checksum
-gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.cc gtype-desc.h
+.if defined(GCC_DIST_SRC.gen${f})
+gen${f}.lo: ${HH} ${GCC_DIST_SRC.gen${f}} gtype-desc.h
 gen${f}: gen${f}.lo
 	${_MKTARGET_LINK}
 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
 CLEANFILES+=	gen${f} gen${f}.lo
+.endif
 .endfor
 
 .include "../../Makefile.hooks"
@@ -560,18 +659,22 @@ CLEANFILES+=	gen${f} gen${f}.lo
 # RTL based files
 .for f in attr.h attr-common.h codes.h config.h flags.h \
 	  automata.c emit.c extract.c output.c peep.c recog.c
+.if defined(GCC_DIST_SRC.gen${f:R})
 insn-${f}: gen${f:R} ${G_md_file} insn-conditions.md
 	${_MKTARGET_CREATE}
 	./gen${f:R} ${G_md_file} insn-conditions.md >${.TARGET}
 CLEANFILES+=	insn-${f}
+.endif
 .endfor
 
 # normal files
 .for f in constants.h enums.c
+.if defined(GCC_DIST_SRC.gen${f:R})
 insn-${f}: gen${f:R} ${G_md_file}
 	${_MKTARGET_CREATE}
 	./gen${f:R} ${G_md_file} >${.TARGET}
 CLEANFILES+=	insn-${f}
+.endif
 .endfor
 
 # genconditions outputs gencondmd.cc
@@ -637,7 +740,9 @@ cgraph.d cgraphunit.d cgraphunit.o: gcov-io.h
 vec.lo: gtype-desc.h
 gtype-desc.d gtype-desc.o: s-gtype insn-constants.h
 insn-emit.d insn-emit.o: tm-constrs.h
+.if defined(GCC_DIST_SRC.genattr-common)
 insn-attr.h: insn-attr-common.h
+.endif
 asan.d asan.o: insn-opinit.h
 data-streamer.d data-streamer-out.d coverage.d gcov-dump.d gcov-io.d gcov-iov.d gcov.d libgcov.d lto-cgraph.d mcf.d modulo-sched.d profile.d value-prof.d: gcov-io.h
 data-streamer.o data-streamer-out.o coverage.o gcov-dump.o gcov-io.o gcov-iov.o gcov.o libgcov.o lto-cgraph.o mcf.o modulo-sched.o profile.o value-prof.o: gcov-io.h

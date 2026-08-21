@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.39
+**Version / 版本**: 1.40
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2063,6 +2063,19 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 **Evidence / 证据**:
 - `issue.md` `#57`
 - GitHub Actions run `32499756350`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+## Entry 52 — 2026-08-21 16:50 UTC
+
+**Change / 变更**: Hosted nightly `32502264930` (`b1686b5c3`) linked `gengtype` then aborted in `s-gtype` (`named_label_entry` used but not defined, then `abort in error_at_line`). riscv64 `gtyp-input.list` is gcc13 `.cc` names; the tmp filter only mapped `.c` to `.cc`, so missing `.cc` files were dropped. `defs.mk` `G_GTFILES` is the 4.8.5 GTFILES list. Emit that list as `gtyp-input.list.tmp` when `gengtype.cc` is absent, and map `.cc` to `.c` on the gcc13 path.
+
+**Issue ID**: `#58`
+
+**Result / 结果**: Local Makefile review against gcc 4.8.5 `gengtype.c` (`error_at_line` asserts `pos->file != NULL`) and `defs.mk` `G_GTFILES`. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#58`
+- GitHub Actions run `32502264930`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
 
 

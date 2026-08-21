@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.37
+**Version / 版本**: 1.38
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -43,6 +43,9 @@
   intl/input/version；网络 nightly `32524763481`（`7014a3bb6`）编过
   gcov.c 后 `libcommon.a` 只有 `input.o`。本分支在 `#66` 落地前死在
   libstdc++，可能尚未重踩 gcov。
+  `#68`：从网络分支拣入 `Makefile.cc2c` 直接追加 `${s}` / `${s:R}.c`；
+  网络 nightly `32527820716`（`c952fa0c1`）把 gcpp 链成三份
+  `ggc-none.o`。本分支在 `#66` 落地前可能尚未重踩 native cpp。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -130,6 +133,11 @@
   `32524763481` (`7014a3bb6`) archived `libcommon.a` from `input.o`
   only. This branch died in libstdc++ until `#66`, so it may not have
   re-hit gcov yet.
+  `#68`: cherry-pick expanding `Makefile.cc2c` mapped names
+  immediately (no virtio-net). Network nightly `32527820716`
+  (`c952fa0c1`) linked gcpp as `ggc-none.o` three times. This
+  branch may not have re-hit native cpp until `#66` clears
+  libstdc++.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.49
+**Version / 版本**: 1.50
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2078,4 +2078,26 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `issue.md` `#67`
 - GitHub Actions run `32524763481`
 - `external/gpl3/gcc/usr.bin/common/Makefile`
+
+### Entry 62 — Makefile.cc2c immediate expansion (2026-08-21) / Makefile.cc2c 立即展开
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32527820716` (`c952fa0c1`) compiled native
+  gcov, then linking `usr.bin/cpp` `gcpp` failed with multiple
+  `ggc_free` definitions and undefined `main`. Link line was
+  `ggc-none.o ggc-none.o ggc-none.o`.
+- This branch may still be in libstdc++ until `#66` and may not
+  have re-hit native cpp yet.
+
+**Fix / 修复**:
+- Cherry-pick `#68` (no virtio-net): add `${s}` / `${s:R}.c`
+  directly in `Makefile.cc2c`. Do not `+= ${_gcc_cc2c}` (bmake
+  delays that expansion so `SRCS:=` repeats the last match).
+
+**Evidence / 证据**:
+- `issue.md` `#68`
+- GitHub Actions run `32527820716`
+- `external/gpl3/gcc/usr.bin/Makefile.cc2c`
 

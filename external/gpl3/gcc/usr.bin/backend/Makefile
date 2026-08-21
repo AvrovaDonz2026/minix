@@ -365,12 +365,13 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 	} > ${.TARGET}
 .else
 # .for inside a `{ \' recipe continuation is passed to the shell
-# (`sh: .for: not found`). Emit one quoted printf per G_GTFILES word.
+# (`sh: .for: not found`). A recipe `printf '%s\n'` is also split by
+# make (`\n` becomes a real newline). Echo one G_GTFILES word per line.
 gtyp-input.list.tmp: Makefile ${GCCARCH}/defs.mk
 	${_MKTARGET_CREATE}
 	rm -f ${.TARGET}
 .for f in ${G_GTFILES}
-	printf '%s\n' '${f}' >> ${.TARGET}
+	echo '${f}' >> ${.TARGET}
 .endfor
 .endif
 CLEANFILES+=	gtyp-input.list.tmp

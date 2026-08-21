@@ -23,7 +23,7 @@ This repository contains the full MINIX 3 source tree plus an active RISC-V 64-b
   GitHub Release / nightly tag publish remains gated to official triggers.
   CI 策略：`release-riscv64.yml` 与 `nightly-riscv64.yml` 两条打包流水线均在每次提交时
   运行，用于 OS 完整性与打包可复现性审查；GitHub Release / nightly tag 发布仍受
-  官方触发条件门禁。
+  官方触发条件门禁。Runner 为 GitHub-hosted `ubuntu-24.04`。
 - Memory probe fix: RV64 FDT boot-pointer bridge is in place; boot log shows
   `Memory: 0x80000000 - 0x90000000` and `neofetch` reports full-range `Mem(raw)`.
   内存识别修复：RV64 FDT 启动指针桥接已合入；启动日志恢复

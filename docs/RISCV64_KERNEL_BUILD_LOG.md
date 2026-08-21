@@ -1724,12 +1724,27 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - 两条流水线仍执行 `tools -> distribution`、`mkdisk`、QEMU `neofetch`/shutdown smoke，
   以及阻断式完整测试套件（`build -> user -> native -> kernel -> gate`）。
 
-**Commands / 命令**:
-- 本地无需额外命令；下一次验证为该分支上的 GitHub Actions 运行结果。
-
 **Evidence / 证据**:
 - `.github/workflows/release-riscv64.yml`
 - `.github/workflows/nightly-riscv64.yml`
 - `README-RISCV64.md`
 - `README.md`
 - `RISC64-STATUS.md`
+
+### Entry 37 — Return Packaging CI to GitHub-Hosted Runners (2026-08-21) / 打包 CI 改回 GitHub-hosted runner
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Change / 变更**:
+- Self-hosted runner 已下线。`nightly-riscv64.yml`、`release-riscv64.yml`、
+  `gcc13-riscv64-spike.yml` 改回 `runs-on: ubuntu-24.04`。
+- 恢复 hosted 路径：`Reclaim runner disk space` + `apt` 安装宿主依赖
+  （打包 CI 含 `qemu-system-misc` / `u-boot-qemu` / `u-boot-tools`）。
+- 每次提交仍跑 nightly + release 审查；GitHub Release / nightly tag 发布门禁不变。
+
+**Evidence / 证据**:
+- `.github/workflows/nightly-riscv64.yml`
+- `.github/workflows/release-riscv64.yml`
+- `.github/workflows/gcc13-riscv64-spike.yml`
+- `README-RISCV64.md`

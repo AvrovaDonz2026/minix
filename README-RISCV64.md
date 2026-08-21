@@ -838,6 +838,8 @@ reproducibility.
 - Release workflow 依赖 GitHub Actions 默认 `GITHUB_TOKEN`（`contents: write`）。
 - 若首次启用失败，请确认仓库 Actions 权限允许 workflow 写 Release。
 - `shortsha` 来自当前构建提交（release: `--short=11`；nightly: `--short=12`）。
+- Runner 使用 GitHub-hosted `ubuntu-24.04`（不再依赖 self-hosted）。作业开始时清盘并
+  `apt` 安装 `qemu-system-misc` / `u-boot-qemu` / 构建依赖。
 - 构建时间较长（完整 `distribution`）；feature 分支/PR 上的审查 run 可在合并前验证
   完整性与可复现性，正式发布仍通过 `v*` tag 或 `workflow_dispatch` 触发。
 - `SOURCE_DATE_EPOCH`、`BUILDINFO.txt` 与 `SHA256SUMS` 共同构成可复现性记录。
@@ -934,6 +936,8 @@ Nightly 产物命名 / Nightly asset naming:
 - `SHA256SUMS`
 
 说明 / Notes:
+- Runner 使用 GitHub-hosted `ubuntu-24.04`（不再依赖 self-hosted），并在构建前清盘、
+  安装 QEMU/U-Boot 与宿主工具链依赖。
 - 发布 run 会把上述产物同时放入：
   1) Actions workflow artifacts；2) GitHub Release（prerelease）资产。
 - 审查 run 仅上传 workflow artifacts，不触碰 GitHub Release / nightly tag。

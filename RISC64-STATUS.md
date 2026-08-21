@@ -60,7 +60,7 @@
 - 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）。
 - Nightly 与 Release 两条 OS 打包 CI 现已在每次提交时运行，作为完整性与可复现性
   门禁；GitHub Release / nightly tag 发布仍仅限官方触发（tag、`workflow_dispatch`、
-  nightly 的 schedule / `master` push）。
+  nightly 的 schedule / `master` push）。Runner 为 GitHub-hosted `ubuntu-24.04`。
 
 **English**
 - Build passes with GCC + workaround flags; see `README-RISCV64.md` for exact commands.
@@ -125,7 +125,7 @@
 - Nightly and Release OS packaging CIs now run on every commit as
   completeness/reproducibility gates; GitHub Release / nightly tag publish
   remains gated to official triggers (tag, `workflow_dispatch`, nightly
-  schedule / `master` push).
+  schedule / `master` push). Runners are GitHub-hosted `ubuntu-24.04`.
 
 ## Build Status / 构建状态
 

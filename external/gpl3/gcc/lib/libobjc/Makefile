@@ -92,8 +92,18 @@ DPSRCS+=	${_dst}
 
 # XXX just while all platforms defs.mk are updated..
 .if exists(${.CURDIR}/arch/${GCC_MACHINE_ARCH}/defs.mk)
-optionlist: ${G_ALL_OPT_FILES} ${LIBOBJCARCH}/defs.mk Makefile ${DIST}/gcc/opt-gather.awk
-	${TOOL_AWK} -f ${DIST}/gcc/opt-gather.awk ${G_ALL_OPT_FILES} \
+# Same gcc 4.8.5 vs gcc13 option-file gap as usr.bin/Makefile.options.
+_ALL_OPT_FILES=
+.for f in ${G_ALL_OPT_FILES}
+.if exists(${f})
+_ALL_OPT_FILES+=	${f}
+.endif
+.endfor
+.if empty(_ALL_OPT_FILES)
+_ALL_OPT_FILES=	${G_ALL_OPT_FILES}
+.endif
+optionlist: ${_ALL_OPT_FILES} ${LIBOBJCARCH}/defs.mk Makefile ${DIST}/gcc/opt-gather.awk
+	${TOOL_AWK} -f ${DIST}/gcc/opt-gather.awk ${_ALL_OPT_FILES} \
 		> ${.TARGET}
 
 .if ${MACHINE_ARCH} == "vax" || ${MACHINE_ARCH} == "mipseb"

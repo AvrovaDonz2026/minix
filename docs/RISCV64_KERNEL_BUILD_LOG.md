@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.28
+**Version / 版本**: 1.29
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1836,4 +1836,35 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `tools/binutils/Makefile`
 - `external/gpl3/gcc/lib/libstdc++-v3/include/Makefile`
 - GitHub Actions runs `32476453612` / `32476453658` / `32478447982` / `32478447998`
+
+### Entry 40 — Hosted distribution: params.opt and _copysignl (2026-08-21) / hosted distribution 缺 params.opt 与 _copysignl
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`  
+**Commit / 提交**: `cb83b9402`
+
+**Symptom / 现象**:
+- Nightly `32479729555` tools succeeded (~4 min), then distribution failed
+  with `don't know how to make .../gcc/dist/gcc/params.opt` while building
+  `external/gpl3/gcc/usr.bin/backend`. riscv64 `defs.mk` is gcc 13.2.0
+  mknative; packaging CI fetches gcc 4.8.5.
+- Release `32479729556` tools succeeded (~6 min), then distribution failed
+  linking `external/mit/lua/usr.bin/lua`:
+  `libm.so: undefined reference to _copysignl`. RISC-V `s_copysign.S`
+  replaces `s_copysign.c` (the alias) and `s_copysignl.c` stayed empty
+  without `__HAVE_LONG_DOUBLE 128`.
+
+**Fix / 修复**:
+1. `Makefile.options` / libobjc: skip option files that do not exist in
+   the fetched dist (`params.opt`).
+2. `sys/arch/riscv/include/math.h`: `__HAVE_LONG_DOUBLE 128` so
+   `s_copysignl.c` emits IEEE binary128 `_copysignl`.
+3. `tools/binutils/Makefile`: configure and build with host GNU make so
+   `stmp-bfd-h` is a real prerequisite of `elfxx-riscv.lo`; fail if
+   `bfd.h` is still missing after generate.
+
+**Evidence / 证据**:
+- `issue.md` `#43` `#44`
+- GitHub Actions runs `32479729555` (nightly) and `32479729556` (release)
+
 

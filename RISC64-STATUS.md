@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.18
+**Version / 版本**: 1.19
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -61,6 +61,10 @@
   binutils 前先生成 `bfd.h`；gcc 4.8.5 dist 上跳过 gcc13 才有的 libstdc++
   头文件名；full-suite 仅在 tools/distribution 成功后运行；net smoke 不再
   把 OpenSBI ASCII art 的 `\ ` 当成 shell prompt。
+- 本轮继续修 hosted packaging CI 的 distribution 失败（`issue.md` `#43` / `#44`）：
+  gcc 4.8.5 dist 上跳过 gcc13 才有的 `params.opt`；RISC-V `math.h` 声明
+  128 位 long double，补齐 libm 的 `_copysignl`；tools binutils 改用宿主
+  GNU make，避免 `bfd.h` 竞态。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
@@ -134,6 +138,10 @@
   libstdc++ headers on the gcc 4.8.5 dist, run the full suite only after
   a successful tools/distribution path, and stop treating OpenSBI's `\ `
   banner as a MINIX shell prompt.
+- Hosted packaging CI after tools (`issue.md` `#43` / `#44`): skip gcc13-only
+  `params.opt` when gathering native gcc options on the gcc 4.8.5 dist,
+  define RISC-V `__HAVE_LONG_DOUBLE 128` so libm exports `_copysignl`,
+  and build tools binutils with host GNU make so `bfd.h` is not raced.
 - Native toolchain work has entered Stage N1/N2 with both a build helper
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate

@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.43
+**Version / 版本**: 1.44
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1956,5 +1956,23 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 **Evidence / 证据**:
 - `issue.md` `#61`
 - GitHub Actions run `32511340050`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+### Entry 56 — gcc 4.8.5 GENERATOR_FILE config.h (2026-08-21) / gcc 4.8.5 GENERATOR_FILE config.h
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32513249750` (`a0707ca84`) finished `s-gtype`,
+  then failed compiling `hash-table.lo` on the host/build `config.h`
+  guard.
+
+**Fix / 修复**:
+- Cherry-pick `#62` (no virtio-net): wrap `config.h` so
+  `GENERATOR_FILE` includes arch `bconfig.h`.
+
+**Evidence / 证据**:
+- `issue.md` `#62`
+- GitHub Actions run `32513249750`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
 

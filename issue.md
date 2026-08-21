@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
-**Date / 日期**: 2026-02-23  
-**Version / 版本**: 1.36
+**Date / 日期**: 2026-08-21  
+**Version / 版本**: 1.37
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -34,6 +34,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   9) `[DONE]` `#34` lwIP raw socket 权限检查因 IPC 白名单缺失 `pm` 导致误拒绝（`ping/ping6` `Permission denied`）
   10) `[DONE]` `#35` `ping6 fe80::...%vio0` 在用户态崩溃（SIGSEGV，`bad addr 0x0`）
   11) `[DONE]` `#36` `lwip.conf` 与 RISC-V `system.conf` 的 IPC 策略漂移，可能在特定启动路径复现 `Permission denied`
+  12) `[DONE]` `#39` `virtio_net_mmio.conf` 覆盖 RISC-V `system.conf` 后缺少 `PRIVCTL`/IRQ/完整 MMIO 窗口，磁盘轮廓网卡无法映射
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -960,6 +961,50 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Status / 状态:
   - Fixed in working tree.
 
+### 39) `virtio_net_mmio.conf` policy drift drops `PRIVCTL`/IRQ and pinches the MMIO window / `virtio_net_mmio.conf` 策略漂移丢掉 `PRIVCTL`/IRQ 并收窄 MMIO 窗口
+- Evidence / 证据:
+  - `minix-service` prefers `/etc/system.conf.d/<progname>` over global
+    `/etc/system.conf` (`minix/commands/minix-service/parse.c`).
+  - `minix/drivers/net/virtio_net_mmio/Makefile` installs
+    `virtio_net_mmio.conf` into `/etc/system.conf.d`.
+  - Before fix, that file only granted `UMAP/VUMAP/IRQCTL/DEVIO`.
+    `SYS_PRIVCTL` is not in `SYS_BASIC_CALLS` (`minix/include/minix/com.h`).
+  - Probe path `virtio_mmio_allow_mem()` uses
+    `sys_privctl(SELF, SYS_PRIV_ADD_MEM, ...)` in
+    `minix/lib/libvirtio_mmio/virtio_mmio.c`. Without `PRIVCTL` this fails,
+    `sys_privquery_mem` then returns `EPERM`, and `vm_map_phys` cannot map
+    VirtIO MMIO slots.
+  - Missing `irq` list still sets `CHECK_IRQ` with an empty table, so
+    `sys_irqsetpolicy()` is denied even if mapping somehow succeeded.
+  - RISC-V global policy in `minix/releasetools/riscv64/system.conf` listed
+    only `io 0x10002000:0x10003000` (slot 1). Diskless `-n` places
+    `virtio-net-device` at slot 0 (`0x10001000`) because QEMU also attaches
+    `virtio-rng-device`.
+- Impact / 影响:
+  - Ramdisk boots that use only `/etc/system.conf` can bring up `vio0`.
+  - Disk/distribution profiles with `/etc/system.conf.d/virtio_net_mmio`
+    fail to start the NIC, so `ifconfig vio0` / `ping 10.0.2.2` never work
+    even though `lwip` and `ping` are present.
+  - 磁盘轮廓下网卡无法映射 MMIO/IRQ，用户态只剩 loopback，QEMU slirp
+    连通性验收被静默跳过。
+- Fix / 修复:
+  - Expand `virtio_net_mmio.conf` to the full RISC-V policy: `uid 0`,
+    `PRIVCTL`, IRQs `1..8`, IPC including `lwip`, and MMIO window
+    `0x10001000:0x10008000`.
+  - Widen the same MMIO window in `minix/releasetools/riscv64/system.conf`.
+  - Program modern virtqueue DESC/AVAIL/USED addresses from `vring_init`
+    pointers; initialize `irq_hook` to `-1`; report NIC link from
+    `VIRTIO_NET_F_STATUS`; print `virtio-net-mmio: initialized`.
+  - QEMU `-n` keeps user-net, adds `ipv6=on` and a stable MAC, and honors
+    `NET_HOSTFWD=none` so smoke/CI does not bind host port 2222.
+  - Add `minix/tests/riscv64/qemu_net_smoke.py` and wire it into
+    `run_tests.sh kernel`.
+- Priority assessment / 优先级评估:
+  - `P1` (network datapath missing on the disk profile; ramdisk-only
+    bring-up looked healthy while distribution images were not).
+- Status / 状态:
+  - Fixed in working tree; runtime revalidation in this change.
+
 ### 17) Repeated safecopy errors during boot are still noisy and unexplained / 启动期重复 safecopy 错误仍有噪声且原因未闭环
 - Evidence / 证据:
   - `/tmp/qemu-fix20.log:415` and `/tmp/qemu-fix20.log:1040` show `kcall safecopy err=...fc1c`.
@@ -1243,6 +1288,12 @@ This section archives items with code-level fixes landed (some may still require
   历史 P1 #35：`sbin/ping6/ping6.c` 在 Minix 路径改为“单调时钟软定时发送节拍 +
   `SO_RCVTIMEO` 接收超时”，在 dual-VM `fe80::...%vio0` 验收中不再复现
   `SIGSEGV ... bad addr 0x0` 崩溃签名，并保持非 Minix 路径行为不变。
+- Former P1 #39: `virtio_net_mmio.conf` now matches RISC-V `system.conf`
+  (`PRIVCTL`, IRQs 1-8, full VirtIO MMIO window), so disk profiles can map
+  the NIC; QEMU `-n` and `qemu_net_smoke.py` cover `vio0` / `ping`.
+  历史 P1 #39：`virtio_net_mmio.conf` 已与 RISC-V `system.conf` 对齐
+  （`PRIVCTL`、IRQ 1-8、完整 VirtIO MMIO 窗口），磁盘轮廓可映射网卡；
+  QEMU `-n` 与 `qemu_net_smoke.py` 覆盖 `vio0` / `ping`。
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the
   required S-mode U-Boot launch chain (`-bios default -kernel ..._smode/uboot.elf`);

@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
-**Date / 日期**: 2026-02-20  
-**Version / 版本**: 1.15
+**Date / 日期**: 2026-08-21  
+**Version / 版本**: 1.16
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -50,8 +50,9 @@
 - 本轮网络权限链路修复：`service lwip` IPC 白名单补充 `pm` 后，
   raw socket 鉴权恢复，`ping/ping6` 不再因 `Permission denied` 失败
   （详见 `issue.md` `#34`）。
-- 新发现待修：`ping6 fe80::...%vio0` 在用户态出现 `SIGSEGV (bad addr 0x0)`，
-  属于 scoped link-local 诊断路径崩溃（见 `issue.md` `#35`）。
+- 本轮网络子系统修复（`issue.md` `#39`）：`virtio_net_mmio.conf` 已与 RISC-V
+  `system.conf` 对齐（`PRIVCTL`、IRQ 1-8、完整 MMIO 窗口），磁盘轮廓也能映射
+  网卡；QEMU `-n` 支持 `NET_HOSTFWD=none`，并新增 `qemu_net_smoke.py`。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
@@ -109,8 +110,10 @@
 - This cycle fixes raw-socket credential lookup permissioning for networking:
   `service lwip` now allows IPC to `pm`, removing false `ping/ping6`
   `Permission denied` failures (`issue.md` `#34`).
-- New open follow-up: `ping6 fe80::...%vio0` can still crash in userspace
-  (`SIGSEGV`, `bad addr 0x0`) on the scoped link-local path (`issue.md` `#35`).
+- This cycle repairs NIC bring-up on disk profiles (`issue.md` `#39`):
+  `virtio_net_mmio.conf` now matches RISC-V `system.conf` (`PRIVCTL`, IRQs
+  1-8, full MMIO window). QEMU `-n` honors `NET_HOSTFWD=none`, and
+  `qemu_net_smoke.py` covers `vio0` / `ping`.
 - Native toolchain work has entered Stage N1/N2 with both a build helper
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate
@@ -250,7 +253,6 @@
 **Major / 重要**
 - #16: VFS service endpoint pre-resync path still needs stricter generation-safe validation.
 - #17: recoverable safecopy fallback noise on `/proc/*` path remains.
-- #35: `ping6 fe80::...%vio0` crashes in userspace (`SIGSEGV`) on scoped link-local path.
 - #23: RV64 `vm_memset` recovery plumbing is implemented and smoke-validated; targeted
   fault-injection validation is still required for full closure.
 

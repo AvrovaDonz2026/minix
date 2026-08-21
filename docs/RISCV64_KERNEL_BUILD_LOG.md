@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
-**Last updated / 最后更新**: 2026-02-20
-**Version / 版本**: 1.27
+**Last updated / 最后更新**: 2026-08-21
+**Version / 版本**: 1.28
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1653,3 +1653,49 @@ minix/tests/riscv64/run_tests.sh native
 - `README-RISCV64.md`
 - `https://github.com/AvrovaDonz2026/minix/actions/runs/22249826170`
 - `https://github.com/AvrovaDonz2026/minix/actions/runs/22250528261`
+
+### Entry 35 — Fix virtio_net_mmio RS Policy Drift and Network Smoke (2026-08-21) / 修复 virtio_net_mmio 策略漂移并补网络冒烟
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Profile / 轮廓**: `obj.intrgcc`
+
+**Symptom / 现象**:
+- Disk/distribution profiles install `/etc/system.conf.d/virtio_net_mmio`
+  from `virtio_net_mmio.conf`, which overrode RISC-V `system.conf` and
+  omitted `PRIVCTL` plus the VirtIO IRQ/MMIO window.
+- Without `SYS_PRIVCTL`, `virtio_mmio_allow_mem()` cannot add the MMIO
+  range, `vm_map_phys` fails, and `vio0` never appears.
+- QEMU `-n` always bound host port 2222, which breaks shared CI hosts.
+- `run_tests.sh kernel` had no network datapath check.
+
+**Fix / 修复**:
+1. Expand `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.conf` to the
+   full RISC-V policy (`uid 0`, `PRIVCTL`, IRQs 1-8, IPC including `lwip`,
+   MMIO `0x10001000:0x10008000`).
+2. Widen the same MMIO window in `minix/releasetools/riscv64/system.conf`.
+3. Program modern virtqueue DESC/AVAIL/USED from `vring_init` pointers;
+   initialize `irq_hook` to `-1`; report link via `VIRTIO_NET_F_STATUS`;
+   print `virtio-net-mmio: initialized`.
+4. QEMU `-n` adds `ipv6=on` and MAC `52:54:00:12:34:56`, and honors
+   `NET_HOSTFWD=none`.
+5. Add `minix/tests/riscv64/qemu_net_smoke.py` and wire it into
+   `run_tests.sh kernel`.
+
+**Commands / 命令**:
+```bash
+NBMAKE=obj.intrgcc/tooldir.*/bin/nbmake-evbriscv64
+"$NBMAKE" -C minix/lib/libvirtio_mmio all install
+"$NBMAKE" -C minix/drivers/net/virtio_net_mmio all install
+"$NBMAKE" -C minix/drivers/storage/ramdisk RAMDISK_TESTS=1 image
+"$NBMAKE" -C minix/drivers/storage/memory RAMDISK_TESTS=1 all install
+NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
+  --qemu-script minix/scripts/qemu-riscv64.sh \
+  --kernel obj.intrgcc/minix/kernel/kernel \
+  --destdir obj.intrgcc/destdir.evbriscv64
+```
+
+**Evidence / 证据**:
+- `issue.md` `#39`
+- `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.conf`
+- `minix/lib/libvirtio_mmio/virtio_mmio.c`
+- `minix/tests/riscv64/qemu_net_smoke.py`

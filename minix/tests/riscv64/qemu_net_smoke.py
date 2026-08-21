@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 """
-QEMU runtime command probe for MINIX/riscv64.
+QEMU VirtIO-net + lwIP smoke test for MINIX/riscv64.
 
-Boots a kernel, reaches shell prompt, runs a fixed command set, and fails on:
-- fatal signatures (panic/SIGSEGV/assertion/pagefault+coredump signatures)
-- command non-zero exit status
-- command timeout or missing prompt/markers
+Boots with user networking, requires virtio-net-mmio init, then checks
+ifconfig vio0, ping6 ::1, and ping of the SLIRP gateway.
 """
 
 from __future__ import annotations
@@ -26,6 +24,8 @@ FATAL_RE = re.compile(
     r"\bpanic\b|SIGSEGV|Segmentation fault|assertion failed|kernel panic|PM: coredump signal",
     re.IGNORECASE,
 )
+
+INIT_MARKER = "virtio-net-mmio: initialized"
 
 
 def log(msg: str) -> None:
@@ -111,16 +111,19 @@ def run_command(
     buf, _ = read_until(io, [rc_pat, FATAL_RE], timeout)
     if FATAL_RE.search(buf):
         log_tail(buf, f"Fatal signature while running {cmd_name}")
+        log(f"FAIL: {cmd_name} hit fatal signature")
         return False
 
     m = rc_pat.search(buf)
     if m is None:
         log_tail(buf, f"Missing return marker for {cmd_name}")
+        log(f"FAIL: {cmd_name} missing return marker")
         return False
 
     rc = int(m.group(1))
     if rc != 0:
         log_tail(buf, f"Command {cmd_name} failed (rc={rc})")
+        log(f"FAIL: {cmd_name} rc={rc}")
         return False
 
     log(f"[PASS] runtime cmd={cmd_name}")
@@ -133,26 +136,8 @@ def main() -> int:
     parser.add_argument("--kernel", required=True)
     parser.add_argument("--destdir", required=True)
     parser.add_argument("--disk")
-    parser.add_argument("--timeout", type=int, default=120)
+    parser.add_argument("--timeout", type=int, default=180)
     parser.add_argument("--cmd-timeout", type=int, default=45)
-    parser.add_argument("--require-disk-node", action="store_true")
-    parser.add_argument(
-        "--cmd",
-        action="append",
-        default=[],
-        metavar="NAME=COMMAND",
-        help="append extra runtime command check (can be repeated)",
-    )
-    parser.add_argument(
-        "--only-custom-cmds",
-        action="store_true",
-        help="run only custom --cmd checks and skip default meminfo/ps/srv checks",
-    )
-    parser.add_argument(
-        "--network",
-        action="store_true",
-        help="enable QEMU user networking (-n); default NET_HOSTFWD=none",
-    )
     args = parser.parse_args()
 
     if not os.path.exists(args.qemu_script):
@@ -165,6 +150,8 @@ def main() -> int:
         log("SKIP: destdir not found")
         return SKIP_RC
 
+    os.environ["NET_HOSTFWD"] = "none"
+
     qemu_cmd = [
         args.qemu_script,
         "-s",
@@ -172,15 +159,12 @@ def main() -> int:
         args.kernel,
         "-B",
         args.destdir,
+        "-n",
     ]
     if args.disk:
         qemu_cmd.extend(["-i", args.disk])
-    if args.network:
-        qemu_cmd.append("-n")
-        if "NET_HOSTFWD" not in os.environ:
-            os.environ["NET_HOSTFWD"] = "none"
 
-    log("Starting QEMU runtime probe...")
+    log("Starting QEMU net smoke...")
     io = spawn(qemu_cmd)
     proc = io.proc
 
@@ -189,88 +173,56 @@ def main() -> int:
         passwd_pat = re.compile(r"password:", re.IGNORECASE)
         prompt_pat = re.compile(r"\n.*[#\\$] ")
 
+        boot = ""
         buf, _ = read_until(io, [login_pat, prompt_pat, FATAL_RE], args.timeout)
+        boot += buf
         if FATAL_RE.search(buf):
             log_tail(buf, "Fatal signature before prompt")
+            log("FAIL: fatal signature before prompt")
             return 1
 
         if login_pat.search(buf):
             send(io, "root\n")
             buf, pat = read_until(io, [passwd_pat, prompt_pat, FATAL_RE], args.timeout)
+            boot += buf
             if FATAL_RE.search(buf):
                 log_tail(buf, "Fatal signature during login")
+                log("FAIL: fatal signature during login")
                 return 1
             if pat == passwd_pat:
                 send(io, "\n")
                 buf, _ = read_until(io, [prompt_pat, FATAL_RE], args.timeout)
+                boot += buf
                 if FATAL_RE.search(buf):
                     log_tail(buf, "Fatal signature after password")
+                    log("FAIL: fatal signature after password")
                     return 1
 
         if not prompt_pat.search(buf):
-            log_tail(buf, "Shell prompt not detected")
+            log_tail(boot, "Shell prompt not detected")
+            log("FAIL: shell prompt not detected")
             return 1
 
-        commands: list[tuple[str, str]] = []
+        if INIT_MARKER not in boot:
+            log_tail(boot, "Missing virtio-net-mmio init marker")
+            log(f"FAIL: {INIT_MARKER} not found")
+            return 1
+        log(f"[PASS] {INIT_MARKER}")
 
-        if not args.only_custom_cmds:
-            commands.extend(
-                [
-                    (
-                        "meminfo",
-                        "PATH=/sbin:/bin:/usr/bin; cat /proc/meminfo >/dev/null 2>&1",
-                    ),
-                    (
-                        "ps_aux",
-                        "PATH=/sbin:/bin:/usr/bin; ps -aux >/dev/null 2>&1",
-                    ),
-                    (
-                        "srv_status",
-                        "PATH=/sbin:/bin:/usr/bin; /sbin/minix-service sysctl srv_status >/dev/null 2>&1",
-                    ),
-                ]
-            )
-            if args.network:
-                commands.extend(
-                    [
-                        (
-                            "vio_up",
-                            "PATH=/sbin:/bin:/usr/bin; /sbin/ifconfig vio0 >/dev/null 2>&1",
-                        ),
-                        (
-                            "ping6_lo",
-                            "PATH=/sbin:/bin:/usr/bin; /sbin/ping6 -c 1 ::1 >/dev/null 2>&1",
-                        ),
-                        (
-                            "ping_gw",
-                            "PATH=/sbin:/bin:/usr/bin; /sbin/ping -c 2 10.0.2.2 >/dev/null 2>&1",
-                        ),
-                    ]
-                )
-
-        if args.require_disk_node:
-            commands.append(
-                (
-                    "disk_node",
-                    "PATH=/sbin:/bin:/usr/bin; test -e /dev/c0d0",
-                )
-            )
-
-        for raw in args.cmd:
-            if "=" not in raw:
-                log(f"Invalid --cmd (missing '='): {raw}")
-                return 1
-            name, command = raw.split("=", 1)
-            name = name.strip()
-            command = command.strip()
-            if not name or not command:
-                log(f"Invalid --cmd (empty name or command): {raw}")
-                return 1
-            commands.append((name, command))
-
-        if not commands:
-            log("SKIP: no runtime commands configured")
-            return SKIP_RC
+        commands: list[tuple[str, str]] = [
+            (
+                "ifconfig_vio",
+                "PATH=/sbin:/bin:/usr/bin; /sbin/ifconfig vio0",
+            ),
+            (
+                "ping6_lo",
+                "PATH=/sbin:/bin:/usr/bin; /sbin/ping6 -c 1 ::1",
+            ),
+            (
+                "ping_gw",
+                "PATH=/sbin:/bin:/usr/bin; /sbin/ping -c 2 10.0.2.2",
+            ),
+        ]
 
         for name, command in commands:
             if not run_command(io, name, command, args.cmd_timeout):
@@ -280,12 +232,14 @@ def main() -> int:
         buf, _ = read_until(io, [re.compile(r"__RUNTIME_OK__"), FATAL_RE], args.cmd_timeout)
         if FATAL_RE.search(buf):
             log_tail(buf, "Fatal signature at probe tail")
+            log("FAIL: fatal signature at probe tail")
             return 1
         if "__RUNTIME_OK__" not in buf:
             log_tail(buf, "Probe completion marker missing")
+            log("FAIL: probe completion marker missing")
             return 1
 
-        log("PASS: qemu runtime probe")
+        log("PASS: qemu net smoke")
         return 0
     finally:
         try:

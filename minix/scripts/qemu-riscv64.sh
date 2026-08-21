@@ -270,9 +270,14 @@ QEMU_ARGS+=(
 
 # Network
 if [ "$NETWORK" -eq 1 ]; then
+    hostfwd_arg=""
+    if [ "${NET_HOSTFWD:-tcp::2222-:22}" != "none" ] && \
+        [ "${NET_HOSTFWD:-}" != "0" ]; then
+        hostfwd_arg=",hostfwd=${NET_HOSTFWD:-tcp::2222-:22}"
+    fi
     QEMU_ARGS+=(
-        -netdev user,id=net0,hostfwd=tcp::2222-:22
-        -device virtio-net-device,netdev=net0
+        -netdev "user,id=net0,ipv6=on${hostfwd_arg}"
+        -device virtio-net-device,netdev=net0,mac=52:54:00:12:34:56
     )
 fi
 

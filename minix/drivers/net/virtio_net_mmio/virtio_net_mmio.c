@@ -15,6 +15,7 @@
 #include <minix/virtio_mmio.h>
 
 #include <sys/queue.h>
+#include <net/if_media.h>
 
 #include "virtio_net.h"
 
@@ -87,6 +88,7 @@ static int virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
 static void virtio_net_stop(void);
 static int virtio_net_send(struct netdriver_data *data, size_t len);
 static ssize_t virtio_net_recv(struct netdriver_data *data, size_t max);
+static unsigned int virtio_net_get_link(uint32_t *media);
 static void virtio_net_intr(unsigned int mask);
 
 static const struct netdriver virtio_net_table = {
@@ -95,6 +97,7 @@ static const struct netdriver virtio_net_table = {
 	.ndr_stop	= virtio_net_stop,
 	.ndr_recv	= virtio_net_recv,
 	.ndr_send	= virtio_net_send,
+	.ndr_get_link	= virtio_net_get_link,
 	.ndr_intr	= virtio_net_intr,
 };
 
@@ -102,7 +105,7 @@ static const struct netdriver virtio_net_table = {
 static struct virtio_feature netf[] = {
 	{ "partial csum",	VIRTIO_NET_F_CSUM,	0,	0	},
 	{ "given mac",		VIRTIO_NET_F_MAC,	0,	1	},
-	{ "status ",		VIRTIO_NET_F_STATUS,	0,	0	},
+	{ "status ",		VIRTIO_NET_F_STATUS,	0,	1	},
 	{ "control channel",	VIRTIO_NET_F_CTRL_VQ,	0,	1	},
 	{ "control channel rx",	VIRTIO_NET_F_CTRL_RX,	0,	0	}
 };
@@ -148,6 +151,13 @@ virtio_net_config(netdriver_addr_t * addr)
 					 i == 5 ? "\n" : ":"));
 	} else {
 		dput(("No mac"));
+		/* Locally administered unicast fallback. */
+		addr->na_addr[0] = 0x02;
+		addr->na_addr[1] = 0x00;
+		addr->na_addr[2] = 0x00;
+		addr->na_addr[3] = 0x00;
+		addr->na_addr[4] = 0x00;
+		addr->na_addr[5] = 0x01;
 	}
 
 	if (virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_STATUS)) {
@@ -162,6 +172,23 @@ virtio_net_config(netdriver_addr_t * addr)
 
 	if (virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CTRL_RX))
 		dput(("Host supports control channel for RX"));
+}
+
+static unsigned int
+virtio_net_get_link(uint32_t * media)
+{
+	u16_t status;
+
+	*media = IFM_MAKEWORD(IFM_ETHER, IFM_AUTO, 0, 0);
+
+	if (virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_STATUS)) {
+		status = virtio_mmio_config_read16(net_dev, 6);
+		if (status & VIRTIO_NET_S_LINK_UP)
+			return NDEV_LINK_UP;
+		return NDEV_LINK_DOWN;
+	}
+
+	return NDEV_LINK_UP;
 }
 
 static int
@@ -405,6 +432,8 @@ virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
 	virtio_net_refill_rx_queue();
 
 	virtio_mmio_device_ready(net_dev);
+
+	printf("virtio-net-mmio: initialized\n");
 
 	virtio_mmio_irq_enable(net_dev);
 

@@ -224,15 +224,24 @@ static int alloc_queue(struct virtio_mmio_dev *dev, int qidx)
         virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_ALIGN, PAGE_SIZE);
         virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_PFN, phys / PAGE_SIZE);
     } else {
+        phys_bytes avail_phys, used_phys;
+
         /* Modern interface */
-        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_DESC_LOW, (u32_t)phys);
-        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_DESC_HIGH, (u32_t)(phys >> 32));
+        avail_phys = phys + ((char *)q->vring.avail - (char *)mem);
+        used_phys = phys + ((char *)q->vring.used - (char *)mem);
+
+        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_DESC_LOW,
+            (u32_t)phys);
+        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_DESC_HIGH,
+            (u32_t)(phys >> 32));
         virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_AVAIL_LOW,
-            (u32_t)(phys + q->num * sizeof(struct vring_desc)));
-        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_AVAIL_HIGH, 0);
+            (u32_t)avail_phys);
+        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_AVAIL_HIGH,
+            (u32_t)(avail_phys >> 32));
         virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_USED_LOW,
-            (u32_t)(phys + ring_size - q->num * sizeof(struct vring_used_elem) - 6));
-        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_USED_HIGH, 0);
+            (u32_t)used_phys);
+        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_USED_HIGH,
+            (u32_t)(used_phys >> 32));
         virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_READY, 1);
     }
 
@@ -303,6 +312,7 @@ struct virtio_mmio_dev *virtio_mmio_setup(u32_t device_type,
     }
 
     memset(dev, 0, sizeof(*dev));
+    dev->irq_hook = -1;         /* not registered until device_ready */
     dev->name = name;
     dev->base = base;
     dev->device_type = device_type;
@@ -384,15 +394,26 @@ int virtio_mmio_alloc_queues(struct virtio_mmio_dev *dev, int num_queues)
 void virtio_mmio_device_ready(struct virtio_mmio_dev *dev)
 {
     u32_t status;
+    int r;
 
     /* Register IRQ */
     dev->irq_hook = dev->irq;
-    sys_irqsetpolicy(dev->irq, 0, &dev->irq_hook);
-    sys_irqenable(&dev->irq_hook);
+    r = sys_irqsetpolicy(dev->irq, 0, &dev->irq_hook);
+    if (r != OK) {
+        printf("%s: unable to register IRQ %d (%d)\n",
+            dev->name, dev->irq, r);
+        dev->irq_hook = -1;
+    } else {
+        r = sys_irqenable(&dev->irq_hook);
+        if (r != OK)
+            printf("%s: unable to enable IRQ %d (%d)\n",
+                dev->name, dev->irq, r);
+    }
 
     /* Set DRIVER_OK */
     status = virtio_mmio_read32(dev, VIRTIO_MMIO_STATUS);
-    virtio_mmio_write32(dev, VIRTIO_MMIO_STATUS, status | VIRTIO_STATUS_DRIVER_OK);
+    virtio_mmio_write32(dev, VIRTIO_MMIO_STATUS,
+        status | VIRTIO_STATUS_DRIVER_OK);
 }
 
 /*

@@ -9,14 +9,14 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.29
-- 最后更新：2026-02-21
+- 版本：1.30
+- 最后更新：2026-08-21
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.29
-- Last updated: 2026-02-21
+- Version: 1.30
+- Last updated: 2026-08-21
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
 
@@ -700,10 +700,10 @@ cd minix/tests/riscv64
 - 默认 `qemu-riscv64.sh -n` 使用 user-net（slirp），可先用于公网连通性验收。
   Default `qemu-riscv64.sh -n` uses user-net (slirp), which is suitable for
   first-pass public reachability checks.
-- 若出现 `hostfwd=tcp::2222-:22` 端口占用，可改用
-  `/tmp/qemu-riscv64-nohostfwd.sh` 或先释放宿主 2222 端口。
-  If `hostfwd=tcp::2222-:22` conflicts, use `/tmp/qemu-riscv64-nohostfwd.sh`
-  or free host port 2222 first.
+- 若出现 `hostfwd=tcp::2222-:22` 端口占用，设置 `NET_HOSTFWD=none` 再跑
+  `qemu-riscv64.sh -n`（网络冒烟默认如此）。
+  If `hostfwd=tcp::2222-:22` conflicts, rerun `qemu-riscv64.sh -n` with
+  `NET_HOSTFWD=none` (network smoke does this by default).
 
 ### 使用 mkdisk 进行 U-Boot 纯磁盘启动 / Disk-only Boot with mkdisk + U-Boot
 

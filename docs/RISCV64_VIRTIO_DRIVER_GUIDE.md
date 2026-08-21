@@ -11,8 +11,8 @@ debugging, and acceptance.
 
 ## Document Info / 文档信息
 
-- Version / 版本: `1.0`
-- Last updated / 最后更新: `2026-02-18`
+- Version / 版本: `1.1`
+- Last updated / 最后更新: `2026-08-21`
 - Baseline / 基线: `obj.intrgcc`
 - Scope / 范围: VirtIO MMIO transport (`virtio_blk_mmio`, `virtio_net_mmio`)
 
@@ -77,7 +77,8 @@ by a single driver instance.
 - `service virtio_blk_mmio` with `UMAP/VUMAP/DEVIO/IRQCTL/PRIVCTL`
   and MMIO range `0x10001000:0x10008000`.
 - `service virtio_net_mmio` with `UMAP/VUMAP/DEVIO/IRQCTL/PRIVCTL`
-  and MMIO range `0x10002000:0x10003000`.
+  and MMIO range `0x10001000:0x10008000` (full 8-slot window; the
+  per-service `/etc/system.conf.d/virtio_net_mmio` file must match).
 - `service lwip` with domain `INET INET6 ROUTE LINK`.
 - `service lwip` IPC includes `pm` (required for root credential lookup in
   raw socket path, relevant to `ping/ping6`).
@@ -134,9 +135,9 @@ minix/releasetools/riscv64/mkdisk.sh
 ```
 
 Notes:
-- `-n` uses QEMU user-net and currently sets
-  `hostfwd=tcp::2222-:22` in the script.
-- if host port `2222` is occupied, either free it or run a custom QEMU command.
+- `-n` uses QEMU user-net (`ipv6=on`) with MAC `52:54:00:12:34:56`.
+- Default host forward is `hostfwd=tcp::2222-:22`. Smoke/CI should set
+  `NET_HOSTFWD=none` to avoid binding host port 2222.
 
 ### 6.2 Direct QEMU (explicit net config)
 
@@ -211,9 +212,15 @@ ping6 -q -c 1 fe80::...%vio0
   - `minix/releasetools/riscv64/system.conf`
   - `minix/net/lwip/lwip.conf`
 
+6. `unable to add mmio mem range` / no `vio0` on disk images
+- Cause: `/etc/system.conf.d/virtio_net_mmio` overrode RISC-V `system.conf`
+  without `PRIVCTL` / IRQ / the full MMIO window (`issue.md` `#39`).
+- Action: keep `virtio_net_mmio.conf` aligned with
+  `minix/releasetools/riscv64/system.conf`.
+
 4. `hostfwd=tcp::2222-:22` already in use
 - Cause: host port conflict.
-- Action: pick a different hostfwd port or run without hostfwd.
+- Action: set `NET_HOSTFWD=none` or pick a different `hostfwd` port.
 
 5. `-netdev bridge` fails with bridge-helper errors
 - Cause: host bridge prerequisites missing (for example `/etc/qemu/bridge.conf`).
@@ -243,6 +250,8 @@ ping6 -q -c 1 fe80::...%vio0
 5. Regression gate:
 - keep both disk and network profiles in regular smoke runs.
 - for network, include both IPv4 (`10.0.2.2`) and IPv6 (`ping6 ::1`) checks.
+- automated: `python3 minix/tests/riscv64/qemu_net_smoke.py` (also run from
+  `minix/tests/riscv64/run_tests.sh kernel`).
 
 ## 10) Related Docs / 关联文档
 

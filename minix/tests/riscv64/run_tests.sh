@@ -298,6 +298,27 @@ run_kernel_tests() {
             log_fail "VirtIO block I/O smoke"
         fi
     fi
+
+    # Test 5: VirtIO net + lwIP smoke test
+    log_info "Test: VirtIO net + lwIP smoke"
+    NET_SMOKE_SCRIPT="${SCRIPT_DIR}/qemu_net_smoke.py"
+    if [ ! -f "$NET_SMOKE_SCRIPT" ]; then
+        log_skip "VirtIO net + lwIP smoke (script missing)"
+    elif python3 "$NET_SMOKE_SCRIPT" \
+        --qemu-script "$QEMU_SCRIPT" \
+        --kernel "$KERNEL" \
+        --destdir "$BOOTMODROOT" \
+        --timeout $((TIMEOUT * 3)) \
+        --cmd-timeout 45; then
+        log_pass "VirtIO net + lwIP smoke"
+    else
+        rc=$?
+        if [ "$rc" -eq 2 ]; then
+            log_skip "VirtIO net + lwIP smoke (skipped)"
+        else
+            log_fail "VirtIO net + lwIP smoke"
+        fi
+    fi
 }
 
 #

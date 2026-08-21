@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.37
+**Version / 版本**: 1.38
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1851,4 +1851,22 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `issue.md` `#55`
 - GitHub Actions run `32495453269`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+### Entry 50 — gcc 4.8.5 genhooks.c fallback (2026-08-21) / gcc 4.8.5 genhooks.c 回退
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32497228532` (`744e854c3`) passed tools then
+  failed looking for `genhooks.cc`. `#50` mapped other generators;
+  `Makefile.hooks` still hardcoded the gcc13 name.
+
+**Fix / 修复**:
+- Cherry-pick `#56` (no virtio-net): resolve `genhooks.cc` or
+  `genhooks.c` from dist.
+
+**Evidence / 证据**:
+- `issue.md` `#56`
+- GitHub Actions run `32497228532`
+- `external/gpl3/gcc/Makefile.hooks`
 

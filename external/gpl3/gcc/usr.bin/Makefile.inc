@@ -18,6 +18,11 @@ GCCARCH=	${.CURDIR}/../gcc/arch/${GCC_MACHINE_ARCH}
 CPPFLAGS+=	-DLOCALEDIR=\"/usr/share/locale\" -DNETBSD_NATIVE
 HOST_CPPFLAGS+=	-I${.CURDIR}/..
 
+# gcc 4.8.5 gcov-io.h includes "gcov-iov.h". That header lives in the
+# libgcov arch dir (mknative), not the gcc dist. Native gcov/cc1 need
+# the same -I backend already uses.
+CPPFLAGS+=	-I${.PARSEDIR}/../lib/libgcc/libgcov/arch/${GCC_MACHINE_ARCH}
+
 # Link in the GMP/MPFR/MPC headers since we don't install them
 BUILDSYMLINKS+=	${NETBSDSRCDIR}/external/lgpl3/gmp/lib/libgmp/arch/${GMP_MACHINE_ARCH}/gmp.h gmp.h
 BUILDSYMLINKS+=	${NETBSDSRCDIR}/external/lgpl3/mpfr/dist/src/mpfr.h mpfr.h

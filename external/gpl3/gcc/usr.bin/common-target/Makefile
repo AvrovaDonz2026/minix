@@ -8,8 +8,12 @@ LIBISPRIVATE=	yes
 
 LIB=		common-target
 
+# gcc 4.8.5 ships params.c in this library. gcc13 folded params into
+# opts, so the name is params.cc here and the exists() map below keeps
+# params.c on 4.8.5 (nightly 32530101083 linked gcpp without
+# global_init_params / compiler_params).
 _COMMON_TARGET_CC= \
-		prefix.cc opts.cc opts-common.cc options.cc vec.cc \
+		prefix.cc params.cc opts.cc opts-common.cc options.cc vec.cc \
 		hooks.cc common-targhooks.cc hash-table.cc file-find.cc \
 		spellcheck.cc selftest.cc opt-suggestions.cc
 SRCS=

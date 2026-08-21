@@ -80,6 +80,15 @@ GCC_BACKEND_BUILD_RTL+=	${o}
 .endfor
 G_BUILD_RTL:=	${GCC_BACKEND_BUILD_RTL}
 
+# gcc 13 mknative lists gcc/common.md. gcc 4.8.5 has only the CPU .md.
+GCC_MD_FILE=
+.for f in ${G_md_file}
+.if exists(${f})
+GCC_MD_FILE+=	${f}
+.endif
+.endfor
+G_md_file:=	${GCC_MD_FILE}
+
 # Reseed the search path after Makefile.inc so GCCARCH and G_out_file
 # contribute their real directories before bsd.lib.mk consumes .depend.
 .PATH: ${DIST}/gcc ${DIST}/libiberty ${GCCARCH} ${G_out_file:H} ${DIST}/include

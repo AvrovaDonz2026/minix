@@ -61,7 +61,10 @@ G_CONFIGLINKS=${GNUHOSTDIST}/libgcc/enable-execute-stack-empty.c  enable-execute
 
 # MINIX/riscv64 currently uses gthr-single (no pthread backend). Exclude
 # libstdc++ sources that require __gthread condition variable/thread types.
+# c++config.h also leaves _GLIBCXX_ATOMIC_BUILTINS undefined, so <atomic>
+# is a hard #error; skip the C++11 atomic ABI compat object too.
 G_SRC_SOURCES:=	${G_SRC_SOURCES:Ncompatibility-thread-c++0x.cc}
+G_SRC_SOURCES:=	${G_SRC_SOURCES:Ncompatibility-atomic-c++0x.cc}
 G_CPP11_SOURCES:= ${G_CPP11_SOURCES:Ncondition_variable.cc:Nfuture.cc:Nmutex.cc:Nthread.cc}
 
 # Keep functexcept.cc aligned with the reduced source set above. Without

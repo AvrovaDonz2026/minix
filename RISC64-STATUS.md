@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.25
+**Version / 版本**: 1.26
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -83,7 +83,8 @@
   `#50`：backend 生成器按 dist 选择 `.cc`/`.c`，跳过 `gengtype-state` 等
   gcc13 才有的文件；4.8.5 的 gengtype 不走 state 文件。`#52`：丢掉 4.8.5
   没有的 `gcc/common.md`，只把存在的 `.md` 传给生成器。`#53`：tools gcc
-  4.8.5 不生成 `version.h` 时改为合成头文件。
+  4.8.5 不生成 `version.h` 时改为合成头文件。`#54`：4.8.5 `genmodes` 没有
+  `-i`，改为空的 `insn-modes-inline.h`；frontend/cc1 的 `.cc` 映射到 `.c`。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
@@ -179,6 +180,8 @@
   files such as `gengtype-state`, and run 4.8.5 `gengtype` without state files.
   `#52`: drop gcc13 `gcc/common.md` when the 4.8.5 dist lacks it.
   `#53`: synthesize `version.h` when tools gcc 4.8.5 does not emit it.
+  `#54`: stub `insn-modes-inline.h` because 4.8.5 `genmodes` has no `-i`,
+  and map remaining frontend/cc1 `.cc` sources to `.c`.
 - Native toolchain work has entered Stage N1/N2 with both a build helper
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate

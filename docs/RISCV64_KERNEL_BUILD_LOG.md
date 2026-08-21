@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.35
+**Version / 版本**: 1.36
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2012,5 +2012,18 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#53`
 - GitHub Actions run `32491621998`
 - `external/gpl3/gcc/usr.bin/Makefile.toolsgccfiles`
+
+## Entry 48 — 2026-08-21 15:05 UTC
+
+**Change / 变更**: gcc 4.8.5 `genmodes` only accepts `-h|-m`. gcc 13 native backend runs `./genmodes -i` for `insn-modes-inline.h`. Stub that header when `genmodes.cc` is absent. Map remaining frontend/cc1/gcc `.cc` SRCS to `.c` via `Makefile.cc2c`, and stub `specs.h` if tools gcc omits it.
+
+**Issue ID**: `#54`
+
+**Result / 结果**: Local Makefile review against gcc 4.8.5 `genmodes.c`. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#54`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
+- `external/gpl3/gcc/usr.bin/Makefile.cc2c`
 
 

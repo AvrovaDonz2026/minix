@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.40
+**Version / 版本**: 1.41
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1903,5 +1903,22 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 **Evidence / 证据**:
 - `issue.md` `#58`
 - GitHub Actions run `32502264930`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+### Entry 53 — gcc 4.8.5 gtyp-input .for recipe (2026-08-21) / gcc 4.8.5 gtyp-input .for 展开
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32505629389` (`d93d49dcb`) failed
+  `gtyp-input.list.tmp` with `sh: .for: not found`.
+
+**Fix / 修复**:
+- Cherry-pick `#59` (no virtio-net): emit one quoted `printf` per
+  `G_GTFILES` word as its own recipe line.
+
+**Evidence / 证据**:
+- `issue.md` `#59`
+- GitHub Actions run `32505629389`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
 

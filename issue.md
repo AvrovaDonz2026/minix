@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.61
+**Version / 版本**: 1.62
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -62,6 +62,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   37) `[DONE]` `#67` `#65` 编过 gcov.c 后，libcommon.a 只有 `input.o`，链接缺 `fnotice` / `version_string`
   38) `[DONE]` `#68` `#67` 之后原生 cpp 把 gcpp 链成三份 `ggc-none.o`，缺 `main`
   39) `[DONE]` `#69` `#68` 之后 gcpp 缺 `params.c` 的 `global_init_params`，且 `-lintl` 在 libcpp 之前
+  40) `[DONE]` `#70` `#54` 在 `NOMAN` 之前 include `Makefile.cc2c`，`bsd.own.mk` 把 `MKMAN` 钉成 yes，dependall 要 `lto1.1`
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1545,6 +1546,24 @@ This section archives items with code-level fixes landed (some may still require
   static RISC-V link sees libintl after libcpp.a.
   历史 P1 #69：common-target 补回 4.8.5 的 `params.c`，frontend 在
   静态库后再链一次 `-lintl`。
+- Former P1 #70: hosted nightly `32532469511` (`9cb398c22`) linked
+  native `gcpp` with `-lintl` after `libdecnumber.a` (`#69` held),
+  then died `nbmake: don't know how to make lto1.1` in
+  `external/gpl3/gcc/usr.bin/lto1` after `.depend`. `#54` put
+  `.include "../Makefile.cc2c"` at the top of `lto1` / `cc1` /
+  `cc1obj` / `cc1plus`; that file includes `Makefile.inc` →
+  `bsd.own.mk` before `NOMAN`. `bsd.own.mk` is include-guarded
+  (`_BSD_OWN_MK_`); first parse sees `NOMAN` unset so `MKMAN`
+  stays yes, and `Makefile.backend`'s later `NOMAN` cannot flip
+  it. `bsd.prog.mk` then `_APPEND_MANS=yes` → `MAN+= ${PROG}.1`.
+  gcc 4.8.5 does not ship `lto1.1` / `cc1.1` / `cc1obj.1` /
+  `cc1plus.1`. Original 4.8.5 `lto1` included `Makefile.backend`
+  first (`NOMAN` then `bsd.own.mk`); `lto-wrapper` already set
+  `NOMAN=1` before `Makefile.cc2c`. Set `NOMAN=1` in those four
+  program Makefiles before `Makefile.cc2c`.
+  历史 P1 #70：在 `Makefile.cc2c` 拉入 `bsd.own.mk` 之前设置
+  `NOMAN`，避免 `MKMAN=yes` 去要 gcc 4.8.5 没有的 `lto1.1` /
+  `cc1.1` / `cc1obj.1` / `cc1plus.1`。
 
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the

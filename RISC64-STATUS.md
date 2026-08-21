@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.40
+**Version / 版本**: 1.41
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -78,7 +78,7 @@
   RX/TX 环深 256，协商 `CTRL_MAC` / `CTRL_RX_EXTRA`，`ndr_set_hwaddr`
   走 `CTRL_MAC_ADDR_SET`，并设置 `CTRL_RX_NOBCAST`。net smoke 要求
   `rx 256`。
-- 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69`）：
+- 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70`）：
   gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
   `#50`：backend 生成器按 dist 选择 `.cc`/`.c`。`#52`：丢掉 4.8.5
   没有的 `gcc/common.md`，只把存在的 `.md` 传给生成器。`#53`：tools gcc
@@ -109,6 +109,11 @@
   `#69`：`#68` 链上 `cppspec.o gcc.o ggc-none.o` 后，缺 4.8.5
   `params.c` 的 `global_init_params`；common-target 补回该源。静态
   链接把 `-lintl` 放在 libcpp.a 之前，frontend 在档案后再链一次。
+  `#70`：`#69` 链上 `gcpp`（`-lintl` 在 `libdecnumber.a` 之后）后，
+  nightly `32532469511` 在 `lto1` 报 `don't know how to make lto1.1`。
+  `#54` 把 `Makefile.cc2c` 放在程序 Makefile 顶部，先于 `NOMAN`
+  拉入 `bsd.own.mk`，`MKMAN` 钉成 yes；在 `lto1` / `cc1` /
+  `cc1obj` / `cc1plus` 里先设 `NOMAN`。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
@@ -198,7 +203,7 @@
 - Follow-up (`issue.md` `#49`): 256-slot RX/TX rings, `CTRL_MAC` /
   `CTRL_RX_EXTRA`, `ndr_set_hwaddr` via `CTRL_MAC_ADDR_SET`, and
   `CTRL_RX_NOBCAST`. Net smoke requires `rx 256`.
-- Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69`): gcov skips
+- Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70`): gcov skips
   `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
   `#50`: backend generators resolve `.cc`/`.c` from dist.
   `#52`: drop gcc13 `gcc/common.md` when the 4.8.5 dist lacks it.
@@ -241,6 +246,12 @@
   `dgettext` (`32530101083` / `92237adf3`). Map `params.cc` onto
   `params.c` in common-target, and repeat `-lintl` after frontend
   archives.
+  `#70`: after `#69` linked `gcpp` with `-lintl` after
+  `libdecnumber.a`, nightly `32532469511` (`9cb398c22`) died
+  `don't know how to make lto1.1`. `#54` put `Makefile.cc2c` at
+  the top of `lto1` / `cc1` / `cc1obj` / `cc1plus`, so
+  `bsd.own.mk` ran before `NOMAN` and `MKMAN` stayed yes. Set
+  `NOMAN` first, matching `lto-wrapper`.
 - Native toolchain work has entered Stage N1/N2 with both a build helper
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate

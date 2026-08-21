@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.50
+**Version / 版本**: 1.51
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2208,6 +2208,22 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - GitHub Actions run `32530101083`
 - `external/gpl3/gcc/usr.bin/common-target/Makefile`
 - `external/gpl3/gcc/usr.bin/Makefile.frontend`
+
+## Entry 63 — 2026-08-21 22:50 UTC
+
+**Change / 变更**: Hosted nightly `32532469511` (`9cb398c22`) linked native `gcpp` with `-lintl` after `libdecnumber.a` (`#69` held), then died `nbmake: don't know how to make lto1.1` in `external/gpl3/gcc/usr.bin/lto1` after `.depend`. `#54` put `.include "../Makefile.cc2c"` at the top of `lto1` / `cc1` / `cc1obj` / `cc1plus`; that file includes `Makefile.inc` → `bsd.own.mk` before `NOMAN`. `bsd.own.mk` is include-guarded (`_BSD_OWN_MK_`); first parse sees `NOMAN` unset so `MKMAN` stays yes, and `Makefile.backend`'s later `NOMAN` cannot flip it. `bsd.prog.mk` then `_APPEND_MANS=yes` → `MAN+= ${PROG}.1`. gcc 4.8.5 does not ship `lto1.1` / `cc1.1` / `cc1obj.1` / `cc1plus.1`. Set `NOMAN=1` in those four program Makefiles before `Makefile.cc2c`, matching `lto-wrapper`.
+
+**Issue ID**: `#70`
+
+**Result / 结果**: Native `lto1` / `cc1` / `cc1obj` / `cc1plus` keep `MKMAN=no` because `NOMAN` is set before `bsd.own.mk`. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#70`
+- GitHub Actions run `32532469511`
+- `external/gpl3/gcc/usr.bin/lto1/Makefile`
+- `external/gpl3/gcc/usr.bin/cc1/Makefile`
+- `external/gpl3/gcc/usr.bin/cc1obj/Makefile`
+- `external/gpl3/gcc/usr.bin/cc1plus/Makefile`
 
 
 

@@ -2,9 +2,19 @@
 
 .include <bsd.own.mk>
 .include "../Makefile.hostprobes"
+.include "../Makefile.inc"
 
 PROG=           gcov
+
+# Packaging CI fetches gcc 4.8.5 (gcov.c, no json.cc). riscv64 defs.mk
+# is gcc 13.2.0 mknative and lists json.o. Skip sources the dist lacks.
+.if !exists(${DIST}/gcc/json.cc)
+G_GCOV_OBJS:=	${G_GCOV_OBJS:Njson.o}
+.endif
 SRCS=		${G_GCOV_OBJS:.o=.cc}
+.if exists(${DIST}/gcc/gcov.c) && !exists(${DIST}/gcc/gcov.cc)
+SRCS:=		${SRCS:S/.cc/.c/g}
+.endif
 
 CPPFLAGS+=	-I. -I${GCCARCH} -I${BACKENDOBJ} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 
@@ -70,9 +80,15 @@ bversion.h: ${TOOLSGCCBUILD}/bversion.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-${SRCS:.cc=.d} ${SRCS:.cc=.o}: options.h config.h auto-host.h tm.h version.h bversion.h
+${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: options.h config.h auto-host.h tm.h version.h bversion.h
+.if exists(${DIST}/gcc/gcov.cc)
 gcov.d gcov.o: gcov.cc
+.elif exists(${DIST}/gcc/gcov.c)
+gcov.d gcov.o: gcov.c
+.endif
+.if exists(${DIST}/gcc/json.cc)
 json.d json.o: json.cc
+.endif
 
 # Force using C++ for this
 HOST_CC:=	${HOST_CXX}

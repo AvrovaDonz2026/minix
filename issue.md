@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
-**Date / 日期**: 2026-02-23  
-**Version / 版本**: 1.36
+**Date / 日期**: 2026-08-21  
+**Version / 版本**: 1.37
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -41,7 +41,8 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   4) `#14` DT 多段内存/保留区解析补齐
   5) `[DONE]` `#30` multi-smoke 默认复用磁盘镜像，削弱跨次可复现性
   6) `[DONE]` `#31` smoke/repro 门禁对退出语义与宿主可移植性校验不足
-  7) `#37` native toolchain（来宾内 `as/ld/ar/ranlib` + `cc/gcc/clang`）闭环未完成
+  7) `#37` native toolchain（来宾内 `as/ld/ar/ranlib` + `cc/gcc`）已可过门禁；`clang` 由 `#42` 单独用全系统 packaging CI 覆盖
+  8) `#42` 打开 `MKLLVM=yes` 的 tools+distribution；LLVM 3.6.1 仍无 RISC-V codegen backend
 - P3 / 低优先（可维护性与技术债）:
   1) `#19` kernel/VM/RS 无条件调试日志收敛
   2) `#11` `minimal_kernel` RISC-V 适配
@@ -1082,6 +1083,32 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Residual note / 残留说明:
   - Optional `link+run` validation may still need a writable target filesystem
     path with sufficient inode budget (root mfs is inode-constrained by design).
+
+### 42) Enable in-tree LLVM/clang in RISC-V full-system packaging CI / 用全系统 packaging CI 打开 RISC-V 的 LLVM
+- Evidence / 证据:
+  - Baseline docs and CI skipped LLVM because host LLVM 3.6.1 failed on
+    modern GCC and the tree had no RISC-V triple/TargetInfo:
+    `README-RISCV64.md` “LLVM 编译问题”,
+    `.github/workflows/nightly-riscv64.yml` `HAVE_LLVM=no MKLLVM=no`.
+  - In-tree LLVM is 3.6.1 (`external/bsd/llvm/Makefile.inc`) with
+    `--enable-targets=x86,powerpc,sparc,aarch64,arm,mips` and no RISC-V
+    backend. Clang therefore cannot codegen RV64 yet.
+  - MINIX `bsd.own.mk` used to set `HAVE_LIBGCC?= no` whenever
+    `HAVE_LLVM=yes`, which would drop libgcc on a GCC-based RISC-V world.
+- Fix in this tree / 本树修复:
+  - Keep GCC as `ACTIVE_CC` and force `HAVE_LIBGCC=yes` on riscv64.
+  - Do not let clang steal `/usr/bin/cc` on RISC-V; gcc still provides `cc`.
+  - Teach LLVM/clang the `riscv32`/`riscv64` triples, Minix TargetInfo,
+    GNU `as`/`ld` flags, and target triple in `config.h.in`.
+  - Host LLVM build: extra `HOST_CXXFLAGS` so GCC 13 can compile LLVM 3.6.
+  - New workflow `.github/workflows/packaging-riscv64-llvm.yml` runs the
+    same hosted tools→distribution→QEMU suite with `MKLLVM=yes` and
+    requires `riscv64-elf32-minix-clang` plus DESTDIR `clang`/`clang++`.
+- Residual / 残留:
+  - No in-tree RISC-V LLVM backend, so `clang -c` for RV64 still cannot
+    emit code. Guest native compile stays on gcc until a later backend
+    import.
+- Priority / 优先级: P2 (toolchain completeness; gated by packaging CI)
 
 ### 38) [DONE] release-riscv64 libstdc++ `functexcept` no-future gate stabilization / release-riscv64 中 libstdc++ `functexcept` no-future 门禁稳定化（已完成）
 - Evidence / 证据:

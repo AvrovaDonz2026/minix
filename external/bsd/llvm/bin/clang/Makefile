@@ -3,18 +3,21 @@
 PROG_CXX=	clang
 NOMAN=		yes
 
+.include <bsd.init.mk>
+
 .if !defined(HOSTPROG)
 SYMLINKS+=	clang ${BINDIR}/clang++
 SYMLINKS+=	clang ${BINDIR}/clang-cpp
 
 # if defined(__MINIX)
+# RISC-V still uses GCC as the native cc until LLVM grows a backend.
+.if ${MACHINE_CPU} != "riscv"
 SYMLINKS+=	clang ${BINDIR}/cc
 SYMLINKS+=	clang ${BINDIR}/c++
 SYMLINKS+=	clang ${BINDIR}/cpp
+.endif
 # endif # defined(__MINIX)
 .endif
-
-.include <bsd.init.mk>
 
 .PATH: ${CLANG_SRCDIR}/tools/driver
 

@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
-**Last updated / 最后更新**: 2026-02-20
-**Version / 版本**: 1.27
+**Last updated / 最后更新**: 2026-08-21
+**Version / 版本**: 1.28
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1653,3 +1653,34 @@ minix/tests/riscv64/run_tests.sh native
 - `README-RISCV64.md`
 - `https://github.com/AvrovaDonz2026/minix/actions/runs/22249826170`
 - `https://github.com/AvrovaDonz2026/minix/actions/runs/22250528261`
+
+### Entry 40 — Enable MKLLVM full-system packaging CI (2026-08-21) / 打开 LLVM 全系统 packaging CI
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64`  
+**Action / 动作**:
+- New branch `cursor/fix-riscv64-llvm-db82` (not mixed with virtio-net).
+- Add `.github/workflows/packaging-riscv64-llvm.yml`: hosted `ubuntu-24.04`
+  tools → distribution → QEMU/full suite with `MKLLVM=yes`, `ACTIVE_CC=gcc`,
+  `HAVE_LIBGCC=yes`. Requires host `riscv64-elf32-minix-clang` and DESTDIR
+  `clang`/`clang++`/`clang-cpp`.
+- LLVM 3.6.1: RISC-V triples + clang TargetInfo + Minix `as`/`ld` flags.
+  No RISC-V codegen backend yet.
+- Keep gcc as guest `cc` on RISC-V so native toolchain gates stay on GCC.
+
+**Commands / 命令**:
+```bash
+# Packaging CI (hosted) equivalent:
+MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no MKLLVM=yes \
+./build.sh -U -j$(nproc) -m evbriscv64 -O obj.intrgcc \
+  -V ACTIVE_CC=gcc -V MKGCC=yes -V MKGCCCMDS=yes \
+  -V MKLLVM=yes -V MKLLVMCMDS=yes -V HAVE_LIBGCC=yes \
+  tools
+
+MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no MKLLVM=yes \
+./build.sh -U -u -j$(nproc) -m evbriscv64 -O obj.intrgcc \
+  -V ACTIVE_CC=gcc -V MKLLVM=yes -V MKLLVMCMDS=yes \
+  -V HAVE_LIBGCC=yes -V CHECKFLIST_FLAGS='-m -e' \
+  distribution
+```
+**Result / 结果**: Source changes landed; full tools+distribution is gated by
+GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.

@@ -187,8 +187,16 @@ MKBINUTILS?=	yes # We are installing clang, so trigger binutils.
 .endif # ${MKLLVM:Uno} == "yes"
 
 .if ${HAVE_LLVM:Dyes} == "yes"
+.  if ${MACHINE_ARCH} != "riscv64" && ${MACHINE_ARCH} != "riscv"
 HAVE_LIBGCC?=	no
+.  endif
 .endif # ${HAVE_LLVM:Dyes} == "yes"
+
+# RISC-V still uses GCC as ACTIVE_CC; keep libgcc even when clang is built.
+.if ${MACHINE_ARCH} == "riscv64" || ${MACHINE_ARCH} == "riscv"
+HAVE_LIBGCC=		yes
+HAVE_LIBGCC_EH=		yes
+.endif
 
 # The default value has to be set after we have figured out if we are using GCC
 # or not.

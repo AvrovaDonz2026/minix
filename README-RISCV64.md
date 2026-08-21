@@ -609,8 +609,11 @@ See `issue.md` for evidence and file/line references.
 
 ### 1. LLVM 编译问题 / LLVM Build Issues
 
-**问题 / Problem**: LLVM 在 RISC-V 64-bit 上编译失败。  
-**解决 / Fix**: 使用 `HAVE_LLVM=no MKLLVM=no` 跳过 LLVM 构建。
+**问题 / Problem**: 旧基线用 `HAVE_LLVM=no MKLLVM=no` 跳过 LLVM 3.6.1。  
+**现状 / Status**: `MKLLVM=yes` 由 `.github/workflows/packaging-riscv64-llvm.yml`
+做全系统 tools→distribution 门禁；世界仍用 GCC（`ACTIVE_CC=gcc`，riscv64 保留 libgcc）。
+Clang 已识别 `riscv64-elf32-minix`，但 3.6.1 没有 RISC-V codegen backend，
+来宾内 `cc` 仍指向 gcc。详见 `issue.md` `#42`。
 
 ### 2. 交叉编译器 `-march=rv64gc` 不兼容 / `-march=rv64gc` Compatibility
 

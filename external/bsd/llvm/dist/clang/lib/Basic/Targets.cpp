@@ -6469,6 +6469,152 @@ const Builtin::Info XCoreTargetInfo::BuiltinInfo[] = {
 };
 } // end anonymous namespace.
 
+namespace {
+class RISCVTargetInfo : public TargetInfo {
+  static const char *const GCCRegNames[];
+  static const GCCRegAlias GCCRegAliases[];
+  std::string ABI;
+  bool Is64Bit;
+
+public:
+  RISCVTargetInfo(const llvm::Triple &Triple)
+      : TargetInfo(Triple),
+        Is64Bit(Triple.getArch() == llvm::Triple::riscv64) {
+    BigEndian = false;
+    LongDoubleWidth = 128;
+    LongDoubleAlign = 128;
+    SuitableAlign = 128;
+    WCharType = SignedInt;
+    WIntType = UnsignedInt;
+    if (Is64Bit) {
+      LongWidth = LongAlign = PointerWidth = PointerAlign = 64;
+      SizeType = UnsignedLong;
+      PtrDiffType = SignedLong;
+      IntPtrType = SignedLong;
+      IntMaxType = SignedLong;
+      Int64Type = SignedLong;
+      DescriptionString = "e-m:e-p:64:64-i64:64-i128:128-n64-S128";
+      ABI = "lp64d";
+    } else {
+      LongWidth = LongAlign = PointerWidth = PointerAlign = 32;
+      SizeType = UnsignedInt;
+      PtrDiffType = SignedInt;
+      IntPtrType = SignedInt;
+      IntMaxType = SignedLongLong;
+      DescriptionString = "e-m:e-p:32:32-i64:64-n32-S128";
+      ABI = "ilp32d";
+    }
+    TheCXXABI.set(TargetCXXABI::GenericItanium);
+  }
+
+  void getTargetDefines(const LangOptions &Opts,
+                        MacroBuilder &Builder) const override {
+    Builder.defineMacro("__riscv");
+    Builder.defineMacro("__riscv__", "1");
+    if (Is64Bit)
+      Builder.defineMacro("__riscv_xlen", "64");
+    else
+      Builder.defineMacro("__riscv_xlen", "32");
+    Builder.defineMacro("__riscv_float_abi_double", "1");
+    Builder.defineMacro("__riscv_flen", "64");
+    Builder.defineMacro("__riscv_i", "2000000");
+    Builder.defineMacro("__riscv_m", "2000000");
+    Builder.defineMacro("__riscv_a", "2000000");
+    Builder.defineMacro("__riscv_f", "2000000");
+    Builder.defineMacro("__riscv_d", "2000000");
+    if (ABI == "lp64d" || ABI == "ilp32d")
+      Builder.defineMacro("__riscv_abi_rve", "0");
+  }
+
+  void getTargetBuiltins(const Builtin::Info *&Records,
+                         unsigned &NumRecords) const override {
+    Records = nullptr;
+    NumRecords = 0;
+  }
+
+  bool hasFeature(StringRef Feature) const override {
+    return Feature == "riscv" ||
+           (Is64Bit && Feature == "riscv64") ||
+           (!Is64Bit && Feature == "riscv32");
+  }
+
+  bool setCPU(const std::string &Name) override {
+    return Name == "generic" || Name == "generic-rv32" ||
+           Name == "generic-rv64" || Name == "rocket" ||
+           Name == "sifive-u54" || Name == "sifive-e31" || Name.empty();
+  }
+
+  bool setABI(const std::string &Name) override {
+    if (Is64Bit) {
+      if (Name != "lp64" && Name != "lp64f" && Name != "lp64d")
+        return false;
+    } else {
+      if (Name != "ilp32" && Name != "ilp32f" && Name != "ilp32d")
+        return false;
+    }
+    ABI = Name;
+    return true;
+  }
+
+  StringRef getABI() const override { return ABI; }
+
+  void getGCCRegNames(const char *const *&Names,
+                      unsigned &NumNames) const override {
+    Names = GCCRegNames;
+    NumNames = llvm::array_lengthof(GCCRegNames);
+  }
+
+  void getGCCRegAliases(const GCCRegAlias *&Aliases,
+                        unsigned &NumAliases) const override {
+    Aliases = GCCRegAliases;
+    NumAliases = llvm::array_lengthof(GCCRegAliases);
+  }
+
+  bool validateAsmConstraint(const char *&Name,
+                             TargetInfo::ConstraintInfo &Info) const override {
+    switch (*Name) {
+    default:
+      return false;
+    case 'I':
+    case 'J':
+    case 'K':
+      Info.setRequiresImmediate(-2048, 2047);
+      return true;
+    case 'f':
+    case 'r':
+      Info.setAllowsRegister();
+      return true;
+    }
+  }
+
+  const char *getClobbers() const override { return ""; }
+
+  BuiltinVaListKind getBuiltinVaListKind() const override {
+    return TargetInfo::VoidPtrBuiltinVaList;
+  }
+};
+
+const char *const RISCVTargetInfo::GCCRegNames[] = {
+    "x0",  "x1",  "x2",  "x3",  "x4",  "x5",  "x6",  "x7",
+    "x8",  "x9",  "x10", "x11", "x12", "x13", "x14", "x15",
+    "x16", "x17", "x18", "x19", "x20", "x21", "x22", "x23",
+    "x24", "x25", "x26", "x27", "x28", "x29", "x30", "x31",
+    "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7",
+    "f8",  "f9",  "f10", "f11", "f12", "f13", "f14", "f15",
+    "f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23",
+    "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31"};
+
+const TargetInfo::GCCRegAlias RISCVTargetInfo::GCCRegAliases[] = {
+    {{"zero"}, "x0"}, {{"ra"}, "x1"},  {{"sp"}, "x2"},  {{"gp"}, "x3"},
+    {{"tp"}, "x4"},   {{"t0"}, "x5"},  {{"t1"}, "x6"},  {{"t2"}, "x7"},
+    {{"s0"}, "x8"},   {{"fp"}, "x8"},  {{"s1"}, "x9"},  {{"a0"}, "x10"},
+    {{"a1"}, "x11"},  {{"a2"}, "x12"}, {{"a3"}, "x13"}, {{"a4"}, "x14"},
+    {{"a5"}, "x15"},  {{"a6"}, "x16"}, {{"a7"}, "x17"}, {{"s2"}, "x18"},
+    {{"s3"}, "x19"},  {{"s4"}, "x20"}, {{"s5"}, "x21"}, {{"s6"}, "x22"},
+    {{"s7"}, "x23"},  {{"s8"}, "x24"}, {{"s9"}, "x25"}, {{"s10"}, "x26"},
+    {{"s11"}, "x27"}, {{"t3"}, "x28"}, {{"t4"}, "x29"}, {{"t5"}, "x30"},
+    {{"t6"}, "x31"}};
+} // end anonymous namespace.
 
 //===----------------------------------------------------------------------===//
 // Driver code
@@ -6840,6 +6986,11 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple) {
         return nullptr;
       return new SPIR64TargetInfo(Triple);
     }
+    case llvm::Triple::riscv32:
+    case llvm::Triple::riscv64:
+      if (os == llvm::Triple::Minix)
+        return new MinixTargetInfo<RISCVTargetInfo>(Triple);
+      return new RISCVTargetInfo(Triple);
   }
 }
 

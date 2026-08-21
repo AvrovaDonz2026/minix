@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
-**Date / 日期**: 2026-02-20  
-**Version / 版本**: 1.15
+**Date / 日期**: 2026-08-21  
+**Version / 版本**: 1.16
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -9,6 +9,8 @@
 
 **中文**
 - 构建可通过（GCC + workaround 组合），详见 `README-RISCV64.md`。
+- LLVM/clang 由独立 packaging CI（`packaging-riscv64-llvm.yml`，`MKLLVM=yes`）门禁；
+  世界仍用 GCC，见 `issue.md` `#42`。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -120,7 +122,7 @@
 ## Build Status / 构建状态
 
 **中文**
-- 基线命令：使用 GCC、禁用 LLVM/C++、放宽 `checkflist`（见 `README-RISCV64.md`）。
+- 基线命令：GCC 世界编译；LLVM 由独立 packaging CI（`MKLLVM=yes`）门禁，见 `#42`。
 - 产物：`minix/kernel/obj/kernel` 与 `obj/destdir.evbriscv64`。
 - 已补充 `obj.intrgcc` 自举输出：`obj.intrgcc/minix/kernel/kernel` 与
   `obj.intrgcc/destdir.evbriscv64` 可直接用于 QEMU。
@@ -132,7 +134,7 @@
   `-march=RV64IMAFD -mcmodel=medany`，避免默认 `-mabi=lp64d` 兼容性分歧。
 
 **English**
-- Baseline: GCC, LLVM/C++ disabled, relaxed `checkflist` (see `README-RISCV64.md`).
+- Baseline: GCC world compile; LLVM gated by packaging CI with `MKLLVM=yes` (`issue.md` #42).
 - Outputs: `minix/kernel/obj/kernel` and `obj/destdir.evbriscv64`.
 - Added validated self-bootstrap outputs: `obj.intrgcc/minix/kernel/kernel` and
   `obj.intrgcc/destdir.evbriscv64` are bootable in QEMU.

@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.32
+**Version / 版本**: 1.33
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1761,4 +1761,26 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `issue.md` `#48`
 - `sys/arch/riscv/include/math.h`
 - `lib/libm/arch/riscv/s_copysign.S`
+
+### Entry 45 — gcc 4.8.5 backend generators and RISC-V array_lengthof (2026-08-21) / 4.8.5 backend 生成器与 RISC-V array_lengthof
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32486378021` failed native backend on
+  `gengenrtl.cc` (gcc 4.8.5 has `.c`).
+- LLVM tools `32486375962` (`66b109f29`) failed `Targets.cpp`:
+  `no matching function for call to 'array_lengthof'` on incomplete
+  `RISCVTargetInfo::GCCRegNames[]`.
+
+**Fix / 修复**:
+1. Cherry-pick backend `.cc`/`.c` generator fallback (`#50`).
+2. Define `getGCCRegNames` / `getGCCRegAliases` out of line after the
+   complete arrays (`#51`).
+
+**Evidence / 证据**:
+- `issue.md` `#50` `#51`
+- GitHub Actions runs `32486378021` / `32486375962`
+- `external/gpl3/gcc/usr.bin/backend/Makefile`
+- `external/bsd/llvm/dist/clang/lib/Basic/Targets.cpp`
 

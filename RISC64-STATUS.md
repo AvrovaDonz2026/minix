@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.20
+**Version / 版本**: 1.21
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -17,7 +17,9 @@
   `_copysignl` 仍在（`#43`/`#44`）。gcov 跳过 gcc13 的 `json.cc`，
   common-target 跳过 `spellcheck.cc` 等（`#47`）。`#44` 的 128 位
   long double 与 gcc 4.8.5 冲突（`s_cbrtl.c`）；`#48` 改为在 RISC-V
-  `.S` 上 alias `*l`。
+  `.S` 上 alias `*l`。`#50` 把 backend 生成器从 gcc13 的 `.cc` 映射到
+  4.8.5 的 `.c`。`#51` 把 `RISCVTargetInfo::array_lengthof` 移到完整
+  寄存器数组定义之后，修复 `Targets.cpp` 编译。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -76,6 +78,9 @@
   set `__HAVE_LONG_DOUBLE 128` for `_copysignl`; gcc 4.8.5 long double
   is 64-bit, so `#48` aliases `*l` from the RISC-V `.S` files. gcov
   skips `json.cc` and common-target skips gcc13-only sources (#47).
+  `#50` maps backend generators from gcc13 `.cc` to gcc 4.8.5 `.c`.
+  `#51` moves `RISCVTargetInfo` `array_lengthof` after the complete
+  register arrays so `Targets.cpp` compiles.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.34
+**Version / 版本**: 1.35
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -1999,5 +1999,18 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#52`
 - GitHub Actions run `32488937725`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+## Entry 47 — 2026-08-21 15:20 UTC
+
+**Change / 变更**: Hosted CI tools gcc 4.8.5 does not emit `version.h` (version is `BASEVER` plus `version.c`). gcc 13 native `defs.mk` still copies that header into `external/gpl3/gcc/usr.bin/backend`. `Makefile.toolsgccfiles` synthesizes `version.h`, `bversion.h`, `plugin-version.h`, and later gcc13 generator fragments when the tools copy is missing.
+
+**Issue ID**: `#53`
+
+**Result / 结果**: Local Makefile review. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#53`
+- GitHub Actions run `32491621998`
+- `external/gpl3/gcc/usr.bin/Makefile.toolsgccfiles`
 
 

@@ -3,6 +3,12 @@
 This document describes a stricter test strategy for the RISC-V port, with
 clear tiers and example commands.
 
+**Last updated / 最后更新**: 2026-08-22  
+**Version / 版本**: 1.1  
+Known gate gaps live in `issue.md` `#84` / `#85`.
+Baseline paths use `obj.intrgcc`. Gateway ping (`#76`) is closed; do not treat
+`ping 10.0.2.2` as red.
+
 ## Tiers
 
 ### Tier 0: Quick checks (local)
@@ -16,14 +22,21 @@ clear tiers and example commands.
 - Command:
   - `./minix/tests/riscv64/run_tests.sh kernel`
 - Notes:
+  - `run_kernel_tests` currently does `timeout … || true` then
+    `grep -q "MINIX"` (`issue.md` `#84`). Treat `[PASS] Kernel boot` as a
+    weak signal; prefer `qemu_runtime_probe.py` / `multi_smoke_gate.sh`
+    with runtime probe for shell readiness (`#85`).
   - The smoke test builds `test_virtio_blk_mmio` into
-    `obj/destdir.evbriscv64/bin/test_virtio_blk_mmio` when a cross-compiler is
+    `obj.intrgcc/destdir.evbriscv64/bin/test_virtio_blk_mmio` when a cross-compiler is
     available. If the binary is not present in the guest, the test falls back
     to a `dd`/`cmp` I/O check.
   - The test runs in QEMU and targets `/dev/c0d0` by default. Provide a
     device path if needed.
   - If the test binary and `dd`/`cmp` are missing in the guest, the smoke test
     skips.
+  - Network smoke is `python3 minix/tests/riscv64/qemu_net_smoke.py` (also
+    from `run_tests.sh kernel`). `#76` is closed: `-netdev` must be
+    `ipv4=on,ipv6=on`. Hosted nightly/release `ping_gw` already passed.
 
 ### Tier 2: Functional guest tests
 - Goal: validate userland behavior and device interaction under real loads.
@@ -58,9 +71,9 @@ Direct usage:
 ```
 python3 minix/tests/riscv64/qemu_io_smoke.py \
   --qemu-script minix/scripts/qemu-riscv64.sh \
-  --kernel minix/kernel/obj/kernel \
-  --destdir obj/destdir.evbriscv64 \
-  --test-bin obj/destdir.evbriscv64/bin/test_virtio_blk_mmio \
+  --kernel obj.intrgcc/minix/kernel/kernel \
+  --destdir obj.intrgcc/destdir.evbriscv64 \
+  --test-bin obj.intrgcc/destdir.evbriscv64/bin/test_virtio_blk_mmio \
   --device /dev/c0d0 \
   --offset 1048576 \
   --size 4096 \
@@ -72,7 +85,7 @@ python3 minix/tests/riscv64/qemu_io_smoke.py \
 If you want to build and install the test binary manually:
 ```
 CC=/path/to/riscv64-elf32-minix-gcc
-DESTDIR=obj/destdir.evbriscv64
+DESTDIR=obj.intrgcc/destdir.evbriscv64
 $CC -march=RV64IMAFD -mcmodel=medany --sysroot=$DESTDIR \
   -I$DESTDIR/usr/include -O2 -Wall -std=gnu99 \
   -Wl,--defsym,__global_pointer$=_gp \

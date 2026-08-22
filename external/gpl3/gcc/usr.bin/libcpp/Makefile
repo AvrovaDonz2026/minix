@@ -2,9 +2,28 @@
 
 LIBISPRIVATE=	yes
 
+# For ../Makefile.inc and bsd.own.mk
+.include <bsd.init.mk>
+
 LIB=		cpp
 
+# Hosted packaging fetches gcc 4.8.5. Native SRCS still use gcc 13 .cc
+# names from G_libcpp_a_OBJS. Map onto libcpp/*.c when the dist has no .cc.
+# Makefile.inc may add 4.8.5-only directives-only.o (gcc13 dropped it;
+# nightly 32537278919 linked cc1 without _cpp_preprocess_dir_only).
+_LIBCPP_SRCS=
+.for f in ${G_libcpp_a_OBJS:.o=.cc}
+.if exists(${DIST}/libcpp/${f})
+_LIBCPP_SRCS+=	${f}
+.elif exists(${DIST}/libcpp/${f:S/.cc/.c/})
+_LIBCPP_SRCS+=	${f:S/.cc/.c/}
+.endif
+.endfor
+.if empty(_LIBCPP_SRCS)
 SRCS=		${G_libcpp_a_OBJS:.o=.cc}
+.else
+SRCS=		${_LIBCPP_SRCS}
+.endif
 
 CPPFLAGS+=	-I${.CURDIR} -I${.CURDIR}/arch/${GCC_MACHINE_ARCH} \
 		-I${GCCARCH} -I${BACKENDOBJ} -I. \

@@ -18,6 +18,12 @@ GCCARCH=	${.CURDIR}/../gcc/arch/${GCC_MACHINE_ARCH}
 CPPFLAGS+=	-DLOCALEDIR=\"/usr/share/locale\" -DNETBSD_NATIVE
 HOST_CPPFLAGS+=	-I${.CURDIR}/..
 
+# gcc 4.8.5 gcov-io.h includes "gcov-iov.h". That header lives in the
+# libgcov arch dir (mknative), not the gcc dist. Native gcov/cc1 need
+# the same -I backend already uses. ${.PARSEDIR} in this Makefile.inc
+# expands empty (hosted CI: -I/../lib/...), so walk from NETBSDSRCDIR.
+CPPFLAGS+=	-I${NETBSDSRCDIR}/external/gpl3/gcc/lib/libgcc/libgcov/arch/${GCC_MACHINE_ARCH}
+
 # Link in the GMP/MPFR/MPC headers since we don't install them
 BUILDSYMLINKS+=	${NETBSDSRCDIR}/external/lgpl3/gmp/lib/libgmp/arch/${GMP_MACHINE_ARCH}/gmp.h gmp.h
 BUILDSYMLINKS+=	${NETBSDSRCDIR}/external/lgpl3/mpfr/dist/src/mpfr.h mpfr.h
@@ -81,6 +87,37 @@ VER_CPPFLAGS=	-DBASEVER="\"${BASEVER}"\" \
 		-DBUGURL=$(G_BUGURL_s)
 
 .include "${GCCARCH}/defs.mk"
+
+# gcc 13 mknative dropped 4.8.5-only frontend and libcpp objects.
+# Nightly 32537278919 linked native cc1 then missed mudflap_init()
+# (gcc/tree-mudflap.c in G_C_OBJS) and _cpp_preprocess_dir_only
+# (libcpp/directives-only.c). i386 gcc 4.8.5 defs still list them.
+# Restore cp/repo.o for cc1plus (also dropped from G_CXX_OBJS).
+.if exists(${DIST}/gcc/tree-mudflap.c) || exists(${DIST}/gcc/tree-mudflap.cc)
+.if empty(G_C_OBJS:Mtree-mudflap.o)
+G_C_OBJS+=		tree-mudflap.o
+.endif
+.if empty(G_C_AND_OBJC_OBJS:Mtree-mudflap.o)
+G_C_AND_OBJC_OBJS+=	tree-mudflap.o
+.endif
+.if empty(G_CXX_OBJS:Mtree-mudflap.o)
+G_CXX_OBJS+=		tree-mudflap.o
+.endif
+.if empty(G_CXX_C_OBJS:Mtree-mudflap.o)
+G_CXX_C_OBJS+=		tree-mudflap.o
+.endif
+.endif
+.if exists(${DIST}/gcc/cp/repo.c) || exists(${DIST}/gcc/cp/repo.cc)
+.if empty(G_CXX_OBJS:Mrepo.o)
+G_CXX_OBJS+=		repo.o
+.endif
+.endif
+.if exists(${DIST}/libcpp/directives-only.c) || \
+    exists(${DIST}/libcpp/directives-only.cc)
+.if empty(G_libcpp_a_OBJS:Mdirectives-only.o)
+G_libcpp_a_OBJS+=	directives-only.o
+.endif
+.endif
 
 .if ${MKPIC} != "no"
 .if ${G_ENABLE_SHARED} == "yes" && ${G_SHLIB_LINK} != ""

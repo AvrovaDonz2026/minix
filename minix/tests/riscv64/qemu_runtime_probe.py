@@ -148,6 +148,11 @@ def main() -> int:
         action="store_true",
         help="run only custom --cmd checks and skip default meminfo/ps/srv checks",
     )
+    parser.add_argument(
+        "--network",
+        action="store_true",
+        help="enable QEMU user networking (-n); default NET_HOSTFWD=none",
+    )
     args = parser.parse_args()
 
     if not os.path.exists(args.qemu_script):
@@ -170,6 +175,10 @@ def main() -> int:
     ]
     if args.disk:
         qemu_cmd.extend(["-i", args.disk])
+    if args.network:
+        qemu_cmd.append("-n")
+        if "NET_HOSTFWD" not in os.environ:
+            os.environ["NET_HOSTFWD"] = "none"
 
     log("Starting QEMU runtime probe...")
     io = spawn(qemu_cmd)
@@ -221,6 +230,23 @@ def main() -> int:
                     ),
                 ]
             )
+            if args.network:
+                commands.extend(
+                    [
+                        (
+                            "vio_up",
+                            "PATH=/sbin:/bin:/usr/bin; /sbin/ifconfig vio0 >/dev/null 2>&1",
+                        ),
+                        (
+                            "ping6_lo",
+                            "PATH=/sbin:/bin:/usr/bin; /sbin/ping6 -c 1 ::1 >/dev/null 2>&1",
+                        ),
+                        (
+                            "ping_gw",
+                            "PATH=/sbin:/bin:/usr/bin; /sbin/ping -c 2 10.0.2.2 >/dev/null 2>&1",
+                        ),
+                    ]
+                )
 
         if args.require_disk_node:
             commands.append(

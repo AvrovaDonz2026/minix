@@ -25,5 +25,6 @@ DPADD+=		${LIBINTL}
 ${SRCS}: ${GCCARCH}/defs.mk
 
 COPTS.gcc.cc=	-Wno-stack-protector
+COPTS.gcc.c+=	${COPTS.gcc.cc}
 
 .PATH: ${DIST}/gcc/cp ${DIST}/gcc ${DIST}/gcc/cp

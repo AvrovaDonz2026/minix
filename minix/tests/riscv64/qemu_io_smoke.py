@@ -71,14 +71,23 @@ def read_until(io: ProcIO, patterns: list[re.Pattern], timeout: float) -> tuple[
     end = time.time() + timeout
     while time.time() < end:
         rlist, _, _ = select.select([io.read_fd], [], [], 0.2)
-        if io.read_fd in rlist:
-            data = os.read(io.read_fd, 4096)
-            if not data:
+        if io.read_fd not in rlist:
+            if io.proc.poll() is not None:
                 break
-            buf += data.decode(errors="ignore")
-            for pat in patterns:
-                if pat.search(buf):
-                    return buf, pat
+            continue
+        try:
+            data = os.read(io.read_fd, 4096)
+        except BlockingIOError:
+            continue
+        except OSError:
+            # Dead PTY after QEMU exits (EIO on Linux).
+            break
+        if not data:
+            break
+        buf += data.decode(errors="ignore")
+        for pat in patterns:
+            if pat.search(buf):
+                return buf, pat
     return buf, None
 
 

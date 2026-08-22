@@ -27,18 +27,68 @@ passed=0
 failed=0
 skipped=0
 
-TOOLDIR_DEFAULT=""
 DESTDIR_DEFAULT=""
-for d in "$MINIX_ROOT"/obj.intrgcc/tooldir.* "$MINIX_ROOT"/obj/tooldir.*; do
-    if [ -x "$d/bin/riscv64-elf32-minix-gcc" ]; then
-        TOOLDIR_DEFAULT="$d"
-        break
-    fi
-done
 if [ -d "$MINIX_ROOT/obj.intrgcc/destdir.evbriscv64" ]; then
     DESTDIR_DEFAULT="$MINIX_ROOT/obj.intrgcc/destdir.evbriscv64"
 elif [ -d "$MINIX_ROOT/obj/destdir.evbriscv64" ]; then
     DESTDIR_DEFAULT="$MINIX_ROOT/obj/destdir.evbriscv64"
+fi
+
+# Tracked obj.intrgcc/tooldir.* wrappers hardcode /home/donz/minix. On GitHub
+# hosted runners that path does not exist, so nbmake-evbriscv64 execs a
+# missing nbmake. Prefer a tooldir whose nbmake binary is present, rewrite
+# wrappers only when the recorded srcdir is gone, and pick the newest tree
+# so a freshly built Azure tooldir wins over the checked-in Debian one.
+fix_nbmake_wrapper() {
+    local wrap="$1"
+    local tooldir="$2"
+    local old_src tmp
+
+    [ -f "$wrap" ] || return 0
+    old_src=$(sed -n 's/^NETBSDSRCDIR=\([^;]*\);.*/\1/p' "$wrap" | head -n 1)
+    old_src=${old_src#\'}
+    old_src=${old_src%\'}
+    [ -n "$old_src" ] || return 0
+    [ -d "$old_src" ] && return 0
+
+    echo "[INFO] Rewriting missing host path in $wrap ($old_src -> $MINIX_ROOT)"
+    tmp=$(mktemp)
+    sed -e "s|$old_src|$MINIX_ROOT|g" \
+        -e "s|^TOOLDIR=.*|TOOLDIR='$tooldir'; export TOOLDIR|" \
+        "$wrap" >"$tmp"
+    cat "$tmp" >"$wrap"
+    rm -f "$tmp"
+    chmod +x "$wrap"
+}
+
+pick_best_tooldir() {
+    local best="" best_mt=0 d mt wrap
+
+    for d in "$@"; do
+        [ -x "$d/bin/riscv64-elf32-minix-gcc" ] || continue
+        [ -x "$d/bin/nbmake" ] || continue
+        wrap="$d/bin/nbmake-evbriscv64"
+        if [ -f "$wrap" ]; then
+            fix_nbmake_wrapper "$wrap" "$d"
+        fi
+        mt=$(stat -c %Y "$d" 2>/dev/null || echo 0)
+        if [ -z "$best" ] || [ "$mt" -ge "$best_mt" ]; then
+            best="$d"
+            best_mt="$mt"
+        fi
+    done
+    printf '%s' "$best"
+}
+
+TOOLDIR_DEFAULT=""
+if [ -n "${TOOLDIR:-}" ] && [ -x "${TOOLDIR}/bin/riscv64-elf32-minix-gcc" ] && \
+   [ -x "${TOOLDIR}/bin/nbmake" ]; then
+    TOOLDIR_DEFAULT="$TOOLDIR"
+    fix_nbmake_wrapper "$TOOLDIR_DEFAULT/bin/nbmake-evbriscv64" "$TOOLDIR_DEFAULT"
+else
+    TOOLDIR_DEFAULT=$(pick_best_tooldir \
+        "$MINIX_ROOT"/obj.intrgcc/tooldir.* \
+        "$MINIX_ROOT"/obj/tooldir.*)
 fi
 NBMAKE_DEFAULT=""
 if [ -n "$TOOLDIR_DEFAULT" ] && [ -x "$TOOLDIR_DEFAULT/bin/nbmake-evbriscv64" ]; then
@@ -114,13 +164,19 @@ run_kernel_tests() {
 
     # Test 1: Kernel boots
     log_info "Test: Kernel boot"
+    set +e
     timeout $TIMEOUT "$QEMU_SCRIPT" \
         -s -k "$KERNEL" -B "$BOOTMODROOT" \
-        > /tmp/boot_test.log 2>&1 || true
+        > /tmp/boot_test.log 2>&1
+    boot_rc=$?
+    set -e
 
-    if grep -q "MINIX" /tmp/boot_test.log 2>/dev/null || \
-       grep -q "rv64: arch_post_init" /tmp/boot_test.log 2>/dev/null || \
-       grep -q "rv64: arch_boot_proc VM" /tmp/boot_test.log 2>/dev/null; then
+    # timeout(1) uses 124 when the watchdog fires; qemu-riscv64.sh does
+    # not exit on its own. Other non-zero codes are runner failures.
+    if [ "$boot_rc" -ne 0 ] && [ "$boot_rc" -ne 124 ]; then
+        log_fail "Kernel boot (runner rc=${boot_rc})"
+    elif grep -Eq 'VFS: init_root done' /tmp/boot_test.log 2>/dev/null && \
+         grep -Eq 'exec path="/bin/sh"|init: exec /bin/sh' /tmp/boot_test.log 2>/dev/null; then
         log_pass "Kernel boot"
     else
         log_fail "Kernel boot"
@@ -298,6 +354,27 @@ run_kernel_tests() {
             log_fail "VirtIO block I/O smoke"
         fi
     fi
+
+    # Test 5: VirtIO net + lwIP smoke test
+    log_info "Test: VirtIO net + lwIP smoke"
+    NET_SMOKE_SCRIPT="${SCRIPT_DIR}/qemu_net_smoke.py"
+    if [ ! -f "$NET_SMOKE_SCRIPT" ]; then
+        log_skip "VirtIO net + lwIP smoke (script missing)"
+    elif python3 "$NET_SMOKE_SCRIPT" \
+        --qemu-script "$QEMU_SCRIPT" \
+        --kernel "$KERNEL" \
+        --destdir "$BOOTMODROOT" \
+        --timeout $((TIMEOUT * 3)) \
+        --cmd-timeout 45; then
+        log_pass "VirtIO net + lwIP smoke"
+    else
+        rc=$?
+        if [ "$rc" -eq 2 ]; then
+            log_skip "VirtIO net + lwIP smoke (skipped)"
+        else
+            log_fail "VirtIO net + lwIP smoke"
+        fi
+    fi
 }
 
 #
@@ -394,6 +471,74 @@ run_build_tests() {
         log_pass "VirtIO block driver directory exists"
     else
         log_fail "VirtIO block driver directory"
+    fi
+
+    # Test 4: Host virtio EVENT_IDX compile/run
+    EVENT_IDX_SRC="$SCRIPT_DIR/test_virtio_event_idx.c"
+    if [ ! -f "$EVENT_IDX_SRC" ]; then
+        log_skip "Host virtio EVENT_IDX (source missing)"
+    else
+        HOST_CC="${HOST_CC:-cc}"
+        EVENT_IDX_BIN=$(mktemp /tmp/test_virtio_event_idx.XXXXXX)
+        if ${HOST_CC} -O2 -Wall -std=c99 -o "$EVENT_IDX_BIN" "$EVENT_IDX_SRC"; then
+            if "$EVENT_IDX_BIN"; then
+                log_pass "Host virtio EVENT_IDX"
+            else
+                log_fail "Host virtio EVENT_IDX (runtime)"
+            fi
+        else
+            log_fail "Host virtio EVENT_IDX (compile)"
+        fi
+        rm -f "$EVENT_IDX_BIN"
+    fi
+
+    # Test 5: QEMU user-net must keep IPv4 when IPv6 is on (QEMU 8.2).
+    QEMU_SCRIPT="$MINIX_ROOT/minix/scripts/qemu-riscv64.sh"
+    if grep -q 'ipv4=on,ipv6=on' "$QEMU_SCRIPT"; then
+        log_pass "QEMU user-net keeps ipv4 with ipv6"
+    else
+        log_fail "QEMU user-net keeps ipv4 with ipv6"
+    fi
+
+    # Test 6: phys_copy_fault must sit before phys_memset (#77).
+    if [ -f "$KERNEL" ] && command -v nm >/dev/null 2>&1; then
+        if python3 - "$KERNEL" <<'PY'
+import subprocess, sys
+out = subprocess.check_output(["nm", "-n", sys.argv[1]], text=True, errors="replace")
+addrs = {}
+for line in out.splitlines():
+    parts = line.split()
+    if len(parts) >= 3:
+        addrs[parts[-1]] = int(parts[0], 16)
+need = ("phys_copy", "phys_copy_fault", "phys_memset", "memset_fault")
+if any(n not in addrs for n in need):
+    sys.exit(1)
+c, cf, m, mf = (addrs[n] for n in need)
+sys.exit(0 if c < cf < m < mf else 1)
+PY
+        then
+            log_pass "phys_copy fault symbol order"
+        else
+            log_fail "phys_copy fault symbol order"
+        fi
+    else
+        log_skip "phys_copy fault symbol order (no kernel/nm)"
+    fi
+
+    # Test 7: QEMU virt PLIC has 96 sources (#78).
+    PLIC_HDR="$MINIX_ROOT/minix/kernel/arch/riscv64/include/archconst.h"
+    if grep -Eq '^#define[[:space:]]+PLIC_NUM_SOURCES[[:space:]]+96' "$PLIC_HDR"; then
+        log_pass "PLIC_NUM_SOURCES is 96"
+    else
+        log_fail "PLIC_NUM_SOURCES is 96"
+    fi
+
+    # Test 8: legacy virtio-mmio must not write GUEST_FEATURES_SEL=1 (#79).
+    VIRTIO_MMIO_C="$MINIX_ROOT/minix/lib/libvirtio_mmio/virtio_mmio.c"
+    if grep -A8 'Write guest features' "$VIRTIO_MMIO_C" | grep -q 'version != 1'; then
+        log_pass "legacy virtio-mmio skips GUEST_FEATURES_SEL=1"
+    else
+        log_fail "legacy virtio-mmio skips GUEST_FEATURES_SEL=1"
     fi
 }
 

@@ -20,6 +20,12 @@ LDADD+=			-L${FRONTENDOBJ} -lfrontend
 .include "../Makefile.libiberty"
 .include "../Makefile.libdecnumber"
 
+# Driver Makefiles put -lintl in LDADD before this file. Static RISC-V
+# links then see -lintl before libcpp.a, so dgettext in libcpp is
+# unresolved (nightly 32530101083). Repeat -lintl after the archives.
+LDADD+=			-lintl
+DPADD+=			${LIBINTL}
+
 HOSTPROG_CXX=	1
 
 TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
@@ -86,22 +92,14 @@ configargs.h: ${TOOLSGCCBUILD}/configargs.h
 	rm -f ${.TARGET}
 	cp ${.ALLSRC} ${.TARGET}
 
-version.h: ${TOOLSGCCBUILD}/version.h
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
-
-bversion.h: ${TOOLSGCCBUILD}/bversion.h
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
-
-specs.h: ${TOOLSGCCBUILD}/specs.h
-	rm -f ${.TARGET}
-	cp ${.ALLSRC} ${.TARGET}
+.include "Makefile.toolsgccfiles"
+.include "Makefile.cc2c"
 
 ${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: \
 	config.h auto-host.h tm.h options.h configargs.h
 gcc.d gcc.o: specs.h ${GCC_BASEVER_FILE}
 CPPFLAGS.gcc.cc+=	${FRONTEND_DRIVER_DEFINES} -DBASEVER=${BASEVERSTR}
+CPPFLAGS.gcc.c+=	${CPPFLAGS.gcc.cc}
 
 # Force using C++ for this
 HOST_CC:=	${HOST_CXX}

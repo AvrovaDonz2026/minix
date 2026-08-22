@@ -13,13 +13,26 @@ SUBDIR+=	tr1 tr2
 DIST=		${GCCDIST}
 GNUHOSTDIST=	${DIST}
 
-# libsupc++
-INCS=		exception new typeinfo cxxabi.h initializer_list compare
+# libsupc++. Packaging CI fetches gcc 4.8.5; gcc13-only names such as
+# compare must not be required when the dist snapshot does not ship them.
+_LIBSUPCXX_INCS=	exception new typeinfo cxxabi.h initializer_list compare
+INCS=
+.for f in ${_LIBSUPCXX_INCS}
+.if exists(${DIST}/libstdc++-v3/libsupc++/${f})
+INCS+=		${f}
+.endif
+.endfor
 
 # others
 INCS+=		cerrno
-INCS+=		${G_std_headers} ${G_c_base_headers}
-INCS+=		${G_c_compatibility_headers_extra}
+.for f in ${G_std_headers} ${G_c_base_headers} ${G_c_compatibility_headers_extra}
+.if exists(${DIST}/libstdc++-v3/include/std/${f}) || \
+    exists(${DIST}/libstdc++-v3/include/c_global/${f}) || \
+    exists(${DIST}/libstdc++-v3/include/c_compatibility/${f}) || \
+    exists(${DIST}/libstdc++-v3/${f})
+INCS+=		${f}
+.endif
+.endfor
 INCSDIR=	/usr/include/g++
 
 .include "${.CURDIR}/Makefile.includes"

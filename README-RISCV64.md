@@ -810,7 +810,7 @@ LLVM_GATE_REQUIRE=all ./minix/tests/riscv64/run_tests.sh llvm
 ```
 
 说明 / Notes:
-- Host 层检查 clang 3.6、`nblvm-tblgen` / `nbclang-tblgen`、
+- Host 层检查 clang 3.6、`nbllvm-tblgen` / `nbclang-tblgen`、
   `__riscv` / `__riscv_xlen 64` / `__minix`，以及 `clang -c`
   不得产出 RISC-V 对象。
 - DESTDIR 层还拒绝 libc++ `__mutex_base`（riscv64 必须

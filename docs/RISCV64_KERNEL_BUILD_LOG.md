@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-22
-**Version / 版本**: 1.56
+**Version / 版本**: 1.57
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2278,4 +2278,28 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `share/mk/bsd.sys.mk`
 - `.github/workflows/packaging-riscv64-llvm.yml`
 - `minix/tests/riscv64/llvm_toolchain_gate.sh`
+
+### Entry 69 — host gate nbllvm-tblgen name (2026-08-22) / host 门禁 tblgen 名称
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Push `32543353223` (`6e97a7c26`) built tools, then the host
+  LLVM gate failed: `llvm-tblgen missing (nblvm-tblgen)`.
+- `nbclang-tblgen` passed. Every other host check passed,
+  including RISC-V/Minix macros, `-emit-llvm`, and `clang -c`
+  not emitting a RISC-V object.
+- Tools install `${_TOOL_PREFIX}llvm-tblgen` =
+  `nbllvm-tblgen` (`tools/llvm-tblgen/Makefile`).
+
+**Fix / 修复**:
+- Look for `nbllvm-tblgen` then `llvm-tblgen`. Do not keep the
+  `nblvm-tblgen` typo. LLVM-only gate fix; do not mix onto the
+  network PR.
+
+**Evidence / 证据**:
+- `issue.md` `#49`
+- GitHub Actions run `32543353223`
+- `minix/tests/riscv64/llvm_toolchain_gate.sh`
+- `tools/llvm-tblgen/Makefile`
 

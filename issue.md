@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.65
+**Version / 版本**: 1.66
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -64,6 +64,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   39) `[DONE]` `#72` gcc13 `G_C_OBJS` / `G_libcpp_a_OBJS` 丢掉 4.8.5 的 `tree-mudflap.o` 与 `directives-only.o`，`cc1` 缺 `mudflap_init` / `_cpp_preprocess_dir_only`
   40) `[DONE]` `#42` LLVM packaging CI 补上 host IR/tblgen、DESTDIR ELF、来宾 clang 功能门禁（不再只看 `--version`）
   41) `[DONE]` `#46` LLVM packaging 的 libc++ 头文件盖住 libstdc++，`functexcept.cc` 的 `<future>` 拉进 `pthread.h`
+  42) `[DONE]` `#49` LLVM host 门禁把 `nbllvm-tblgen` 写成 `nblvm-tblgen`，tools 已装 tblgen 仍失败
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1136,7 +1137,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     requires `riscv64-elf32-minix-clang` plus DESTDIR `clang`/`clang++`.
   - Functional LLVM gates (not just `--version`):
     - After tools: `minix/tests/riscv64/llvm_toolchain_gate.sh --mode host
-      --require host` checks clang 3.6, clang++/clang-cpp, nblvm-tblgen,
+      --require host` checks clang 3.6, clang++/clang-cpp, nbllvm-tblgen,
       nbclang-tblgen, RISC-V/Minix `-dM` macros, `-fsyntax-only`, `-E`,
       optional `-emit-llvm`, and that `clang -c` does **not** emit a
       RISC-V object (no backend).
@@ -1190,7 +1191,11 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     and drops stale DESTDIR libc++ headers under MKUPDATE. Do not
     mix onto the network PR (`MKCXX=no`). The host LLVM gate still
     runs after tools even if a later C++ residual blocks
-    distribution.
+    distribution. `#49`: first hosted host-gate run (`32543353223`
+    on `6e97a7c26`) failed `llvm-tblgen missing (nblvm-tblgen)`
+    while tools had installed `nbllvm-tblgen` (`nb` + `llvm-tblgen`).
+    The rest of the host layer passed, including `clang -c` not
+    emitting a RISC-V object.
 - Priority / 优先级: P2 (toolchain completeness; gated by packaging CI)
 
 ### 38) [DONE] release-riscv64 libstdc++ `functexcept` no-future gate stabilization / release-riscv64 中 libstdc++ `functexcept` no-future 门禁稳定化（已完成）
@@ -1613,6 +1618,12 @@ This section archives items with code-level fixes landed (some may still require
   功能门禁，distribution 之后检查 DESTDIR clang ELF，full suite
   增加来宾 clang 冒烟。`#46` 后 DESTDIR 门禁拒绝 libc++
   `__mutex_base`。
+- Former P1 #49: LLVM packaging `32543353223` (`6e97a7c26`) passed
+  tools and every host-gate check except `llvm-tblgen missing
+  (nblvm-tblgen)`. Tools install `${_TOOL_PREFIX}llvm-tblgen` =
+  `nbllvm-tblgen`. Look for that name. LLVM-only gate fix.
+  历史 P1 #49：host 门禁改为查找 `nbllvm-tblgen`（`nb` +
+  `llvm-tblgen`），不再写成 `nblvm-tblgen`。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

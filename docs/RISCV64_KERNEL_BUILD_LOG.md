@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.52
+**Version / 版本**: 1.53
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2237,6 +2237,21 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `issue.md` `#71`
 - GitHub Actions run `32534503524`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+## Entry 65 — 2026-08-21 23:59 UTC
+
+**Change / 变更**: Hosted nightly `32537278919` (`6954a7e6c`) linked native `lto1` (`#71` held), then failed linking `cc1` with undefined `mudflap_init()` and `_cpp_preprocess_dir_only`. gcc13 `G_C_OBJS` dropped 4.8.5 `tree-mudflap.o` (still in i386 defs); `G_libcpp_a_OBJS` dropped `directives-only.o`. Restore those objects (and `cp/repo.o` for `cc1plus`) in `usr.bin/Makefile.inc` when the dist source exists.
+
+**Issue ID**: `#72`
+
+**Result / 结果**: Native `cc1` / `cc1plus` / libcpp keep gcc 4.8.5 frontend and directives-only objects gcc13 mknative dropped. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#72`
+- GitHub Actions run `32537278919`
+- `external/gpl3/gcc/usr.bin/Makefile.inc`
+- `external/gpl3/gcc/usr.bin/libcpp/Makefile`
+
 
 
 

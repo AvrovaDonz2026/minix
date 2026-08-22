@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.63
+**Version / 版本**: 1.64
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -64,6 +64,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   39) `[DONE]` `#69` `#68` 之后 gcpp 缺 `params.c` 的 `global_init_params`，且 `-lintl` 在 libcpp 之前
   40) `[DONE]` `#70` `#54` 在 `NOMAN` 之前 include `Makefile.cc2c`，`bsd.own.mk` 把 `MKMAN` 钉成 yes，dependall 要 `lto1.1`
   41) `[DONE]` `#71` backend `:Mininsn-*` 匹配 `ininsn-*`，`insn-*.o` 未进 `libbackend.a`；gcc13 `G_OBJS` 还少 4.8.5 的 `pointer-set` / `sched-vis` / `lto-symtab`
+  42) `[DONE]` `#72` gcc13 `G_C_OBJS` / `G_libcpp_a_OBJS` 丢掉 4.8.5 的 `tree-mudflap.o` 与 `directives-only.o`，`cc1` 缺 `mudflap_init` / `_cpp_preprocess_dir_only`
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1580,6 +1581,16 @@ This section archives items with code-level fixes landed (some may still require
   not call `madvise` (tools `config.h` is the Linux host).
   历史 P1 #71：backend `:Minsn-*` 保留生成的 `insn-*.o`，并补回
   gcc13 `G_OBJS` 丢掉的 4.8.5 对象；MINIX 上关掉 `HAVE_MADVISE`。
+- Former P1 #72: hosted nightly `32537278919` (`6954a7e6c`) linked
+  native `lto1` (`#71` held) then failed linking `cc1` with
+  undefined `mudflap_init()` and `_cpp_preprocess_dir_only`.
+  gcc13 `G_C_OBJS` dropped 4.8.5 `tree-mudflap.o` (i386 defs still
+  list it); `G_libcpp_a_OBJS` dropped `directives-only.o`. Also
+  restore `cp/repo.o` in `G_CXX_OBJS` for `cc1plus`. Add those
+  objects in `usr.bin/Makefile.inc` when the dist source exists.
+  历史 P1 #72：补回 gcc13 丢掉的 4.8.5 `tree-mudflap.o` /
+  `directives-only.o` / `repo.o`，让原生 `cc1` 链上 `mudflap_init`
+  与 `_cpp_preprocess_dir_only`。
 
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the

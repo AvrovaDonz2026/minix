@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.42
+**Version / 版本**: 1.43
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -78,7 +78,7 @@
   RX/TX 环深 256，协商 `CTRL_MAC` / `CTRL_RX_EXTRA`，`ndr_set_hwaddr`
   走 `CTRL_MAC_ADDR_SET`，并设置 `CTRL_RX_NOBCAST`。net smoke 要求
   `rx 256`。
-- 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71`）：
+- 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`）：
   gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
   `#50`：backend 生成器按 dist 选择 `.cc`/`.c`。`#52`：丢掉 4.8.5
   没有的 `gcc/common.md`，只把存在的 `.md` 传给生成器。`#53`：tools gcc
@@ -119,6 +119,11 @@
   `:Mininsn-*` 实际匹配 `ininsn-*`，生成的 `insn-*.o` 未进档案；
   改为 `:Minsn-*`，并补回 gcc13 `G_OBJS` 丢掉的 4.8.5 对象。
   MINIX 上 `config.h` 关掉 `HAVE_MADVISE`。
+  `#72`：`#71` 链上 `lto1` 后，nightly `32537278919` 链 `cc1`
+  缺 `mudflap_init()` / `_cpp_preprocess_dir_only`。gcc13
+  `G_C_OBJS` 丢掉 `tree-mudflap.o`，`G_libcpp_a_OBJS` 丢掉
+  `directives-only.o`；在 `Makefile.inc` 按 dist 补回，并恢复
+  `cc1plus` 的 `cp/repo.o`。
 - Native toolchain 进入 Stage N1/N2 推进：已新增构建入口
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
@@ -208,7 +213,7 @@
 - Follow-up (`issue.md` `#49`): 256-slot RX/TX rings, `CTRL_MAC` /
   `CTRL_RX_EXTRA`, `ndr_set_hwaddr` via `CTRL_MAC_ADDR_SET`, and
   `CTRL_RX_NOBCAST`. Net smoke requires `rx 256`.
-- Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71`): gcov skips
+- Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`): gcov skips
   `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
   `#50`: backend generators resolve `.cc`/`.c` from dist.
   `#52`: drop gcc13 `gcc/common.md` when the 4.8.5 dist lacks it.
@@ -264,6 +269,12 @@
   `libbackend.a`. Use `:Minsn-*` and add 4.8.5-only objects
   gcc13 `G_OBJS` dropped. Undef `HAVE_MADVISE` in native
   `config.h`.
+  `#72`: after `#71` linked `lto1`, nightly `32537278919`
+  (`6954a7e6c`) linked `cc1` then missed `mudflap_init()` and
+  `_cpp_preprocess_dir_only`. gcc13 dropped `tree-mudflap.o`
+  from `G_C_OBJS` and `directives-only.o` from
+  `G_libcpp_a_OBJS`. Restore them (and `cp/repo.o` for
+  `cc1plus`) in `usr.bin/Makefile.inc` when dist source exists.
 - Native toolchain work has entered Stage N1/N2 with both a build helper
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate

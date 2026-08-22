@@ -2377,3 +2377,20 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
 - `minix/tests/riscv64/run_tests.sh`
 - `minix/tests/riscv64/multi_smoke_gate.sh`
+
+## Entry 74 — 2026-08-22 08:25 UTC
+
+**Change / 变更**: Relinked tracked `obj.intrgcc` kernel / virtio-net / ramdisk / `service/memory` (`80163bebc`) and revalidated `#77`–`#85`. Host gcc 4.8.5 tooldir has no `liblto_plugin.so`; local link used `-fno-use-linker-plugin` (no Makefile change). `nm -n` order is `phys_copy < phys_copy_fault < phys_memset < memset_fault`.
+
+**Issue ID**: `#77` `#13` `#78` `#79` `#80` `#81` `#82` `#84` `#85`
+
+**Result / 结果**: Local QEMU 8.2.2: `timeout 60 qemu-riscv64.sh -s` `rc=124`, `VFS: init_root done` + `exec path="/bin/sh"` + `#`; `-d guest_errors,unimp` debug log 0 bytes (no invalid PLIC, no `GUEST_FEATURES_SEL`). `run_tests.sh build` 13/0/0. `qemu_net_smoke.py` PASS `ping_gw` `arp_req=2 arp_rep=1 echo_req=2 echo_rep=2`, `event_idx on`. Hosted nightly `32559794636` and release `32559794615` on `80163bebc`: `build/user/native/kernel/gate` PASS; kernel boot PASS; `ping_gw` same pcap counts.
+
+**Evidence / 证据**:
+- `obj.intrgcc/minix/kernel/kernel`
+- `obj.intrgcc/destdir.evbriscv64/service/memory`
+- `/tmp/boot_test.log`
+- `/tmp/qemu-debug.log`
+- `minix/tests/riscv64/run_tests.sh build`
+- `minix/tests/riscv64/qemu_net_smoke.py`
+- GitHub Actions runs `32559794636` (nightly) and `32559794615` (release)

@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.73
+**Version / 版本**: 1.74
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -15,6 +15,9 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 
 **2026-08-22 fix round / 修复轮次**: Landed `#77`/`#13` (phys_copy fault layout), `#78` (PLIC 96), `#79` (legacy features sel), `#80` (MAC table before PROMISC, UC count 0), `#81` (`pg_walk` sfence), `#82` (no PA-as-VA `root_v`), `#84`/`#85` (stronger boot markers). Left `#17`, A2/`MKPIC`, `#15` SMP, `#14` DT, `#83` multiboot u32, `#19`/`#11`. Do not disable EVENT_IDX or ipv6.
 **2026-08-22 fix round**: Closed `#77`/`#13`/`#78`–`#82`/`#84`/`#85` in tree. Open remain `#17`, A2, `#15`, `#14`, `#83`, `#19`, `#11`.
+
+**2026-08-22 runtime / 运行时复测**: Local QEMU 8.2.2 (`80163bebc`): boot `rc=124` with `VFS: init_root done` + `exec path="/bin/sh"` + `#`; `-d guest_errors,unimp` log empty (no invalid PLIC, no `GUEST_FEATURES_SEL`); net smoke `ping_gw` `arp_req=2 arp_rep=1 echo_req=2 echo_rep=2`, `event_idx on`. Hosted nightly `32559794636` and release `32559794615` on the same commit: full suite `build/user/native/kernel/gate` PASS; kernel boot PASS; `ping_gw` same pcap counts.
+**2026-08-22 runtime**: Local and hosted `ping_gw` stayed green after the `#77`–`#85` rebuild. EVENT_IDX and `ipv4=on,ipv6=on` unchanged.
 
 **审计否决 / audit rejected**:
 - `VIRTIO_MMIO_IRQ(i - 1)` is not an off-by-one: the `for` loop increments `i` after the matching slot, so slot `k` yields IRQ `k+1` (`virtio_mmio.c:287-334`).
@@ -725,8 +728,12 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     now prefers the memset window. Deleted the dead `la`/`TODO` (`#13`).
     `run_tests.sh build` checks `nm -n` symbol order
     `phys_copy < phys_copy_fault < phys_memset < memset_fault`.
+    Local QEMU 8.2.2 and hosted nightly `32559794636` / release
+    `32559794615` on `80163bebc` booted to shell (`VFS: init_root done`
+    + `exec /bin/sh`) and passed `ping_gw`.
     2026-08-22：按 i386 把 `phys_copy_fault` 放到 copy 之后，并让
     `handle_page_fault` 先判 memset 窗口。删掉死 `la`/`TODO`（`#13`）。
+    本地与 hosted 已复测启动与 `ping_gw`。
 - Status / 状态: `[DONE]` in working tree.
 
 ## Moderate / 中等

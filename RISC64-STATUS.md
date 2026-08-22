@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.52
+**Version / 版本**: 1.53
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -109,6 +109,13 @@
   空指针回退、kernel boot grep、smoke 弱 boot marker）。P3 `#83`
   （multiboot 32 位截断）。`#16` 已归档。否决 virtio IRQ off-by-one
   与把 SBI `sfence` 的 VA 范围当成指针。
+- 本轮按 `issue.md` 修了 `#77`/`#13`/`#78`–`#82`/`#84`/`#85`（`80163bebc`）。
+  本地 QEMU 8.2.2：`VFS: init_root done` + `exec /bin/sh` + `#`；
+  `-d guest_errors,unimp` 日志为空；net smoke `ping_gw`
+  `arp_req=2 arp_rep=1 echo_req=2 echo_rep=2`，`event_idx on`。
+  hosted nightly `32559794636` 与 release `32559794615` 全套
+  `build/user/native/kernel/gate` 通过，kernel boot 与 `ping_gw` 同样绿。
+  未关 EVENT_IDX，未关 ipv6。仍开放 `#17`、A2/`MKPIC`、`#15`、`#14`、`#83`。
 - 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`）：
   gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
   `#50`：backend 生成器按 dist 选择 `.cc`/`.c`。`#52`：丢掉 4.8.5
@@ -277,6 +284,12 @@
   `#16` archived. Rejected a virtio IRQ off-by-one reading of
   `VIRTIO_MMIO_IRQ(i-1)` and treating SBI `sfence` start/size as
   pointers.
+- Fix round (`issue.md` `#77`/`#13`/`#78`–`#82`/`#84`/`#85`, `80163bebc`):
+  `phys_copy_fault` before `phys_memset`, PLIC 96, legacy virtio skips
+  SEL=1, MAC table before PROMISC, `pg_walk` sfence, no PA-as-VA
+  `root_v`, stronger boot markers. Local QEMU 8.2.2 and hosted nightly
+  `32559794636` / release `32559794615` kept `ping_gw`
+  (`echo_req=2 echo_rep=2`) and kernel boot. EVENT_IDX stays on.
 - Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`): gcov skips
   `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
   `#50`: backend generators resolve `.cc`/`.c` from dist.

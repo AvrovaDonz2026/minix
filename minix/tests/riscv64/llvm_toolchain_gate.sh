@@ -203,7 +203,7 @@ run_host_layer() {
 
   clangxx="$(find_host_bin "$tooldir" riscv64-elf32-minix-clang++ || true)"
   clangcpp="$(find_host_bin "$tooldir" riscv64-elf32-minix-clang-cpp || true)"
-  tblgen="$(find_host_bin "$tooldir" nblvm-tblgen llvm-tblgen || true)"
+  tblgen="$(find_host_bin "$tooldir" nbllvm-tblgen llvm-tblgen || true)"
   ctblgen="$(find_host_bin "$tooldir" nbclang-tblgen clang-tblgen || true)"
   readelf="$(find_host_bin "$tooldir" riscv64-elf32-minix-readelf readelf || true)"
 
@@ -261,7 +261,7 @@ run_host_layer() {
       log_fail "llvm-tblgen -help"
     fi
   else
-    log_fail "llvm-tblgen missing (nblvm-tblgen)"
+    log_fail "llvm-tblgen missing (nbllvm-tblgen)"
   fi
 
   if [ -n "$ctblgen" ]; then

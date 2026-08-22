@@ -281,6 +281,28 @@ jobs:
           fi
           "${tooldir}/bin/riscv64-elf32-minix-clang" --version | head -n 5
 
+      - name: LLVM host toolchain gate (tools)
+        shell: bash
+        run: |
+          set -euo pipefail
+          log="/tmp/llvm-host-gate.log"
+          echo "[llvm-host] log: ${log}"
+          : >"${log}"
+          ./minix/tests/riscv64/llvm_toolchain_gate.sh \
+            --mode host \
+            --require host \
+            --tooldir "${TOOLDIR}" \
+            2>&1 | tee -a "${log}"
+
+      - name: Upload LLVM host gate log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: riscv64-llvm-host-gate-log-${{ steps.meta.outputs.llvm_stamp }}-${{ steps.meta.outputs.short_sha }}
+          if-no-files-found: ignore
+          path: /tmp/llvm-host-gate.log
+          retention-days: 14
+
       - name: Prepare GCC include install dirs (obj.intrgcc)
         shell: bash
         run: |
@@ -434,6 +456,29 @@ jobs:
           fi
 
           echo "[native-toolchain] payload check PASS"
+
+      - name: LLVM DESTDIR payload gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          log="/tmp/llvm-destdir-gate.log"
+          echo "[llvm-destdir] log: ${log}"
+          : >"${log}"
+          ./minix/tests/riscv64/llvm_toolchain_gate.sh \
+            --mode destdir \
+            --require destdir \
+            --tooldir "${TOOLDIR}" \
+            --destdir "${PWD}/${OBJDIR}/destdir.evbriscv64" \
+            2>&1 | tee -a "${log}"
+
+      - name: Upload LLVM DESTDIR gate log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: riscv64-llvm-destdir-gate-log-${{ steps.meta.outputs.llvm_stamp }}-${{ steps.meta.outputs.short_sha }}
+          if-no-files-found: ignore
+          path: /tmp/llvm-destdir-gate.log
+          retention-days: 14
 
       - name: Verify libstdc++ thread profile (DESTDIR)
         shell: bash
@@ -720,6 +765,8 @@ jobs:
           export SMOKE_GATE_TIMEOUT=180
           export NATIVE_GATE_TIMEOUT=300
           export NATIVE_GATE_CMD_TIMEOUT=180
+          export LLVM_GATE_REQUIRE=all
+          export TOOLDIR="${TOOLDIR}"
           run_case() {
             local name="$1"
             shift
@@ -733,7 +780,8 @@ jobs:
             fi
           }
 
-          if run_case build ./minix/tests/riscv64/run_tests.sh build \
+          if run_case llvm ./minix/tests/riscv64/run_tests.sh llvm \
+             && run_case build ./minix/tests/riscv64/run_tests.sh build \
              && run_case user ./minix/tests/riscv64/run_tests.sh user \
              && run_case native ./minix/tests/riscv64/run_tests.sh native \
              && run_case kernel ./minix/tests/riscv64/run_tests.sh kernel \
@@ -835,9 +883,15 @@ jobs:
             echo "Full-system tools+distribution with \`MKLLVM=yes\`."
             echo "World still compiles with GCC (\`ACTIVE_CC=gcc\`); clang must be in tooldir and DESTDIR."
             echo ""
+            echo "### LLVM functional gates"
+            echo "- Host (after tools): \`llvm_toolchain_gate.sh --mode host --require host\`"
+            echo "- DESTDIR (after distribution): \`llvm_toolchain_gate.sh --mode destdir --require destdir\`"
+            echo "- Guest (full suite): \`run_tests.sh llvm\` with \`LLVM_GATE_REQUIRE=all\`"
+            echo "- 3.6.1 has no RISC-V codegen backend; \`clang -c\` must not emit a RISC-V object."
+            echo ""
             echo "### Full Test Suite (blocking)"
-            echo "- Runner sequence: \`build -> user -> native -> kernel -> gate(timeout 900s)\`"
-            echo "- Environment: \`SMOKE_DD_UNSAFE=1 SMOKE_ROUNDS=1\`"
+            echo "- Runner sequence: \`llvm -> build -> user -> native -> kernel -> gate(timeout 900s)\`"
+            echo "- Environment: \`SMOKE_DD_UNSAFE=1 SMOKE_ROUNDS=1 LLVM_GATE_REQUIRE=all\`"
             echo "- Suite rc: \`${suite_rc}\`"
             echo "- Logs: artifact \`riscv64-llvm-full-suite-log-${{ steps.meta.outputs.llvm_stamp }}-${{ steps.meta.outputs.short_sha }}\`"
           } >> "${GITHUB_STEP_SUMMARY}"

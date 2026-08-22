@@ -3,7 +3,7 @@
 # RISC-V 64-bit test runner for MINIX 3
 #
 # Usage:
-#   ./run_tests.sh [kernel|user|build|gate|native|all]
+#   ./run_tests.sh [kernel|user|build|gate|native|llvm|all]
 #
 
 set -e
@@ -505,6 +505,54 @@ run_smoke_gate() {
     fi
 }
 
+run_llvm_toolchain_gate() {
+    local gate_script="$SCRIPT_DIR/llvm_toolchain_gate.sh"
+    local bootmodroot="${DESTDIR:-$DESTDIR_DEFAULT}"
+    local args=()
+    local require="${LLVM_GATE_REQUIRE:-}"
+
+    log_info "Running LLVM toolchain gate..."
+
+    if [ ! -x "$gate_script" ]; then
+        log_skip "llvm_toolchain_gate.sh not found, skipping LLVM gate"
+        return
+    fi
+
+    args+=(--mode all)
+    if [ -n "$require" ]; then
+        args+=(--require "$require")
+    fi
+    if [ -n "${TOOLDIR:-$TOOLDIR_DEFAULT}" ]; then
+        args+=(--tooldir "${TOOLDIR:-$TOOLDIR_DEFAULT}")
+    fi
+    if [ -n "$bootmodroot" ] && [ -d "$bootmodroot" ]; then
+        args+=(--destdir "$bootmodroot")
+    fi
+    if [ -f "$KERNEL" ]; then
+        args+=(--kernel "$KERNEL")
+    fi
+    if [ -n "${SMOKE_DISK_IMAGE:-}" ]; then
+        args+=(--disk-image "$SMOKE_DISK_IMAGE")
+    fi
+    if [ -n "${NATIVE_GATE_TIMEOUT:-}" ]; then
+        args+=(--timeout "$NATIVE_GATE_TIMEOUT")
+    fi
+    if [ -n "${NATIVE_GATE_CMD_TIMEOUT:-}" ]; then
+        args+=(--cmd-timeout "$NATIVE_GATE_CMD_TIMEOUT")
+    fi
+
+    if "$gate_script" "${args[@]}"; then
+        log_pass "LLVM toolchain gate"
+    else
+        rc=$?
+        if [ "$rc" -eq 2 ]; then
+            log_skip "LLVM toolchain gate (skipped)"
+        else
+            log_fail "LLVM toolchain gate"
+        fi
+    fi
+}
+
 run_native_toolchain_gate() {
     local gate_script="$SCRIPT_DIR/native_toolchain_gate.sh"
     local bootmodroot="${DESTDIR:-$DESTDIR_DEFAULT}"
@@ -567,6 +615,9 @@ case "${1:-all}" in
     native)
         run_native_toolchain_gate
         ;;
+    llvm)
+        run_llvm_toolchain_gate
+        ;;
     all)
         run_build_tests
         echo ""
@@ -577,9 +628,11 @@ case "${1:-all}" in
         run_smoke_gate
         echo ""
         run_native_toolchain_gate
+        echo ""
+        run_llvm_toolchain_gate
         ;;
     *)
-        echo "Usage: $0 [kernel|user|build|gate|native|all]"
+        echo "Usage: $0 [kernel|user|build|gate|native|llvm|all]"
         exit 1
         ;;
 esac

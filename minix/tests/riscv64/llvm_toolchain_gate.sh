@@ -4,7 +4,8 @@
 #
 # Layers:
 #   host     TOOLDIR clang/tblgen frontend, IR, RISC-V/Minix macros
-#   destdir  guest clang ELF payload; /usr/bin/cc stays gcc
+#   destdir  guest clang ELF payload; /usr/bin/cc stays gcc;
+#            libc++ must not install __mutex_base over libstdc++
 #   guest    QEMU: clang --version, -dM, -emit-llvm (no RISC-V object codegen)
 #
 # Exit codes:
@@ -454,6 +455,12 @@ run_destdir_layer() {
 
   readelf="$(find_host_bin "$(detect_tooldir || true)" \
     riscv64-elf32-minix-readelf readelf || true)"
+  if [ -e "${root}/usr/include/c++/__mutex_base" ]; then
+    log_fail "DESTDIR has libc++ __mutex_base; MKLIBCXX must stay no on riscv64 (shadows libstdc++ / pulls pthread.h)"
+  else
+    log_pass "DESTDIR has no libc++ __mutex_base"
+  fi
+
   if [ -x "$clang" ]; then
     machine="$(host_machine_of "$clang" "$readelf" || true)"
     case "$machine" in

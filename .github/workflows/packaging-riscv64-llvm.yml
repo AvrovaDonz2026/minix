@@ -254,6 +254,7 @@ jobs:
             -V HAVE_LIBGCC_EH=yes \
             -V MKCXX=yes \
             -V MKLIBSTDCXX=yes \
+            -V MKLIBCXX=no \
             tools
 
           tooldir=""
@@ -339,6 +340,12 @@ jobs:
             "${destdir_root}/usr/lib/libstdc++.a" \
             "${destdir_root}/usr/lib/libstdc++_pic.a" \
             "${destdir_root}/usr/include/g++/bits/c++config.h"
+          # MKUPDATE keeps a tracked DESTDIR. Drop libc++ headers so they
+          # cannot shadow libstdc++ even after MKLIBCXX=no removes -I c++.
+          rm -rf "${destdir_root}/usr/include/c++"
+          rm -f \
+            "${destdir_root}/usr/lib/libc++.a" \
+            "${destdir_root}/usr/lib/libc++_pic.a"
 
           # Keep gthreads profile deterministic even when obj.intrgcc carries
           # stale generated headers from earlier CI iterations.
@@ -401,6 +408,7 @@ jobs:
             -V HAVE_LIBGCC_EH=yes \
             -V MKCXX=yes \
             -V MKLIBSTDCXX=yes \
+            -V MKLIBCXX=no \
             -V MKLIBOBJC=no \
             -V MKLIBGOMP=no \
             -V MKATF=no \
@@ -880,8 +888,9 @@ jobs:
             echo "- Publish release: \`${{ steps.meta.outputs.publish_release }}\`"
             echo "- SOURCE_DATE_EPOCH: \`${{ steps.pin.outputs.source_date_epoch }}\`"
             echo ""
-            echo "Full-system tools+distribution with \`MKLLVM=yes\`."
+            echo "Full-system tools+distribution with \`MKLLVM=yes\` and \`MKLIBCXX=no\`."
             echo "World still compiles with GCC (\`ACTIVE_CC=gcc\`); clang must be in tooldir and DESTDIR."
+            echo "libc++ stays off on riscv64 so \`/usr/include/c++\` cannot shadow libstdc++."
             echo ""
             echo "### LLVM functional gates"
             echo "- Host (after tools): \`llvm_toolchain_gate.sh --mode host --require host\`"

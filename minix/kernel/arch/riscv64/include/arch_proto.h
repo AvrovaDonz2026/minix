@@ -42,6 +42,9 @@ void plic_set_priority(int irq, int priority);
 void plic_set_threshold(int cpu, int threshold);
 void plic_irq_cpu_mask(int irq, u32_t cpu_mask);
 u32_t plic_irq_get_cpu_mask(int irq);
+#ifdef CONFIG_SMP
+void plic_init_cpu(int cpu);
+#endif
 
 /* sbi.c - SBI interface */
 void sbi_console_putchar(int ch);
@@ -83,6 +86,7 @@ void pg_protect(vir_bytes virt, size_t size, u64_t flags);
 void pg_unmap(vir_bytes virt, size_t size);
 void pg_identity_map(phys_bytes start, phys_bytes end);
 void pg_flush_tlb(void);
+void refresh_tlb(void);
 void pg_extend_kernel_map(phys_bytes start, phys_bytes size);
 void pg_load(struct proc *p);
 void pg_dump_mapping(vir_bytes va);
@@ -144,14 +148,17 @@ void write_cpu_flags(u32_t flags);
 
 /* smp.c (if SMP enabled) */
 #ifdef CONFIG_SMP
+void riscv_smp_early_init(void);
 void smp_init(void);
-void smp_start_cpu(int cpu);
-void smp_ap_entry(int hart_id);
-void smp_send_ipi(int cpu);
-void smp_broadcast_ipi(void);
+void riscv_smp_ap_entry(int hart_id);
 void smp_ipi_handler(struct trapframe *tf);
-int cpu_number(void);
+void arch_send_smp_schedule_ipi(unsigned cpu);
+void arch_smp_halt_cpu(void);
 #endif
+
+int bsp_get_num_cpus(void);
+int cpu_number(void);
+u64_t bsp_get_timer_freq(void);
 
 /* CSR operations (inline assembly) */
 static inline u64_t csr_read_sstatus(void) {

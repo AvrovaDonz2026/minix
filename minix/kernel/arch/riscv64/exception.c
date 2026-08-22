@@ -68,9 +68,6 @@ void exception_init(void)
 
     /* Enable timer and external interrupts */
     csr_set_sie(SIE_STIE | SIE_SEIE);
-#ifdef CONFIG_SMP
-    csr_set_sie(SIE_SSIE);
-#endif
 }
 
 /*

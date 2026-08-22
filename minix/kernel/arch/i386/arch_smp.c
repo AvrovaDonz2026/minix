@@ -169,9 +169,9 @@ static void smp_start_aps(void)
 	NOT_REACHABLE;
 }
 
-void smp_halt_cpu (void) 
+void smp_halt_cpu(void)
 {
-	NOT_IMPLEMENTED;
+	arch_smp_halt_cpu();
 }
 
 void smp_shutdown_aps(void)

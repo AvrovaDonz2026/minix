@@ -195,10 +195,6 @@ jobs:
           llvm_tag="llvm-${branch_slug}-riscv64-${llvm_stamp}-${short_sha}"
           base_name="minix-cat-${llvm_tag}-ci-${ci_stamp}"
 
-          # Artifacts are enough for this lane; do not publish GitHub Releases
-          # that would collide with the GCC nightly/release workflows.
-          publish_release=false
-
           image_name="${base_name}.img"
           image_path="/tmp/${image_name}"
           image_gz_name="${image_name}.gz"
@@ -208,14 +204,12 @@ jobs:
           sysroot_name="${base_name}-sysroot.tar.gz"
           sysroot_path="/tmp/${sysroot_name}"
           sums_path="/tmp/SHA256SUMS.txt"
-          buildinfo_path="/tmp/BUILDINFO.txt"
 
           echo "llvm_stamp=${llvm_stamp}" >>"${GITHUB_OUTPUT}"
           echo "ci_stamp=${ci_stamp}" >>"${GITHUB_OUTPUT}"
           echo "short_sha=${short_sha}" >>"${GITHUB_OUTPUT}"
           echo "branch_slug=${branch_slug}" >>"${GITHUB_OUTPUT}"
           echo "llvm_tag=${llvm_tag}" >>"${GITHUB_OUTPUT}"
-          echo "publish_release=${publish_release}" >>"${GITHUB_OUTPUT}"
           echo "artifact_base=${base_name}" >>"${GITHUB_OUTPUT}"
           echo "image_name=${image_name}" >>"${GITHUB_OUTPUT}"
           echo "image_path=${image_path}" >>"${GITHUB_OUTPUT}"
@@ -226,7 +220,6 @@ jobs:
           echo "sysroot_name=${sysroot_name}" >>"${GITHUB_OUTPUT}"
           echo "sysroot_path=${sysroot_path}" >>"${GITHUB_OUTPUT}"
           echo "sums_path=${sums_path}" >>"${GITHUB_OUTPUT}"
-          echo "buildinfo_path=${buildinfo_path}" >>"${GITHUB_OUTPUT}"
 
       - name: Build tools (obj.intrgcc)
         shell: bash
@@ -429,7 +422,7 @@ jobs:
           root="${PWD}/${OBJDIR}/destdir.evbriscv64"
           missing=()
 
-          # Align with local packaging behavior: frontend aliases may differ.
+          # Align with nightly packaging: frontend aliases may differ.
           # Require at least one from each alias group, then enforce core binutils.
           if [[ ! -x "${root}/usr/bin/cc" && ! -x "${root}/usr/bin/gcc" ]]; then
             missing+=("usr/bin/(cc|gcc)")
@@ -441,7 +434,7 @@ jobs:
             missing+=("usr/bin/(cpp|gcpp)")
           fi
 
-          for bin in as ld ar ranlib nm objcopy objdump readelf strip clang clang++ clang-cpp; do
+          for bin in as ld ar ranlib nm objcopy objdump readelf strip; do
             if [[ ! -x "${root}/usr/bin/${bin}" ]]; then
               missing+=("usr/bin/${bin}")
             fi
@@ -452,12 +445,7 @@ jobs:
             usr/lib/libgcc_eh.a \
             usr/lib/libstdc++.a \
             usr/include/stdio.h \
-            usr/include/g++/bits/c++config.h \
-            service/virtio_net_mmio \
-            service/lwip \
-            sbin/ifconfig \
-            sbin/ping \
-            sbin/ping6; do
+            usr/include/g++/bits/c++config.h; do
             if [[ ! -e "${root}/${entry}" ]]; then
               missing+=("${entry}")
             fi
@@ -564,23 +552,7 @@ jobs:
             echo "No sysroot headers/libs found under ${destdir_root}" >&2
             exit 1
           fi
-          if ! tar -C "${destdir_root}" \
-            --sort=name \
-            --mtime="@${SOURCE_DATE_EPOCH}" \
-            --owner=0 --group=0 --numeric-owner \
-            -cf - "${sysroot_items[@]}" 2>/dev/null | \
-            gzip -n -9 >"${{ steps.meta.outputs.sysroot_path }}"; then
-            tar -C "${destdir_root}" -czf "${{ steps.meta.outputs.sysroot_path }}" "${sysroot_items[@]}"
-          fi
-
-          {
-            echo "workflow=riscv64-nightly"
-            echo "event_name=${{ github.event_name }}"
-            echo "git_commit=${{ steps.pin.outputs.git_commit }}"
-            echo "source_date_epoch=${SOURCE_DATE_EPOCH}"
-            echo "ref=${{ github.ref }}"
-            echo "objdir=${OBJDIR}"
-          } >"${{ steps.meta.outputs.buildinfo_path }}"
+          tar -C "${destdir_root}" -czf "${{ steps.meta.outputs.sysroot_path }}" "${sysroot_items[@]}"
 
           (
             cd /tmp
@@ -589,7 +561,6 @@ jobs:
               "${{ steps.meta.outputs.image_gz_name }}" \
               "${{ steps.meta.outputs.elf_name }}" \
               "${{ steps.meta.outputs.sysroot_name }}" \
-              BUILDINFO.txt \
               >"$(basename "${{ steps.meta.outputs.sums_path }}")"
           )
 
@@ -763,7 +734,7 @@ jobs:
 
       - name: Full riscv64 test suite (blocking)
         id: full_suite
-        if: success()
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
@@ -832,10 +803,8 @@ jobs:
             ${{ steps.meta.outputs.elf_path }}
             ${{ steps.meta.outputs.sysroot_path }}
             ${{ steps.meta.outputs.sums_path }}
-            ${{ steps.meta.outputs.buildinfo_path }}
 
       - name: Create nightly tag
-        if: steps.meta.outputs.publish_release == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -848,17 +817,16 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${tag}" -m "MINIX riscv64 nightly ${tag}"
+          git tag -a "${tag}" -m "MINIX riscv64 llvm ${tag}"
           git push origin "refs/tags/${tag}"
           echo "Created nightly tag: ${tag}"
 
       - name: Publish nightly release
-        if: steps.meta.outputs.publish_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.llvm_tag }}
           target_commitish: ${{ github.sha }}
-          name: MINIX riscv64 nightly ${{ steps.meta.outputs.llvm_tag }}
+          name: MINIX riscv64 llvm ${{ steps.meta.outputs.llvm_tag }}
           prerelease: true
           make_latest: false
           generate_release_notes: false
@@ -870,7 +838,6 @@ jobs:
             ${{ steps.meta.outputs.elf_path }}
             ${{ steps.meta.outputs.sysroot_path }}
             ${{ steps.meta.outputs.sums_path }}
-            ${{ steps.meta.outputs.buildinfo_path }}
 
       - name: Write nightly summary
         if: always()
@@ -879,7 +846,7 @@ jobs:
           suite_rc="${{ steps.full_suite.outputs.rc }}"
           [ -n "${suite_rc}" ] || suite_rc="n/a"
           {
-            echo "## riscv64 LLVM packaging"
+            echo "## riscv64 LLVM Nightly"
             echo ""
             echo "- Date (UTC): ${{ steps.meta.outputs.llvm_stamp }}"
             echo "- Commit: \`${{ github.sha }}\`"
@@ -890,19 +857,11 @@ jobs:
             echo "- Compressed image: \`${{ steps.meta.outputs.image_gz_name }}\`"
             echo "- ELF: \`${{ steps.meta.outputs.elf_name }}\`"
             echo "- Sysroot: \`${{ steps.meta.outputs.sysroot_name }}\`"
-            echo "- Branch slug: \`${{ steps.meta.outputs.branch_slug }}\`"
-            echo "- Publish release: \`${{ steps.meta.outputs.publish_release }}\`"
-            echo "- SOURCE_DATE_EPOCH: \`${{ steps.pin.outputs.source_date_epoch }}\`"
             echo ""
-            echo "Full-system tools+distribution with \`MKLLVM=yes\`, \`MKLLVM_CMAKE=yes\` (LLVM 18.1.8), and \`MKLIBCXX=no\`."
-            echo "World still compiles with GCC (\`ACTIVE_CC=gcc\`); clang 18 provides RISC-V codegen."
-            echo "libc++ stays off on riscv64 so \`/usr/include/c++\` cannot shadow libstdc++."
-            echo ""
-            echo "### LLVM functional gates"
-            echo "- Host (after tools): \`llvm_toolchain_gate.sh --mode host --require host\`"
-            echo "- DESTDIR (after distribution): \`llvm_toolchain_gate.sh --mode destdir --require destdir\`"
-            echo "- Guest (full suite): \`run_tests.sh llvm\` with \`LLVM_GATE_REQUIRE=all\`"
-            echo "- LLVM 18.1.8 CMake build enables RISC-V codegen; \`clang -c\` must emit RV64 objects."
+            echo "### LLVM gates (before packaging)"
+            echo "- Host: \`llvm_toolchain_gate.sh --mode host --require host\`"
+            echo "- DESTDIR: \`llvm_toolchain_gate.sh --mode destdir --require destdir\`"
+            echo "- Build flags: \`MKLLVM=yes MKLLVM_CMAKE=yes MKLIBCXX=no\`"
             echo ""
             echo "### Full Test Suite (blocking)"
             echo "- Runner sequence: \`llvm -> build -> user -> native -> kernel -> gate(timeout 900s)\`"

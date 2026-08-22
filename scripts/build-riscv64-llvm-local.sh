@@ -60,23 +60,17 @@ COMMON_FLAGS=(
 
 install_cross_as_flock_wrapper() {
   local tooldir="$1"
+  local as="${tooldir}/riscv64-elf32-minix/bin/as"
   local lock="/tmp/minix-cross-as.lock"
 
-  for as in \
-      "${tooldir}/riscv64-elf32-minix/bin/as" \
-      "${tooldir}/bin/riscv64-elf32-minix-as"
-  do
-    [[ -x "${as}" ]] || continue
-    [[ -x "${as}.real" ]] && continue
+  [[ -e "${as}" || -x "${as}.real" ]] || return 0
+  [[ -x "${as}.real" ]] || mv "${as}" "${as}.real"
 
-    echo "[local] serializing cross-as via flock (${as})"
-    mv "${as}" "${as}.real"
-    cat > "${as}" <<EOF
+  cat > "${as}" <<EOF
 #!/bin/bash
 exec flock -w 600 ${lock} ${as}.real "\$@"
 EOF
-    chmod +x "${as}"
-  done
+  chmod +x "${as}"
 }
 
 run_tools() {

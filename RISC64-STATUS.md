@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
-**Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.42
+**Date / 日期**: 2026-08-22  
+**Version / 版本**: 1.43
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -67,6 +67,12 @@
   `32537278919`（`6954a7e6c`）链上 `lto1` 后链 `cc1` 缺
   `mudflap_init()` / `_cpp_preprocess_dir_only`。本分支仍死在
   `pthread.h`，不要把 pthread 修到网络 PR。
+  `#42` LLVM packaging CI 现已在 tools 之后跑 host 功能门禁
+  （clang 3.6、tblgen、RISC-V/Minix macros、`-fsyntax-only`、
+  `clang -c` 不得产出 RISC-V 对象），distribution 之后跑 DESTDIR
+  ELF 门禁，full suite 增加 `run_tests.sh llvm` 来宾 clang 冒烟。
+  不再只检查 `clang --version`。host 门禁在 pthread 挡住
+  distribution 时仍会执行。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -182,6 +188,12 @@
   `mudflap_init()` / `_cpp_preprocess_dir_only` while linking
   `cc1`. This branch still dies in `pthread.h`. Do not mix
   pthread onto the network PR.
+  `#42` LLVM packaging CI now runs a host functional gate after
+  tools (clang 3.6, tblgen, RISC-V/Minix macros, `-fsyntax-only`,
+  `clang -c` must not emit a RISC-V object), a DESTDIR ELF gate
+  after distribution, and `run_tests.sh llvm` in the full suite.
+  It no longer stops at `clang --version`. The host gate still
+  runs when pthread blocks distribution.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

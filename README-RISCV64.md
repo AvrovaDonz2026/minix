@@ -613,7 +613,10 @@ See `issue.md` for evidence and file/line references.
 **现状 / Status**: `MKLLVM=yes` 由 `.github/workflows/packaging-riscv64-llvm.yml`
 做全系统 tools→distribution 门禁；世界仍用 GCC（`ACTIVE_CC=gcc`，riscv64 保留 libgcc）。
 Clang 已识别 `riscv64-elf32-minix`，但 3.6.1 没有 RISC-V codegen backend，
-来宾内 `cc` 仍指向 gcc。详见 `issue.md` `#42`。
+来宾内 `cc` 仍指向 gcc。CI 在 tools 之后跑
+`llvm_toolchain_gate.sh --mode host`（IR/tblgen/macros），distribution
+之后跑 DESTDIR ELF 检查，full suite 增加 `run_tests.sh llvm`。
+详见 `issue.md` `#42`。
 
 ### 2. 交叉编译器 `-march=rv64gc` 不兼容 / `-march=rv64gc` Compatibility
 
@@ -681,7 +684,7 @@ cd minix/tests/riscv64
 - `vm` - 虚拟内存 / Virtual memory
 
 `run_tests.sh` 入口类别 / `run_tests.sh` top-level targets:
-- `build` / `user` / `kernel` / `gate` / `native` / `all`
+- `build` / `user` / `kernel` / `gate` / `native` / `llvm` / `all`
 
 ### 使用 QEMU 运行 / Run in QEMU
 
@@ -776,6 +779,37 @@ SMOKE_DISK_IMAGE=$PWD/.ci-artifact-test/minix-native-toolchain.img \
   镜像再测，避免旧镜像状态影响结论。
 - Native toolchain 的阶段模型、手工验收与故障排查见：
   `docs/RISCV64_NATIVE_TOOLCHAIN_GUIDE.md`。
+
+### LLVM/clang gate / LLVM 功能门禁
+
+`MKLLVM=yes` 的 packaging CI（`.github/workflows/packaging-riscv64-llvm.yml`）
+在 `clang --version` 之外跑功能门禁。世界仍用 GCC；3.6.1 没有 RISC-V
+codegen backend。
+
+```bash
+# Host TOOLDIR clang/tblgen/macros/IR（tools 之后即可，不依赖 distribution）
+./minix/tests/riscv64/llvm_toolchain_gate.sh \
+  --mode host --require host --tooldir "$TOOLDIR"
+
+# DESTDIR：clang 必须是 RISC-V ELF，且 /usr/bin/cc 不能是 clang
+./minix/tests/riscv64/llvm_toolchain_gate.sh \
+  --mode destdir --require destdir \
+  --destdir obj.intrgcc/destdir.evbriscv64
+
+# 统一入口（clang 缺失时 SKIP，GCC nightly 不失败）
+./minix/tests/riscv64/run_tests.sh llvm
+
+# LLVM packaging full suite 使用强制模式
+LLVM_GATE_REQUIRE=all ./minix/tests/riscv64/run_tests.sh llvm
+```
+
+说明 / Notes:
+- Host 层检查 clang 3.6、`nblvm-tblgen` / `nbclang-tblgen`、
+  `__riscv` / `__riscv_xlen 64` / `__minix`，以及 `clang -c`
+  不得产出 RISC-V 对象。
+- Guest 层需要 `--disk-image`，在 QEMU 里跑 `clang --version`、
+  `-fsyntax-only` 与 `-emit-llvm`。
+- 详见 `issue.md` `#42`。
 
 2026-02-20 关键修复记录 / 2026-02-20 Key Fix Record:
 - 修复 `minix/servers/vm/alloc.c` 中 RV64 `NO_MEM` 哨兵宽度/符号扩展问题，

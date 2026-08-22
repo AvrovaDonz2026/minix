@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
-**Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.63
+**Date / 日期**: 2026-08-22  
+**Version / 版本**: 1.64
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -62,6 +62,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   37) `[DONE]` `#70` `#54` 在 `NOMAN` 之前 include `Makefile.cc2c`，`bsd.own.mk` 把 `MKMAN` 钉成 yes，dependall 要 `lto1.1`
   38) `[DONE]` `#71` backend `:Mininsn-*` 匹配 `ininsn-*`，`insn-*.o` 未进 `libbackend.a`；gcc13 `G_OBJS` 还少 4.8.5 的 `pointer-set` / `sched-vis` / `lto-symtab`
   39) `[DONE]` `#72` gcc13 `G_C_OBJS` / `G_libcpp_a_OBJS` 丢掉 4.8.5 的 `tree-mudflap.o` 与 `directives-only.o`，`cc1` 缺 `mudflap_init` / `_cpp_preprocess_dir_only`
+  40) `[DONE]` `#42` LLVM packaging CI 补上 host IR/tblgen、DESTDIR ELF、来宾 clang 功能门禁（不再只看 `--version`）
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1132,6 +1133,19 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - New workflow `.github/workflows/packaging-riscv64-llvm.yml` runs the
     same hosted tools→distribution→QEMU suite with `MKLLVM=yes` and
     requires `riscv64-elf32-minix-clang` plus DESTDIR `clang`/`clang++`.
+  - Functional LLVM gates (not just `--version`):
+    - After tools: `minix/tests/riscv64/llvm_toolchain_gate.sh --mode host
+      --require host` checks clang 3.6, clang++/clang-cpp, nblvm-tblgen,
+      nbclang-tblgen, RISC-V/Minix `-dM` macros, `-fsyntax-only`, `-E`,
+      optional `-emit-llvm`, and that `clang -c` does **not** emit a
+      RISC-V object (no backend).
+    - After distribution: `--mode destdir --require destdir` checks
+      DESTDIR clang is RISC-V ELF and `/usr/bin/cc` is not clang.
+    - Full suite: `./minix/tests/riscv64/run_tests.sh llvm` with
+      `LLVM_GATE_REQUIRE=all` also boots QEMU for guest `clang --version`
+      / macros / IR.
+    - GCC nightly `run_tests.sh all` still skips this layer when clang
+      is absent (exit 2).
 - Residual / 残留:
   - No in-tree RISC-V LLVM backend, so `clang -c` for RV64 still cannot
     emit code. Guest native compile stays on gcc until a later backend
@@ -1166,6 +1180,8 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     compiling `functexcept.cc`:
     `usr/include/c++/__mutex_base:17:21: fatal error: pthread.h`.
     That is LLVM-only (`MKCXX=yes`); do not mix onto the network PR.
+    The host LLVM gate now runs after tools even when distribution
+    still dies on that pthread residual.
 - Priority / 优先级: P2 (toolchain completeness; gated by packaging CI)
 
 ### 38) [DONE] release-riscv64 libstdc++ `functexcept` no-future gate stabilization / release-riscv64 中 libstdc++ `functexcept` no-future 门禁稳定化（已完成）
@@ -1562,6 +1578,16 @@ This section archives items with code-level fixes landed (some may still require
   until a later LLVM-only fix.
   历史 P1 #72：从网络分支拣入 gcc 4.8.5 的 `tree-mudflap` 与
   `directives-only`，避免原生 `cc1` 缺 `mudflap_init`。
+- `#42` test-CI follow-up: packaging LLVM CI used to stop at
+  `clang --version` after tools, then reuse the GCC full suite
+  after distribution. Host/DESTDIR/guest functional gates now live
+  in `minix/tests/riscv64/llvm_toolchain_gate.sh` and
+  `run_tests.sh llvm`. Host gate is blocking after tools so LLVM
+  frontend/tblgen regressions fail even when libstdc++ still dies
+  on `functexcept.cc` / `pthread.h`.
+  `#42` 测试跟进：LLVM packaging CI 在 tools 之后增加 host
+  功能门禁，distribution 之后检查 DESTDIR clang ELF，full suite
+  增加来宾 clang 冒烟。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

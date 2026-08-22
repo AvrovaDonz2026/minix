@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
-**Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.54
+**Last updated / 最后更新**: 2026-08-22
+**Version / 版本**: 1.55
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2208,4 +2208,37 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - GitHub Actions run `32537278919`
 - `external/gpl3/gcc/usr.bin/Makefile.inc`
 - `external/gpl3/gcc/usr.bin/libcpp/Makefile`
+
+### Entry 67 — LLVM host/DESTDIR/guest functional CI (2026-08-22) / LLVM 功能测试 CI
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- LLVM packaging CI (`packaging-riscv64-llvm.yml`) only checked
+  `riscv64-elf32-minix-clang --version` after tools, then reused the
+  GCC full suite after distribution.
+- HEAD `cb5799c36` (`32539330823`) still dies in libstdc++
+  `functexcept.cc` (`pthread.h`), so DESTDIR/QEMU never ran and LLVM
+  frontend/tblgen/IR were never tested.
+
+**Fix / 修复**:
+- Add `minix/tests/riscv64/llvm_toolchain_gate.sh` with host, DESTDIR,
+  and guest layers. Host checks clang 3.6, clang++/clang-cpp,
+  `nblvm-tblgen` / `nbclang-tblgen`, RISC-V/Minix macros,
+  `-fsyntax-only`, `-E`, optional `-emit-llvm`, and that `clang -c`
+  does not emit a RISC-V object (3.6.1 has no RISC-V backend).
+- DESTDIR checks guest clang is RISC-V ELF and `/usr/bin/cc` is not
+  clang. Guest QEMU smoke runs `clang --version` / macros / IR.
+- Wire host gate immediately after tools (`--require host`) so it
+  still fails the job if LLVM is broken while pthread blocks
+  distribution. DESTDIR gate runs after payload verify. Full suite
+  adds `run_tests.sh llvm` with `LLVM_GATE_REQUIRE=all`.
+- `run_tests.sh all` on GCC-only trees skips the LLVM layer (exit 2).
+  Do not mix virtio-net or the pthread residual onto this change.
+
+**Evidence / 证据**:
+- `issue.md` `#42`
+- GitHub Actions run `32539330823`
+- `.github/workflows/packaging-riscv64-llvm.yml`
+- `minix/tests/riscv64/llvm_toolchain_gate.sh`
 

@@ -82,10 +82,15 @@ run_tools() {
 
 run_distribution() {
   echo "[local] building distribution -> ${LOG_DIR}/distribution.log"
+  # bsd.sys.mk adds -D_FORTIFY_SOURCE=2; disable for legacy cross-as on Ubuntu.
+  export CPPFLAGS="${HARDENING_OFF}"
+  export CFLAGS="${HARDENING_OFF}"
   MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" \
     HOST_CXXFLAGS="-O -std=c++11 -fno-rtti -fno-exceptions ${HARDENING_OFF}" \
     HAVE_GOLD=no MKLLVM=yes \
-    ./build.sh -U -u "${COMMON_FLAGS[@]}" distribution \
+    ./build.sh -U -u -V MKUPDATE=yes \
+      -V "CPPFLAGS=${HARDENING_OFF}" \
+      "${COMMON_FLAGS[@]}" distribution \
     2>&1 | tee "${LOG_DIR}/distribution.log"
 }
 

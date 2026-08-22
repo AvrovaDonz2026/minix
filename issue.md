@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.67
+**Version / 版本**: 1.68
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -68,6 +68,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   43) `[DONE]` `#73` virtio-net `EVENT_IDX` 灌 RX 环时只 kick 第一槽，QEMU slirp `ping 10.0.2.2` 100% 丢包
   44) `[DONE]` `#74` `#73` kick 之后 ping 仍 100% 丢包：used 环只在 IRQ 上排空，EVENT_IDX 错过第一次 used 通知后不再中断
   45) `[DONE]` `#75` hosted nightly 仍要 30+ 分钟才能重现 EVENT_IDX avail/used 通知数学错误；本地/CI 用宿主可执行 `test_virtio_event_idx.c` + net smoke MAC/pcap 探测
+  46) `[DONE]` `#76` `#75` pcap 显示 guest ARP who-has `10.0.2.2` 但 slirp 不回：QEMU 8.2 `ipv6=on` 且未写 `ipv4` 会关掉 IPv4
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1033,6 +1034,8 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     left the RX ring silent (`ping` TX with 0 replies).
   - QEMU `-n` keeps user-net, adds `ipv6=on` and a stable MAC, and honors
     `NET_HOSTFWD=none` so smoke/CI does not bind host port 2222.
+    (`#76` later adds `ipv4=on` because QEMU 8.2 `ipv6=on` alone
+    disables IPv4.)
   - Add `minix/tests/riscv64/qemu_net_smoke.py` and wire it into
     `run_tests.sh kernel`.
 - Priority assessment / 优先级评估:
@@ -1641,6 +1644,17 @@ This section archives items with code-level fixes landed (some may still require
   `-netdev` 之后抓包，并在 `ping_gw` 失败时按 ARP/echo 计数区分
   TX 与 RX。本地 QEMU 对重建 ramdisk 已跑：网关 ping 仍 100% 丢包，
   pcap 只有 guest ARP who-has。
+- Former P1 #76: after `#73`/`#74`/`#75`, local QEMU 8.2.2 pcap still
+  showed well-formed guest ARP who-has `10.0.2.2` and no slirp ARP
+  reply. QEMU 8.2 `net/slirp.c` `net_init_slirp()` sets `ipv4=0` when
+  `ipv6=on` is present and `has_ipv4` is false, so libslirp
+  `in_enabled` is off and `arp_input` returns immediately.
+  `qemu-riscv64.sh -n` now passes `ipv4=on,ipv6=on`. Keep EVENT_IDX.
+  Local net smoke then passed `ping_gw` (`arp_req=2 arp_rep=1
+  echo_req=2 echo_rep=2`).
+  历史 P1 #76：`#75` 的 pcap 已证明 guest ARP 离卡，但 slirp 不回。
+  QEMU 8.2 只写 `ipv6=on` 会关掉 IPv4。`-netdev` 改为
+  `ipv4=on,ipv6=on`；本地 `ping 10.0.2.2` 通过。
 
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the

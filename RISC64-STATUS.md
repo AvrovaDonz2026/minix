@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.46
+**Version / 版本**: 1.47
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -95,8 +95,11 @@
   `qemu_net_smoke.py` 要求 `virtio-net-mmio: mac 52:54:00:12:34:56`，
   可选 `NET_PCAP` 解析 ARP/echo 并在 `ping_gw` 失败时提示 TX vs RX。
   本地 QEMU 8.2.2 对重建 ramdisk 已跑：init/MAC/mrg/event_idx/rx256/
-  ifconfig/ping6 通过，`ping 10.0.2.2` 仍 100% 丢包；pcap
-  `arp_req>0 arp_rep=0 echo_req=0`。不宣称网关 ping 已通过。
+  ifconfig/ping6 通过；`#75` 时 pcap 只有 guest ARP who-has。`#76` 修好
+  slirp IPv4 之后 `ping_gw` 通过。
+- 本轮修 QEMU user-net IPv4（`issue.md` `#76`）：QEMU 8.2 只写 `ipv6=on`
+  会把 `ipv4` 清掉，slirp 不答 ARP。`-netdev` 改为 `ipv4=on,ipv6=on`。
+  本地 QEMU 8.2.2 net smoke `ping_gw` 通过（`echo_req=2 echo_rep=2`）。
 - 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`）：
   gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
   `#50`：backend 生成器按 dist 选择 `.cc`/`.c`。`#52`：丢掉 4.8.5
@@ -251,9 +254,13 @@
   `vring_need_event` cases; `qemu_net_smoke.py` requires QEMU MAC
   `52:54:00:12:34:56` and optional `NET_PCAP` dumps classify `ping_gw`
   failures as TX vs RX. Local QEMU 8.2.2 against a rebuilt ramdisk
-  passed init/MAC/mrg/event_idx/rx256/ifconfig/ping6; `ping 10.0.2.2`
-  still lost every packet (`arp_req>0 arp_rep=0 echo_req=0`). Gateway
-  ping is not claimed green.
+  passed init/MAC/mrg/event_idx/rx256/ifconfig/ping6; `#75` pcap had
+  guest ARP who-has only. `#76` restored slirp IPv4 and `ping_gw`
+  passed.
+- Follow-up (`issue.md` `#76`): QEMU 8.2 `net_init_slirp()` clears IPv4
+  when `ipv6=on` is set without `ipv4=on`, so slirp ignores ARP.
+  `qemu-riscv64.sh` now passes `ipv4=on,ipv6=on`. Local QEMU 8.2.2 net
+  smoke passed `ping -c 2 10.0.2.2` (`echo_req=2 echo_rep=2`).
 - Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`): gcov skips
   `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
   `#50`: backend generators resolve `.cc`/`.c` from dist.
@@ -400,9 +407,9 @@
   （`.ci-artifact-test/minix-native-gcc-test-fixed.img`）上，
   `native_toolchain_gate.sh` 全链路通过（含 `native_as_stdin`、`native_hello_build`）。
   同时 release/nightly 流水中的 native gate 已升级为阻断式（blocking）。
-- `#75` 增加宿主可执行 `test_virtio_event_idx.c`（`run_tests.sh build`）
-  与 net smoke 的 MAC/`NET_PCAP` 探针；本地 QEMU 对重建 ramdisk 已跑，
-  网关 ping 仍 100% 丢包（pcap 只有 guest ARP who-has）。
+- `#75` 增加宿主可执行 `test_virtio_event_idx.c` 与 net smoke pcap。
+- `#76` 发现 QEMU 8.2 只写 `ipv6=on` 会关掉 IPv4；改为 `ipv4=on,ipv6=on`
+  后本地 `ping 10.0.2.2` 通过。
 
 **English**
 - Boot path is stable to the `#` shell prompt; init and core services complete basic startup handshake.
@@ -453,9 +460,9 @@
   (`.ci-artifact-test/minix-native-gcc-test-fixed.img`) with full
   `native_toolchain_gate.sh` coverage.
   Native toolchain gate in release/nightly workflows is now blocking.
-- `#75` adds a host-run `test_virtio_event_idx.c` via `run_tests.sh build`
-  plus MAC/`NET_PCAP` probes in net smoke; local QEMU against a rebuilt
-  ramdisk still loses `ping 10.0.2.2` (pcap has guest ARP who-has only).
+- `#75` adds a host-run `test_virtio_event_idx.c` and net-smoke pcap probes.
+- `#76` keeps QEMU slirp IPv4 enabled alongside IPv6; local `ping 10.0.2.2`
+  now succeeds.
 
 ## Key Issues (Snapshot) / 关键问题（摘要）
 

@@ -2292,8 +2292,19 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 
 **Evidence / 证据**:
 - `issue.md` `#75`
-- `minix/tests/riscv64/test_virtio_event_idx.c`
-- `minix/tests/riscv64/run_tests.sh`
-- `minix/scripts/qemu-riscv64.sh`
 - `minix/tests/riscv64/qemu_net_smoke.py`
+
+## Entry 69 — 2026-08-22 04:30 UTC
+
+**Change / 变更**: `#75` pcap showed well-formed guest ARP who-has `10.0.2.2` and no slirp reply. QEMU 8.2 `net/slirp.c` `net_init_slirp()` sets `ipv4=0` when `ipv6=on` is present without `ipv4=on`, so libslirp `in_enabled` is off and `arp_input` returns immediately. Pass `ipv4=on,ipv6=on` from `qemu-riscv64.sh`. Keep EVENT_IDX. `run_tests.sh build` greps the script so this cannot silently regress.
+
+**Issue ID**: `#76`
+
+**Result / 结果**: Local QEMU 8.2.2 net smoke `PASS: qemu net smoke`; `ping_gw` passed. pcap `arp_req=2 arp_rep=1 echo_req=2 echo_rep=2`. Hosted nightly not claimed green.
+
+**Evidence / 证据**:
+- `issue.md` `#76`
+- `minix/scripts/qemu-riscv64.sh`
+- `/tmp/qemu-net-smoke-ipv4.log`
+- QEMU 8.2 `net/slirp.c` `net_init_slirp()`
 

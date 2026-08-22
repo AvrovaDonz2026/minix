@@ -11,8 +11,8 @@ debugging, and acceptance.
 
 ## Document Info / 文档信息
 
-- Version / 版本: `1.1`
-- Last updated / 最后更新: `2026-08-21`
+- Version / 版本: `1.2`
+- Last updated / 最后更新: `2026-08-22`
 - Baseline / 基线: `obj.intrgcc`
 - Scope / 范围: VirtIO MMIO transport (`virtio_blk_mmio`, `virtio_net_mmio`)
 
@@ -135,7 +135,7 @@ minix/releasetools/riscv64/mkdisk.sh
 ```
 
 Notes:
-- `-n` uses QEMU user-net (`ipv6=on`) with MAC `52:54:00:12:34:56`.
+- `-n` uses QEMU user-net (`ipv4=on,ipv6=on`) with MAC `52:54:00:12:34:56`.
 - Default host forward is `hostfwd=tcp::2222-:22`. Smoke/CI should set
   `NET_HOSTFWD=none` to avoid binding host port 2222.
 
@@ -147,7 +147,7 @@ qemu-system-riscv64 -machine virt -m 256M -nographic \
   -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf \
   -drive if=none,file=/tmp/minix-rv64-virtio.img,format=raw,id=hd0 \
   -device virtio-blk-device,drive=hd0 \
-  -netdev user,id=net0,ipv6=on \
+  -netdev user,id=net0,ipv4=on,ipv6=on \
   -device virtio-net-device,netdev=net0,mac=52:54:00:12:34:56
 ```
 

@@ -1,0 +1,22 @@
+diff -rNU3 texinfo.orig/lib/system.h texinfo/lib/system.h
+--- texinfo.orig/lib/system.h	2004-04-11 19:56:46.000000000 +0200
++++ texinfo/lib/system.h	2026-03-16 01:35:00.000000000 +0800
+@@ -54,11 +54,13 @@
+ #define _(String) gettext (String)
+ #define N_(String) (String)
+ 
+-#ifdef STDC_HEADERS
+-#define getopt system_getopt
+-#include <stdlib.h>
+-#undef getopt
+-#else
++#ifdef HAVE_STDLIB_H
++# define getopt system_getopt
++# include <stdlib.h>
++# undef getopt
++#endif
++
++#ifndef STDC_HEADERS
+ extern char *getenv ();
+ #endif
+ 

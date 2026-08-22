@@ -1,0 +1,13 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -214,6 +214,10 @@
+ GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
+ GCC13_BACKEND_G_GTFILES:=	${GCC13_BACKEND_G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
+ 
++G_GTFILES:=	${G_GTFILES:S,${DIST}/gcc/../libcpp/include,${DIST}/libcpp/include,g}
++G_GTFILES:=	${G_GTFILES:S,${DIST}/gcc/../include,${DIST}/include,g}
++G_GTFILES:=	${G_GTFILES:S,${G_GT_OUT_FILE},${G_OUT_FILE_SRC},g}
++
+ 
+ #
+ # Generate the various header files we need.

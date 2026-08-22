@@ -110,7 +110,8 @@ _citrus_db_lookup(struct _citrus_db *db, struct _citrus_region *key,
 	_memstream_bind(&ms, &db->db_region);
 
 	dhx = _memstream_getregion(&ms, NULL, sizeof(*dhx));
-	_DIAGASSERT(dhx);
+	if (dhx == NULL)
+		return EFTYPE;
 	num_entries = be32toh(dhx->dhx_num_entries);
 	if (num_entries == 0)
 		return ENOENT;
@@ -293,7 +294,8 @@ _citrus_db_get_number_of_entries(struct _citrus_db *db)
 	_memstream_bind(&ms, &db->db_region);
 
 	dhx = _memstream_getregion(&ms, NULL, sizeof(*dhx));
-	_DIAGASSERT(dhx);
+	if (dhx == NULL)
+		return 0;
 	return (int)be32toh(dhx->dhx_num_entries);
 }
 
@@ -310,7 +312,8 @@ _citrus_db_get_entry(struct _citrus_db *db, int idx,
 	_memstream_bind(&ms, &db->db_region);
 
 	dhx = _memstream_getregion(&ms, NULL, sizeof(*dhx));
-	_DIAGASSERT(dhx);
+	if (dhx == NULL)
+		return EFTYPE;
 	num_entries = be32toh(dhx->dhx_num_entries);
 	if (idx < 0 || (uint32_t)idx >= num_entries)
 		return EINVAL;

@@ -22,7 +22,7 @@
 static volatile u32_t *plic_base;
 
 /* Maximum number of interrupt sources */
-#define PLIC_MAX_SOURCES    1024
+#define PLIC_MAX_SOURCES    PLIC_NUM_SOURCES
 #define PLIC_MAX_CONTEXTS   15872
 
 void plic_set_priority(int irq, int priority);

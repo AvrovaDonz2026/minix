@@ -2,7 +2,8 @@
 
 NOMAN=1
 PROG=		lto-wrapper
-SRCS=		lto-wrapper.c
+SRCS=		lto-wrapper.cc collect-utils.cc ggc-none.cc
+.include "../Makefile.cc2c"
 CPPFLAGS+=	-DPREFIX=\"/usr\"
 
 .include "../Makefile.backend"

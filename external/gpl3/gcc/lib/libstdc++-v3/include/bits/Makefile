@@ -11,7 +11,16 @@ GNUHOSTDIST=	${DIST}
 BUILDINCS=	basic_file.h c++allocator.h c++io.h c++locale.h
 BUILDINCS+=	messages_members.h time_members.h opt_random.h gthr-default.h
 
-INCS=		${G_bits_headers} ${G_c_base_headers_extra} ${G_host_headers}
+INCS=
+.for _f in ${G_bits_headers} ${G_c_base_headers_extra} ${G_host_headers}
+.if exists(${DIST}/libstdc++-v3/include/${_f}) || \
+    exists(${DIST}/libstdc++-v3/config/${_f}) || \
+    exists(${DIST}/libstdc++-v3/${_f}) || \
+    exists(${DIST}/libstdc++-v3/libsupc++/${_f}) || \
+    exists(${.CURDIR}/../../arch/${GCC_MACHINE_ARCH}/${_f})
+INCS+=		${_f}
+.endif
+.endfor
 INCS+=		gthr.h gthr-single.h gthr-posix.h
 INCS+=		${BUILDINCS}
 

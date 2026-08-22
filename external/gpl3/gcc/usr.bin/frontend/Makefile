@@ -4,24 +4,27 @@ LIBISPRIVATE=	yes
 
 # For ../Makefile.inc and bsd.own.mk
 .include <bsd.init.mk>
+.include "../Makefile.hostprobes"
 
 LIB=		frontend
 
-SRCS=		gcc.c version.c prefix.c
+SRCS=		gcc.cc prefix.cc
 
 HOSTPROG_CXX=	1
 
 # XXX
 .if ${GCC_MACHINE_ARCH} == "x86_64" || ${GCC_MACHINE_ARCH} == "i386"
-SRCS+=		driver-i386.c
+	SRCS+=		driver-i386.cc
 .PATH:		${DIST}/gcc/config/i386
 .endif
 .if ${GCC_MACHINE_ARCH} == "powerpc" || ${GCC_MACHINE_ARCH} == "powerpc64"
-SRCS+=		driver-rs6000.c
+	SRCS+=		driver-rs6000.cc
 .PATH:		${DIST}/gcc/config/rs6000
 .endif
 
-CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
+.include "../Makefile.cc2c"
+
+CPPFLAGS+=	-I. -I${GCCARCH} -I${BACKENDOBJ} \
 		${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*} \
 		-DPREFIX=\"/usr\" \
 		-DDEFAULT_TARGET_VERSION=\"${G_version}\" \
@@ -29,14 +32,84 @@ CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} -I. \
 		-DCONFIGURE_SPECS="\"\""
 HOST_CPPFLAGS+=	-I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 
-DPSRCS+=	specs.h
+TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
+GCC_BASEVER_FILE=	${NETBSDSRCDIR}/external/gpl3/gcc/dist/gcc/BASE-VER
+
+DPSRCS+=	config.h auto-host.h tm.h options.h version.h bversion.h configargs.h specs.h
+.NOPATH:	config.h auto-host.h tm.h options.h version.h bversion.h configargs.h specs.h
+CLEANFILES+=	config.h auto-host.h tm.h options.h version.h bversion.h configargs.h specs.h
+
+FRONTEND_DRIVER_DEFINES= \
+		-DDEFAULT_REAL_TARGET_MACHINE=\"${MACHINE_GNU_PLATFORM}\" \
+		-DSTANDARD_LIBEXEC_PREFIX=\"/usr/libexec/\" \
+		-DSTANDARD_BINDIR_PREFIX=\"/usr/bin\" \
+		-DTOOLDIR_BASE_PREFIX=\"../\" \
+		-DACCEL_DIR_SUFFIX=\"\" \
+		-DENABLE_OFFLOADING=0 \
+		-DOFFLOAD_TARGETS=\"\"
+
+config.h: gcc13-config-force ${TOOLSGCCBUILD}/config.h ${.PARSEDIR}/../Makefile.hostprobes
+	rm -f ${.TARGET}
+	cp ${TOOLSGCCBUILD}/config.h ${.TARGET}
+	{ \
+		echo '#ifndef CHECKING_P'; \
+		echo '#define CHECKING_P 0'; \
+		echo '#endif'; \
+		echo '#ifndef ENABLE_OFFLOADING'; \
+		echo '#define ENABLE_OFFLOADING 0'; \
+		echo '#endif'; \
+		echo '#ifndef HAVE_AS_LEB128'; \
+		echo '#define HAVE_AS_LEB128 0'; \
+		echo '#endif'; \
+	} >> ${.TARGET}
+
+auto-host.h: gcc13-auto-host-force ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/../Makefile.hostprobes
+	rm -f ${.TARGET}
+	cp ${TOOLSGCCBUILD}/auto-host.h ${.TARGET}
+	{ \
+		for fn in ${GCC13_TARGET_STDIO_UNLOCKED_MISSING}; do \
+			echo "#undef HAVE_$${fn}_UNLOCKED"; \
+			echo "#undef HAVE_DECL_$${fn}_UNLOCKED"; \
+		done; \
+		for fn in ${GCC13_TARGET_MALLOC_INFO_MISSING}; do \
+			echo "#undef HAVE_$${fn}"; \
+			echo "#undef HAVE_DECL_$${fn}"; \
+		done; \
+		for fn in ${GCC13_TARGET_DECL_FALLBACKS}; do \
+			echo "#undef HAVE_$${fn}"; \
+			echo "#define HAVE_DECL_$${fn} 0"; \
+		done; \
+	} >> ${.TARGET}
+
+tm.h: ${TOOLSGCCBUILD}/tm.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+options.h: ${TOOLSGCCBUILD}/options.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+configargs.h: ${TOOLSGCCBUILD}/configargs.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+.include "../Makefile.toolsgccfiles"
+
+CPPFLAGS.gcc.cc+=	${FRONTEND_DRIVER_DEFINES} -DBASEVER=${BASEVERSTR}
+CPPFLAGS.gcc.c+=	${CPPFLAGS.gcc.cc}
+CPPFLAGS.prefix.cc+=	-DBASEVER=${BASEVERSTR}
+CPPFLAGS.prefix.c+=	${CPPFLAGS.prefix.cc}
+
+${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: \
+	config.h auto-host.h tm.h options.h configargs.h
+gcc.d gcc.o: specs.h ${GCC_BASEVER_FILE}
+prefix.d prefix.o: ${GCC_BASEVER_FILE}
 
 ${SRCS}: ${GCCARCH}/defs.mk
 
 MKPIC:=		no
 MKPICLIB:=	no
-
-.include <bsd.lib.mk>
 
 # Force using C++ for this
 HOST_CC:=	${HOST_CXX}
@@ -50,9 +123,4 @@ CPPFLAGS+=	-I../backend
 
 .PATH: ${DIST}/gcc ${DIST}/gcc/common
 
-# Build the specs.h file
-CLEANFILES+=	specs.h
-specs.h: Makefile
-	for f in cp lto objc objcp; do \
-		echo "#include \"$$f/lang-specs.h\""; \
-	done > specs.h
+.include <bsd.lib.mk>

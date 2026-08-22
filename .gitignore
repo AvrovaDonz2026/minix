@@ -6,6 +6,8 @@ cscope.*
 *.orig
 *.diff
 *.patch
+!toolchain/patches/gcc13/**/*.patch
+!toolchain/patches/gcc13/*.patch
 *.rej
 *.[1-9].gz
 *.o
@@ -37,6 +39,8 @@ boot-evbriscv64-*.log
 build-*.log
 _tmp/*.log
 _tmp/
+.tmp-*/
+.ci-artifact-test/
 usr.bin/mdocml/man/*.7
 etc/passwd
 etc/pwd.db

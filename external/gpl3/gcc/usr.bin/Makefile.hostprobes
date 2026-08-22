@@ -1,0 +1,16 @@
+# Shared target-lane host probe masks for GCC13.
+#
+# These values are used when staging tools/gcc/build/gcc/auto-host.h into
+# usr.bin build directories that compile against the MINIX target sysroot.
+# The build host may provide declarations that the target libc does not.
+
+GCC13_TARGET_STDIO_UNLOCKED_MISSING= \
+	CLEARERR FEOF FERROR FFLUSH FGETC FGETS FILENO FPRINTF \
+	FPUTC FPUTS FREAD FWRITE
+GCC13_TARGET_MALLOC_INFO_MISSING=	MALLINFO MALLINFO2
+GCC13_TARGET_DECL_FALLBACKS=	STRVERSCMP
+
+.PHONY: gcc13-auto-host-force
+.PHONY: gcc13-config-force
+gcc13-auto-host-force:
+gcc13-config-force:

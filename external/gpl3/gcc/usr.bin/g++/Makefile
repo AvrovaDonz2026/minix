@@ -2,7 +2,7 @@
 
 PROG=		gplusplus
 PROGNAME=	g++
-SRCS=		${G_GXX_OBJS:.o=.c}
+SRCS=		${G_GXX_OBJS:.o=.cc}
 
 NOMAN=		# Linked to gcc.1
 .include <bsd.own.mk>
@@ -24,6 +24,7 @@ DPADD+=		${LIBINTL}
 
 ${SRCS}: ${GCCARCH}/defs.mk
 
-COPTS.gcc.c=	-Wno-stack-protector
+COPTS.gcc.cc=	-Wno-stack-protector
+COPTS.gcc.c+=	${COPTS.gcc.cc}
 
 .PATH: ${DIST}/gcc/cp ${DIST}/gcc ${DIST}/gcc/cp

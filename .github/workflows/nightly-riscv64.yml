@@ -1,6 +1,12 @@
 name: riscv64-nightly
 
 on:
+  push:
+    branches:
+      - "**"
+    tags-ignore:
+      - "**"
+  pull_request:
   schedule:
     # 18:20 UTC daily (02:20 Asia/Shanghai)
     - cron: "20 18 * * *"
@@ -26,6 +32,27 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Pin reproducible build identity
+        id: pin
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_date_epoch="$(git log -1 --pretty=%ct "${GITHUB_SHA}")"
+          git_commit="${GITHUB_SHA}"
+          short_sha="$(git rev-parse --short=12 "${GITHUB_SHA}")"
+          ref_name="${GITHUB_REF_NAME}"
+
+          echo "SOURCE_DATE_EPOCH=${source_date_epoch}" >>"${GITHUB_ENV}"
+          echo "source_date_epoch=${source_date_epoch}" >>"${GITHUB_OUTPUT}"
+          echo "git_commit=${git_commit}" >>"${GITHUB_OUTPUT}"
+          echo "short_sha=${short_sha}" >>"${GITHUB_OUTPUT}"
+          echo "ref_name=${ref_name}" >>"${GITHUB_OUTPUT}"
+
+          echo "SOURCE_DATE_EPOCH=${source_date_epoch}"
+          echo "git_commit=${git_commit}"
+          echo "short_sha=${short_sha}"
+          echo "ref_name=${ref_name}"
 
       - name: Reclaim runner disk space
         shell: bash
@@ -87,6 +114,66 @@ jobs:
             u-boot-qemu \
             u-boot-tools
 
+          command -v qemu-system-riscv64 >/dev/null
+          command -v mkimage >/dev/null
+          test -f /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf
+
+      - name: Resolve build parallelism
+        shell: bash
+        run: |
+          set -euo pipefail
+          visible_cpus="$(nproc --all 2>/dev/null || nproc 2>/dev/null || getconf _NPROCESSORS_ONLN || echo 1)"
+          requested_jobs="${CPU_COUNT:-${NUMBER_OF_PROCESSORS:-${BUILD_JOBS_OVERRIDE:-}}}"
+          if [[ -z "${requested_jobs}" ]]; then
+            requested_jobs="${visible_cpus}"
+          fi
+          tools_jobs="${TOOLS_CPU_COUNT:-}"
+          if [[ -z "${tools_jobs}" ]]; then
+            tools_jobs="${visible_cpus}"
+            if (( tools_jobs > 8 )); then
+              tools_jobs=8
+            fi
+          fi
+          world_jobs="${WORLD_CPU_COUNT:-${requested_jobs}}"
+
+          case "${requested_jobs}" in
+            ''|*[!0-9]*)
+              echo "Invalid CPU_COUNT/NUMBER_OF_PROCESSORS/BUILD_JOBS_OVERRIDE: ${requested_jobs}" >&2
+              exit 1
+              ;;
+          esac
+          case "${tools_jobs}" in
+            ''|*[!0-9]*)
+              echo "Invalid TOOLS_CPU_COUNT: ${tools_jobs}" >&2
+              exit 1
+              ;;
+          esac
+          case "${world_jobs}" in
+            ''|*[!0-9]*)
+              echo "Invalid WORLD_CPU_COUNT: ${world_jobs}" >&2
+              exit 1
+              ;;
+          esac
+
+          if (( requested_jobs < 1 )); then
+            requested_jobs=1
+          fi
+          if (( tools_jobs < 1 )); then
+            tools_jobs=1
+          fi
+          if (( world_jobs < 1 )); then
+            world_jobs=1
+          fi
+
+          echo "Visible runner CPUs: ${visible_cpus}"
+          echo "Configured CPU_COUNT: ${CPU_COUNT:-unset}"
+          echo "Configured TOOLS_CPU_COUNT: ${TOOLS_CPU_COUNT:-unset}"
+          echo "Configured WORLD_CPU_COUNT: ${WORLD_CPU_COUNT:-unset}"
+          echo "Tools build jobs: ${tools_jobs}"
+          echo "World build jobs: ${world_jobs}"
+          echo "TOOLS_BUILD_JOBS=${tools_jobs}" >>"${GITHUB_ENV}"
+          echo "WORLD_BUILD_JOBS=${world_jobs}" >>"${GITHUB_ENV}"
+
       - name: Resolve nightly metadata
         id: meta
         shell: bash
@@ -94,9 +181,22 @@ jobs:
           set -euo pipefail
           nightly_stamp="$(date -u +%Y%m%d)"
           ci_stamp="$(date -u +%Y%m%d%H%M%S)"
-          short_sha="$(git rev-parse --short=12 "${GITHUB_SHA}")"
-          nightly_tag="nightly-master-riscv64-${nightly_stamp}-${short_sha}"
+          short_sha="${{ steps.pin.outputs.short_sha }}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            branch_name="${GITHUB_HEAD_REF}"
+          else
+            branch_name="${GITHUB_REF_NAME}"
+          fi
+          branch_slug="${branch_name//\//-}"
+          nightly_tag="nightly-${branch_slug}-riscv64-${nightly_stamp}-${short_sha}"
           base_name="minix-cat-${nightly_tag}-ci-${ci_stamp}"
+
+          publish_release=false
+          if [[ "${{ github.event_name }}" == "schedule" ]] || \
+             [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
+             [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/master" ]]; then
+            publish_release=true
+          fi
 
           image_name="${base_name}.img"
           image_path="/tmp/${image_name}"
@@ -107,11 +207,14 @@ jobs:
           sysroot_name="${base_name}-sysroot.tar.gz"
           sysroot_path="/tmp/${sysroot_name}"
           sums_path="/tmp/SHA256SUMS.txt"
+          buildinfo_path="/tmp/BUILDINFO.txt"
 
           echo "nightly_stamp=${nightly_stamp}" >>"${GITHUB_OUTPUT}"
           echo "ci_stamp=${ci_stamp}" >>"${GITHUB_OUTPUT}"
           echo "short_sha=${short_sha}" >>"${GITHUB_OUTPUT}"
+          echo "branch_slug=${branch_slug}" >>"${GITHUB_OUTPUT}"
           echo "nightly_tag=${nightly_tag}" >>"${GITHUB_OUTPUT}"
+          echo "publish_release=${publish_release}" >>"${GITHUB_OUTPUT}"
           echo "artifact_base=${base_name}" >>"${GITHUB_OUTPUT}"
           echo "image_name=${image_name}" >>"${GITHUB_OUTPUT}"
           echo "image_path=${image_path}" >>"${GITHUB_OUTPUT}"
@@ -122,14 +225,25 @@ jobs:
           echo "sysroot_name=${sysroot_name}" >>"${GITHUB_OUTPUT}"
           echo "sysroot_path=${sysroot_path}" >>"${GITHUB_OUTPUT}"
           echo "sums_path=${sums_path}" >>"${GITHUB_OUTPUT}"
+          echo "buildinfo_path=${buildinfo_path}" >>"${GITHUB_OUTPUT}"
 
       - name: Build tools (obj.intrgcc)
         shell: bash
         run: |
           set -euo pipefail
+          export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH}"
+          echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
+
+          # obj.intrgcc tracks a host tooldir (Linux-6.12.63+deb13, paths
+          # under /home/donz/minix) plus tools/ stamps. Incremental rebuild
+          # on ubuntu-24.04 then compiles binutils before regenerating
+          # bfd.h. Drop those trees so this runner gets a clean TOOLDIR.
+          echo "Dropping host-specific tool objects under ${OBJDIR}"
+          rm -rf "${OBJDIR}/tooldir."* "${OBJDIR}/tools"
+
           HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
           MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
-          ./build.sh -U -m "${MACHINE}" -O "${OBJDIR}" \
+          ./build.sh -U -j"${TOOLS_BUILD_JOBS}" -m "${MACHINE}" -O "${OBJDIR}" \
             -V AVAILABLE_COMPILER=gcc \
             -V ACTIVE_CC=gcc \
             -V ACTIVE_CPP=gcc \
@@ -140,6 +254,25 @@ jobs:
             -V MKCXX=yes \
             -V MKLIBSTDCXX=yes \
             tools
+
+          tooldir=""
+          newest=0
+          for d in "${OBJDIR}"/tooldir.*; do
+            [[ -d "${d}" ]] || continue
+            [[ -x "${d}/bin/nbmake" && -x "${d}/bin/riscv64-elf32-minix-gcc" ]] || continue
+            mt="$(stat -c %Y "${d}")"
+            if (( mt >= newest )); then
+              newest="${mt}"
+              tooldir="$(cd "${d}" && pwd)"
+            fi
+          done
+          if [[ -z "${tooldir}" ]]; then
+            echo "No usable tooldir under ${OBJDIR} after tools build" >&2
+            ls -ld "${OBJDIR}"/tooldir.* >&2 || true
+            exit 1
+          fi
+          echo "TOOLDIR=${tooldir}" >>"${GITHUB_ENV}"
+          echo "TOOLDIR=${tooldir}"
 
       - name: Prepare GCC include install dirs (obj.intrgcc)
         shell: bash
@@ -219,9 +352,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH}"
+          echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
           HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
           MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" HOST_CXXFLAGS="-O ${HARDENING_OFF}" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
-          ./build.sh -U -u -j"$(nproc)" -m "${MACHINE}" -O "${OBJDIR}" \
+          ./build.sh -U -u -j"${WORLD_BUILD_JOBS}" -m "${MACHINE}" -O "${OBJDIR}" \
             -V AVAILABLE_COMPILER=gcc \
             -V ACTIVE_CC=gcc \
             -V ACTIVE_CPP=gcc \
@@ -270,7 +405,12 @@ jobs:
             usr/lib/libgcc_eh.a \
             usr/lib/libstdc++.a \
             usr/include/stdio.h \
-            usr/include/g++/bits/c++config.h; do
+            usr/include/g++/bits/c++config.h \
+            service/virtio_net_mmio \
+            service/lwip \
+            sbin/ifconfig \
+            sbin/ping \
+            sbin/ping6; do
             if [[ ! -e "${root}/${entry}" ]]; then
               missing+=("${entry}")
             fi
@@ -354,7 +494,23 @@ jobs:
             echo "No sysroot headers/libs found under ${destdir_root}" >&2
             exit 1
           fi
-          tar -C "${destdir_root}" -czf "${{ steps.meta.outputs.sysroot_path }}" "${sysroot_items[@]}"
+          if ! tar -C "${destdir_root}" \
+            --sort=name \
+            --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner \
+            -cf - "${sysroot_items[@]}" 2>/dev/null | \
+            gzip -n -9 >"${{ steps.meta.outputs.sysroot_path }}"; then
+            tar -C "${destdir_root}" -czf "${{ steps.meta.outputs.sysroot_path }}" "${sysroot_items[@]}"
+          fi
+
+          {
+            echo "workflow=riscv64-nightly"
+            echo "event_name=${{ github.event_name }}"
+            echo "git_commit=${{ steps.pin.outputs.git_commit }}"
+            echo "source_date_epoch=${SOURCE_DATE_EPOCH}"
+            echo "ref=${{ github.ref }}"
+            echo "objdir=${OBJDIR}"
+          } >"${{ steps.meta.outputs.buildinfo_path }}"
 
           (
             cd /tmp
@@ -363,6 +519,7 @@ jobs:
               "${{ steps.meta.outputs.image_gz_name }}" \
               "${{ steps.meta.outputs.elf_name }}" \
               "${{ steps.meta.outputs.sysroot_name }}" \
+              BUILDINFO.txt \
               >"$(basename "${{ steps.meta.outputs.sums_path }}")"
           )
 
@@ -536,7 +693,7 @@ jobs:
 
       - name: Full riscv64 test suite (blocking)
         id: full_suite
-        if: always()
+        if: success()
         shell: bash
         run: |
           set -euo pipefail
@@ -602,8 +759,10 @@ jobs:
             ${{ steps.meta.outputs.elf_path }}
             ${{ steps.meta.outputs.sysroot_path }}
             ${{ steps.meta.outputs.sums_path }}
+            ${{ steps.meta.outputs.buildinfo_path }}
 
       - name: Create nightly tag
+        if: steps.meta.outputs.publish_release == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -621,6 +780,7 @@ jobs:
           echo "Created nightly tag: ${tag}"
 
       - name: Publish nightly release
+        if: steps.meta.outputs.publish_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.nightly_tag }}
@@ -637,6 +797,7 @@ jobs:
             ${{ steps.meta.outputs.elf_path }}
             ${{ steps.meta.outputs.sysroot_path }}
             ${{ steps.meta.outputs.sums_path }}
+            ${{ steps.meta.outputs.buildinfo_path }}
 
       - name: Write nightly summary
         if: always()
@@ -656,6 +817,12 @@ jobs:
             echo "- Compressed image: \`${{ steps.meta.outputs.image_gz_name }}\`"
             echo "- ELF: \`${{ steps.meta.outputs.elf_name }}\`"
             echo "- Sysroot: \`${{ steps.meta.outputs.sysroot_name }}\`"
+            echo "- Branch slug: \`${{ steps.meta.outputs.branch_slug }}\`"
+            echo "- Publish release: \`${{ steps.meta.outputs.publish_release }}\`"
+            echo "- SOURCE_DATE_EPOCH: \`${{ steps.pin.outputs.source_date_epoch }}\`"
+            echo ""
+            echo "This lane is the per-commit OS completeness review; GitHub Release"
+            echo "publish runs only on master push, schedule, or workflow_dispatch."
             echo ""
             echo "### Full Test Suite (blocking)"
             echo "- Runner sequence: \`build -> user -> native -> kernel -> gate(timeout 900s)\`"

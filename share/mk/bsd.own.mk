@@ -90,11 +90,15 @@ CFLAGS+= -mno-unaligned-access
 # RISC-V defaults:
 # Keep a GCC-compatible baseline for the in-tree rv64 toolchain.
 .if ${MACHINE_ARCH} == "riscv64"
-RISCV_ARCH_FLAGS?= -march=RV64IMAFD -mcmodel=medany
+RISCV_ARCH_FLAGS?= -march=rv64imafd -mcmodel=medany
 CFLAGS+= ${RISCV_ARCH_FLAGS}
+CFLAGS+= -fcommon
+CFLAGS+= -fno-delete-null-pointer-checks
 .elif ${MACHINE_ARCH} == "riscv32"
 RISCV_ARCH_FLAGS?= -march=rv32gc -mabi=ilp32d
 CFLAGS+= ${RISCV_ARCH_FLAGS}
+CFLAGS+= -fcommon
+CFLAGS+= -fno-delete-null-pointer-checks
 .endif
 
 __uname_s!= uname -s
@@ -1339,6 +1343,10 @@ _MKVARS.no= \
 _MKVARS.no+= \
 	MKIMAGEONLY MKSMALL MKBITCODE MKMAGIC MKPAE MKASR MKSRC
 .if !empty(MACHINE_ARCH:Mearm*)
+_MKVARS.no+= \
+	MKWATCHDOG MKPAE MKACPI MKAPIC MKDEBUGREG MKINSTALLBOOT MKPCI
+.endif
+.if ${MACHINE_ARCH} == "riscv64" || ${MACHINE_ARCH} == "riscv"
 _MKVARS.no+= \
 	MKWATCHDOG MKPAE MKACPI MKAPIC MKDEBUGREG MKINSTALLBOOT MKPCI
 .endif

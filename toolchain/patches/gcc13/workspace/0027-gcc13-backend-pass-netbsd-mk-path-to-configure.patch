@@ -1,0 +1,11 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -171,7 +171,7 @@
+ 	(cd .ab && \
+ 		AWK=${TOOL_AWK:Q} \
+ 		CC=${ORIGHOST_CC:Q} CFLAGS=${HOST_CFLAGS:Q} \
+-		MAKE=${MAKE:Q} \
++		MAKE="${MAKE:Q} -m ${NETBSDSRCDIR}/share/mk" \
+ 		CONFIG_SHELL=${HOST_SH:Q} \
+ 		gcc_cv_ld=${LD} \
+ 		gcc_cv_as=${AS} \

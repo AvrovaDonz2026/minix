@@ -9,6 +9,7 @@ SYSDIR= ${NETBSDSRCDIR}/sys/
 
 .PATH.c: ${SYSDIR}/dev/pci ${SYSDIR}/dev
 CPPFLAGS+= -I${SYSDIR}
+COPTS.pci_subr.c+= -O1
 
 MAN=	pci.3
 

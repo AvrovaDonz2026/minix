@@ -1,0 +1,34 @@
+diff --git a/gcc/config/riscv/minix.h b/gcc/config/riscv/minix.h
+index 1827ccad8..40d75c8a2 100644
+--- a/gcc/config/riscv/minix.h
++++ b/gcc/config/riscv/minix.h
+@@ -20,8 +20,29 @@
+ #ifndef GCC_RISCV_MINIX_H
+ #define GCC_RISCV_MINIX_H
+ 
++/* Keep the assembler invocation compatible with the in-tree binutils used by
++   MINIX.  That assembler predates GCC 13's canonicalized lowercase ISA names,
++   explicit zicsr/zifencei expansion and forwarded -mabi option support.  */
++#undef ASM_SPEC
++#define ASM_SPEC "\
++%(subtarget_asm_debugging_spec) \
++%{" FPIE_OR_FPIC_SPEC ":-fpic} \
++-march=RV64IMAFD \
++%{mno-relax} \
++%{mbig-endian} \
++%{mlittle-endian}"
++
++/* Old MINIX binutils also do not understand the newer RISC-V PLT call syntax
++   that GCC 13 emits by default for PIC code.  Keep PIC generation on the
++   legacy no-PLT path unless the user overrides it explicitly.  */
++#undef DRIVER_SELF_SPECS
++#define DRIVER_SELF_SPECS						\
++"%{march=*:%:riscv_expand_arch(%*)} "					\
++"%{!march=*:%{mcpu=*:%:riscv_expand_arch_from_cpu(%*)}} "		\
++"%{fpic|fPIC|fpie|fPIE:%{!mplt:%{!mno-plt:-mno-plt}}}"
++
+ /* MINIX keeps the historical 64-bit long double ABI on RISC-V.  */
+ #undef LONG_DOUBLE_TYPE_SIZE
+ #define LONG_DOUBLE_TYPE_SIZE 64
+ 
+ #endif /* GCC_RISCV_MINIX_H */

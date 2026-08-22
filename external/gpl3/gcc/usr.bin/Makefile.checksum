@@ -6,11 +6,18 @@
 .ifndef _EXTERNAL_GPL3_GCC_USR_BIN_MAKEFILE_CHECKSUM_
 _EXTERNAL_GPL3_GCC_USR_BIN_MAKEFILE_CHECKSUM_=1
 
-CLEANFILES+=	${PROG}-checksum.c genchecksum genchecksum.lo checksum-options
+CLEANFILES+=	${PROG}-checksum.c genchecksum genchecksum.lo checksum-options bconfig.h
+DPSRCS+=	bconfig.h
+.NOPATH:	bconfig.h
 
-CPPFLAGS.genchecksum.c+=	-DGENERATOR_FILE -I${GCCARCH} -I${DIST}/include -I${BACKENDOBJ}
+CPPFLAGS.genchecksum.c+=	-DGENERATOR_FILE -I. -I${GCCARCH} -I${DIST}/include -I${BACKENDOBJ}
+CPPFLAGS.genchecksum.cc+=	${CPPFLAGS.genchecksum.c}
 
-genchecksum.lo:
+bconfig.h: ${TOOLSGCCBUILD}/bconfig.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+genchecksum.lo: bconfig.h
 genchecksum: genchecksum.lo
 	${_MKTARGET_LINK}
 	${HOST_LINK.c} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}

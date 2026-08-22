@@ -1,0 +1,20 @@
+--- a/tools/gcc/Makefile	2026-03-03 11:21:35.235546826 +0800
++++ b/tools/gcc/Makefile	2026-03-03 11:21:35.239546836 +0800
+@@ -8,7 +8,7 @@
+ GCCDIST=	${.CURDIR}/../../external/gpl3/${EXTERNAL_GCC_SUBDIR}/dist
+ GNUHOSTDIST=	${GCCDIST}
+ 
+-HOST_CXXFLAGS+=	-std=gnu++98
++HOST_CXXFLAGS+=	-std=gnu++11
+ 
+ .if ${HAVE_GCC} == 48
+ CC_FOR_BUILD=		${HOST_CXX:Q}
+@@ -90,7 +90,7 @@
+ 		LIBGCC= LIBGCC1= LIBGCC1_TEST= LIBGCC2= INSTALL_LIBGCC= \
+ 		EXTRA_PARTS= CPPFLAGS=${GCC_CPPFLAGS:Q} \
+ 		AR=${HOST_AR:Q} RANLIB=${HOST_RANLIB:Q}
+-MAKE_ARGS+=	CXXFLAGS=-std=gnu++98
++MAKE_ARGS+=	CXXFLAGS=-std=gnu++11
+ 
+ CONFIGURE_ENV+= gcc_cv_libc_provides_ssp=yes \
+ 		gcc_cv_as_sparc_gotdata_op=no

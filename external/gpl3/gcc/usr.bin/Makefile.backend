@@ -7,10 +7,11 @@ NOMAN=		# defined
 NOCTF=		# defined
 BINDIR=		/usr/libexec
 
-CPPFLAGS+=	-I${GCCARCH} -I${BACKENDOBJ} \
+CPPFLAGS+=	-I. -I${GCCARCH} -I${BACKENDOBJ} \
 		${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
 
 .include <bsd.own.mk>
+.include "Makefile.hostprobes"
 
 DPADD+=			${BACKENDOBJ}/libbackend.a
 LDADD+=			${BACKENDOBJ}/libbackend.a
@@ -20,7 +21,61 @@ LDADD+=			${BACKENDOBJ}/libbackend.a
 
 HOSTPROG_CXX=	1
 
-.include <bsd.prog.mk>
+TOOLSGCCOBJ!=	cd ${NETBSDSRCDIR}/tools/gcc && ${PRINTOBJDIR}
+TOOLSGCCBUILD=	${TOOLSGCCOBJ}/build/gcc
+
+# GCC13 expects generated backend headers from the backend objdir, but these
+# programs still search GCCARCH first. Stage the generated headers locally so
+# they win deterministically during dep generation and compilation.
+DPSRCS+=	config.h auto-host.h tm.h options.h version.h bversion.h
+.NOPATH:	config.h auto-host.h tm.h options.h version.h bversion.h
+CLEANFILES+=	config.h auto-host.h tm.h options.h version.h bversion.h
+
+config.h: gcc13-config-force ${TOOLSGCCBUILD}/config.h ${.PARSEDIR}/Makefile.hostprobes
+	rm -f ${.TARGET}
+	cp ${TOOLSGCCBUILD}/config.h ${.TARGET}
+	{ \
+		echo '#ifndef CHECKING_P'; \
+		echo '#define CHECKING_P 0'; \
+		echo '#endif'; \
+		echo '#ifndef ENABLE_OFFLOADING'; \
+		echo '#define ENABLE_OFFLOADING 0'; \
+		echo '#endif'; \
+		echo '#ifndef HAVE_AS_LEB128'; \
+		echo '#define HAVE_AS_LEB128 0'; \
+		echo '#endif'; \
+	} >> ${.TARGET}
+
+auto-host.h: gcc13-auto-host-force ${TOOLSGCCBUILD}/auto-host.h ${.PARSEDIR}/Makefile.hostprobes
+	rm -f ${.TARGET}
+	cp ${TOOLSGCCBUILD}/auto-host.h ${.TARGET}
+	{ \
+		for fn in ${GCC13_TARGET_STDIO_UNLOCKED_MISSING}; do \
+			echo "#undef HAVE_$${fn}_UNLOCKED"; \
+			echo "#undef HAVE_DECL_$${fn}_UNLOCKED"; \
+		done; \
+		for fn in ${GCC13_TARGET_MALLOC_INFO_MISSING}; do \
+			echo "#undef HAVE_$${fn}"; \
+			echo "#undef HAVE_DECL_$${fn}"; \
+		done; \
+		for fn in ${GCC13_TARGET_DECL_FALLBACKS}; do \
+			echo "#undef HAVE_$${fn}"; \
+			echo "#define HAVE_DECL_$${fn} 0"; \
+		done; \
+	} >> ${.TARGET}
+
+tm.h: ${TOOLSGCCBUILD}/tm.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+options.h: ${TOOLSGCCBUILD}/options.h
+	rm -f ${.TARGET}
+	cp ${.ALLSRC} ${.TARGET}
+
+.include "Makefile.toolsgccfiles"
+
+${SRCS:.cc=.d} ${SRCS:.cc=.o} ${SRCS:.c=.d} ${SRCS:.c=.o}: \
+	config.h auto-host.h tm.h options.h
 
 # Force using C++ for this
 HOST_CC:=	${HOST_CXX}
@@ -39,5 +94,7 @@ LIBMPCDIR!=	cd ${NETBSDSRCDIR}/external/lgpl3/mpc/lib/libmpc && ${PRINTOBJDIR}
 LIBGMP=		${LIBGMPDIR}/libgmp.a
 LIBMPFR=	${LIBMPFRDIR}/libmpfr.a
 LIBMPC=		${LIBMPCDIR}/libmpc.a
+
+.include <bsd.prog.mk>
 
 .endif

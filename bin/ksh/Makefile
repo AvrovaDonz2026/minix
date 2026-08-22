@@ -30,7 +30,7 @@ CLEANFILES+=	siglist.out siglist.out.tmp
 siglist.out: config.h sh.h siglist.in siglist.sh
 	${_MKTARGET_CREATE}
 	${SCRIPT_ENV} \
-	${HOST_SH} $(.CURDIR)/siglist.sh "$(CC) -E $(CPPFLAGS) $(DEFS) -I. -I$(.CURDIR)" < $(.CURDIR)/siglist.in > siglist.out.tmp \
+	${HOST_SH} $(.CURDIR)/siglist.sh "$(CC) -E -P $(CPPFLAGS) $(DEFS) -I. -I$(.CURDIR)" < $(.CURDIR)/siglist.in > siglist.out.tmp \
 	    && mv siglist.out.tmp siglist.out
 
 # two steps to prevent the creation of a bogus emacs.out

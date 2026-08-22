@@ -1,0 +1,137 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile	2026-03-10 13:36:14.719003584 +0800
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile	2026-03-10 13:37:30.651500823 +0800
+@@ -4,7 +4,12 @@
+ 
+ LIB=		backend
+ 
+-SRCS=		${G_OBJS:.o=.c} ${G_out_file:T}
++G_OUT_FILE_SRC=	${G_out_file}
++.if !exists(${G_out_file}) && exists(${G_out_file:S,.c,.cc,})
++G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
++.endif
++
++SRCS=		${G_OBJS} ${G_OUT_FILE_SRC:T}
+ 
+ BOTH_CPPFLAGS+=	-I. -I${GCCARCH} ${G_ALL_CFLAGS:M-D*} ${G_INCLUDES:M-I*:N-I.*}
+ CPPFLAGS+=	${BOTH_CPPFLAGS} -DTARGET_NAME=\"${MACHINE_GNU_PLATFORM}\"
+@@ -15,6 +20,7 @@
+ 
+ CPPFLAGS.cppdefault.c+=	-DPREFIX=\"/usr\" \
+ 			-DNATIVE_SYSTEM_HEADER_DIR=\"${G_NATIVE_SYSTEM_HEADER_DIR}\"
++CPPFLAGS.cppdefault.cc+=	${CPPFLAGS.cppdefault.c}
+ 
+ HOSTPROG_CXX=	1
+ 
+@@ -34,6 +40,7 @@
+ 
+ # Check PREPROCESSOR_DEFINES for cppbuiltin.c and cppdefault.c
+ CPPFLAGS.cppbuiltin.c+=	-DBASEVER="\"${BASEVER}"\"
++CPPFLAGS.cppbuiltin.cc+=	${CPPFLAGS.cppbuiltin.c}
+ 
+ #
+ # Independent generation programs.
+@@ -45,9 +52,9 @@
+ 		gencheck tree-check.h \
+ 		insn-preds.c genpreds tm-preds.h tm_p.h cs-tm_p.h \
+ 		genmodes insn-modes.c insn-modes.h min-insn-modes.c \
+-		auto-host.h build-print-rtl.c \
+-		build-rtl.c build-errors.c build-varray.c \
+-		build-bitmap.c build-ggc-none.c \
++		auto-host.h build-print-rtl.cc \
++		build-rtl.cc build-errors.cc build-varray.c \
++		build-bitmap.cc build-ggc-none.cc \
+ 		gt-*.h *.o *.lo \
+ 		cs-config.h \
+ 		gcov-iov gcov-iov.h \
+@@ -62,6 +69,11 @@
+ 	${HOST_COMPILE.cc} -o ${.TARGET}.o ${COPTS.${.IMPSRC:T}} ${CPUFLAGS.${.IMPSRC:T}} ${CPPFLAGS.${.IMPSRC:T}} ${.IMPSRC}
+ 	mv ${.TARGET}.o ${.TARGET}
+ 
++.cc.lo:
++	${_MKTARGET_COMPILE}
++	${HOST_COMPILE.cc} -o ${.TARGET}.o ${COPTS.${.IMPSRC:T}} ${CPUFLAGS.${.IMPSRC:T}} ${CPPFLAGS.${.IMPSRC:T}} ${.IMPSRC}
++	mv ${.TARGET}.o ${.TARGET}
++
+ # Headers that host objects depend on (except gen*rtl*)
+ G_BUILD_XM_HEADERS=	${G_build_xm_include_list:S,ansidecl.h,${DIST}/include/ansidecl.h,}
+ HH_NORTL=		${G_tm_file_list} ${G_BUILD_XM_HEADERS}
+@@ -200,38 +212,38 @@
+ # by the genfoo programs.
+ #
+ 
+-build-rtl.c: ${DIST}/gcc/rtl.c \
++build-rtl.cc: ${DIST}/gcc/rtl.cc \
+   ${G_RTL_H} ${DIST}/gcc/real.h ${G_GCC_H} ${DIST}/gcc/errors.h gtype-desc.h
+ 	${_MKTARGET_CREATE}
+-	rm -f build-rtl.c
++	rm -f build-rtl.cc
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+-		${GNUHOSTDIST}/gcc/rtl.c >${.TARGET}
+-build-rtl.lo: ${HH}
++		${GNUHOSTDIST}/gcc/rtl.cc >${.TARGET}
++build-rtl.lo: ${HH} build-rtl.cc
+ 
+-build-print-rtl.c: ${DIST}/gcc/print-rtl.c \
++build-print-rtl.cc: ${DIST}/gcc/print-rtl.cc \
+   ${G_RTL_BASE_H} ${G_GTM_H} ${DIST}/gcc/hard-reg-set.h
+ 	${_MKTARGET_CREATE}
+-	rm -f build-print-rtl.c
++	rm -f build-print-rtl.cc
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+-		${GNUHOSTDIST}/gcc/print-rtl.c >${.TARGET}
+-build-print-rtl.lo: ${HH}
+-build/print-rtl.o: ${DIST}/gcc/print-rtl.c $(BCONFIG_H) $(SYSTEM_H) ${DIST}/gcc/coretypes.h     \
++		${GNUHOSTDIST}/gcc/print-rtl.cc >${.TARGET}
++build-print-rtl.lo: ${HH} build-print-rtl.cc
++build/print-rtl.o: ${DIST}/gcc/print-rtl.cc $(BCONFIG_H) $(SYSTEM_H) ${DIST}/gcc/coretypes.h     \
+   $(GTM_H) $(RTL_BASE_H)
+ 
+ 
+-build-bitmap.c: ${DIST}/gcc/bitmap.c \
++build-bitmap.cc: ${DIST}/gcc/bitmap.cc \
+   ${G_RTL_H} flags.h ${G_BASIC_BLOCK_H} ${REGS_H} ${G_GCC_H} gtype-desc.h
+ 	${_MKTARGET_CREATE}
+-	rm -f build-bitmap.c
++	rm -f build-bitmap.cc
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+-		${GNUHOSTDIST}/gcc/bitmap.c >${.TARGET}
+-build-bitmap.lo: ${HH}
++		${GNUHOSTDIST}/gcc/bitmap.cc >${.TARGET}
++build-bitmap.lo: ${HH} build-bitmap.cc
+ 
+-build-errors.c: ${DIST}/gcc/errors.c ${DIST}/gcc/errors.h
++build-errors.cc: ${DIST}/gcc/errors.cc ${DIST}/gcc/errors.h
+ 	${_MKTARGET_CREATE}
+-	rm -f build-errors.c
+-	cat ${GNUHOSTDIST}/gcc/errors.c >${.TARGET}
+-build-errors.lo: ${HH_NORTL}
++	rm -f build-errors.cc
++	cat ${GNUHOSTDIST}/gcc/errors.cc >${.TARGET}
++build-errors.lo: ${HH_NORTL} build-errors.cc
+ 
+ build-varray.c: ${DIST}/gcc/varray.c \
+   ${G_RTL_H} ${G_GCC_H} ${TREE_H} ${DIST}/gcc/bitmap.h ${DIST}/gcc/errors.h
+@@ -241,18 +253,18 @@
+ 		${GNUHOSTDIST}/gcc/varray.c >${.TARGET}
+ build-varray.lo: ${HH} gtype-desc.h
+ 
+-build-ggc-none.c: ${DIST}/gcc/ggc-none.c \
++build-ggc-none.cc: ${DIST}/gcc/ggc-none.cc \
+   ${G_GCC_H} gtype-desc.h
+ 	${_MKTARGET_CREATE}
+-	rm -f build-ggc-none.c
++	rm -f build-ggc-none.cc
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+-		${GNUHOSTDIST}/gcc/ggc-none.c >${.TARGET}
+-build-ggc-none.lo: ${HH}
++		${GNUHOSTDIST}/gcc/ggc-none.cc >${.TARGET}
++build-ggc-none.lo: ${HH} build-ggc-none.cc
+ 
+ #
+ # The normal insn-foo generators
+ #
+-.for f in gensupport.c read-rtl.c dummy-conditions.c
++.for f in gensupport.cc read-rtl.cc dummy-conditions.c
+ ${f:R}.lo: ${HH}
+ .endfor
+ 

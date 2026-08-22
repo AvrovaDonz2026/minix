@@ -7,7 +7,12 @@
 
 .cc: # disable .cc->NULL transform
 
-INCS=		${G_debug_headers}
+INCS=
+.for _f in ${G_debug_headers}
+.if exists(${DIST}/libstdc++-v3/include/${_f})
+INCS+=		${_f}
+.endif
+.endfor
 INCSDIR=	/usr/include/g++/debug
 
 .include "${.CURDIR}/../Makefile.includes"

@@ -17,13 +17,13 @@ The port targets the QEMU `virt` machine platform.
 
 ```
 riscv64/
-├── include/           # Architecture-specific headers
+├── include/           # Architecture-specific headers (see include/arch.md)
 │   ├── archconst.h    # Constants (memory map, CSR bits)
 │   ├── arch_proto.h   # Function prototypes, inline CSR ops
 │   ├── arch_clock.h   # Clock/timer definitions
 │   ├── hw_intr.h      # Hardware interrupt definitions
 │   └── sconst.h       # Assembly constants
-├── bsp/               # Board Support Package (QEMU virt)
+├── bsp/virt/          # Board Support Package (QEMU virt)
 │   ├── bsp_init.c     # Platform initialization
 │   ├── bsp_serial.c   # UART output
 │   ├── bsp_timer.c    # Timer setup
@@ -32,18 +32,20 @@ riscv64/
 ├── head.S             # Boot entry point
 ├── mpx.S              # Context switch assembly
 ├── exc.S              # Exception/interrupt entry
-├── klib.S             # Kernel library (memcpy, etc.)
-├── phys_copy.S        # Physical memory copy
+├── klib.S             # Kernel library (memcpy, FPU save/restore)
+├── phys_copy.S        # Physical memory copy (fault PC range: issue.md #77)
 ├── phys_memset.S      # Physical memory set
 ├── sbi.c              # SBI (Supervisor Binary Interface)
 ├── plic.c             # PLIC interrupt controller driver
 ├── exception.c        # Exception handling
 ├── arch_clock.c       # Timer/clock management
-├── arch_system.c      # System management (shutdown, reboot)
+├── arch_system.c      # System management (shutdown, reboot, FPU wiring)
+├── arch_do_vmctl.c    # VMCTL (SETADDRSPACE root_v: issue.md #82)
 ├── memory.c           # Memory management
 ├── protect.c          # Protection/privilege setup
-├── pg_utils.c         # Page table utilities
+├── pg_utils.c         # Page table utilities (split flush: issue.md #81)
 ├── kernel.lds         # Linker script
+├── arch.md            # Tracked file listing
 └── Makefile.inc       # Build configuration
 ```
 
@@ -71,6 +73,7 @@ riscv64/
 - Per-CPU interrupt enable/disable
 - Priority management
 - SMP support via `plic_irq_cpu_mask()`
+- QEMU virt has 96 sources (`PLIC_NUM_SOURCES`); init no longer writes past that range (`issue.md` `#78`)
 
 ### Page Tables (Sv39)
 - 3-level page tables
@@ -104,24 +107,27 @@ Notes:
 ## Running
 
 ### QEMU
+Baseline paths are under `obj.intrgcc`. Historical `minix/kernel/obj/kernel`
+and `obj/destdir.evbriscv64` are not the current profile.
+
 ```bash
 # Basic run
-./minix/scripts/qemu-riscv64.sh -k minix/kernel/obj/kernel -B obj/destdir.evbriscv64
+./minix/scripts/qemu-riscv64.sh -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
-# Debug mode (wait for GDB)
-./minix/scripts/qemu-riscv64.sh -d -k minix/kernel/obj/kernel -B obj/destdir.evbriscv64
+# Debug mode (wait for GDB; `-s` means single CPU, not the QEMU gdb stub)
+./minix/scripts/qemu-riscv64.sh -d -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
-# With networking
-./minix/scripts/qemu-riscv64.sh -n -k minix/kernel/obj/kernel -B obj/destdir.evbriscv64
+# With networking (user-net; script passes ipv4=on,ipv6=on — issue.md #76)
+./minix/scripts/qemu-riscv64.sh -n -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 ```
 
 ### GDB Debugging
 ```bash
 # Terminal 1: Start QEMU in debug mode
-./minix/scripts/qemu-riscv64.sh -d -k minix/kernel/obj/kernel -B obj/destdir.evbriscv64
+./minix/scripts/qemu-riscv64.sh -d -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
 # Terminal 2: Connect GDB
-./minix/scripts/gdb-riscv64.sh minix/kernel/obj/kernel
+./minix/scripts/gdb-riscv64.sh obj.intrgcc/minix/kernel/kernel
 ```
 
 ## Boot Sequence
@@ -153,9 +159,13 @@ Notes:
 
 ## TODO / Known Issues
 
-1. SMP support is scaffolded but not fully tested
-2. FPU context switching needs implementation
+1. SMP support is scaffolded but not fully tested (`issue.md` `#15`; no `smp.c`)
+2. FPU save/restore is implemented in `klib.S` (`save_fpu`/`restore_fpu`) and
+   wired from `arch_system.c`. Remaining FPU work is broader process-switch
+   coverage, not a missing stub.
 3. Debug registers (hardware breakpoints) not yet supported
+4. Open audit items: `#77`/`#13` phys_copy fault PC range (fixed this
+   round); residual watch: `#17` safecopy noise. See `issue.md`.
 
 ## References
 

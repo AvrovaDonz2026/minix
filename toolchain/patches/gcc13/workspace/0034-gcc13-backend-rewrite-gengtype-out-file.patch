@@ -1,0 +1,10 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -235,6 +235,7 @@
+ # be nice to generate this entirely; but difficult.
+ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
+ 	${TOOL_SED} -e 's#SRCDIR#${DIST}#' \
++	    -e 's#${G_GT_OUT_FILE}#${G_OUT_FILE_SRC}#' \
+ 	    -e 's#${G_out_file}#${G_OUT_FILE_SRC}#' < ${.ALLSRC} > ${.TARGET}
+ CLEANFILES+=	gtyp-input.list.tmp
+ 

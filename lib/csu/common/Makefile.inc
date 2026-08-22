@@ -4,6 +4,9 @@
 
 # XXX: FIXME: This is defined in bsd.lib.mk
 PICFLAGS ?= -fPIC
+.if ${MACHINE_CPU} == "riscv"
+PICFLAGS+= -mno-plt
+.endif
 
 COMMON_DIR:=	${.CURDIR}/common
 .PATH:		${COMMON_DIR}

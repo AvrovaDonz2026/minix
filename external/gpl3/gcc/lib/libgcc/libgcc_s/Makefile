@@ -36,6 +36,7 @@ SRCS+=		${LIB2FUNCS} ${LIB2DIVMOD} ${LIB2_EH} ${LIB2_EHASM} \
 		${G_LIB2ADD_ST:T} ${LIB1ASMFUNCS}
 
 COPTS.unwind-dw2.c = -Wno-stack-protector
+COPTS.emutls.c = -Wno-builtin-declaration-mismatch
 
 DPADD+=		libgcc.map
 CLEANFILES+=	libgcc.map

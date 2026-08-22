@@ -1,0 +1,104 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -18,6 +18,12 @@
+ 
+ HOSTPROG_CXX=	1
+ 
++# GCC13's generated dependency files may keep backend generator inputs as
++# bare names such as genattr.c. Seed the gcc/dist search path before
++# bsd.lib.mk pulls in .depend so those lookups remain resolvable.
++.PATH: ${DIST}/gcc ${DIST}/libiberty ${GCCARCH} ${G_out_file:H} ${DIST}/include
++.PATH: ${DIST}/gcc/config
++
+ .include <bsd.lib.mk>
+ 
+ # Force using C++ for this
+@@ -193,7 +199,7 @@
+ # by the genfoo programs.
+ #
+ 
+-build-rtl.c: rtl.c \
++build-rtl.c: ${DIST}/gcc/rtl.c \
+   ${G_RTL_H} real.h ${G_GCC_H} errors.h gtype-desc.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-rtl.c
+@@ -201,18 +207,18 @@
+ 		${GNUHOSTDIST}/gcc/rtl.c >${.TARGET}
+ build-rtl.lo: ${HH}
+ 
+-build-print-rtl.c: print-rtl.c \
++build-print-rtl.c: ${DIST}/gcc/print-rtl.c \
+   ${G_RTL_BASE_H} ${G_GTM_H} hard-reg-set.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-print-rtl.c
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+ 		${GNUHOSTDIST}/gcc/print-rtl.c >${.TARGET}
+ build-print-rtl.lo: ${HH}
+-build/print-rtl.o: print-rtl.c $(BCONFIG_H) $(SYSTEM_H) coretypes.h     \
++build/print-rtl.o: ${DIST}/gcc/print-rtl.c $(BCONFIG_H) $(SYSTEM_H) coretypes.h     \
+   $(GTM_H) $(RTL_BASE_H)
+ 
+ 
+-build-bitmap.c: bitmap.c \
++build-bitmap.c: ${DIST}/gcc/bitmap.c \
+   ${G_RTL_H} flags.h ${G_BASIC_BLOCK_H} ${REGS_H} ${G_GCC_H} gtype-desc.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-bitmap.c
+@@ -220,13 +226,13 @@
+ 		${GNUHOSTDIST}/gcc/bitmap.c >${.TARGET}
+ build-bitmap.lo: ${HH}
+ 
+-build-errors.c: errors.c errors.h
++build-errors.c: ${DIST}/gcc/errors.c errors.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-errors.c
+ 	cat ${GNUHOSTDIST}/gcc/errors.c >${.TARGET}
+ build-errors.lo: ${HH_NORTL}
+ 
+-build-varray.c: varray.c \
++build-varray.c: ${DIST}/gcc/varray.c \
+   ${G_RTL_H} ${G_GCC_H} ${TREE_H} bitmap.h errors.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-varray.c
+@@ -234,7 +240,7 @@
+ 		${GNUHOSTDIST}/gcc/varray.c >${.TARGET}
+ build-varray.lo: ${HH} gtype-desc.h
+ 
+-build-ggc-none.c: ggc-none.c \
++build-ggc-none.c: ${DIST}/gcc/ggc-none.c \
+   ${G_GCC_H} gtype-desc.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-ggc-none.c
+@@ -264,7 +270,7 @@
+ #
+ .for f in attr attr-common attrtab automata codes conditions config emit \
+ 	  extract flags opinit output peep preds recog mddump condmd
+-gen${f}.lo: ${HH} gen${f}.c
++gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.c
+ gen${f}: gen${f}.lo ${GENPROG_RTL_DEPENDS} 
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
+@@ -272,7 +278,7 @@
+ .endfor
+ 
+ .for f in mddeps constants enums
+-gen${f}.lo: ${HH} gen${f}.c
++gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.c
+ gen${f}: gen${f}.lo ${GENPROG_READER_DEPENDS} 
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
+@@ -280,7 +286,7 @@
+ .endfor
+ 
+ .for f in check checksum
+-gen${f}.lo: ${HH} gen${f}.c
++gen${f}.lo: ${HH} ${DIST}/gcc/gen${f}.c
+ gen${f}: gen${f}.lo
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY} ${LDFLAGS.${.TARGET}}
+@@ -410,5 +416,3 @@
+ 
+ COPTS.tree.c=	${${ACTIVE_CC} == "clang" :? -O0 :}
+ 
+-.PATH: ${DIST}/gcc ${DIST}/libiberty ${GCCARCH} ${G_out_file:H} ${DIST}/include
+-.PATH: ${DIST}/gcc/config

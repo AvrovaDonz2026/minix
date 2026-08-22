@@ -11,8 +11,8 @@ debugging, and acceptance.
 
 ## Document Info / 文档信息
 
-- Version / 版本: `1.0`
-- Last updated / 最后更新: `2026-02-18`
+- Version / 版本: `1.4`
+- Last updated / 最后更新: `2026-08-22`
 - Baseline / 基线: `obj.intrgcc`
 - Scope / 范围: VirtIO MMIO transport (`virtio_blk_mmio`, `virtio_net_mmio`)
 
@@ -77,7 +77,8 @@ by a single driver instance.
 - `service virtio_blk_mmio` with `UMAP/VUMAP/DEVIO/IRQCTL/PRIVCTL`
   and MMIO range `0x10001000:0x10008000`.
 - `service virtio_net_mmio` with `UMAP/VUMAP/DEVIO/IRQCTL/PRIVCTL`
-  and MMIO range `0x10002000:0x10003000`.
+  and MMIO range `0x10001000:0x10008000` (full 8-slot window; the
+  per-service `/etc/system.conf.d/virtio_net_mmio` file must match).
 - `service lwip` with domain `INET INET6 ROUTE LINK`.
 - `service lwip` IPC includes `pm` (required for root credential lookup in
   raw socket path, relevant to `ping/ping6`).
@@ -134,9 +135,9 @@ minix/releasetools/riscv64/mkdisk.sh
 ```
 
 Notes:
-- `-n` uses QEMU user-net and currently sets
-  `hostfwd=tcp::2222-:22` in the script.
-- if host port `2222` is occupied, either free it or run a custom QEMU command.
+- `-n` uses QEMU user-net (`ipv4=on,ipv6=on`) with MAC `52:54:00:12:34:56`.
+- Default host forward is `hostfwd=tcp::2222-:22`. Smoke/CI should set
+  `NET_HOSTFWD=none` to avoid binding host port 2222.
 
 ### 6.2 Direct QEMU (explicit net config)
 
@@ -146,7 +147,7 @@ qemu-system-riscv64 -machine virt -m 256M -nographic \
   -kernel /usr/lib/u-boot/qemu-riscv64_smode/uboot.elf \
   -drive if=none,file=/tmp/minix-rv64-virtio.img,format=raw,id=hd0 \
   -device virtio-blk-device,drive=hd0 \
-  -netdev user,id=net0,ipv6=on \
+  -netdev user,id=net0,ipv4=on,ipv6=on \
   -device virtio-net-device,netdev=net0,mac=52:54:00:12:34:56
 ```
 
@@ -205,20 +206,33 @@ ping6 -q -c 1 fe80::...%vio0
 - Cause: no virtio-net device attached or startup mode is strict.
 - Action: attach `-netdev ... -device virtio-net-device,...` and retry.
 
-3. `ping/ping6: Permission denied` on raw socket path
+3. `ping/ping6: Permission denied` on raw socket path (historical `#34`, closed)
 - Cause: policy drift where `lwip` cannot talk to `pm`.
-- Action: verify `lwip` IPC includes `pm` in both:
+- Action: already fixed; if it regresses, verify `lwip` IPC includes `pm` in:
   - `minix/releasetools/riscv64/system.conf`
   - `minix/net/lwip/lwip.conf`
 
-4. `hostfwd=tcp::2222-:22` already in use
-- Cause: host port conflict.
-- Action: pick a different hostfwd port or run without hostfwd.
+4. `unable to add mmio mem range` / no `vio0` on disk images (historical `#39`, closed)
+- Cause: `/etc/system.conf.d/virtio_net_mmio` overrode RISC-V `system.conf`
+  without `PRIVCTL` / IRQ / the full MMIO window (`issue.md` `#39`).
+- Action: keep `virtio_net_mmio.conf` aligned with
+  `minix/releasetools/riscv64/system.conf`.
 
-5. `-netdev bridge` fails with bridge-helper errors
+5. `hostfwd=tcp::2222-:22` already in use
+- Cause: host port conflict.
+- Action: set `NET_HOSTFWD=none` or pick a different `hostfwd` port.
+
+6. `-netdev bridge` fails with bridge-helper errors
 - Cause: host bridge prerequisites missing (for example `/etc/qemu/bridge.conf`).
 - Action: validate functionality with user-net (slirp) first, then configure
   host bridge environment.
+
+7. Gateway ARP with no slirp reply (historical `#76`, closed)
+- Cause: QEMU 8.2 `ipv6=on` without `ipv4=on` disables slirp IPv4
+  (`net_init_slirp` clears `ipv4` when only IPv6 is present).
+- Action: `qemu-riscv64.sh -n` must pass `ipv4=on,ipv6=on`. Do not disable
+  EVENT_IDX or ipv6. Hosted nightly `32552319291` and release `32552319287`
+  already passed `ping_gw`.
 
 ## 9) Implementation Notes for Developers / 开发实现要点
 
@@ -243,6 +257,14 @@ ping6 -q -c 1 fe80::...%vio0
 5. Regression gate:
 - keep both disk and network profiles in regular smoke runs.
 - for network, include both IPv4 (`10.0.2.2`) and IPv6 (`ping6 ::1`) checks.
+- automated: `python3 minix/tests/riscv64/qemu_net_smoke.py` (also run from
+  `minix/tests/riscv64/run_tests.sh kernel`).
+- QEMU `-netdev` must pass `ipv4=on,ipv6=on` (`issue.md` `#76`).
+- Open residuals (`issue.md`): `#78` PLIC init overscan vs QEMU virt 96
+  sources; `#79` skip `GUEST_FEATURES_SEL=1` on legacy MMIO; `#80` send
+  `CTRL_MAC_TABLE_SET` before PROMISC (QEMU `n->mac` still accepts default
+  unicast). Do not disable `EVENT_IDX`. `VIRTIO_MMIO_IRQ(i-1)` is not an
+  off-by-one: the scan loop increments `i` after the matching slot.
 
 ## 10) Related Docs / 关联文档
 

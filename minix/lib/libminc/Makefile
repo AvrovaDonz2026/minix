@@ -144,6 +144,9 @@ COPTS+=  -Wno-missing-prototypes \
                 -Wno-uninitialized \
                 -Wno-cast-qual
 
+COPTS.udivmoddi4.c+=	-O1
+COPTS.udivmodti4.c+=	-O1
+
 
 
 .if ${USE_BITCODE:Uno} == "yes"

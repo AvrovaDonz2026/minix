@@ -508,6 +508,10 @@ _DPADD.${_P}=		${DPADD}    ${DPADD.${_P}}
 _LDADD.${_P}=		${LDADD}    ${LDADD.${_P}}
 _LDFLAGS.${_P}=		${LDFLAGS}  ${LDFLAGS.${_P}}
 _LDSTATIC.${_P}=	${LDSTATIC} ${LDSTATIC.${_P}}
+# Historical MINIX makefiles use LDSTATIC=-dynamic; treat it as plain dynamic.
+.if ${_LDSTATIC.${_P}:S/ //g:U} == "-dynamic"
+_LDSTATIC.${_P}:=
+.endif
 
 ##### Build and install rules
 .if !empty(_APPEND_SRCS:M[Yy][Ee][Ss])

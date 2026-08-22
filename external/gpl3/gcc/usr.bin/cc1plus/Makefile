@@ -1,13 +1,14 @@
 #	$NetBSD: Makefile,v 1.9 2014/05/31 22:55:17 mrg Exp $
 
-PROG=		cc1plus
-SRCS=		${G_CXX_OBJS:S,c-family/,,:S,cp/,,:Nlibcpp.a:.o=.c} main.c ${PROG}-checksum.c
+# Set NOMAN before Makefile.cc2c pulls bsd.own.mk. See lto1/Makefile.
+NOMAN=		# defined
 
-# XXX
-NOMAN=	1
+PROG=		cc1plus
+SRCS=		${G_CXX_OBJS:S,c-family/,,:S,cp/,,:Nlibcpp.a:.o=.cc} main.cc ${PROG}-checksum.c
+.include "../Makefile.cc2c"
 
 CPPFLAGS+=	-I${DIST}/gcc/cp
-CPPFLAGS.prefix.c+=     -DPREFIX=\"/usr\"
+CPPFLAGS.prefix.cc+=     -DPREFIX=\"/usr\"
 
 .include "../Makefile.backend"
 .include "../Makefile.backtrace"
@@ -32,8 +33,17 @@ CHECKSUM_OBJS= ${LIBBACKTRACEOBJ}/libbacktrace.a \
 # LDFLAGS+=   -rdynamic
 
 ## VER_CPPFLAGS from Makefile.inc
-#CPPFLAGS.c-cppbuiltin.c=	${VER_CPPFLAGS}
-#c-cppbuiltin.c: ${GCCARCH}/defs.mk
+CPPFLAGS.c-cppbuiltin.cc=	${VER_CPPFLAGS}
+CPPFLAGS.c-cppbuiltin.c+=	${CPPFLAGS.c-cppbuiltin.cc}
+c-cppbuiltin.cc: ${GCCARCH}/defs.mk
+c-cppbuiltin.c: ${GCCARCH}/defs.mk
+c-cppbuiltin.d c-cppbuiltin.o: ${BACKENDOBJ}/tm_p.h ${BACKENDOBJ}/configargs.h \
+	${BACKENDOBJ}/gt-c-family-c-cppbuiltin.h
+.if exists(${DIST}/gcc/config/default-c.cc)
+default-c.o: ${DIST}/gcc/config/default-c.cc
+.elif exists(${DIST}/gcc/config/default-c.c)
+default-c.o: ${DIST}/gcc/config/default-c.c
+.endif
 
 # YUCK.  but see timevar.h:POP_TIMEVAR_AND_RETURN
 CFLAGS+=	-Wno-error # not good enough: -Wno-return-type

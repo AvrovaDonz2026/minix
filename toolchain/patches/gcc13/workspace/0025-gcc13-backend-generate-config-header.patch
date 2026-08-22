@@ -1,0 +1,25 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -71,6 +71,7 @@
+ 		cs-config.h \
+ 		gcov-iov gcov-iov.h \
+ 		gtype-go.h gtype.state
++CLEANFILES+=	config.h
+ 
+ # XXX
+ COPTS.varasm.c=			-Wno-error
+@@ -195,6 +196,14 @@
+ #
+ # Generate the various header files we need.
+ #
++config.h: cs-config.h
++	@true
++cs-config.h: Makefile
++	${_MKTARGET_CREATE}
++	TARGET_CPU_DEFAULT="" \
++	HEADERS="$(G_host_xm_file)" DEFINES="$(G_host_xm_defines)" \
++	${HOST_SH} $(GNUHOSTDIST)/gcc/mkconfig.sh config.h
++
+ genrtl.h: gengenrtl
+ 	${_MKTARGET_CREATE}
+ 	./gengenrtl >${.TARGET}

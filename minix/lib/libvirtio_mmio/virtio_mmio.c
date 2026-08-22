@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <minix/com.h>
 #include <minix/syslib.h>
 #include <minix/sysutil.h>
 #include <minix/virtio_mmio.h>
@@ -52,6 +53,7 @@ struct virtio_mmio_dev {
     int irq_hook;
     int threads;
     int version;                /* VirtIO version (1 or 2) */
+    u8_t event_idx;             /* VIRTIO_RING_F_EVENT_IDX negotiated */
 };
 
 static int virtio_mmio_allow_mem(void)
@@ -121,11 +123,14 @@ static int exchange_features(struct virtio_mmio_dev *dev)
     u32_t guest_features_hi = 0;
     int i;
 
-    /* Read host features */
+    /* Read host features. Legacy MMIO (version 1) only has 32 bits. */
     virtio_mmio_write32(dev, VIRTIO_MMIO_HOST_FEATURES_SEL, 0);
     host_features_lo = virtio_mmio_read32(dev, VIRTIO_MMIO_HOST_FEATURES);
-    virtio_mmio_write32(dev, VIRTIO_MMIO_HOST_FEATURES_SEL, 1);
-    host_features_hi = virtio_mmio_read32(dev, VIRTIO_MMIO_HOST_FEATURES);
+    host_features_hi = 0;
+    if (dev->version != 1) {
+        virtio_mmio_write32(dev, VIRTIO_MMIO_HOST_FEATURES_SEL, 1);
+        host_features_hi = virtio_mmio_read32(dev, VIRTIO_MMIO_HOST_FEATURES);
+    }
 
     /* Check which features we support */
     for (i = 0; i < dev->num_features; i++) {
@@ -150,11 +155,24 @@ static int exchange_features(struct virtio_mmio_dev *dev)
     if (dev->version >= 2 && (host_features_hi & 1U))
         guest_features_hi |= 1U;
 
+    /*
+     * EVENT_IDX is a transport feature.  Negotiate it whenever the
+     * host offers it so kicks and used-ring interrupts can be delayed
+     * the same way FreeBSD's virtio(4) does.
+     */
+    if (host_features_lo & (1U << VIRTIO_RING_F_EVENT_IDX)) {
+        guest_features_lo |= (1U << VIRTIO_RING_F_EVENT_IDX);
+        dev->event_idx = 1;
+    }
+
     /* Write guest features */
     virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES_SEL, 0);
     virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES, guest_features_lo);
-    virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES_SEL, 1);
-    virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES, guest_features_hi);
+    /* Legacy MMIO rejects GUEST_FEATURES_SEL > 0 (#79). */
+    if (dev->version != 1) {
+        virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES_SEL, 1);
+        virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES, guest_features_hi);
+    }
 
     return OK;
 }
@@ -224,15 +242,24 @@ static int alloc_queue(struct virtio_mmio_dev *dev, int qidx)
         virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_ALIGN, PAGE_SIZE);
         virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_PFN, phys / PAGE_SIZE);
     } else {
+        phys_bytes avail_phys, used_phys;
+
         /* Modern interface */
-        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_DESC_LOW, (u32_t)phys);
-        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_DESC_HIGH, (u32_t)(phys >> 32));
+        avail_phys = phys + ((char *)q->vring.avail - (char *)mem);
+        used_phys = phys + ((char *)q->vring.used - (char *)mem);
+
+        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_DESC_LOW,
+            (u32_t)phys);
+        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_DESC_HIGH,
+            (u32_t)(phys >> 32));
         virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_AVAIL_LOW,
-            (u32_t)(phys + q->num * sizeof(struct vring_desc)));
-        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_AVAIL_HIGH, 0);
+            (u32_t)avail_phys);
+        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_AVAIL_HIGH,
+            (u32_t)(avail_phys >> 32));
         virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_USED_LOW,
-            (u32_t)(phys + ring_size - q->num * sizeof(struct vring_used_elem) - 6));
-        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_USED_HIGH, 0);
+            (u32_t)used_phys);
+        virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_USED_HIGH,
+            (u32_t)(used_phys >> 32));
         virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_READY, 1);
     }
 
@@ -303,6 +330,7 @@ struct virtio_mmio_dev *virtio_mmio_setup(u32_t device_type,
     }
 
     memset(dev, 0, sizeof(*dev));
+    dev->irq_hook = -1;         /* not registered until device_ready */
     dev->name = name;
     dev->base = base;
     dev->device_type = device_type;
@@ -384,15 +412,28 @@ int virtio_mmio_alloc_queues(struct virtio_mmio_dev *dev, int num_queues)
 void virtio_mmio_device_ready(struct virtio_mmio_dev *dev)
 {
     u32_t status;
+    int r;
 
-    /* Register IRQ */
+    /* Register IRQ. IRQ_REENABLE keeps the PLIC line unmasked if the
+     * driver is in a TX kick / poll path and cannot sys_irqenable
+     * until it returns to the message loop. */
     dev->irq_hook = dev->irq;
-    sys_irqsetpolicy(dev->irq, 0, &dev->irq_hook);
-    sys_irqenable(&dev->irq_hook);
+    r = sys_irqsetpolicy(dev->irq, IRQ_REENABLE, &dev->irq_hook);
+    if (r != OK) {
+        printf("%s: unable to register IRQ %d (%d)\n",
+            dev->name, dev->irq, r);
+        dev->irq_hook = -1;
+    } else {
+        r = sys_irqenable(&dev->irq_hook);
+        if (r != OK)
+            printf("%s: unable to enable IRQ %d (%d)\n",
+                dev->name, dev->irq, r);
+    }
 
     /* Set DRIVER_OK */
     status = virtio_mmio_read32(dev, VIRTIO_MMIO_STATUS);
-    virtio_mmio_write32(dev, VIRTIO_MMIO_STATUS, status | VIRTIO_STATUS_DRIVER_OK);
+    virtio_mmio_write32(dev, VIRTIO_MMIO_STATUS,
+        status | VIRTIO_STATUS_DRIVER_OK);
 }
 
 /*
@@ -478,6 +519,16 @@ int virtio_mmio_guest_supports(struct virtio_mmio_dev *dev, int bit)
     return 0;
 }
 
+int virtio_mmio_version(struct virtio_mmio_dev *dev)
+{
+    return dev->version;
+}
+
+int virtio_mmio_has_event_idx(struct virtio_mmio_dev *dev)
+{
+    return dev->event_idx != 0;
+}
+
 /*
  * Add buffers to queue
  */
@@ -522,13 +573,36 @@ int virtio_mmio_to_queue(struct virtio_mmio_dev *dev, int qidx,
     virtio_wmb();
     q->vring.avail->ring[q->vring.avail->idx % q->num] = head;
     virtio_wmb();
-    q->vring.avail->idx++;
-    virtio_wmb();
+    {
+        u16_t old_idx = q->vring.avail->idx;
 
-    /* Notify device */
-    virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_NOTIFY, qidx);
+        q->vring.avail->idx++;
+        virtio_wmb();
+
+        if (dev->event_idx) {
+            if (vring_need_event(vring_avail_event(&q->vring),
+                q->vring.avail->idx, old_idx))
+                virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_NOTIFY, qidx);
+        } else if (!(q->vring.used->flags & VRING_USED_F_NO_NOTIFY))
+            virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_NOTIFY, qidx);
+    }
 
     return OK;
+}
+
+/*
+ * Always write QUEUE_NOTIFY.  to_queue() with EVENT_IDX only kicks when
+ * vring_need_event(avail_event=0) is true, which is the first buffer of
+ * a burst.  A 256-slot RX refill therefore left QEMU looking at one
+ * buffer; later TX packets had the same hole.  Callers kick after a
+ * batch so the device sees the current avail idx.
+ */
+void virtio_mmio_kick(struct virtio_mmio_dev *dev, int qidx)
+{
+    if (dev == NULL || qidx < 0 || qidx >= (int)dev->num_queues)
+        return;
+    virtio_wmb();
+    virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_NOTIFY, qidx);
 }
 
 /*
@@ -567,8 +641,35 @@ int virtio_mmio_from_queue(struct virtio_mmio_dev *dev, int qidx,
     q->free_head = head;
 
     q->last_used++;
+    /*
+     * Do not publish used_event here.  Updating it on every consume
+     * leaves QEMU's signalled_used vs used_event window in the
+     * suppressed state if the first VRING IRQ is missed (IPv6 RA
+     * at boot).  Callers drain, then virtio_mmio_enable_cb().
+     */
 
     return 0;
+}
+
+/*
+ * Linux virtqueue_enable_cb: tell the device to interrupt when used
+ * idx passes last_used, then recheck.  A 1 return means drain again.
+ */
+int virtio_mmio_enable_cb(struct virtio_mmio_dev *dev, int qidx)
+{
+    struct virtio_mmio_queue *q;
+
+    if (dev == NULL || qidx < 0 || qidx >= (int)dev->num_queues)
+        return 0;
+    if (!dev->event_idx)
+        return 0;
+
+    q = &dev->queues[qidx];
+    virtio_wmb();
+    vring_used_event(&q->vring) = q->last_used;
+    virtio_mb();
+    virtio_rmb();
+    return q->last_used != q->vring.used->idx;
 }
 
 /*
@@ -588,10 +689,8 @@ int virtio_mmio_had_irq(struct virtio_mmio_dev *dev)
 {
     u32_t status = virtio_mmio_read32(dev, VIRTIO_MMIO_INTERRUPT_STATUS);
 
-    if (status) {
+    if (status)
         virtio_mmio_write32(dev, VIRTIO_MMIO_INTERRUPT_ACK, status);
-        return 1;
-    }
 
-    return 0;
+    return (int)status;
 }

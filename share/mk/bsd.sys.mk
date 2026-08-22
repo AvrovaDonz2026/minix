@@ -185,6 +185,9 @@ AFLAGS+=	${CPUFLAGS}
 .if !defined(LDSTATIC) || ${LDSTATIC} != "-static"
 # Position Independent Executable flags
 PIE_CFLAGS?=        -fPIC
+.if ${MACHINE_CPU} == "riscv"
+PIE_CFLAGS+=        -mno-plt
+.endif
 PIE_LDFLAGS?=       -Wl,-pie ${${ACTIVE_CC} == "gcc":? -shared-libgcc :}
 PIE_AFLAGS?=	    -fPIC
 .endif

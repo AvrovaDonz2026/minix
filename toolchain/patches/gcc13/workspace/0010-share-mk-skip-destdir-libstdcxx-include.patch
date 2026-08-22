@@ -1,0 +1,12 @@
+--- a/share/mk/bsd.own.mk
++++ b/share/mk/bsd.own.mk
+@@ -145,7 +145,9 @@
+ .  if ${USETOOLS:Uno} == "yes" || ${MKLIBSTDCXX:Uno} == "yes"
+ # When cross-compiling, or building MKLIBSTDCXX, use the in-tree LIBSTDCXX
+ MKLIBSTDCXX?=	yes
++.   if ${GCC13_SPIKE:Uno} != "yes"
+ CXXFLAGS+=	-I${DESTDIR}/usr/include/g++
++.   endif
+ .  endif # ${USETOOLS:Uno} == "yes"
+ 
+ .  if ${MKLIBSTDCXX:Uno} == "no"

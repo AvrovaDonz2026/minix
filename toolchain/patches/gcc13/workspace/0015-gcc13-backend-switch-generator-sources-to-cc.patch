@@ -1,0 +1,44 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -201,7 +201,7 @@
+ #
+ 
+ build-rtl.c: ${DIST}/gcc/rtl.c \
+-  ${G_RTL_H} real.h ${G_GCC_H} errors.h gtype-desc.h
++  ${G_RTL_H} ${DIST}/gcc/real.h ${G_GCC_H} ${DIST}/gcc/errors.h gtype-desc.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-rtl.c
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+@@ -209,13 +209,13 @@
+ build-rtl.lo: ${HH}
+ 
+ build-print-rtl.c: ${DIST}/gcc/print-rtl.c \
+-  ${G_RTL_BASE_H} ${G_GTM_H} hard-reg-set.h
++  ${G_RTL_BASE_H} ${G_GTM_H} ${DIST}/gcc/hard-reg-set.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-print-rtl.c
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+ 		${GNUHOSTDIST}/gcc/print-rtl.c >${.TARGET}
+ build-print-rtl.lo: ${HH}
+-build/print-rtl.o: ${DIST}/gcc/print-rtl.c $(BCONFIG_H) $(SYSTEM_H) coretypes.h     \
++build/print-rtl.o: ${DIST}/gcc/print-rtl.c $(BCONFIG_H) $(SYSTEM_H) ${DIST}/gcc/coretypes.h     \
+   $(GTM_H) $(RTL_BASE_H)
+ 
+ 
+@@ -227,14 +227,14 @@
+ 		${GNUHOSTDIST}/gcc/bitmap.c >${.TARGET}
+ build-bitmap.lo: ${HH}
+ 
+-build-errors.c: ${DIST}/gcc/errors.c errors.h
++build-errors.c: ${DIST}/gcc/errors.c ${DIST}/gcc/errors.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-errors.c
+ 	cat ${GNUHOSTDIST}/gcc/errors.c >${.TARGET}
+ build-errors.lo: ${HH_NORTL}
+ 
+ build-varray.c: ${DIST}/gcc/varray.c \
+-  ${G_RTL_H} ${G_GCC_H} ${TREE_H} bitmap.h errors.h
++  ${G_RTL_H} ${G_GCC_H} ${TREE_H} ${DIST}/gcc/bitmap.h ${DIST}/gcc/errors.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-varray.c
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \

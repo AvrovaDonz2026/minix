@@ -57,7 +57,7 @@ MODINFO_MAGIC="${MODINFO_MAGIC:-0x584e494d}"
 MODULE_ALIGN="${MODULE_ALIGN:-0x1000}"
 
 # QEMU binary
-QEMU="qemu-system-riscv64"
+QEMU="${QEMU:-qemu-system-riscv64}"
 
 # Parse arguments
 while getopts "dsm:k:i:B:ng" opt; do
@@ -270,10 +270,22 @@ QEMU_ARGS+=(
 
 # Network
 if [ "$NETWORK" -eq 1 ]; then
+    hostfwd_arg=""
+    if [ "${NET_HOSTFWD:-tcp::2222-:22}" != "none" ] && \
+        [ "${NET_HOSTFWD:-}" != "0" ]; then
+        hostfwd_arg=",hostfwd=${NET_HOSTFWD:-tcp::2222-:22}"
+    fi
+    # QEMU 8.2 net/slirp.c: ipv6=on without has_ipv4 clears ipv4, so
+    # slirp in_enabled=0 and ARP/ICMP to 10.0.2.2 are dropped. Keep both.
     QEMU_ARGS+=(
-        -netdev user,id=net0,hostfwd=tcp::2222-:22
-        -device virtio-net-device,netdev=net0
+        -netdev "user,id=net0,ipv4=on,ipv6=on${hostfwd_arg}"
+        -device virtio-net-device,netdev=net0,mac=52:54:00:12:34:56
     )
+    if [ -n "${NET_PCAP:-}" ]; then
+        QEMU_ARGS+=(
+            -object "filter-dump,id=netdump0,netdev=net0,file=${NET_PCAP},queue=all"
+        )
+    fi
 fi
 
 # Graphics

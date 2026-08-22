@@ -1,0 +1,19 @@
+--- a/external/gpl3/gcc/lib/libsupc++/Makefile.common
++++ b/external/gpl3/gcc/lib/libsupc++/Makefile.common
+@@ -26,9 +26,16 @@
+ CPPFLAGS+=	-I${DESTDIR}/usr/include/g++
+ CPPFLAGS+=	-I${DESTDIR}/usr/include/gcc-4.8
+ .elif ${GCC13_SPIKE:Uno} == "yes"
++# bsd.own.mk injects DESTDIR's installed g++ headers into CXXFLAGS for
++# MKLIBSTDCXX builds. That path contains legacy public wrappers whose
++# <string>/<system_error>/<stdexcept> headers are older than the GCC13
++# source tree, so strip it here and use the overlaid source wrappers.
++CXXFLAGS:=	${CXXFLAGS:N-I${DESTDIR}/usr/include/g++:N-I${DESTDIR}/usr/include/gcc-4.8}
+ # Keep GCC13 libsupc++/libstdc++ self-hosted against the overlaid source
+ # headers. Mixing in DESTDIR's legacy GCC4-era include trees leaves string
+ # and ios types incomplete during the bootstrap build.
++CPPFLAGS+=	-I${DIST}/libstdc++-v3/include/std
++CPPFLAGS+=	-I${DIST}/libstdc++-v3/include/c_global
+ CPPFLAGS+=	-I${DIST}/libstdc++-v3/include
+ CPPFLAGS+=	-I${DIST}/libstdc++-v3/include/debug
+ .endif #defined(__MINIX)

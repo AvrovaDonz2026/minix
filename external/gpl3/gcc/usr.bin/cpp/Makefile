@@ -10,7 +10,7 @@ PROG=		gcpp
 .else
 PROG=		cpp
 .endif # defined(__MINIX)
-SRCS=		cppspec.c ${G_GCC_OBJS:.o=.c}
+SRCS=		cppspec.cc ${G_GCC_OBJS:.o=.cc}
 
 CPPFLAGS+=	-I${BACKENDOBJ}
 # XXX
@@ -43,7 +43,8 @@ ${SRCS}: ${GCCARCH}/defs.mk
 
 .include <bsd.info.mk>
 
-COPTS.gcc.c=	-Wno-stack-protector
+COPTS.gcc.cc=	-Wno-stack-protector
+COPTS.gcc.c+=	${COPTS.gcc.cc}
 
 .PATH: ${DIST}/gcc ${DIST}/gcc/c-family ${DIST}/gcc/doc
 

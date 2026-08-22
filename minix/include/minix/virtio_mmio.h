@@ -122,16 +122,27 @@ void virtio_mmio_free(struct virtio_mmio_dev *dev);
 /* Feature helpers */
 int virtio_mmio_host_supports(struct virtio_mmio_dev *dev, int bit);
 int virtio_mmio_guest_supports(struct virtio_mmio_dev *dev, int bit);
+int virtio_mmio_version(struct virtio_mmio_dev *dev);
+int virtio_mmio_has_event_idx(struct virtio_mmio_dev *dev);
 
 /* Queue operations */
 int virtio_mmio_to_queue(struct virtio_mmio_dev *dev, int qidx,
     struct vumap_phys *bufs, size_t num, void *data);
 int virtio_mmio_from_queue(struct virtio_mmio_dev *dev, int qidx,
     void **data, size_t *len);
+/* Always notify the device. EVENT_IDX in to_queue only kicks the first
+ * buffer of a burst (avail_event starts at 0), so RX refill and TX
+ * send must kick after the batch or QEMU never sees the rest. */
+void virtio_mmio_kick(struct virtio_mmio_dev *dev, int qidx);
+/* After draining a used ring, publish used_event = last_used (Linux
+ * virtqueue_enable_cb). Returns 1 if the device added more used
+ * buffers during the barrier; drain again. Without EVENT_IDX, 0. */
+int virtio_mmio_enable_cb(struct virtio_mmio_dev *dev, int qidx);
 
 /* IRQ handling */
 void virtio_mmio_irq_enable(struct virtio_mmio_dev *dev);
 void virtio_mmio_irq_disable(struct virtio_mmio_dev *dev);
+/* Acknowledge and return VIRTIO_MMIO_INT_* bits, or 0. */
 int virtio_mmio_had_irq(struct virtio_mmio_dev *dev);
 
 /* Register access */

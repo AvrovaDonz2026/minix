@@ -1,0 +1,14 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -42,6 +42,11 @@
+ G_OUT_FILE_SRC:=	${G_out_file:S,.c,.cc,}
+ .endif
+ 
++# Reseed the search path after Makefile.inc so GCCARCH and G_out_file
++# contribute their real directories before bsd.lib.mk consumes .depend.
++.PATH: ${DIST}/gcc ${DIST}/libiberty ${GCCARCH} ${G_out_file:H} ${DIST}/include
++.PATH: ${DIST}/gcc/config
++
+ .include <bsd.lib.mk>
+ 
+ # Force using C++ for this

@@ -1,0 +1,11 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -378,7 +378,7 @@
+ data-streamer.o data-streamer-out.o coverage.o gcov-dump.o gcov-io.o gcov-iov.o gcov.o libgcov.o lto-cgraph.o mcf.o modulo-sched.o profile.o value-prof.o: gcov-io.h
+ gcov-io.h: gcov-iov.h
+ df-scan.d df-scan.o: target-hooks-def.h
+-read-md.d read-md.o read-md.lo: auto-build.h
++read-md.d read-md.o read-md.lo: auto-build.h insn-modes.h
+ 
+ # XXX make all hooks generated for now.
+ final.o: target-hooks-def.h c-family/c-target-hooks-def.h common/common-target-hooks-def.h

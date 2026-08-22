@@ -1,0 +1,40 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -78,7 +78,7 @@
+ 		build-bitmap.cc build-ggc-none.cc \
+ 		gt-*.h *.o *.lo \
+ 		cs-config.h \
+-		gcov-iov gcov-iov.h \
++		gcov-iov gcov-iov.h version.h \
+ 		gtype-go.h gtype.state
+ CLEANFILES+=	config.h
+ 
+@@ -258,12 +258,11 @@
+ 	./gengtype -r gtype.state
+ 	# GCC 4.8 installs gtype-state and gengtype as a plugin
+ 
+-# gengtype is the real need for options.h
+-gengtype.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_gengtype_SRC}
++# GCC 13 replaced version.o with a generated version.h.
++gengtype.lo: ${HH} gtyp-gen.h config.h options.h version.h ${GCC13_BACKEND_gengtype_SRC}
+ gengtype-lex.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_gengtype_lex_SRC}
+ gengtype-parse.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_gengtype_parse_SRC}
+-gengtype-state.lo: ${HH} gtyp-gen.h config.h options.h ${GCC13_BACKEND_gengtype_state_SRC}
+-version.lo: ${HH} gtyp-gen.h config.h options.h version.c
+-gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo build-errors.lo version.lo
++gengtype-state.lo: ${HH} gtyp-gen.h config.h options.h version.h ${GCC13_BACKEND_gengtype_state_SRC}
++gengtype: gengtype.lo gengtype-lex.lo gengtype-parse.lo gengtype-state.lo build-errors.lo
+ 	${_MKTARGET_LINK}
+ 	${HOST_LINK.cc} -o ${.TARGET} ${.ALLSRC} ${NBCOMPATLIB} ${HOSTLIBIBERTY}
+@@ -282,6 +281,11 @@
+ 	echo "NULL };"							; \
+ 	) >${.TARGET}
+ 
++version.h: ${TOOLSGCCBUILD}/version.h
++	${_MKTARGET_CREATE}
++	rm -f ${.TARGET}
++	cp ${.ALLSRC} ${.TARGET}
++
+ insn-modes.c: genmodes
+ 	${_MKTARGET_CREATE}
+ 	./genmodes >${.TARGET}

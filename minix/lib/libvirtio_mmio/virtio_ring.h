@@ -145,9 +145,8 @@ static inline unsigned vring_size(unsigned int num, unsigned long align)
 		+ sizeof(u16_t) * 3 + sizeof(struct vring_used_elem) * num;
 }
 
-#if 0
 /* The following is used with USED_EVENT_IDX and AVAIL_EVENT_IDX */
-/* Assuming a given event_idx value from the other size, if
+/* Assuming a given event_idx value from the other side, if
  * we have just incremented index from old to new_idx,
  * should we trigger an event? */
 static inline int vring_need_event(u16_t event_idx, u16_t new_idx, u16_t old)
@@ -159,6 +158,8 @@ static inline int vring_need_event(u16_t event_idx, u16_t new_idx, u16_t old)
 	 * event indexes in virtio start at 0. */
 	return (u16_t)(new_idx - event_idx - 1) < (u16_t)(new_idx - old);
 }
+
+#if 0
 
 #ifdef __KERNEL__
 #include <linux/irqreturn.h>

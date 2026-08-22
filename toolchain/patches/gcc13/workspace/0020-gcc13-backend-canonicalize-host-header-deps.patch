@@ -1,0 +1,144 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -83,6 +83,92 @@
+ HH_NORTL=		${G_tm_file_list} ${G_BUILD_XM_HEADERS}
+ HH=		${HH_NORTL} genrtl.h insn-modes.h
+ 
++# GCC13 carries many backend helper prerequisites as bare basenames in the
++# generated defs. Canonicalize the source-tree headers here so host helper
++# rules do not depend on .PATH continuing to resolve each basename.
++GCC13_BACKEND_G_GCC_H_DIST=	gcc.h version.h diagnostic-core.h input.h diagnostic.def
++GCC13_BACKEND_G_GCC_H_ARCH=	bversion.h
++GCC13_BACKEND_G_GCC_H=
++.for h in ${G_GCC_H}
++.if !empty(GCC13_BACKEND_G_GCC_H_DIST:M${h})
++GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${DIST}/gcc/${h}
++.elif !empty(GCC13_BACKEND_G_GCC_H_ARCH:M${h})
++GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${GCCARCH}/${h}
++.else
++GCC13_BACKEND_G_GCC_H:= ${GCC13_BACKEND_G_GCC_H} ${h}
++.endif
++.endfor
++
++GCC13_BACKEND_G_RTL_H_DIST=	coretypes.h rtl.h rtl.def machmode.h mode-classes.def
++GCC13_BACKEND_G_RTL_H_DIST+=	reg-notes.def insn-notes.def input.h real.h
++GCC13_BACKEND_G_RTL_H_DIST+=	statistics.h vec.h ggc.h fixed-value.h
++GCC13_BACKEND_G_RTL_H_DIST+=	double-int.h alias.h flags.h flag-types.h
++GCC13_BACKEND_G_RTL_H=
++.for h in ${G_RTL_H}
++.if !empty(GCC13_BACKEND_G_RTL_H_DIST:M${h})
++GCC13_BACKEND_G_RTL_H:= ${GCC13_BACKEND_G_RTL_H} ${DIST}/gcc/${h}
++.else
++GCC13_BACKEND_G_RTL_H:= ${GCC13_BACKEND_G_RTL_H} ${h}
++.endif
++.endfor
++
++GCC13_BACKEND_G_RTL_BASE_H_DIST=	coretypes.h rtl.h rtl.def machmode.h
++GCC13_BACKEND_G_RTL_BASE_H_DIST+=	mode-classes.def reg-notes.def insn-notes.def
++GCC13_BACKEND_G_RTL_BASE_H_DIST+=	input.h real.h statistics.h vec.h ggc.h
++GCC13_BACKEND_G_RTL_BASE_H_DIST+=	fixed-value.h double-int.h alias.h
++GCC13_BACKEND_G_RTL_BASE_H=
++.for h in ${G_RTL_BASE_H}
++.if !empty(GCC13_BACKEND_G_RTL_BASE_H_DIST:M${h})
++GCC13_BACKEND_G_RTL_BASE_H:= ${GCC13_BACKEND_G_RTL_BASE_H} ${DIST}/gcc/${h}
++.else
++GCC13_BACKEND_G_RTL_BASE_H:= ${GCC13_BACKEND_G_RTL_BASE_H} ${h}
++.endif
++.endfor
++
++GCC13_BACKEND_G_TREE_H_DIST=	coretypes.h tree.h tree.def machmode.h mode-classes.def
++GCC13_BACKEND_G_TREE_H_DIST+=	builtins.def sync-builtins.def omp-builtins.def
++GCC13_BACKEND_G_TREE_H_DIST+=	gtm-builtins.def sanitizer.def input.h
++GCC13_BACKEND_G_TREE_H_DIST+=	statistics.h vec.h ggc.h treestruct.def
++GCC13_BACKEND_G_TREE_H_DIST+=	double-int.h alias.h flags.h flag-types.h
++GCC13_BACKEND_G_TREE_H_DIST+=	real.h fixed-value.h
++GCC13_BACKEND_G_TREE_H_ARCH=	all-tree.def
++GCC13_BACKEND_G_TREE_H=
++.for h in ${G_TREE_H}
++.if !empty(GCC13_BACKEND_G_TREE_H_DIST:M${h})
++GCC13_BACKEND_G_TREE_H:= ${GCC13_BACKEND_G_TREE_H} ${DIST}/gcc/${h}
++.elif !empty(GCC13_BACKEND_G_TREE_H_ARCH:M${h})
++GCC13_BACKEND_G_TREE_H:= ${GCC13_BACKEND_G_TREE_H} ${GCCARCH}/${h}
++.else
++GCC13_BACKEND_G_TREE_H:= ${GCC13_BACKEND_G_TREE_H} ${h}
++.endif
++.endfor
++
++GCC13_BACKEND_G_GTM_H_ARCH=	tm.h
++GCC13_BACKEND_G_GTM_H=
++.for h in ${G_GTM_H}
++.if !empty(GCC13_BACKEND_G_GTM_H_ARCH:M${h})
++GCC13_BACKEND_G_GTM_H:= ${GCC13_BACKEND_G_GTM_H} ${GCCARCH}/${h}
++.else
++GCC13_BACKEND_G_GTM_H:= ${GCC13_BACKEND_G_GTM_H} ${h}
++.endif
++.endfor
++
++GCC13_BACKEND_G_BASIC_BLOCK_H_DIST=	basic-block.h predict.h predict.def
++GCC13_BACKEND_G_BASIC_BLOCK_H_DIST+=	vec.h statistics.h ggc.h function.h
++GCC13_BACKEND_G_BASIC_BLOCK_H_DIST+=	hard-reg-set.h cfghooks.h machmode.h
++GCC13_BACKEND_G_BASIC_BLOCK_H_DIST+=	mode-classes.def cfg-flags.def flag-types.h
++GCC13_BACKEND_G_BASIC_BLOCK_H_ARCH=	tm.h
++GCC13_BACKEND_G_BASIC_BLOCK_H=
++.for h in ${G_BASIC_BLOCK_H}
++.if !empty(GCC13_BACKEND_G_BASIC_BLOCK_H_DIST:M${h})
++GCC13_BACKEND_G_BASIC_BLOCK_H:= ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${DIST}/gcc/${h}
++.elif !empty(GCC13_BACKEND_G_BASIC_BLOCK_H_ARCH:M${h})
++GCC13_BACKEND_G_BASIC_BLOCK_H:= ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${GCCARCH}/${h}
++.else
++GCC13_BACKEND_G_BASIC_BLOCK_H:= ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${h}
++.endif
++.endfor
++
+ #
+ # Generate the various header files we need.
+ #
+@@ -217,7 +303,7 @@
+ #
+ 
+ build-rtl.cc: ${DIST}/gcc/rtl.cc \
+-  ${G_RTL_H} ${DIST}/gcc/real.h ${G_GCC_H} ${DIST}/gcc/errors.h gtype-desc.h
++  ${GCC13_BACKEND_G_RTL_H} ${DIST}/gcc/real.h ${GCC13_BACKEND_G_GCC_H} ${DIST}/gcc/errors.h gtype-desc.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-rtl.cc
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+@@ -225,18 +311,18 @@
+ build-rtl.lo: ${HH} build-rtl.cc
+ 
+ build-print-rtl.cc: ${DIST}/gcc/print-rtl.cc \
+-  ${G_RTL_BASE_H} ${G_GTM_H} ${DIST}/gcc/hard-reg-set.h
++  ${GCC13_BACKEND_G_RTL_BASE_H} ${GCC13_BACKEND_G_GTM_H} ${DIST}/gcc/hard-reg-set.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-print-rtl.cc
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+ 		${GNUHOSTDIST}/gcc/print-rtl.cc >${.TARGET}
+ build-print-rtl.lo: ${HH} build-print-rtl.cc
+ build/print-rtl.o: ${DIST}/gcc/print-rtl.cc $(BCONFIG_H) $(SYSTEM_H) ${DIST}/gcc/coretypes.h     \
+-  $(GTM_H) $(RTL_BASE_H)
++  ${GCC13_BACKEND_G_GTM_H} ${GCC13_BACKEND_G_RTL_BASE_H}
+ 
+ 
+ build-bitmap.cc: ${DIST}/gcc/bitmap.cc \
+-  ${G_RTL_H} flags.h ${G_BASIC_BLOCK_H} ${REGS_H} ${G_GCC_H} gtype-desc.h
++  ${GCC13_BACKEND_G_RTL_H} ${DIST}/gcc/flags.h ${GCC13_BACKEND_G_BASIC_BLOCK_H} ${REGS_H} ${GCC13_BACKEND_G_GCC_H} gtype-desc.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-bitmap.cc
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+@@ -250,7 +336,7 @@
+ build-errors.lo: ${HH_NORTL} build-errors.cc
+ 
+ build-varray.c: ${DIST}/gcc/varray.c \
+-  ${G_RTL_H} ${G_GCC_H} ${TREE_H} ${DIST}/gcc/bitmap.h ${DIST}/gcc/errors.h
++  ${GCC13_BACKEND_G_RTL_H} ${GCC13_BACKEND_G_GCC_H} ${GCC13_BACKEND_G_TREE_H} ${DIST}/gcc/bitmap.h ${DIST}/gcc/errors.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-varray.c
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \
+@@ -258,7 +344,7 @@
+ build-varray.lo: ${HH} gtype-desc.h
+ 
+ build-ggc-none.cc: ${DIST}/gcc/ggc-none.cc \
+-  ${G_GCC_H} gtype-desc.h
++  ${GCC13_BACKEND_G_GCC_H} gtype-desc.h
+ 	${_MKTARGET_CREATE}
+ 	rm -f build-ggc-none.cc
+ 	${TOOL_SED} -e 's/<config[.]h/hconfig.h/' \

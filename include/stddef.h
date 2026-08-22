@@ -65,6 +65,24 @@ typedef	_BSD_WCHAR_T_	wchar_t;
 #endif
 #define	offsetof(type, member) __offsetof__((reinterpret_cast<size_t> \
     (&reinterpret_cast<const volatile char &>(static_cast<type *>(0)->member))))
-#endif  
+#endif
+
+#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L) || \
+    (defined(__cplusplus) && __cplusplus >= 201103L)
+#ifndef _GCC_MAX_ALIGN_T
+#define _GCC_MAX_ALIGN_T
+typedef struct {
+	long long __max_align_ll __attribute__((__aligned__(__alignof__(long long))));
+	long double __max_align_ld __attribute__((__aligned__(__alignof__(long double))));
+} max_align_t;
+#endif
+#endif
+
+#if defined(__cplusplus) && __cplusplus >= 201103L
+#ifndef _GXX_NULLPTR_T
+#define _GXX_NULLPTR_T
+typedef decltype(nullptr) nullptr_t;
+#endif
+#endif
  
 #endif /* _STDDEF_H_ */

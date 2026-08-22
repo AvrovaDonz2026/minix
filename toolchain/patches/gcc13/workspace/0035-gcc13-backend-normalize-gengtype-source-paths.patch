@@ -1,0 +1,11 @@
+--- a/external/gpl3/gcc/usr.bin/backend/Makefile
++++ b/external/gpl3/gcc/usr.bin/backend/Makefile
+@@ -237,6 +237,8 @@
+ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
+ 	${TOOL_SED} -e 's#SRCDIR#${DIST}#' \
+ 	    -e 's#${G_GT_OUT_FILE}#${G_OUT_FILE_SRC}#' \
++	    -e 's#${DIST}/gcc/\\.\\./libcpp/include#${DIST}/libcpp/include#g' \
++	    -e 's#${DIST}/gcc/\\.\\./include#${DIST}/include#g' \
+ 	    -e 's#${G_out_file}#${G_OUT_FILE_SRC}#' < ${.ALLSRC} > ${.TARGET}
+ CLEANFILES+=	gtyp-input.list.tmp
+ 

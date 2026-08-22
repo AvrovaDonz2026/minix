@@ -88,6 +88,37 @@ VER_CPPFLAGS=	-DBASEVER="\"${BASEVER}"\" \
 
 .include "${GCCARCH}/defs.mk"
 
+# gcc 13 mknative dropped 4.8.5-only frontend and libcpp objects.
+# Nightly 32537278919 linked native cc1 then missed mudflap_init()
+# (gcc/tree-mudflap.c in G_C_OBJS) and _cpp_preprocess_dir_only
+# (libcpp/directives-only.c). i386 gcc 4.8.5 defs still list them.
+# Restore cp/repo.o for cc1plus (also dropped from G_CXX_OBJS).
+.if exists(${DIST}/gcc/tree-mudflap.c) || exists(${DIST}/gcc/tree-mudflap.cc)
+.if empty(G_C_OBJS:Mtree-mudflap.o)
+G_C_OBJS+=		tree-mudflap.o
+.endif
+.if empty(G_C_AND_OBJC_OBJS:Mtree-mudflap.o)
+G_C_AND_OBJC_OBJS+=	tree-mudflap.o
+.endif
+.if empty(G_CXX_OBJS:Mtree-mudflap.o)
+G_CXX_OBJS+=		tree-mudflap.o
+.endif
+.if empty(G_CXX_C_OBJS:Mtree-mudflap.o)
+G_CXX_C_OBJS+=		tree-mudflap.o
+.endif
+.endif
+.if exists(${DIST}/gcc/cp/repo.c) || exists(${DIST}/gcc/cp/repo.cc)
+.if empty(G_CXX_OBJS:Mrepo.o)
+G_CXX_OBJS+=		repo.o
+.endif
+.endif
+.if exists(${DIST}/libcpp/directives-only.c) || \
+    exists(${DIST}/libcpp/directives-only.cc)
+.if empty(G_libcpp_a_OBJS:Mdirectives-only.o)
+G_libcpp_a_OBJS+=	directives-only.o
+.endif
+.endif
+
 .if ${MKPIC} != "no"
 .if ${G_ENABLE_SHARED} == "yes" && ${G_SHLIB_LINK} != ""
 CPPFLAGS+=	-DENABLE_SHARED_LIBGCC

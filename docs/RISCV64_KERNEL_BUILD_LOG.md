@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-22
-**Version / 版本**: 1.55
+**Version / 版本**: 1.56
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2309,3 +2309,19 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - QEMU 8.2 `net/slirp.c` `net_init_slirp()`
 - GitHub Actions runs `32552319291` (nightly) and `32552319287` (release)
 
+## Entry 70 — 2026-08-22 06:45 UTC
+
+**Change / 变更**: System audit of the current tree and `/tmp/qemu-debug.log` (QEMU 8.2.2 `-d guest_errors,unimp`). Gateway ping (`#76`) stays closed. Filed `#77` (`phys_copy` catch_pagefaults PC range covers `phys_memset`), `#78` (PLIC 1024 vs QEMU virt 96 sources: 928 invalid priority writes `0x180`–`0xffc`, 29 invalid enable writes from `0x208c`), `#79` (legacy virtio-mmio `GUEST_FEATURES_SEL=1`), `#80` (PROMISC before `CTRL_MAC_TABLE_SET`, unicast count=1). Archived `#16` (`map_service()` validates first). `#37` marked DONE on the P2 list. `A3` is `[WATCH]`. `multi_smoke_gate.sh` `rc=124` then `[PASS]` after boot markers is the intended QEMU stop, not a new false-positive.
+
+**Issue ID**: `#77` `#78` `#79` `#80`
+
+**Result / 结果**: Docs only. No kernel/driver change.
+
+**Evidence / 证据**:
+- `issue.md` `#77`–`#80`
+- `minix/kernel/arch/riscv64/phys_copy.S`
+- `minix/kernel/arch/riscv64/exception.c`
+- `minix/kernel/arch/riscv64/plic.c`
+- `minix/lib/libvirtio_mmio/virtio_mmio.c`
+- `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
+- `/tmp/qemu-debug.log`

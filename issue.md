@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.69
+**Version / 版本**: 1.70
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,11 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`.
+**2026-08-22 系统审计 / system audit**: 对照当前工作树与 `/tmp/qemu-debug.log`（QEMU 8.2.2 `-d guest_errors,unimp`）复核开放项。`#73`–`#76` 的网关 ping 保持已关闭；新开 `#77`–`#80`。`#16` 的“先写后验”路径已不在 `map_service()` 中。`multi_smoke_gate.sh` 把 `timeout` 的 `rc=124` 记成 `[INFO]` 再查 boot marker，这是停 QEMU 的预期语义，不另开假阳性单。
+**2026-08-22 system audit**: Re-checked open items against the current tree and `/tmp/qemu-debug.log` (QEMU 8.2.2 `-d guest_errors,unimp`). `#73`–`#76` gateway ping stays closed. Newly filed: `#77`–`#80`. The `#16` write-then-validate path is gone from `map_service()`. `multi_smoke_gate.sh` logging `rc=124` then `[PASS]` after boot-marker checks is the intended way to stop QEMU, not a separate false-positive issue.
+
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -23,11 +26,12 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   5) `[DONE]` `#18` RS `do_init_ready()` / `catch_boot_init_ready()` 异常路径空指针解引用
   6) `[DONE]` `#23` RISC-V `vm_memset` 无故障恢复，可能把可恢复故障升级为 kernel panic
 - P1 / 高优先（高概率影响功能正确性）:
-  1) `#16` VFS 服务端点“先写后验”可能弱化代际校验
+  1) `#77` `phys_copy` 缺页恢复 PC 区间覆盖 `phys_memset`，`catch_pagefaults` 可能拆错栈帧
   2) `#17` 启动期 safecopy 噪声错误闭环（定位根因并降噪）
-  3) `A3` 含盘场景 `minix-service`/`virtio_blk_mmio` SIGSEGV
-  4) `[DONE]` `#25` 内建 GCC 不支持 `-mabi=lp64d`，阻断部分 GCC-only 增量构建
-  5) `[DONE]` `#26` RS `do_up`/`do_update` 失败路径未回收 slot 资源，`RSS_COPY` 可触发可重复内存泄漏
+  3) `A3` `[WATCH]` 用户态 `memset` 栈顶 SIGSEGV（已缓解并经无盘/带盘 smoke；保留长跑回归）
+  4) `[DONE]` `#16` VFS 服务端点“先写后验”可能弱化代际校验
+  5) `[DONE]` `#25` 内建 GCC 不支持 `-mabi=lp64d`，阻断部分 GCC-only 增量构建
+  6) `[DONE]` `#26` RS `do_up`/`do_update` 失败路径未回收 slot 资源，`RSS_COPY` 可触发可重复内存泄漏
   6) `[DONE]` `#28` RS `init_state_data` 在多个错误出口缺少内存回收
   7) `[DONE]` `#29` safecopy 首错分类规则过宽，存在门禁假阴性风险
   8) `[DONE]` `#32` multi-smoke 缺少运行时命令探针，易漏报“能启动但功能退化”
@@ -72,11 +76,18 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
-  3) `#13` `phys_copy` fault handler 注册缺失
+  3) `#13` `phys_copy` 本地 TODO 未接线；缺页恢复见 `#77`
   4) `#14` DT 多段内存/保留区解析补齐
   5) `[DONE]` `#30` multi-smoke 默认复用磁盘镜像，削弱跨次可复现性
   6) `[DONE]` `#31` smoke/repro 门禁对退出语义与宿主可移植性校验不足
-  7) `#37` native toolchain（来宾内 `as/ld/ar/ranlib` + `cc/gcc/clang`）闭环未完成
+  7) `[DONE]` `#37` native toolchain（来宾内 `as/ld/ar/ranlib` + `cc/gcc/clang`）闭环未完成
+  8) `#78` `PLIC_NUM_SOURCES=1024` 超过 QEMU virt 的 96 个源，启动写非法 PLIC 寄存器
+  9) `#79` legacy virtio-mmio 仍写 `GUEST_FEATURES_SEL=1`，QEMU 报 guest_error
+  10) `#80` virtio-net `CTRL_RX` PROMISC 先于 `CTRL_MAC_TABLE_SET`，单播表填本机 MAC 而非 Linux 空表
+- P3 / 低优先（可维护性与技术债）:
+  1) `#19` kernel/VM/RS 无条件调试日志收敛
+  2) `#11` `minimal_kernel` RISC-V 适配
+  3) `TD1`/`TD2`/`TD3` 技术债
 - P3 / 低优先（可维护性与技术债）:
   1) `#19` kernel/VM/RS 无条件调试日志收敛
   2) `#11` `minimal_kernel` RISC-V 适配
@@ -176,6 +187,11 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     `virtio-blk-mmio` reports capacity and initialization, no `minix-service` SIGSEGV signature observed.
     Log: `/tmp/qemu-smoke-disk.log`
   - Status / 状态: fixed + smoke-validated for current bring-up scope; keep long-run stress/regression under P1 follow-up.
+  - 2026-08-22 audit: hosted nightly/release virtio-blk I/O smoke and
+    net `ping_gw` stay green; no new stack-top `memset` SIGSEGV in
+    those logs. Keep as `[WATCH]`, not an active bring-up blocker.
+    2026-08-22 审计：hosted virtio-blk I/O 与 net `ping_gw` 仍绿，未见
+    新的栈顶 `memset` SIGSEGV。降为 `[WATCH]`，不再当启动阻断项。
 
 ### A4) virtio_blk_mmio startup failure in diskless QEMU smoke (configuration-driven) / 无盘 QEMU 冒烟中 virtio_blk_mmio 启动失败（配置驱动）
 - Evidence / 证据:
@@ -298,6 +314,19 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Suggested fix / 修复建议:
   - Validate endpoint/generation first (without mutating `fproc`), then apply resync only when explicitly proven safe.
   - Add a guarded path (and log) for legitimate RS republish cases.
+- Update / 进展:
+  - 2026-08-22 audit: `map_service()` no longer writes `fp_endpoint` before
+    validation. It calls `isokendpt()` first, then only sets `FP_SRV_PROC`.
+    `get_work()` panics on generation mismatch instead of masking it.
+    2026-08-22 审计：`map_service()` 不再先写 `fp_endpoint` 再校验。
+    现先 `isokendpt()`，再置 `FP_SRV_PROC`。`get_work()` 在代际不一致时
+    直接 panic，而不是掩盖。
+    Evidence: `minix/servers/vfs/dmap.c:209-215`,
+    `minix/servers/vfs/main.c:652-667`,
+    `minix/servers/vfs/utility.c:117`.
+- Status / 状态:
+  - Stale in current tree; archived. Remaining endpoint noise is `#17`.
+    当前树已不存在该路径；归档。残留端点噪声见 `#17`。
 
 ### 18) RS init-ready path may dereference null service slot on unexpected RS_INIT / RS 初始化就绪路径在异常 RS_INIT 下可能空指针解引用
 - Evidence / 证据:
@@ -642,6 +671,46 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     已在当前工作树修复；用既有 smoke 日志回放结果稳定
     （已知启动回退签名仍判定为 `acceptable_noise`）。
 
+### 77) `phys_copy` catch_pagefaults PC range includes `phys_memset` / `phys_copy` 缺页恢复区间覆盖 `phys_memset`
+- Evidence / 证据:
+  - i386 puts `phys_copy_fault` immediately after the copy loop, then
+    defines `phys_memset` later:
+    `minix/kernel/arch/i386/klib.S:173-214` (`ENTRY(phys_copy)` /
+    `LABEL(phys_copy_fault)`), `klib.S:354` (`ENTRY(phys_memset)`).
+  - RISC-V layout in `minix/kernel/arch/riscv64/phys_copy.S` is
+    `phys_copy` (line 48) → `phys_memset` (line 155) → `phys_copy_fault`
+    (line 217) → `memset_fault` (line 229).
+  - `handle_page_fault` tests
+    `sepc > phys_copy && sepc < phys_copy_fault` first, then
+    `sepc > phys_memset && sepc < memset_fault`:
+    `minix/kernel/arch/riscv64/exception.c:253-266`.
+    A fault inside `phys_memset` matches both; `if (in_physcopy)` wins
+    and jumps to `phys_copy_fault` → `.Lcopy_fault`.
+  - `.Lcopy_fault` pops a 16-byte `ra`/`s0` frame
+    (`phys_copy.S:130-140`) that `phys_memset` never pushed
+    (`phys_copy.S:155-206` has no stack frame).
+  - `vm_memset` sets `catch_pagefaults = 1` then calls `phys_memset`:
+    `minix/kernel/arch/riscv64/memory.c:435-459`.
+    `#23` added this catch path; the overlapping symbols can turn a
+    recoverable user-memset fault into stack corruption or panic.
+- Impact / 影响:
+  - `SYS_MEMSET` / `SYS_SAFEMEMSET` faults on user pages can restore the
+    wrong `ra` instead of returning an error. Boot smoke that never
+    faults `phys_memset` will not see this.
+    用户页上的 memset 缺页可能拆错栈而不是返回错误。未触发
+    `phys_memset` 缺页的 boot smoke 看不出这个问题。
+- Suggested fix / 修复建议:
+  - Move `phys_copy_fault` / `phys_copy_fault_in_kernel` to immediately
+    after `phys_copy`, matching i386, so the copy range excludes
+    `phys_memset`.
+  - Keep `memset_fault` immediately after `phys_memset`.
+  - Check `in_memset` before `in_physcopy`, or use non-overlapping
+    `[fn, fn_fault)` ranges.
+  - Drop the dead `la t0, .Lcopy_fault` / TODO (`#13`).
+- Priority assessment / 优先级评估:
+  - `P1`: kernel catch_pagefaults recovery is wrong for a path that is
+    already used (`vm_memset`). Not a ping regression.
+
 ## Moderate / 中等
 
 ### 11) Minimal kernel build is not RISC-V-ready / minimal_kernel 未支持 RISC-V
@@ -655,11 +724,24 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 
 ### 13) phys_copy fault handler not registered / phys_copy 缺少故障处理注册
 - Evidence / 证据:
-  - `minix/kernel/arch/riscv64/phys_copy.S:71-74` leaves a TODO to register the fault handler
+  - `minix/kernel/arch/riscv64/phys_copy.S:84-86` still has a dead
+    `la t0, .Lcopy_fault` plus `TODO: Register fault handler`; `t0` is
+    overwritten by the alignment check.
+  - `minix/kernel/arch/riscv64/exception.c:253-271` already recovers by
+    PC range (`phys_copy` .. `phys_copy_fault`), like i386. That range is
+    wrong; see `#77`.
 - Impact / 影响:
-  - Faulting physical copies can trap instead of returning an error. / 物理复制缺页可能直接陷入异常而非返回错误。
+  - The leftover TODO is not what recovers faults. Overlapping symbols can
+    turn a recoverable `phys_memset` fault into stack corruption.
+    本地 TODO 并未真正注册恢复入口；符号区间重叠才是正确性风险（见 `#77`）。
 - Suggested fix / 修复建议:
-  - Hook into the arch fault-handling mechanism (as in other architectures) for safe phys_copy. / 接入架构故障处理机制以安全执行 phys_copy。
+  - Delete the dead `la`/`TODO`. Keep recovery in `exception.c`, with `#77`
+    fixing the symbol order to match i386 (`phys_copy_fault` immediately
+    after `phys_copy`).
+- Update / 进展:
+  - 2026-08-22 audit: handler registration exists via PC range; remaining
+    correctness bug is `#77`.
+    2026-08-22 审计：缺页恢复已按 PC 区间接线，剩余正确性见 `#77`。
 
 ### 14) Device tree parsing is minimal (single region, no reserved areas) / 设备树解析较简化（单一内存段、无保留区）
 - Evidence / 证据:
@@ -1128,12 +1210,101 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - RS boot handshake prints `RS: wait init ready ...`/`RS: got init ready ...`:
     `minix/servers/rs/main.c:797-823`.
   - Corresponding QEMU logs (`/tmp/qemu-fix20.log`) are heavily saturated with trace lines.
+  - 2026-08-22 net smoke (`/tmp/qemu-net-smoke-debug.log`) still prints
+    `VFS: recv src=...`, `VFS: exec path=...`, `VM: pt_bind set_addrspace`,
+    `fsdriver: vfs src=...`, and `VFS: select ...` on every `ping`.
+    RISC-V-only VFS message dump: `minix/servers/vfs/main.c:637-646`.
 - Impact / 影响:
   - Log saturation makes real regressions harder to detect and can perturb timing-sensitive behavior.
   - 长期会降低回归测试可读性与排障效率。
 - Suggested fix / 修复建议:
   - Gate noisy traces behind build-time/runtime debug flags (or strict rate limits).
   - Keep only milestone-level boot markers enabled by default.
+  - Drop or `#ifdef DEBUG` the `__riscv` `VFS: recv` cap-64 dump.
+
+### 78) PLIC init writes past QEMU virt's 96 sources / PLIC 初始化写出 QEMU virt 的 96 个中断源
+- Evidence / 证据:
+  - MINIX uses `PLIC_NUM_SOURCES 1024` in
+    `minix/kernel/arch/riscv64/include/archconst.h:69`.
+  - `plic_init()` writes priority for `i = 1 .. 1023` and 32 enable
+    words for hart0 S-mode context:
+    `minix/kernel/arch/riscv64/plic.c:69-82`.
+    Priority offset `i*4`; source 96 is `0x180`. Enable base for
+    context 1 is `0x2000 + 0x80 = 0x2080`; word 3 is `0x208c`.
+  - QEMU 8.2.2 virt SiFive PLIC has 96 sources (valid priority
+    `0x4 .. 0x17c`, enable words 0-2). `/tmp/qemu-debug.log` with
+    `-d guest_errors,unimp`:
+    - 928 `sifive_plic_write: Invalid register write 0x180` .. `0xffc`
+      (sources 96-1023);
+    - 29 `sifive_plic_write: Invalid enable write 0x208c` .. (words 3-31).
+  - `minimal_kernel/arch/riscv64/plic.c` uses 128 sources; its
+    `archconst.h` still says 1024 (`#11`).
+- Impact / 影响:
+  - Boot and virtio IRQs 1-8 / UART 10 still work. QEMU guest_errors
+    flood the log and the extra stores are wasted MMIO. A future
+    tighter emulator or real 96-source PLIC would fault these stores.
+    启动与现有 IRQ 仍可用；guest_errors 刷屏。更严的模拟器或真机
+    96 源 PLIC 可能对越界写报错。
+- Suggested fix / 修复建议:
+  - Set `PLIC_NUM_SOURCES` to the QEMU virt count (96), or parse it
+    from the DT `riscv,ndev` / `interrupts-extended` on the PLIC node
+    (`#14`).
+  - Stop enable-word loops at `(ndev + 31) / 32`.
+
+### 79) Legacy virtio-mmio writes `GUEST_FEATURES_SEL=1` / legacy virtio-mmio 仍写高 32 位 guest features
+- Evidence / 证据:
+  - `exchange_features()` always writes selector 1 after the low word:
+    `minix/lib/libvirtio_mmio/virtio_mmio.c:165-169`.
+  - QEMU virt `virtio-net-device` / `virtio-blk-device` are legacy
+    MMIO (version 1). QEMU 8.2 logs a guest_error when the guest
+    writes `GUEST_FEATURES_SEL > 0` in legacy mode.
+  - `/tmp/qemu-debug.log:958`:
+    `virtio_mmio_write: attempt to write guest features with
+    guest_features_sel > 0 in legacy mode`.
+  - Version is read at `virtio_mmio.c:337-338`; page size is already
+    version-gated (`virtio_mmio.c:351-353`), but the SEL=1 store is not.
+  - `VIRTIO_F_VERSION_1` (bit 32) is only forced when `version >= 2`
+    (`virtio_mmio.c:151-153`), so the high-word write is unused on
+    legacy and only produces the guest_error.
+- Impact / 影响:
+  - Feature bits 0-31 (including `EVENT_IDX`) still negotiate. Ping
+    stays green. The log is a spec/QEMU violation that can hide real
+    MMIO bugs.
+    低 32 位功能（含 EVENT_IDX）仍能协商；ping 不受影响。该 guest_error
+    会掩盖真正的 MMIO 问题。
+- Suggested fix / 修复建议:
+  - If `dev->version == 1`, skip `GUEST_FEATURES_SEL=1` and the high
+    guest-features store. Keep the high-word path for version 2.
+
+### 80) virtio-net sets PROMISC before MAC table; unicast count is 1 / virtio-net 先关 PROMISC 再设 MAC 表，单播表写入本机地址
+- Evidence / 证据:
+  - `virtio_net_set_mode()` sends `CTRL_RX` PROMISC / ALLMULTI /
+    NOBCAST, then `CTRL_MAC_TABLE_SET`:
+    `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c:577-602`.
+  - Linux `virtnet_set_rx_mode` sends `CTRL_MAC_TABLE_SET` first, then
+    `CTRL_RX_PROMISC` (drivers/net/virtio_net.c).
+  - `virtio_net_ctrl_mac_table()` sets unicast `*count = 1` and copies
+    `hwaddr` (`virtio_net_mmio.c:461-463`). Linux walks
+    `netdev_for_each_uc_addr` and typically leaves the unicast table
+    empty; the primary MAC stays in device config (`n->mac`).
+  - QEMU `receive_filter()` accepts the config MAC even with an empty
+    table, and accepts everything when `n->promisc`. Clearing PROMISC
+    before the table is programmed is a drop window. `#76` ping works
+    because QEMU matches `n->mac` and slirp IPv4 is on.
+- Impact / 影响:
+  - QEMU slirp unicast to `52:54:00:12:34:56` still passes. A host
+    that filters strictly on the programmed table, or a mode change
+    that clears PROMISC while the table is empty, can drop guest RX
+    until the CTRL command completes.
+    QEMU slirp 单播仍可通过。严格按过滤表的后端，或在空表时清
+    PROMISC，会丢掉 RX。
+- Suggested fix / 修复建议:
+  - Program `CTRL_MAC_TABLE_SET` first, then PROMISC / ALLMULTI /
+    NOBCAST, matching Linux.
+  - Use unicast count 0 unless the stack added extra unicast
+    addresses; keep the primary MAC via `CTRL_MAC_ADDR_SET` /
+    config.
+  - Do not disable `EVENT_IDX` or IPv6 to paper over this.
 
 ### 37) [DONE] Native toolchain command set closure in guest image / 来宾 native 工具链命令集闭环（已完成）
 - Evidence / 证据:
@@ -1166,6 +1337,15 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Residual note / 残留说明:
   - Optional `link+run` validation may still need a writable target filesystem
     path with sufficient inode budget (root mfs is inode-constrained by design).
+  - 2026-08-22 audit: `native_toolchain_gate.sh` requires guest `c++`/`g++`
+    (`native_cxx_detect`, `native_cxx_link_check` at
+    `minix/tests/riscv64/native_toolchain_gate.sh:162-195`). Hosted
+    nightly/release set `MKCXX=yes`. The documented local distribution
+    baseline is `MKCXX=no`, so that image cannot pass the cxx steps.
+    This is a local/docs mismatch, not a hosted false pass.
+    2026-08-22 审计：native gate 要求来宾内 `c++`/`g++`。hosted CI 使用
+    `MKCXX=yes`；文档中的本地 distribution 基线是 `MKCXX=no`，该镜像
+    过不了 cxx 步骤。这不是 hosted 假阳性。
 
 ### 38) [DONE] release-riscv64 libstdc++ `functexcept` no-future gate stabilization / release-riscv64 中 libstdc++ `functexcept` no-future 门禁稳定化（已完成）
 - Evidence / 证据:
@@ -1302,6 +1482,12 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 
 说明 / Note: 本节记录“已合入代码但可能仍待运行时复验”的归档项，并保留原始问题编号以便追溯。  
 This section archives items with code-level fixes landed (some may still require runtime re-validation), keeping original IDs for traceability.
+
+- Former P1 #16: 2026-08-22 audit found `map_service()` no longer rewrites
+  `fp_endpoint` before `isokendpt()`. It sets `FP_SRV_PROC` only after
+  validation; `get_work()` panics on generation mismatch.
+  历史 P1 #16：2026-08-22 审计确认 `map_service()` 已先校验端点再置
+  `FP_SRV_PROC`，不再先写后验。
 
 - Former Major #24: in-tree binutils now accepts `R_RISCV_RELAX` as a hint/no-op via
   `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`; in-tree `ld` no longer aborts

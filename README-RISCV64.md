@@ -9,13 +9,13 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.33
+- 版本：1.34
 - 最后更新：2026-08-22
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.33
+- Version: 1.34
 - Last updated: 2026-08-22
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -49,7 +49,8 @@ targeting the QEMU virt platform.
   必须齐全）。
 - Release/Nightly 现执行分阶段“完整测试”阻断门禁：
   `build -> user -> native -> kernel -> gate(timeout 900s)`。
-- 关键风险：`procfs` safecopy 回退噪声、SMP 未实现（详见 `issue.md`）
+- 关键风险：`procfs` safecopy 回退噪声（#17）、`phys_copy` 缺页恢复区间（#77）、SMP 未实现（详见 `issue.md`）
+- 2026-08-22 审计：新开 `issue.md` `#77`–`#80`；`#16` 已归档；网关 ping（#76）保持关闭。
 - A4 已闭环：`mkdisk` 产物在 S-mode U-Boot 链路下可从磁盘镜像启动到 shell。
 - 进度估计：约 80%（启动链路与基础用户态已稳定，主要剩余问题集中在噪声收敛与稳定性增强）
 - 代码更新（至 2026-01-06 01:00 前）：用户态 gp 初始化（crt0 + gp.c）、exec/ucontext 与
@@ -89,7 +90,8 @@ targeting the QEMU virt platform.
   native payload precheck (`cc/gcc/c++/g++/binutils/libgcc/libstdc++`) in DESTDIR.
 - Release/nightly now enforce a staged full-suite blocking sequence:
   `build -> user -> native -> kernel -> gate(timeout 900s)`.
-- Key risks: procfs safecopy fallback noise and SMP not implemented
+- Key risks: procfs safecopy fallback noise (#17), `phys_copy` fault PC range (#77), SMP not implemented (see `issue.md`)
+- 2026-08-22 audit: filed `issue.md` `#77`–`#80`; `#16` archived; gateway ping (#76) stays closed.
   (see `issue.md`)
 - A4 is closed: `mkdisk` artifacts now boot from disk image via the S-mode U-Boot chain.
 - Progress estimate: ~80% (boot + basic userland path stabilized; remaining work is mostly
@@ -303,7 +305,7 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
 - Public reachability: pass in QEMU user-net (slirp) with successful
   `ping 10.0.2.2` and `ping 1.1.1.1`.
 - Remaining gaps: SMP remains skipped (not yet implemented); procfs safecopy noise
-  still needs convergence.
+  (#17) and `phys_copy`/`phys_memset` fault recovery (#77) are still open.
 
 #### 5.1 启动稳定化验证记录 / Boot Stabilization Validation
 

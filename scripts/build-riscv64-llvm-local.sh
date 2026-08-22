@@ -192,6 +192,7 @@ run_distribution() {
   [[ -n "${tooldir}" ]] && install_cross_as_flock_wrapper "${tooldir}"
 
   prepare_libstdcxx_guest
+  prepare_llvm_guest_path
 
   echo "[local] building distribution (jobs=${DIST_JOBS}) -> ${LOG_DIR}/distribution.log"
   install_cross_as_flock_wrapper "${tooldir}"

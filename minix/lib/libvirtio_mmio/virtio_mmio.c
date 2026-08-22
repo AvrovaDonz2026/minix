@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <minix/com.h>
 #include <minix/syslib.h>
 #include <minix/sysutil.h>
 #include <minix/virtio_mmio.h>
@@ -407,9 +408,11 @@ void virtio_mmio_device_ready(struct virtio_mmio_dev *dev)
     u32_t status;
     int r;
 
-    /* Register IRQ */
+    /* Register IRQ. IRQ_REENABLE keeps the PLIC line unmasked if the
+     * driver is in a TX kick / poll path and cannot sys_irqenable
+     * until it returns to the message loop. */
     dev->irq_hook = dev->irq;
-    r = sys_irqsetpolicy(dev->irq, 0, &dev->irq_hook);
+    r = sys_irqsetpolicy(dev->irq, IRQ_REENABLE, &dev->irq_hook);
     if (r != OK) {
         printf("%s: unable to register IRQ %d (%d)\n",
             dev->name, dev->irq, r);
@@ -632,10 +635,35 @@ int virtio_mmio_from_queue(struct virtio_mmio_dev *dev, int qidx,
     q->free_head = head;
 
     q->last_used++;
-    if (dev->event_idx)
-        vring_used_event(&q->vring) = q->last_used;
+    /*
+     * Do not publish used_event here.  Updating it on every consume
+     * leaves QEMU's signalled_used vs used_event window in the
+     * suppressed state if the first VRING IRQ is missed (IPv6 RA
+     * at boot).  Callers drain, then virtio_mmio_enable_cb().
+     */
 
     return 0;
+}
+
+/*
+ * Linux virtqueue_enable_cb: tell the device to interrupt when used
+ * idx passes last_used, then recheck.  A 1 return means drain again.
+ */
+int virtio_mmio_enable_cb(struct virtio_mmio_dev *dev, int qidx)
+{
+    struct virtio_mmio_queue *q;
+
+    if (dev == NULL || qidx < 0 || qidx >= (int)dev->num_queues)
+        return 0;
+    if (!dev->event_idx)
+        return 0;
+
+    q = &dev->queues[qidx];
+    virtio_wmb();
+    vring_used_event(&q->vring) = q->last_used;
+    virtio_mb();
+    virtio_rmb();
+    return q->last_used != q->vring.used->idx;
 }
 
 /*

@@ -7,6 +7,9 @@
  * RX NEEDS_CSUM fixup, CTRL_VQ RX filter / announce, config-change
  * link status, and VIRTIO_RING_F_EVENT_IDX. Kick RX/TX/CTRL after a
  * batch: EVENT_IDX in to_queue only notifies the first posted slot.
+ * Drain the used ring after TX and on a tick: virtio-blk busy-waits
+ * on from_queue, but net only looked at RX from IRQ, so a missed
+ * first EVENT_IDX used-notify left slirp replies sitting in the ring.
  *
  * This software is released under the BSD license. See the LICENSE file
  * included in the main directory of this source distribution for the
@@ -114,6 +117,7 @@ static int virtio_net_send(struct netdriver_data *data, size_t len);
 static ssize_t virtio_net_recv(struct netdriver_data *data, size_t max);
 static unsigned int virtio_net_get_link(uint32_t *media);
 static void virtio_net_intr(unsigned int mask);
+static void virtio_net_tick(void);
 static void virtio_net_set_mode(unsigned int mode,
 	const netdriver_addr_t * mcast_list, unsigned int mcast_count);
 static void virtio_net_set_caps(uint32_t caps);
@@ -130,6 +134,7 @@ static const struct netdriver virtio_net_table = {
 	.ndr_send	= virtio_net_send,
 	.ndr_get_link	= virtio_net_get_link,
 	.ndr_intr	= virtio_net_intr,
+	.ndr_tick	= virtio_net_tick,
 };
 
 /*
@@ -174,16 +179,12 @@ virtio_net_probe(unsigned int skip)
 static void
 virtio_net_config(netdriver_addr_t * addr)
 {
-	u32_t mac14;
-	u32_t mac56;
 	int i;
 
 	if (virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_MAC)) {
 		dprintf(("Mac set by host: "));
-		mac14 = virtio_mmio_config_read32(net_dev, 0);
-		mac56 = virtio_mmio_config_read32(net_dev, 4);
-		memcpy(&addr->na_addr[0], &mac14, 4);
-		memcpy(&addr->na_addr[4], &mac56, 2);
+		for (i = 0; i < 6; i++)
+			addr->na_addr[i] = virtio_mmio_config_read8(net_dev, i);
 
 		for (i = 0; i < 6; i++)
 			dprintf(("%02x%s", addr->na_addr[i],
@@ -698,16 +699,47 @@ virtio_net_check_queues(void)
 	struct packet *p;
 	size_t len;
 
-	while (virtio_mmio_from_queue(net_dev, RX_Q, (void **)&p, &len) == 0) {
-		p->len = len;
-		STAILQ_INSERT_TAIL(&recv_list, p, next);
-		in_rx--;
+	/*
+	 * Drain, then enable_cb (publish used_event = last_used) and
+	 * drain again if the device added buffers during the barrier.
+	 * from_queue no longer pokes used_event on each consume.
+	 */
+	for (;;) {
+		while (virtio_mmio_from_queue(net_dev, RX_Q,
+		    (void **)&p, &len) == 0) {
+			p->len = len;
+			STAILQ_INSERT_TAIL(&recv_list, p, next);
+			in_rx--;
+		}
+		if (!virtio_mmio_enable_cb(net_dev, RX_Q))
+			break;
 	}
 
-	while (virtio_mmio_from_queue(net_dev, TX_Q, (void **)&p, NULL) == 0) {
-		memset(p->vbuf, 0, pkt_slot_sz);
-		STAILQ_INSERT_HEAD(&tx_free, p, next);
+	for (;;) {
+		while (virtio_mmio_from_queue(net_dev, TX_Q,
+		    (void **)&p, NULL) == 0) {
+			memset(p->vbuf, 0, pkt_slot_sz);
+			STAILQ_INSERT_HEAD(&tx_free, p, next);
+		}
+		if (!virtio_mmio_enable_cb(net_dev, TX_Q))
+			break;
 	}
+}
+
+static void
+virtio_net_poll(void)
+{
+
+	virtio_net_check_queues();
+	virtio_net_refill_rx_queue();
+}
+
+static void
+virtio_net_tick(void)
+{
+
+	virtio_net_poll();
+	virtio_net_check_pending();
 }
 
 static void
@@ -727,25 +759,21 @@ virtio_net_intr(unsigned int __unused mask)
 	int status;
 
 	status = virtio_mmio_had_irq(net_dev);
-	if (status) {
-		if (status & VIRTIO_MMIO_INT_CONFIG) {
-			virtio_net_check_announce();
-			netdriver_link();
-		}
-		if (status & VIRTIO_MMIO_INT_VRING)
-			virtio_net_check_queues();
-	} else {
+	if (status & VIRTIO_MMIO_INT_CONFIG) {
+		virtio_net_check_announce();
+		netdriver_link();
+	} else if (!status) {
 		if (!spurious_interrupt)
 			dput(("Spurious interrupt"));
 
 		spurious_interrupt = 1;
 	}
 
+	/* Always drain: ISR may be 0 if we already polled after TX. */
+	virtio_net_poll();
 	virtio_net_check_pending();
 
 	virtio_mmio_irq_enable(net_dev);
-
-	virtio_net_refill_rx_queue();
 }
 
 static int
@@ -772,6 +800,15 @@ virtio_net_send(struct netdriver_data * data, size_t len)
 	phys[0].vp_size = net_hdr_size + len;
 	virtio_mmio_to_queue(net_dev, TX_Q, phys, 1, p);
 	virtio_mmio_kick(net_dev, TX_Q);
+	/*
+	 * QEMU slirp replies during the TX QUEUE_NOTIFY MMIO.  virtio-blk
+	 * busy-waits on from_queue; drain RX here so ping does not depend
+	 * on the used-ring IRQ surviving EVENT_IDX.  Do not call
+	 * netdriver_send: we are already inside ndr_send.
+	 */
+	virtio_net_poll();
+	if (!STAILQ_EMPTY(&recv_list))
+		netdriver_recv();
 
 	return OK;
 }
@@ -832,8 +869,11 @@ virtio_net_recv(struct netdriver_data * data, size_t max)
 	size_t payload;
 
 	for (;;) {
-		if (STAILQ_EMPTY(&recv_list))
-			return SUSPEND;
+		if (STAILQ_EMPTY(&recv_list)) {
+			virtio_net_check_queues();
+			if (STAILQ_EMPTY(&recv_list))
+				return SUSPEND;
+		}
 
 		p = STAILQ_FIRST(&recv_list);
 		STAILQ_REMOVE_HEAD(&recv_list, next);
@@ -885,7 +925,7 @@ virtio_net_recv(struct netdriver_data * data, size_t max)
 
 static int
 virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
-	uint32_t * caps, unsigned int * ticks __unused)
+	uint32_t * caps, unsigned int * ticks)
 {
 	int r;
 
@@ -935,8 +975,12 @@ virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
 	virtio_mmio_device_ready(net_dev);
 
 	virtio_net_refill_rx_queue();
+	(void)virtio_mmio_enable_cb(net_dev, RX_Q);
 
 	printf("virtio-net-mmio: initialized\n");
+	printf("virtio-net-mmio: mac %02x:%02x:%02x:%02x:%02x:%02x\n",
+	    addr->na_addr[0], addr->na_addr[1], addr->na_addr[2],
+	    addr->na_addr[3], addr->na_addr[4], addr->na_addr[5]);
 	printf("virtio-net-mmio: hdr %zu csum %s ctrl_rx %s mrg %s event_idx %s rx %u tx %u\n",
 	    net_hdr_size,
 	    virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_CSUM) ?
@@ -953,6 +997,9 @@ virtio_net_init(unsigned int instance, netdriver_addr_t * addr,
 		*caps |= NDEV_CAP_CS_TCP_TX | NDEV_CAP_CS_UDP_TX;
 	if (virtio_mmio_host_supports(net_dev, VIRTIO_NET_F_GUEST_CSUM))
 		*caps |= NDEV_CAP_CS_TCP_RX | NDEV_CAP_CS_UDP_RX;
+	*ticks = sys_hz() / 10;
+	if (*ticks == 0)
+		*ticks = 1;
 	return OK;
 }
 

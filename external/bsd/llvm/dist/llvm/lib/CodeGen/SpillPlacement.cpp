@@ -234,7 +234,8 @@ void SpillPlacement::setThreshold(const BlockFrequency &Entry) {
   // it.  Divide by 2^13, rounding as appropriate.
   uint64_t Freq = Entry.getFrequency();
   uint64_t Scaled = (Freq >> 13) + bool(Freq & (1 << 12));
-  Threshold = std::max(UINT64_C(1), Scaled);
+  // uint64_t not UINT64_C: gcc 4.8 std::max rejects ULL vs unsigned long.
+  Threshold = std::max(uint64_t(1), Scaled);
 }
 
 /// addConstraints - Compute node biases and weights from a set of constraints.

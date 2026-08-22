@@ -58,6 +58,27 @@ COMMON_FLAGS=(
   -V CHECKFLIST_FLAGS='-m -e'
 )
 
+install_cross_as_flock_wrapper() {
+  local tooldir="$1"
+  local lock="/tmp/minix-cross-as.lock"
+
+  for as in \
+      "${tooldir}/riscv64-elf32-minix/bin/as" \
+      "${tooldir}/bin/riscv64-elf32-minix-as"
+  do
+    [[ -x "${as}" ]] || continue
+    [[ -x "${as}.real" ]] && continue
+
+    echo "[local] serializing cross-as via flock (${as})"
+    mv "${as}" "${as}.real"
+    cat > "${as}" <<EOF
+#!/bin/bash
+exec flock -w 600 ${lock} ${as}.real "\$@"
+EOF
+    chmod +x "${as}"
+  done
+}
+
 run_tools() {
   echo "[local] cleaning stale tool objects under ${OBJDIR}"
   rm -rf "${OBJDIR}/tooldir."* "${OBJDIR}/tools"
@@ -76,11 +97,16 @@ run_tools() {
     exit 1
   }
   echo "[local] TOOLDIR=${tooldir}"
+  install_cross_as_flock_wrapper "${tooldir}"
   TOOLDIR="${tooldir}" ./minix/tests/riscv64/llvm_toolchain_gate.sh \
     --mode host --require host --tooldir "${tooldir}"
 }
 
 run_distribution() {
+  local tooldir
+  tooldir="$(ls -d "${OBJDIR}"/tooldir.* 2>/dev/null | head -1)"
+  [[ -n "${tooldir}" ]] && install_cross_as_flock_wrapper "${tooldir}"
+
   echo "[local] building distribution (jobs=${DIST_JOBS}) -> ${LOG_DIR}/distribution.log"
   # Propagate -j1 to all sub-makes; parallel cross-as aborts on Ubuntu.
   export MAKEFLAGS="-j${DIST_JOBS}"

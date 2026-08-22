@@ -5,7 +5,8 @@
  * Datapath follows FreeBSD if_vtnet: modern virtio_net_hdr (12 bytes
  * when VIRTIO_F_VERSION_1), mergeable RX buffers, TX partial checksum,
  * RX NEEDS_CSUM fixup, CTRL_VQ RX filter / announce, config-change
- * link status, and VIRTIO_RING_F_EVENT_IDX kicks.
+ * link status, and VIRTIO_RING_F_EVENT_IDX. Kick RX/TX/CTRL after a
+ * batch: EVENT_IDX in to_queue only notifies the first posted slot.
  *
  * This software is released under the BSD license. See the LICENSE file
  * included in the main directory of this source distribution for the
@@ -406,6 +407,7 @@ virtio_net_ctrl_exec(struct vumap_phys * phys, int n)
 	ctrl_vir[CTRL_ACK_OFF] = 0xff;
 	if (virtio_mmio_to_queue(net_dev, CTRL_Q, phys, n, ctrl_vir) != OK)
 		return EIO;
+	virtio_mmio_kick(net_dev, CTRL_Q);
 
 	for (i = 0; i < CTRL_POLL_MAX; i++) {
 		if (virtio_mmio_from_queue(net_dev, CTRL_Q, &cookie,
@@ -660,6 +662,7 @@ virtio_net_refill_rx_queue(void)
 {
 	struct vumap_phys phys[1];
 	struct packet *p;
+	int posted = 0;
 
 	while (!STAILQ_EMPTY(&rx_free)) {
 		p = STAILQ_FIRST(&rx_free);
@@ -675,7 +678,15 @@ virtio_net_refill_rx_queue(void)
 			break;
 		}
 		in_rx++;
+		posted++;
 	}
+
+	/*
+	 * EVENT_IDX only notifies on the first posted slot.  Kick after
+	 * the batch so QEMU sees all RX buffers, not just the first.
+	 */
+	if (posted)
+		virtio_mmio_kick(net_dev, RX_Q);
 
 	if (in_rx == 0 && STAILQ_EMPTY(&rx_free))
 		dput(("warning: rx queue underflow!"));
@@ -760,6 +771,7 @@ virtio_net_send(struct netdriver_data * data, size_t len)
 	assert(!(phys[0].vp_addr & 1));
 	phys[0].vp_size = net_hdr_size + len;
 	virtio_mmio_to_queue(net_dev, TX_Q, phys, 1, p);
+	virtio_mmio_kick(net_dev, TX_Q);
 
 	return OK;
 }

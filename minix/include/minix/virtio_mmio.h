@@ -130,6 +130,10 @@ int virtio_mmio_to_queue(struct virtio_mmio_dev *dev, int qidx,
     struct vumap_phys *bufs, size_t num, void *data);
 int virtio_mmio_from_queue(struct virtio_mmio_dev *dev, int qidx,
     void **data, size_t *len);
+/* Always notify the device. EVENT_IDX in to_queue only kicks the first
+ * buffer of a burst (avail_event starts at 0), so RX refill and TX
+ * send must kick after the batch or QEMU never sees the rest. */
+void virtio_mmio_kick(struct virtio_mmio_dev *dev, int qidx);
 
 /* IRQ handling */
 void virtio_mmio_irq_enable(struct virtio_mmio_dev *dev);

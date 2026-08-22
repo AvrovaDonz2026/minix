@@ -582,6 +582,21 @@ int virtio_mmio_to_queue(struct virtio_mmio_dev *dev, int qidx,
 }
 
 /*
+ * Always write QUEUE_NOTIFY.  to_queue() with EVENT_IDX only kicks when
+ * vring_need_event(avail_event=0) is true, which is the first buffer of
+ * a burst.  A 256-slot RX refill therefore left QEMU looking at one
+ * buffer; later TX packets had the same hole.  Callers kick after a
+ * batch so the device sees the current avail idx.
+ */
+void virtio_mmio_kick(struct virtio_mmio_dev *dev, int qidx)
+{
+    if (dev == NULL || qidx < 0 || qidx >= (int)dev->num_queues)
+        return;
+    virtio_wmb();
+    virtio_mmio_write32(dev, VIRTIO_MMIO_QUEUE_NOTIFY, qidx);
+}
+
+/*
  * Get completed buffers from queue
  */
 int virtio_mmio_from_queue(struct virtio_mmio_dev *dev, int qidx,

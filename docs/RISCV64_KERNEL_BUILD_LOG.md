@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-22
-**Version / 版本**: 1.54
+**Version / 版本**: 1.55
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2263,6 +2263,21 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 **Evidence / 证据**:
 - `issue.md` `#73`
 - GitHub Actions run `32539264449`
+- `minix/include/minix/virtio_mmio.h`
+- `minix/lib/libvirtio_mmio/virtio_mmio.c`
+- `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
+
+## Entry 67 — 2026-08-22 03:20 UTC
+
+**Change / 变更**: Hosted nightly `32546187525` (`45418c7fb`) kept `#73` kicks (`event_idx on`, `rx 256`, `ifconfig vio0`, `ping6 ::1`) then failed `ping -c 2 10.0.2.2` with `2 packets transmitted, 0 packets received`. virtio-blk completes I/O by busy-waiting on `from_queue`; virtio-net only drained RX from the VRING IRQ. `from_queue` published `used_event = last_used` on every consume, so a missed first used-notify left QEMU's `signalled_used_valid` set and suppressed later interrupts. Drain the used ring after TX kick and on a 10 Hz tick, publish `used_event` with Linux `virtqueue_enable_cb` after the drain, `IRQ_REENABLE` the MMIO line, and read the MAC with byte accesses. Keep EVENT_IDX negotiated.
+
+**Issue ID**: `#74`
+
+**Result / 结果**: virtio-net RX no longer depends on the first EVENT_IDX used-notify. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#74`
+- GitHub Actions run `32546187525`
 - `minix/include/minix/virtio_mmio.h`
 - `minix/lib/libvirtio_mmio/virtio_mmio.c`
 - `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`

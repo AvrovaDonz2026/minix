@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.44
+**Version / 版本**: 1.45
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -82,6 +82,13 @@
   `#46` 在 `to_queue` 里按 `vring_need_event` 抑制 kick，256 槽 RX
   refill 只通知第一槽，QEMU slirp 的 `ping 10.0.2.2` 100% 丢包。
   RX 灌环、TX 发包、CTRL 命令之后补一次无条件 `QUEUE_NOTIFY`。
+- 本轮修 virtio-net EVENT_IDX used 环通知（`issue.md` `#74`）：
+  `#73` kick 之后 hosted nightly 的 `ping 10.0.2.2` 仍 100% 丢包。
+  virtio-blk 在 `from_queue` 上 busy-wait，网卡却只在 IRQ 上收包；
+  每次 consume 都写 `used_event` 会在错过第一次 used 通知后让 QEMU
+  永久抑制后续中断。TX kick 之后与 10 Hz tick 排空 used 环，drain
+  之后按 Linux `virtqueue_enable_cb` 发布 `used_event`，MMIO IRQ
+  使用 `IRQ_REENABLE`，MAC 改为按字节读取。
 - 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`）：
   gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
   `#50`：backend 生成器按 dist 选择 `.cc`/`.c`。`#52`：丢掉 4.8.5
@@ -222,6 +229,14 @@
   256-slot RX refill left QEMU looking at one buffer and
   `ping 10.0.2.2` lost every packet. Kick RX after refill, TX after
   send, and CTRL after `to_queue`.
+- Follow-up (`issue.md` `#74`): `#73` kicks were not enough. Hosted
+  nightly `32546187525` still lost every slirp ping. virtio-blk
+  busy-waits on `from_queue`; virtio-net only drained RX from the
+  VRING IRQ, and `from_queue` wrote `used_event` on every consume, so
+  a missed first used-notify suppressed later interrupts. Drain RX
+  after TX and on a 10 Hz tick, publish `used_event` with Linux
+  `virtqueue_enable_cb`, `IRQ_REENABLE` the MMIO line, and read the
+  MAC a byte at a time.
 - Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`): gcov skips
   `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
   `#50`: backend generators resolve `.cc`/`.c` from dist.

@@ -18,6 +18,7 @@ TARGET="${1:-all}"
 OBJDIR="${OBJDIR:-obj.intrgcc}"
 MACHINE="${MACHINE:-evbriscv64}"
 JOBS="${JOBS:-$(nproc 2>/dev/null || echo 4)}"
+DIST_JOBS="${DIST_JOBS:-1}"  # parallel cross-as trips fortify on Ubuntu
 LOG_DIR="${LOG_DIR:-/tmp/minix-riscv64-llvm}"
 
 mkdir -p "${LOG_DIR}"
@@ -90,7 +91,32 @@ run_distribution() {
     HAVE_GOLD=no MKLLVM=yes \
     ./build.sh -U -u -V MKUPDATE=yes \
       -V "CPPFLAGS=${HARDENING_OFF}" \
-      "${COMMON_FLAGS[@]}" distribution \
+      -j"${DIST_JOBS}" \
+      -m "${MACHINE}" \
+      -O "${OBJDIR}" \
+      -V AVAILABLE_COMPILER=gcc \
+      -V ACTIVE_CC=gcc \
+      -V ACTIVE_CPP=gcc \
+      -V ACTIVE_CXX=gcc \
+      -V ACTIVE_OBJC=gcc \
+      -V RISCV_ARCH_FLAGS='-march=RV64IMAFD -mcmodel=medany' \
+      -V NOGCCERROR=yes \
+      -V MKGCC=yes \
+      -V MKGCCCMDS=yes \
+      -V MKLLVM=yes \
+      -V MKLLVM_CMAKE=yes \
+      -V MKLLVMCMDS=yes \
+      -V HAVE_LIBGCC=yes \
+      -V HAVE_LIBGCC_EH=yes \
+      -V MKCXX=yes \
+      -V MKLIBSTDCXX=yes \
+      -V MKLIBCXX=no \
+      -V MKLIBOBJC=no \
+      -V MKLIBGOMP=no \
+      -V MKATF=no \
+      -V USE_PCI=no \
+      -V CHECKFLIST_FLAGS='-m -e' \
+      distribution \
     2>&1 | tee "${LOG_DIR}/distribution.log"
 }
 

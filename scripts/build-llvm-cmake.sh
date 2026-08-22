@@ -163,12 +163,12 @@ EOF
 
   for tool in llvm-tblgen clang-tblgen; do
     if [ -x "${prefix}/bin/${tool}" ]; then
-      ln -sf "${prefix}/bin/${tool}" "${bindir}/nb${tool}"
+      ln -sf "${prefix}/bin/${tool}" "${bindir}/nb${tool}-cmake"
     fi
   done
 
   log "installed wrappers:"
-  ls -l "${bindir}/${triple_prefix}-clang"* "${bindir}/nbllvm-tblgen" 2>/dev/null || true
+  ls -l "${bindir}/${triple_prefix}-clang"* "${bindir}/nbllvm-tblgen-cmake" 2>/dev/null || true
   "${bindir}/${triple_prefix}-clang" --version | head -n 3
 }
 

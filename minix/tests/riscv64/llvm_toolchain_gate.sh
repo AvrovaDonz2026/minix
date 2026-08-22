@@ -217,8 +217,8 @@ run_host_layer() {
 
   clangxx="$(find_host_bin "$tooldir" riscv64-elf32-minix-clang++ || true)"
   clangcpp="$(find_host_bin "$tooldir" riscv64-elf32-minix-clang-cpp || true)"
-  tblgen="$(find_host_bin "$tooldir" nbllvm-tblgen llvm-tblgen || true)"
-  ctblgen="$(find_host_bin "$tooldir" nbclang-tblgen clang-tblgen || true)"
+  tblgen="$(find_host_bin "$tooldir" nbllvm-tblgen-cmake nbllvm-tblgen llvm-tblgen || true)"
+  ctblgen="$(find_host_bin "$tooldir" nbclang-tblgen-cmake nbclang-tblgen clang-tblgen || true)"
   readelf="$(find_host_bin "$tooldir" riscv64-elf32-minix-readelf readelf || true)"
 
   log "host tooldir: $tooldir"

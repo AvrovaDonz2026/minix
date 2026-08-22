@@ -135,7 +135,10 @@ SUBDIR+= stat .WAIT
 .if ${MKLLVM_CMAKE:Uno} == "yes"
 SUBDIR+= \
 	llvm-cmake .WAIT \
-	llvm-cmake-clang .WAIT
+	llvm-cmake-clang .WAIT \
+	llvm .WAIT \
+	llvm-lib/libLLVMSupport llvm-lib/libLLVMTableGen .WAIT \
+	llvm-tblgen llvm-clang-tblgen .WAIT
 .else
 SUBDIR+= \
 	llvm .WAIT \

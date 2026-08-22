@@ -77,12 +77,10 @@ def parse_pcap(path: str) -> tuple[int, int, int, int, int]:
         return 0, 0, 0, 0, size
 
     magic = struct.unpack_from("<I", data, 0)[0]
-    if magic == 0xa1b2c3d4:
-        endian = ">"
-        rec_endian = ">"
-    elif magic == 0xd4c3b2a1:
-        endian = "<"
+    if magic in (0xa1b2c3d4, 0xa1b23c4d):
         rec_endian = "<"
+    elif magic in (0xd4c3b2a1, 0x4d3cb2a1):
+        rec_endian = ">"
     else:
         return 0, 0, 0, 0, size
 
@@ -127,6 +125,62 @@ def parse_pcap(path: str) -> tuple[int, int, int, int, int]:
                 echo_rep += 1
 
     return arp_req, arp_rep, echo_req, echo_rep, size
+
+
+def _selftest() -> None:
+    """Validate parse_pcap endian handling without QEMU."""
+    # 24-byte LE global header (magic a1b2c3d4, version 2.4, rest zeros).
+    hdr = struct.pack("<IHHIIII", 0xA1B2C3D4, 2, 4, 0, 0, 65535, 1)
+    assert len(hdr) == 24
+
+    # Minimal Ethernet + IPv4 + ICMP echo request to 10.0.2.2 (42 bytes).
+    pkt = bytearray(42)
+    pkt[12:14] = b"\x08\x00"  # IPv4 ethertype
+    pkt[14] = 0x45  # IPv4, IHL=5
+    pkt[23] = 1  # ICMP protocol
+    pkt[26:30] = bytes([10, 0, 2, 15])  # src (guest)
+    pkt[30:34] = bytes([10, 0, 2, 2])  # dst (SLIRP gateway)
+    pkt[34] = 8  # ICMP echo request
+    pkt = bytes(pkt)
+
+    rec_hdr = struct.pack("<IIII", 0, 0, len(pkt), len(pkt))
+    le_data = hdr + rec_hdr + pkt
+
+    with tempfile.NamedTemporaryFile(suffix=".pcap", delete=False) as f:
+        le_path = f.name
+        f.write(le_data)
+    try:
+        arp_req, arp_rep, echo_req, echo_rep, nbytes = parse_pcap(le_path)
+        assert nbytes == len(le_data), (nbytes, len(le_data))
+        assert echo_req >= 1, (arp_req, arp_rep, echo_req, echo_rep)
+    finally:
+        os.unlink(le_path)
+
+    # BE global header: magic bytes on wire are d4 c3 b2 a1.
+    be_hdr = struct.pack(">IHHIIII", 0xA1B2C3D4, 2, 4, 0, 0, 65535, 1)
+    be_rec_hdr = struct.pack(">IIII", 0, 0, len(pkt), len(pkt))
+    be_data = be_hdr + be_rec_hdr + pkt
+
+    with tempfile.NamedTemporaryFile(suffix=".pcap", delete=False) as f:
+        be_path = f.name
+        f.write(be_data)
+    try:
+        arp_req, arp_rep, echo_req, echo_rep, nbytes = parse_pcap(be_path)
+        assert nbytes == len(be_data), (nbytes, len(be_data))
+        assert echo_req >= 1, (arp_req, arp_rep, echo_req, echo_rep)
+    finally:
+        os.unlink(be_path)
+
+    # Truncated file: header only, no complete record.
+    with tempfile.NamedTemporaryFile(suffix=".pcap", delete=False) as f:
+        trunc_path = f.name
+        f.write(hdr)
+    try:
+        arp_req, arp_rep, echo_req, echo_rep, nbytes = parse_pcap(trunc_path)
+        assert nbytes == 24
+        assert echo_req == 0 and echo_rep == 0
+    finally:
+        os.unlink(trunc_path)
 
 
 def analyze_pcap(pcap_path: str, ping_gw_failed: bool) -> None:
@@ -260,13 +314,28 @@ def run_command(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--qemu-script", required=True)
-    parser.add_argument("--kernel", required=True)
-    parser.add_argument("--destdir", required=True)
+    parser.add_argument("--selftest", action="store_true",
+                        help="run parse_pcap selftest and exit")
+    parser.add_argument("--qemu-script")
+    parser.add_argument("--kernel")
+    parser.add_argument("--destdir")
     parser.add_argument("--disk")
     parser.add_argument("--timeout", type=int, default=180)
     parser.add_argument("--cmd-timeout", type=int, default=45)
     args = parser.parse_args()
+
+    if args.selftest:
+        try:
+            _selftest()
+        except AssertionError as exc:
+            log(f"FAIL: parse_pcap selftest: {exc}")
+            return 1
+        log("PASS: parse_pcap selftest")
+        return 0
+
+    if not args.qemu_script or not args.kernel or not args.destdir:
+        parser.error("--qemu-script, --kernel, and --destdir are required "
+                     "unless --selftest is given")
 
     if not os.path.exists(args.qemu_script):
         log("SKIP: qemu script not found")

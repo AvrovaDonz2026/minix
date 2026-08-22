@@ -1,12 +1,15 @@
 #!/bin/bash
 #
-# LLVM/clang functional gate for MINIX/riscv64 (LLVM 3.6.1).
+# LLVM/clang functional gate for MINIX/riscv64.
+#
+# Supports legacy LLVM 3.6.1 (frontend-only RISC-V) and modern CMake LLVM
+# 18+ (full RISC-V codegen backend).
 #
 # Layers:
 #   host     TOOLDIR clang/tblgen frontend, IR, RISC-V/Minix macros
 #   destdir  guest clang ELF payload; /usr/bin/cc stays gcc;
 #            libc++ must not install __mutex_base over libstdc++
-#   guest    QEMU: clang --version, -dM, -emit-llvm (no RISC-V object codegen)
+#   guest    QEMU: clang --version, -dM, -emit-llvm; LLVM 18+ also tests -c
 #
 # Exit codes:
 #   0 = pass
@@ -62,6 +65,17 @@ log() { echo "[llvm-gate] $*"; }
 log_pass() { echo "[llvm-gate] PASS: $*"; passed=$((passed + 1)); }
 log_fail() { echo "[llvm-gate] FAIL: $*" >&2; failed=$((failed + 1)); }
 log_skip() { echo "[llvm-gate] SKIP: $*"; skipped=$((skipped + 1)); }
+
+detect_llvm_generation() {
+  local verfile="$1"
+  if grep -Eqi 'clang[[:space:]]+version[[:space:]]+3\.6' "$verfile"; then
+    echo "legacy"
+  elif grep -Eqi 'clang[[:space:]]+version[[:space:]]+1[0-9]' "$verfile"; then
+    echo "modern"
+  else
+    echo "unknown"
+  fi
+}
 
 want_mode() {
   case "$MODE" in
@@ -221,12 +235,19 @@ run_host_layer() {
     cat "${tmp}/clang.ver" >&2 || true
     return 0
   fi
-  if ! grep -Eqi 'clang[[:space:]]+version[[:space:]]+3\.6' "${tmp}/clang.ver"; then
-    log_fail "clang --version is not LLVM/clang 3.6"
-    cat "${tmp}/clang.ver" >&2 || true
-  else
-    log_pass "clang --version (3.6)"
-  fi
+  llvm_gen="$(detect_llvm_generation "${tmp}/clang.ver")"
+  case "$llvm_gen" in
+    legacy)
+      log_pass "clang --version (LLVM 3.6 legacy frontend)"
+      ;;
+    modern)
+      log_pass "clang --version (LLVM modern with RISC-V backend)"
+      ;;
+    *)
+      log_fail "clang --version is not a supported LLVM/clang (3.6 or 10+)"
+      cat "${tmp}/clang.ver" >&2 || true
+      ;;
+  esac
 
   if [ -n "$clangxx" ]; then
     if "$clangxx" --version >/dev/null 2>&1; then
@@ -376,11 +397,26 @@ run_host_layer() {
   if [ "$rc" -ge 128 ]; then
     log_fail "clang -c crashed (rc=${rc})"
     cat "$stderrf" >&2 || true
+  elif [ "$llvm_gen" = "modern" ]; then
+    if [ "$rc" -eq 0 ] && [ -s "$obj" ]; then
+      machine="$(host_machine_of "$obj" "$readelf" || true)"
+      case "$machine" in
+        *RISC-V*|*RiscV*|*riscv*)
+          log_pass "clang -c emitted RISC-V object (LLVM modern backend)"
+          ;;
+        *)
+          log_fail "clang -c succeeded but object is not RISC-V (${machine})"
+          ;;
+      esac
+    else
+      log_fail "clang -c failed on modern LLVM (expected RISC-V object)"
+      cat "$stderrf" >&2 || true
+    fi
   elif [ "$rc" -eq 0 ] && [ -s "$obj" ]; then
     machine="$(host_machine_of "$obj" "$readelf" || true)"
     case "$machine" in
       *RISC-V*|*RiscV*|*riscv*)
-        log_fail "clang -c emitted a RISC-V object; 3.6.1 has no RISC-V backend"
+        log_fail "clang -c emitted a RISC-V object; legacy 3.6.1 has no backend"
         ;;
       *)
         log_fail "clang -c unexpectedly succeeded (machine='${machine}')"
@@ -388,7 +424,7 @@ run_host_layer() {
     esac
     cat "$stderrf" >&2 || true
   else
-    log_pass "clang -c does not emit RISC-V objects (no backend)"
+    log_pass "clang -c does not emit RISC-V objects (legacy 3.6.1, expected)"
   fi
 }
 

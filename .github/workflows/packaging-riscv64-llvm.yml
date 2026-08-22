@@ -93,6 +93,7 @@ jobs:
             build-essential \
             byacc \
             ca-certificates \
+            cmake \
             curl \
             e2fsprogs \
             file \
@@ -104,6 +105,7 @@ jobs:
             libssl-dev \
             m4 \
             make \
+            ninja-build \
             parted \
             pkg-config \
             python3 \
@@ -112,7 +114,9 @@ jobs:
             rsync \
             texinfo \
             u-boot-qemu \
-            u-boot-tools
+            u-boot-tools \
+            xz-utils \
+            zlib1g-dev
 
           command -v qemu-system-riscv64 >/dev/null
           command -v mkimage >/dev/null
@@ -249,6 +253,7 @@ jobs:
             -V MKGCC=yes \
             -V MKGCCCMDS=yes \
             -V MKLLVM=yes \
+            -V MKLLVM_CMAKE=yes \
             -V MKLLVMCMDS=yes \
             -V HAVE_LIBGCC=yes \
             -V HAVE_LIBGCC_EH=yes \
@@ -403,6 +408,7 @@ jobs:
             -V MKGCC=yes \
             -V MKGCCCMDS=yes \
             -V MKLLVM=yes \
+            -V MKLLVM_CMAKE=yes \
             -V MKLLVMCMDS=yes \
             -V HAVE_LIBGCC=yes \
             -V HAVE_LIBGCC_EH=yes \
@@ -888,15 +894,15 @@ jobs:
             echo "- Publish release: \`${{ steps.meta.outputs.publish_release }}\`"
             echo "- SOURCE_DATE_EPOCH: \`${{ steps.pin.outputs.source_date_epoch }}\`"
             echo ""
-            echo "Full-system tools+distribution with \`MKLLVM=yes\` and \`MKLIBCXX=no\`."
-            echo "World still compiles with GCC (\`ACTIVE_CC=gcc\`); clang must be in tooldir and DESTDIR."
+            echo "Full-system tools+distribution with \`MKLLVM=yes\`, \`MKLLVM_CMAKE=yes\` (LLVM 18.1.8), and \`MKLIBCXX=no\`."
+            echo "World still compiles with GCC (\`ACTIVE_CC=gcc\`); clang 18 provides RISC-V codegen."
             echo "libc++ stays off on riscv64 so \`/usr/include/c++\` cannot shadow libstdc++."
             echo ""
             echo "### LLVM functional gates"
             echo "- Host (after tools): \`llvm_toolchain_gate.sh --mode host --require host\`"
             echo "- DESTDIR (after distribution): \`llvm_toolchain_gate.sh --mode destdir --require destdir\`"
             echo "- Guest (full suite): \`run_tests.sh llvm\` with \`LLVM_GATE_REQUIRE=all\`"
-            echo "- 3.6.1 has no RISC-V codegen backend; \`clang -c\` must not emit a RISC-V object."
+            echo "- LLVM 18.1.8 CMake build enables RISC-V codegen; \`clang -c\` must emit RV64 objects."
             echo ""
             echo "### Full Test Suite (blocking)"
             echo "- Runner sequence: \`llvm -> build -> user -> native -> kernel -> gate(timeout 900s)\`"

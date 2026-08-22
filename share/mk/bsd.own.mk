@@ -193,14 +193,14 @@ HAVE_LIBGCC?=	no
 .endif # ${HAVE_LLVM:Dyes} == "yes"
 
 # RISC-V still uses GCC as ACTIVE_CC; keep libgcc even when clang is built.
-# In-tree LLVM 3.6.1 has no RISC-V codegen. Do not install libc++ into
-# /usr/include/c++: bsd.sys.mk then adds -I${DESTDIR}/usr/include/c++
-# ahead of libstdc++ /usr/include/g++, so <future> pulls libc++
-# __mutex_base and pthread.h (MINIX has no guest pthreads).
+# Prefer CMake LLVM 18+ (RISC-V codegen) over in-tree autoconf LLVM 3.6.1.
+# Do not install libc++ into /usr/include/c++: bsd.sys.mk then adds
+# -I${DESTDIR}/usr/include/c++ ahead of libstdc++ /usr/include/g++.
 .if ${MACHINE_ARCH} == "riscv64" || ${MACHINE_ARCH} == "riscv"
 HAVE_LIBGCC=		yes
 HAVE_LIBGCC_EH=		yes
 MKLIBCXX=		no
+MKLLVM_CMAKE?=		yes
 .endif
 
 # The default value has to be set after we have figured out if we are using GCC

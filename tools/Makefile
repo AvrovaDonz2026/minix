@@ -141,6 +141,11 @@ SUBDIR+= .WAIT config
 .endif # defined(__MINIX)
 
 .if ${MKLLVM} != "no"
+.if ${MKLLVM_CMAKE:Uno} == "yes"
+SUBDIR+= \
+	llvm-cmake .WAIT \
+	llvm-cmake-clang
+.else
 SUBDIR+= \
 	llvm .WAIT \
 	llvm-lib/libLLVMSupport llvm-lib/libLLVMTableGen .WAIT \
@@ -154,6 +159,7 @@ SUBDIR+=	llvm-lld
 . if ${MKMCLINKER} != "no"
 SUBDIR+=	llvm-mcld
 . endif
+.endif # ${MKLLVM_CMAKE:Uno} == "yes"
 .endif
 
 .if ${MKMAN} != "no" || ${MKDOC} != "no" || ${MKHTML} != "no"

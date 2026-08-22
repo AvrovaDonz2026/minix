@@ -702,10 +702,16 @@ cd minix/tests/riscv64
   first-pass public reachability checks.
 - virtio-net-mmio datapath follows FreeBSD `if_vtnet` in userspace: VirtIO 1.0
   12-byte `virtio_net_hdr`, dedicated RX/TX rings, checksum offload, CTRL_VQ
-  RX filter. The stack remains lwIP in userspace (not a FreeBSD kernel port).
+  RX filter, and `VIRTIO_RING_F_EVENT_IDX`. Kick RX after a refill batch and
+  TX/CTRL after each post: EVENT_IDX in `to_queue` only notifies the first
+  posted slot (`avail_event` starts at 0), which left QEMU looking at one RX
+  buffer and dropped slirp `ping 10.0.2.2`. The stack remains lwIP in
+  userspace (not a FreeBSD kernel port).
   virtio-net-mmio 用户态 datapath 参照 FreeBSD `if_vtnet`：VirtIO 1.0 的
-  12 字节头、独立收发环、checksum offload、CTRL_VQ 过滤；协议栈仍是用户态
-  lwIP，而不是把 FreeBSD 内核协议栈搬进微内核。
+  12 字节头、独立收发环、checksum offload、CTRL_VQ 过滤、EVENT_IDX。
+  RX 灌环与 TX/CTRL 之后补 kick：`to_queue` 在 EVENT_IDX 下只通知第一槽，
+  否则 QEMU 只看见一个 RX buffer，slirp 网关 ping 会丢包。协议栈仍是
+  用户态 lwIP，而不是把 FreeBSD 内核协议栈搬进微内核。
 - 若出现 `hostfwd=tcp::2222-:22` 端口占用，设置 `NET_HOSTFWD=none` 再跑
   `qemu-riscv64.sh -n`（网络冒烟默认如此）。
   If `hostfwd=tcp::2222-:22` conflicts, rerun `qemu-riscv64.sh -n` with

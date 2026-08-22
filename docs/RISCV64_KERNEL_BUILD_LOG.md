@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
-**Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.53
+**Last updated / 最后更新**: 2026-08-22
+**Version / 版本**: 1.54
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2252,7 +2252,18 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `external/gpl3/gcc/usr.bin/Makefile.inc`
 - `external/gpl3/gcc/usr.bin/libcpp/Makefile`
 
+## Entry 66 — 2026-08-22 02:20 UTC
 
+**Change / 变更**: Hosted nightly `32539264449` (`6a08be70f`) passed tools, distribution, native, virtio-blk, and virtio-net init (`hdr 12`, `mrg on`, `event_idx on`, `rx 256`, `ifconfig vio0`, `ping6 ::1`), then `/sbin/ping -c 2 10.0.2.2` reported `2 packets transmitted, 0 packets received`. `#46` EVENT_IDX in `virtio_mmio_to_queue` only writes `QUEUE_NOTIFY` when `vring_need_event(avail_event=0)` is true (the first buffer of a burst). A 256-slot RX refill therefore left QEMU looking at one buffer (IPv6 RA can consume it); TX `ping -c 2` has the same hole on the second packet. Add `virtio_mmio_kick()` and kick RX after refill, TX after send, and CTRL after `to_queue`. Keep EVENT_IDX negotiated. Do not change virtio-blk (one request at a time).
 
+**Issue ID**: `#73`
 
+**Result / 结果**: virtio-net RX refill and TX/CTRL posts notify QEMU of the current avail idx instead of only the first slot. CI pending after this push.
+
+**Evidence / 证据**:
+- `issue.md` `#73`
+- GitHub Actions run `32539264449`
+- `minix/include/minix/virtio_mmio.h`
+- `minix/lib/libvirtio_mmio/virtio_mmio.c`
+- `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
 

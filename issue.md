@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
-**Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.64
+**Date / 日期**: 2026-08-22  
+**Version / 版本**: 1.65
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -65,6 +65,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   40) `[DONE]` `#70` `#54` 在 `NOMAN` 之前 include `Makefile.cc2c`，`bsd.own.mk` 把 `MKMAN` 钉成 yes，dependall 要 `lto1.1`
   41) `[DONE]` `#71` backend `:Mininsn-*` 匹配 `ininsn-*`，`insn-*.o` 未进 `libbackend.a`；gcc13 `G_OBJS` 还少 4.8.5 的 `pointer-set` / `sched-vis` / `lto-symtab`
   42) `[DONE]` `#72` gcc13 `G_C_OBJS` / `G_libcpp_a_OBJS` 丢掉 4.8.5 的 `tree-mudflap.o` 与 `directives-only.o`，`cc1` 缺 `mudflap_init` / `_cpp_preprocess_dir_only`
+  43) `[DONE]` `#73` virtio-net `EVENT_IDX` 灌 RX 环时只 kick 第一槽，QEMU slirp `ping 10.0.2.2` 100% 丢包
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1591,6 +1592,20 @@ This section archives items with code-level fixes landed (some may still require
   历史 P1 #72：补回 gcc13 丢掉的 4.8.5 `tree-mudflap.o` /
   `directives-only.o` / `repo.o`，让原生 `cc1` 链上 `mudflap_init`
   与 `_cpp_preprocess_dir_only`。
+- Former P1 #73: hosted nightly `32539264449` (`6a08be70f`) passed
+  tools, distribution, native, and virtio-net init (`hdr 12`,
+  `mrg on`, `event_idx on`, `rx 256`, `ifconfig vio0`,
+  `ping6 ::1`), then `ping -c 2 10.0.2.2` reported
+  `2 packets transmitted, 0 packets received`. `#46` negotiated
+  `VIRTIO_RING_F_EVENT_IDX`; `virtio_mmio_to_queue` kicks only when
+  `vring_need_event(avail_event=0)` is true, which is the first
+  buffer of a burst. A 256-slot RX refill left QEMU looking at one
+  buffer (IPv6 RA can consume it); later TX packets had the same
+  hole. Kick RX after refill, TX after send, and CTRL after
+  `to_queue`. Keep EVENT_IDX negotiated; virtio-blk still posts
+  one request at a time, so its `need_event` kick stays true.
+  历史 P1 #73：RX 灌环与 TX 之后补 `QUEUE_NOTIFY`，避免 EVENT_IDX
+  只通知第一槽导致 slirp 网关 ping 丢包。
 
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the

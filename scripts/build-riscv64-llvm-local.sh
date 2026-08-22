@@ -82,6 +82,8 @@ run_tools() {
 
 run_distribution() {
   echo "[local] building distribution (jobs=${DIST_JOBS}) -> ${LOG_DIR}/distribution.log"
+  # Propagate -j1 to all sub-makes; parallel cross-as aborts on Ubuntu.
+  export MAKEFLAGS="-j${DIST_JOBS}"
   MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" \
     HOST_CXXFLAGS="-O -std=c++11 -fno-rtti -fno-exceptions ${HARDENING_OFF}" \
     HAVE_GOLD=no MKLLVM=yes \

@@ -613,7 +613,8 @@ See `issue.md` for evidence and file/line references.
 **现状 / Status**: `MKLLVM=yes` 由 `.github/workflows/packaging-riscv64-llvm.yml`
 做全系统 tools→distribution 门禁；世界仍用 GCC（`ACTIVE_CC=gcc`，riscv64 保留 libgcc）。
 Clang 已识别 `riscv64-elf32-minix`，但 3.6.1 没有 RISC-V codegen backend，
-来宾内 `cc` 仍指向 gcc。CI 在 tools 之后跑
+来宾内 `cc` 仍指向 gcc。riscv64 强制 `MKLIBCXX=no`，避免 libc++ 头文件
+盖住 libstdc++（`issue.md` `#46`）。CI 在 tools 之后跑
 `llvm_toolchain_gate.sh --mode host`（IR/tblgen/macros），distribution
 之后跑 DESTDIR ELF 检查，full suite 增加 `run_tests.sh llvm`。
 详见 `issue.md` `#42`。
@@ -638,6 +639,10 @@ When `MKCXX/MKLIBSTDCXX` is enabled, create:
 mkdir -p $DESTDIR/usr/include/g++/bits/riscv32
 mkdir -p $DESTDIR/usr/include/g++/bits/riscv64
 ```
+
+riscv64 在 `MKLLVM=yes` 时仍须 `MKLIBCXX=no`。libc++ 会安装到
+`/usr/include/c++`，`bsd.sys.mk` 把它插到 libstdc++ `/usr/include/g++`
+前面，`<future>` 会拉进 `pthread.h`（见 `issue.md` `#46`）。
 
 ### 5. 静态链接需要 __global_pointer$ 兼容层 / Static Linking Needs __global_pointer$ Stub
 
@@ -791,7 +796,8 @@ codegen backend。
 ./minix/tests/riscv64/llvm_toolchain_gate.sh \
   --mode host --require host --tooldir "$TOOLDIR"
 
-# DESTDIR：clang 必须是 RISC-V ELF，且 /usr/bin/cc 不能是 clang
+# DESTDIR：clang 必须是 RISC-V ELF，/usr/bin/cc 不能是 clang，
+# 且不得安装 libc++ __mutex_base
 ./minix/tests/riscv64/llvm_toolchain_gate.sh \
   --mode destdir --require destdir \
   --destdir obj.intrgcc/destdir.evbriscv64
@@ -807,6 +813,8 @@ LLVM_GATE_REQUIRE=all ./minix/tests/riscv64/run_tests.sh llvm
 - Host 层检查 clang 3.6、`nblvm-tblgen` / `nbclang-tblgen`、
   `__riscv` / `__riscv_xlen 64` / `__minix`，以及 `clang -c`
   不得产出 RISC-V 对象。
+- DESTDIR 层还拒绝 libc++ `__mutex_base`（riscv64 必须
+  `MKLIBCXX=no`，见 `issue.md` `#46`）。
 - Guest 层需要 `--disk-image`，在 QEMU 里跑 `clang --version`、
   `-fsyntax-only` 与 `-emit-llvm`。
 - 详见 `issue.md` `#42`。

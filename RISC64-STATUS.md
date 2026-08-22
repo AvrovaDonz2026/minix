@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.43
+**Version / 版本**: 1.44
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -50,29 +50,36 @@
   frontend 档案后再链 `-lintl`。网络 nightly `32530101083`
   （`92237adf3`）链上 `cppspec.o gcc.o ggc-none.o` 后缺
   `global_init_params` / `dgettext`。本分支 `7cd93be42`
-  （`32530212770`）已过 `#66`，死在 libstdc++ `functexcept.cc`
+  （`32530212770`）已过 `#66`，当时死在 libstdc++ `functexcept.cc`
   缺 `pthread.h`（仅本 LLVM 分支）。
   `#70`：从网络分支拣入在 `lto1` / `cc1` / `cc1obj` / `cc1plus`
   里先于 `Makefile.cc2c` 设置 `NOMAN`。网络 nightly
   `32532469511`（`9cb398c22`）链上 `gcpp` 后报 `don't know how
-  to make lto1.1`。本分支仍死在 libstdc++ `functexcept.cc` /
+  to make lto1.1`。当时仍死在 libstdc++ `functexcept.cc` /
   `pthread.h`，不要把 pthread 修到网络 PR。
   `#71`：从网络分支拣入 `:Minsn-*`（不是 `:Mininsn-*`）并补回
   gcc13 `G_OBJS` 丢掉的 4.8.5 对象。网络 nightly
   `32534503524`（`88ec45927`）链上 `lto1` 后缺 `pointer_set_*` /
-  `insn_data`。本分支仍死在 `pthread.h`，不要把 pthread 修到
+  `insn_data`。当时仍死在 `pthread.h`，不要把 pthread 修到
   网络 PR。
   `#72`：从网络分支拣入 4.8.5 `tree-mudflap.o` /
   `directives-only.o` / `cp/repo.o`。网络 nightly
   `32537278919`（`6954a7e6c`）链上 `lto1` 后链 `cc1` 缺
-  `mudflap_init()` / `_cpp_preprocess_dir_only`。本分支仍死在
+  `mudflap_init()` / `_cpp_preprocess_dir_only`。本分支当时仍死在
   `pthread.h`，不要把 pthread 修到网络 PR。
   `#42` LLVM packaging CI 现已在 tools 之后跑 host 功能门禁
   （clang 3.6、tblgen、RISC-V/Minix macros、`-fsyntax-only`、
   `clang -c` 不得产出 RISC-V 对象），distribution 之后跑 DESTDIR
   ELF 门禁，full suite 增加 `run_tests.sh llvm` 来宾 clang 冒烟。
-  不再只检查 `clang --version`。host 门禁在 pthread 挡住
-  distribution 时仍会执行。
+  不再只检查 `clang --version`。
+  `#46`（仅本 LLVM 分支）：`32539330823`（`cb5799c36`）编
+  `functexcept.cc` 时 `#include <future>` 打到 libc++ 的
+  `/usr/include/c++/__mutex_base`，再要 `pthread.h`。根因是
+  `MKLLVM=yes` 时 `bsd.own.mk` 仍默认 `MKLIBCXX=yes`，
+  `bsd.sys.mk` 把 `-I .../usr/include/c++` 插到 libstdc++
+  `/usr/include/g++` 前面。riscv64 强制 `MKLIBCXX=no`，CI 再传
+  `-V MKLIBCXX=no`，并清掉 MKUPDATE 留下的 libc++ 头文件。
+  不要把 libc++ / pthread 修到网络 PR。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -186,14 +193,21 @@
   `directives-only.o` / `cp/repo.o` (no virtio-net). Network
   nightly `32537278919` (`6954a7e6c`) linked `lto1` then missed
   `mudflap_init()` / `_cpp_preprocess_dir_only` while linking
-  `cc1`. This branch still dies in `pthread.h`. Do not mix
+  `cc1`. This branch then still died in `pthread.h`. Do not mix
   pthread onto the network PR.
   `#42` LLVM packaging CI now runs a host functional gate after
   tools (clang 3.6, tblgen, RISC-V/Minix macros, `-fsyntax-only`,
   `clang -c` must not emit a RISC-V object), a DESTDIR ELF gate
   after distribution, and `run_tests.sh llvm` in the full suite.
-  It no longer stops at `clang --version`. The host gate still
-  runs when pthread blocks distribution.
+  It no longer stops at `clang --version`.
+  `#46` (this LLVM branch only): `32539330823` (`cb5799c36`)
+  compiled `functexcept.cc` and `#include <future>` hit libc++
+  `/usr/include/c++/__mutex_base` then `pthread.h`. `MKLLVM=yes`
+  still defaulted `MKLIBCXX=yes` on riscv64, so `bsd.sys.mk`
+  prepended `-I .../usr/include/c++` ahead of libstdc++
+  `/usr/include/g++`. Force `MKLIBCXX=no` on riscv64, pass it in
+  LLVM CI, and drop stale DESTDIR libc++ headers. Do not mix
+  libc++ / pthread onto the network PR.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

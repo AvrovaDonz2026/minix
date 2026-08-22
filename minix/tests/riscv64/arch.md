@@ -36,5 +36,6 @@ This document summarizes the top-level, git-tracked contents of `minix/tests/ris
 - `run_tests.sh` top-level targets: `build`, `user`, `kernel`, `gate`,
   `native`, `llvm`, `all`.
 - `llvm_toolchain_gate.sh` is the MKLLVM host/DESTDIR/guest functional gate
-  (frontend, IR, tblgen, guest clang). It skips when clang is absent so
-  GCC-only `run_tests.sh all` still passes.
+  (frontend, IR, tblgen, guest clang). DESTDIR also rejects libc++
+  `__mutex_base` so `/usr/include/c++` cannot shadow libstdc++. It skips
+  when clang is absent so GCC-only `run_tests.sh all` still passes.

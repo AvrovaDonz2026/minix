@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.64
+**Version / 版本**: 1.65
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -63,6 +63,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   38) `[DONE]` `#71` backend `:Mininsn-*` 匹配 `ininsn-*`，`insn-*.o` 未进 `libbackend.a`；gcc13 `G_OBJS` 还少 4.8.5 的 `pointer-set` / `sched-vis` / `lto-symtab`
   39) `[DONE]` `#72` gcc13 `G_C_OBJS` / `G_libcpp_a_OBJS` 丢掉 4.8.5 的 `tree-mudflap.o` 与 `directives-only.o`，`cc1` 缺 `mudflap_init` / `_cpp_preprocess_dir_only`
   40) `[DONE]` `#42` LLVM packaging CI 补上 host IR/tblgen、DESTDIR ELF、来宾 clang 功能门禁（不再只看 `--version`）
+  41) `[DONE]` `#46` LLVM packaging 的 libc++ 头文件盖住 libstdc++，`functexcept.cc` 的 `<future>` 拉进 `pthread.h`
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1140,7 +1141,8 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
       optional `-emit-llvm`, and that `clang -c` does **not** emit a
       RISC-V object (no backend).
     - After distribution: `--mode destdir --require destdir` checks
-      DESTDIR clang is RISC-V ELF and `/usr/bin/cc` is not clang.
+      DESTDIR clang is RISC-V ELF, `/usr/bin/cc` is not clang, and
+      libc++ `__mutex_base` is absent (`#46`).
     - Full suite: `./minix/tests/riscv64/run_tests.sh llvm` with
       `LLVM_GATE_REQUIRE=all` also boots QEMU for guest `clang --version`
       / macros / IR.
@@ -1176,12 +1178,19 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     (network nightly `32537278919` linked `lto1` then missed
     `mudflap_init()` / `_cpp_preprocess_dir_only` while linking
     `cc1`). LLVM packaging
-    `32530212770` (`7cd93be42`) got past `#66` then failed
-    compiling `functexcept.cc`:
+    `32530212770` (`7cd93be42`) and `32539330823` (`cb5799c36`)
+    got past `#66` then failed compiling `functexcept.cc`:
     `usr/include/c++/__mutex_base:17:21: fatal error: pthread.h`.
-    That is LLVM-only (`MKCXX=yes`); do not mix onto the network PR.
-    The host LLVM gate now runs after tools even when distribution
-    still dies on that pthread residual.
+    That path is LLVM libc++ (`INCSDIR=/usr/include/c++`), not
+    libstdc++ (`/usr/include/g++`). `bsd.own.mk` sets
+    `MKLIBCXX?= yes` after `HAVE_GCC` is filled in, so `MKLLVM=yes`
+    on riscv64 still turns libc++ on; `bsd.sys.mk` then adds
+    `-I${DESTDIR}/usr/include/c++` ahead of g++. `#46` forces
+    `MKLIBCXX=no` on riscv64, passes `-V MKLIBCXX=no` in LLVM CI,
+    and drops stale DESTDIR libc++ headers under MKUPDATE. Do not
+    mix onto the network PR (`MKCXX=no`). The host LLVM gate still
+    runs after tools even if a later C++ residual blocks
+    distribution.
 - Priority / 优先级: P2 (toolchain completeness; gated by packaging CI)
 
 ### 38) [DONE] release-riscv64 libstdc++ `functexcept` no-future gate stabilization / release-riscv64 中 libstdc++ `functexcept` no-future 门禁稳定化（已完成）
@@ -1578,16 +1587,32 @@ This section archives items with code-level fixes landed (some may still require
   until a later LLVM-only fix.
   历史 P1 #72：从网络分支拣入 gcc 4.8.5 的 `tree-mudflap` 与
   `directives-only`，避免原生 `cc1` 缺 `mudflap_init`。
+- Former P1 #46: LLVM packaging `32539330823` (`cb5799c36`) and
+  `32530212770` (`7cd93be42`) compiled libstdc++ `functexcept.cc`
+  and died `usr/include/c++/__mutex_base:17:21: fatal error:
+  pthread.h`. That header is libc++ (`external/bsd/libc++/include`,
+  `INCSDIR=/usr/include/c++`), not libstdc++ (`/usr/include/g++`).
+  `bsd.own.mk` defaulted `MKLIBCXX?= yes` after the `HAVE_GCC`
+  check, so `MKLLVM=yes` on riscv64 installed libc++ and
+  `bsd.sys.mk` added `-I${DESTDIR}/usr/include/c++` ahead of g++.
+  Force `MKLIBCXX=no` on riscv64, pass it in LLVM CI, drop stale
+  DESTDIR libc++ headers, and reject `__mutex_base` in the DESTDIR
+  gate. LLVM-only; do not mix onto the network PR (`MKCXX=no`).
+  历史 P1 #46：riscv64 在 `MKLLVM=yes` 时关掉 libc++，避免
+  `/usr/include/c++` 盖住 libstdc++ 并拉进 `pthread.h`。仅本
+  LLVM 分支。
 - `#42` test-CI follow-up: packaging LLVM CI used to stop at
   `clang --version` after tools, then reuse the GCC full suite
   after distribution. Host/DESTDIR/guest functional gates now live
   in `minix/tests/riscv64/llvm_toolchain_gate.sh` and
   `run_tests.sh llvm`. Host gate is blocking after tools so LLVM
-  frontend/tblgen regressions fail even when libstdc++ still dies
-  on `functexcept.cc` / `pthread.h`.
+  frontend/tblgen regressions fail even when a later C++ residual
+  blocks distribution. DESTDIR now also rejects libc++
+  `__mutex_base` (`#46`).
   `#42` 测试跟进：LLVM packaging CI 在 tools 之后增加 host
   功能门禁，distribution 之后检查 DESTDIR clang ELF，full suite
-  增加来宾 clang 冒烟。
+  增加来宾 clang 冒烟。`#46` 后 DESTDIR 门禁拒绝 libc++
+  `__mutex_base`。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

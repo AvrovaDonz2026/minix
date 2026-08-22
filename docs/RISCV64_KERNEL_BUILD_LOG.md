@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-22
-**Version / 版本**: 1.55
+**Version / 版本**: 1.56
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2239,6 +2239,43 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 **Evidence / 证据**:
 - `issue.md` `#42`
 - GitHub Actions run `32539330823`
+- `.github/workflows/packaging-riscv64-llvm.yml`
+- `minix/tests/riscv64/llvm_toolchain_gate.sh`
+
+### Entry 68 — riscv64 MKLIBCXX=no (2026-08-22) / riscv64 关闭 libc++
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- LLVM packaging `32539330823` (`cb5799c36`) and `32530212770`
+  (`7cd93be42`) compiled libstdc++ `functexcept.cc` and died
+  `usr/include/c++/__mutex_base:17:21: fatal error: pthread.h`.
+- That header is LLVM libc++ (`INCSDIR=/usr/include/c++`), not
+  libstdc++ (`/usr/include/g++`). `#include <future>` hit libc++
+  because `bsd.sys.mk` adds `-I${DESTDIR}/usr/include/c++` when
+  `MKLIBCXX=yes`, ahead of `-I${DESTDIR}/usr/include/g++`.
+- `bsd.own.mk` checks `HAVE_GCC` before `HAVE_GCC?= 5`, so the
+  GCC clause that would set `MKLIBCXX?= no` misses. With
+  `MKLLVM=yes` the later `MKLIBCXX?= yes` fires. `_NEEDS_LIBCXX`
+  intentionally omits riscv64, but the early default already
+  turned libc++ on.
+- Do not stub `pthread.h`. gcc 4.8 `<future>` is already inert
+  without `_GLIBCXX_HAS_GTHREADS` once the include path is
+  libstdc++. Do not mix onto the network PR (`MKCXX=no`).
+
+**Fix / 修复**:
+- Force `MKLIBCXX=no` on `MACHINE_ARCH` riscv64/riscv next to
+  the existing `HAVE_LIBGCC=yes` override.
+- Pass `-V MKLIBCXX=no` on LLVM CI tools and distribution.
+- Under MKUPDATE, delete stale DESTDIR `/usr/include/c++` and
+  `libc++.a` before distribution.
+- DESTDIR LLVM gate fails if `__mutex_base` is present.
+
+**Evidence / 证据**:
+- `issue.md` `#46`
+- GitHub Actions run `32539330823`
+- `share/mk/bsd.own.mk`
+- `share/mk/bsd.sys.mk`
 - `.github/workflows/packaging-riscv64-llvm.yml`
 - `minix/tests/riscv64/llvm_toolchain_gate.sh`
 

@@ -9,13 +9,13 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.32
+- 版本：1.33
 - 最后更新：2026-08-22
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.32
+- Version: 1.33
 - Last updated: 2026-08-22
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
@@ -734,9 +734,10 @@ cd minix/tests/riscv64
 - QEMU 8.2 `ipv6=on` without `ipv4=on` disables slirp IPv4 (`net_init_slirp`
   clears `ipv4` when only IPv6 is present). `qemu-riscv64.sh -n` now uses
   `ipv4=on,ipv6=on`. Local QEMU 8.2.2 net smoke passed `ping -c 2 10.0.2.2`
-  (`arp_rep=1 echo_req=2 echo_rep=2`).
+  (`arp_rep=1 echo_req=2 echo_rep=2`). Hosted nightly `32552319291` and
+  release `32552319287` on `dc53ecdd9` passed the same `ping_gw` check.
   QEMU 8.2 只写 `ipv6=on` 会关掉 IPv4。脚本改为 `ipv4=on,ipv6=on`；
-  本地网关 ping 已通过。
+  本地与 hosted nightly/release 网关 ping 已通过。
 - 若出现 `hostfwd=tcp::2222-:22` 端口占用，设置 `NET_HOSTFWD=none` 再跑
   `qemu-riscv64.sh -n`（网络冒烟默认如此）。
   If `hostfwd=tcp::2222-:22` conflicts, rerun `qemu-riscv64.sh -n` with

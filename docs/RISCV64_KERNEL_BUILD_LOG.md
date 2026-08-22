@@ -2300,11 +2300,12 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 
 **Issue ID**: `#76`
 
-**Result / 结果**: Local QEMU 8.2.2 net smoke `PASS: qemu net smoke`; `ping_gw` passed. pcap `arp_req=2 arp_rep=1 echo_req=2 echo_rep=2`. Hosted nightly not claimed green.
+**Result / 结果**: Local QEMU 8.2.2 net smoke `PASS: qemu net smoke`; `ping_gw` passed. pcap `arp_req=2 arp_rep=1 echo_req=2 echo_rep=2`. Hosted nightly `32552319291` and release `32552319287` on `dc53ecdd9` passed `ping_gw` with the same pcap counts; virtio-blk I/O smoke stayed green.
 
 **Evidence / 证据**:
 - `issue.md` `#76`
 - `minix/scripts/qemu-riscv64.sh`
 - `/tmp/qemu-net-smoke-ipv4.log`
 - QEMU 8.2 `net/slirp.c` `net_init_slirp()`
+- GitHub Actions runs `32552319291` (nightly) and `32552319287` (release)
 

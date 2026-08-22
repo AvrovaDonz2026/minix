@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.68
+**Version / 版本**: 1.69
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -1651,10 +1651,13 @@ This section archives items with code-level fixes landed (some may still require
   `in_enabled` is off and `arp_input` returns immediately.
   `qemu-riscv64.sh -n` now passes `ipv4=on,ipv6=on`. Keep EVENT_IDX.
   Local net smoke then passed `ping_gw` (`arp_req=2 arp_rep=1
-  echo_req=2 echo_rep=2`).
+  echo_req=2 echo_rep=2`). Hosted nightly `32552319291` and release
+  `32552319287` on `dc53ecdd9` both passed `ping_gw` with the same
+  pcap counts; virtio-blk I/O smoke stayed green.
   历史 P1 #76：`#75` 的 pcap 已证明 guest ARP 离卡，但 slirp 不回。
   QEMU 8.2 只写 `ipv6=on` 会关掉 IPv4。`-netdev` 改为
-  `ipv4=on,ipv6=on`；本地 `ping 10.0.2.2` 通过。
+  `ipv4=on,ipv6=on`；本地与 hosted nightly/release 的 `ping 10.0.2.2`
+  均通过。
 
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the

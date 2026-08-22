@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.47
+**Version / 版本**: 1.48
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -100,6 +100,8 @@
 - 本轮修 QEMU user-net IPv4（`issue.md` `#76`）：QEMU 8.2 只写 `ipv6=on`
   会把 `ipv4` 清掉，slirp 不答 ARP。`-netdev` 改为 `ipv4=on,ipv6=on`。
   本地 QEMU 8.2.2 net smoke `ping_gw` 通过（`echo_req=2 echo_rep=2`）。
+  hosted nightly `32552319291` 与 release `32552319287`（`dc53ecdd9`）
+  同样 `ping_gw` 通过，virtio-blk smoke 仍绿。
 - 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`）：
   gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
   `#50`：backend 生成器按 dist 选择 `.cc`/`.c`。`#52`：丢掉 4.8.5
@@ -261,6 +263,8 @@
   when `ipv6=on` is set without `ipv4=on`, so slirp ignores ARP.
   `qemu-riscv64.sh` now passes `ipv4=on,ipv6=on`. Local QEMU 8.2.2 net
   smoke passed `ping -c 2 10.0.2.2` (`echo_req=2 echo_rep=2`).
+  Hosted nightly `32552319291` and release `32552319287` on
+  `dc53ecdd9` passed the same `ping_gw` check; virtio-blk stayed green.
 - Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`): gcov skips
   `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
   `#50`: backend generators resolve `.cc`/`.c` from dist.
@@ -409,7 +413,7 @@
   同时 release/nightly 流水中的 native gate 已升级为阻断式（blocking）。
 - `#75` 增加宿主可执行 `test_virtio_event_idx.c` 与 net smoke pcap。
 - `#76` 发现 QEMU 8.2 只写 `ipv6=on` 会关掉 IPv4；改为 `ipv4=on,ipv6=on`
-  后本地 `ping 10.0.2.2` 通过。
+  后本地与 hosted nightly/release 的 `ping 10.0.2.2` 均通过。
 
 **English**
 - Boot path is stable to the `#` shell prompt; init and core services complete basic startup handshake.
@@ -461,8 +465,8 @@
   `native_toolchain_gate.sh` coverage.
   Native toolchain gate in release/nightly workflows is now blocking.
 - `#75` adds a host-run `test_virtio_event_idx.c` and net-smoke pcap probes.
-- `#76` keeps QEMU slirp IPv4 enabled alongside IPv6; local `ping 10.0.2.2`
-  now succeeds.
+- `#76` keeps QEMU slirp IPv4 enabled alongside IPv6; local and hosted
+  `ping 10.0.2.2` now succeed (nightly `32552319291`, release `32552319287`).
 
 ## Key Issues (Snapshot) / 关键问题（摘要）
 

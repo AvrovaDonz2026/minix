@@ -275,8 +275,10 @@ if [ "$NETWORK" -eq 1 ]; then
         [ "${NET_HOSTFWD:-}" != "0" ]; then
         hostfwd_arg=",hostfwd=${NET_HOSTFWD:-tcp::2222-:22}"
     fi
+    # QEMU 8.2 net/slirp.c: ipv6=on without has_ipv4 clears ipv4, so
+    # slirp in_enabled=0 and ARP/ICMP to 10.0.2.2 are dropped. Keep both.
     QEMU_ARGS+=(
-        -netdev "user,id=net0,ipv6=on${hostfwd_arg}"
+        -netdev "user,id=net0,ipv4=on,ipv6=on${hostfwd_arg}"
         -device virtio-net-device,netdev=net0,mac=52:54:00:12:34:56
     )
     if [ -n "${NET_PCAP:-}" ]; then

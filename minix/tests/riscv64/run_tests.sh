@@ -485,6 +485,14 @@ run_build_tests() {
         fi
         rm -f "$EVENT_IDX_BIN"
     fi
+
+    # Test 5: QEMU user-net must keep IPv4 when IPv6 is on (QEMU 8.2).
+    QEMU_SCRIPT="$MINIX_ROOT/minix/scripts/qemu-riscv64.sh"
+    if grep -q 'ipv4=on,ipv6=on' "$QEMU_SCRIPT"; then
+        log_pass "QEMU user-net keeps ipv4 with ipv6"
+    else
+        log_fail "QEMU user-net keeps ipv4 with ipv6"
+    fi
 }
 
 run_smoke_gate() {

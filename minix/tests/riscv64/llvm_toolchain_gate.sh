@@ -600,14 +600,14 @@ run_guest_layer() {
     --cmd 'prepare_usr_check=/bin/mount | /bin/grep /usr >/dev/null || (/bin/mount; false)' \
     --cmd 'llvm_clang_detect=test -x /usr/bin/clang' \
     --cmd 'llvm_clangxx_detect=test -e /usr/bin/clang++' \
-    --cmd 'llvm_clang_version=PATH=/sbin:/bin:/usr/bin; clang --version >/usr/lt_ver.txt && test -s /usr/lt_ver.txt' \
-    --cmd 'llvm_cc_is_gcc=PATH=/sbin:/bin:/usr/bin; test -x /usr/bin/gcc || test -x /usr/bin/cc' \
-    --cmd 'llvm_src_prep=PATH=/sbin:/bin:/usr/bin; printf "int add(int a,int b){return a+b;}\n" >/usr/lt.c' \
-    --cmd 'llvm_syntax=PATH=/sbin:/bin:/usr/bin; clang -ffreestanding -nostdinc -fsyntax-only /usr/lt.c' \
-    --cmd 'llvm_macros=PATH=/sbin:/bin:/usr/bin; clang -ffreestanding -nostdinc -dM -E -x c /dev/null >/usr/lt_m.h' \
-    --cmd 'llvm_macros_riscv=PATH=/sbin:/bin:/usr/bin; grep __riscv /usr/lt_m.h >/dev/null' \
-    --cmd 'llvm_emit_ir=PATH=/sbin:/bin:/usr/bin; clang -ffreestanding -nostdinc -emit-llvm -S /usr/lt.c -o /usr/lt.ll >/usr/lt_ir.err 2>&1 || true' \
-    --cmd 'llvm_emit_ir_ok=PATH=/sbin:/bin:/usr/bin; test -s /usr/lt.ll || grep -Ei "target" /usr/lt_ir.err >/dev/null'; then
+    --cmd 'llvm_clang_version=/usr/bin/clang --version >/usr/lt_ver.txt && test -s /usr/lt_ver.txt' \
+    --cmd 'llvm_cc_is_gcc=test -x /usr/bin/gcc || test -x /usr/bin/cc' \
+    --cmd 'llvm_src_prep=printf "int add(int a,int b){return a+b;}\n" >/usr/lt.c' \
+    --cmd 'llvm_syntax=/usr/bin/clang -ffreestanding -nostdinc -fsyntax-only /usr/lt.c' \
+    --cmd 'llvm_macros=/usr/bin/clang -ffreestanding -nostdinc -dM -E -x c /dev/null >/usr/lt_m.h' \
+    --cmd 'llvm_macros_riscv=grep __riscv /usr/lt_m.h >/dev/null' \
+    --cmd 'llvm_emit_ir=/usr/bin/clang -ffreestanding -nostdinc -emit-llvm -S /usr/lt.c -o /usr/lt.ll >/usr/lt_ir.err 2>&1 || true' \
+    --cmd 'llvm_emit_ir_ok=test -s /usr/lt.ll || grep -Ei "target" /usr/lt_ir.err >/dev/null'; then
     log_pass "guest clang QEMU smoke"
   else
     rc=$?

@@ -103,12 +103,14 @@ prepare_libstdcxx_guest() {
   local destdir_root="${REPO_ROOT}/${OBJDIR}/destdir.evbriscv64"
   local functexcept_src="${REPO_ROOT}/external/gpl3/gcc/dist/libstdc++-v3/src/c++11/functexcept.cc"
 
-  # MKUPDATE keeps a tracked DESTDIR. Drop libc++ headers so they cannot
-  # shadow libstdc++ even after MKLIBCXX=no removes -I c++.
-  rm -rf "${destdir_root}/usr/include/c++"
-  rm -f \
-    "${destdir_root}/usr/lib/libc++.a" \
-    "${destdir_root}/usr/lib/libc++_pic.a"
+  strip_libcxx_from_destdir() {
+    rm -rf "${destdir_root}/usr/include/c++"
+    rm -f \
+      "${destdir_root}/usr/lib/libc++.a" \
+      "${destdir_root}/usr/lib/libc++_pic.a"
+  }
+
+  strip_libcxx_from_destdir
 
   sanitize_cxxconfig() {
     local cfg="$1"
@@ -139,6 +141,26 @@ prepare_libstdcxx_guest() {
     exit 1
   fi
   echo "[local] libstdc++ guest prep: functexcept no-future profile ok"
+}
+
+prepare_llvm_guest_path() {
+  local path_inc="${REPO_ROOT}/external/bsd/llvm/dist/llvm/lib/Support/Unix/Path.inc"
+  [[ -f "${path_inc}" ]] || return 0
+  if grep -q 'fallback("/usr/bin/")' "${path_inc}"; then
+    return 0
+  fi
+  perl -0777 -i -pe \
+    's@(if \(getprogpath\(exe_path, argv0\) != NULL\)\n    return exe_path;\n)@$1#if defined(__minix)\n  if (argv0 && argv0[0] == '"'"'/'"'"')\n    return argv0;\n  if (argv0 && argv0[0]) {\n    std::string fallback("/usr/bin/");\n    fallback.append(llvm::sys::path::filename(argv0));\n    if (sys::fs::can_execute(fallback))\n      return fallback;\n  }\n#endif\n@' \
+    "${path_inc}"
+  echo "[local] llvm guest prep: Path.inc getMainExecutable fallback ok"
+}
+
+strip_libcxx_from_destdir() {
+  local destdir_root="${REPO_ROOT}/${OBJDIR}/destdir.evbriscv64"
+  rm -rf "${destdir_root}/usr/include/c++"
+  rm -f \
+    "${destdir_root}/usr/lib/libc++.a" \
+    "${destdir_root}/usr/lib/libc++_pic.a"
 }
 
 run_tools() {
@@ -179,6 +201,9 @@ run_distribution() {
     HAVE_GOLD=no MKLLVM=yes \
     ./build.sh -U -u -V MKUPDATE=yes -j"${DIST_JOBS}" "${COMMON_FLAGS[@]}" distribution \
     2>&1 | tee "${LOG_DIR}/distribution.log"
+
+  strip_libcxx_from_destdir
+  echo "[local] stripped stale libc++ artifacts from DESTDIR"
 }
 
 pick_tooldir() {
@@ -229,6 +254,7 @@ run_verify() {
   local image="${IMAGE_PATH:-${LOG_DIR}/minix-riscv64-llvm.img}"
   tooldir="$(pick_tooldir)"
   install_cross_as_flock_wrapper "${tooldir}"
+  strip_libcxx_from_destdir
 
   : >"${log}"
   export TOOLDIR="${tooldir}"

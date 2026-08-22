@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.67
+**Version / 版本**: 1.75 (merges LLVM track 1.67 + virtio-net track 1.74)
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,23 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`.
+**2026-08-22 系统审计 / system audit**: 对照当前工作树与 `/tmp/qemu-debug.log`（QEMU 8.2.2 `-d guest_errors,unimp`）复核开放项。`#73`–`#76` 的网关 ping 保持已关闭；新开 `#77`–`#85`。`#16` 的“先写后验”路径已不在 `map_service()` 中。`multi_smoke_gate.sh` 把 `timeout` 的 `rc=124` 记成 `[INFO]` 再查 boot marker，这是停 QEMU 的预期语义，不另开假阳性单。
+**2026-08-22 system audit**: Re-checked open items against the current tree and `/tmp/qemu-debug.log` (QEMU 8.2.2 `-d guest_errors,unimp`). `#73`–`#76` gateway ping stays closed. Newly filed: `#77`–`#85`. The `#16` write-then-validate path is gone from `map_service()`. `multi_smoke_gate.sh` logging `rc=124` then `[PASS]` after boot-marker checks is the intended way to stop QEMU, not a separate false-positive issue.
+
+**2026-08-22 fix round / 修复轮次**: Landed `#77`/`#13` (phys_copy fault layout), `#78` (PLIC 96), `#79` (legacy features sel), `#80` (MAC table before PROMISC, UC count 0), `#81` (`pg_walk` sfence), `#82` (no PA-as-VA `root_v`), `#84`/`#85` (stronger boot markers). Left `#17`, A2/`MKPIC`, `#15` SMP, `#14` DT, `#83` multiboot u32, `#19`/`#11`. Do not disable EVENT_IDX or ipv6.
+**2026-08-22 fix round**: Closed `#77`/`#13`/`#78`–`#82`/`#84`/`#85` in tree. Open remain `#17`, A2, `#15`, `#14`, `#83`, `#19`, `#11`.
+
+**2026-08-22 runtime / 运行时复测**: Local QEMU 8.2.2 (`80163bebc`): boot `rc=124` with `VFS: init_root done` + `exec path="/bin/sh"` + `#`; `-d guest_errors,unimp` log empty (no invalid PLIC, no `GUEST_FEATURES_SEL`); net smoke `ping_gw` `arp_req=2 arp_rep=1 echo_req=2 echo_rep=2`, `event_idx on`. Hosted nightly `32559794636` and release `32559794615` on the same commit: full suite `build/user/native/kernel/gate` PASS; kernel boot PASS; `ping_gw` same pcap counts.
+**2026-08-22 runtime**: Local and hosted `ping_gw` stayed green after the `#77`–`#85` rebuild. EVENT_IDX and `ipv4=on,ipv6=on` unchanged.
+
+**审计否决 / audit rejected**:
+- `VIRTIO_MMIO_IRQ(i - 1)` is not an off-by-one: the `for` loop increments `i` after the matching slot, so slot `k` yields IRQ `k+1` (`virtio_mmio.c:287-334`).
+- Legacy SBI `REMOTE_SFENCE_VMA` `start`/`size` are VA range operands (register values), not pointers. `#5` only needed a PA for the hart-mask pointer.
+- `for` 循环在命中槽位后仍会 `i++`，`VIRTIO_MMIO_IRQ(i-1)` 对槽 `k` 得到 IRQ `k+1`，不是 off-by-one。
+- 旧 SBI `REMOTE_SFENCE_VMA` 的 `start`/`size` 是要刷新的 VA 范围，不是指针；`#5` 只需 hart-mask 指针为 PA。
+
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；部分编号在 virtio-net 与 LLVM packaging 并行分支中复用，下文 P1/P2 对复用编号保留双方原始描述。已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#13`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`, `#77`, `#78`, `#79`, `#80`, `#81`, `#82`, `#84`, `#85`。  
+Issue IDs are historically stable and intentionally non-contiguous; some IDs were reused across parallel virtio-net and LLVM packaging tracks — both original descriptions are kept in P1/P2 below. Archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#13`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`, `#77`, `#78`, `#79`, `#80`, `#81`, `#82`, `#84`, `#85`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -23,62 +38,80 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   5) `[DONE]` `#18` RS `do_init_ready()` / `catch_boot_init_ready()` 异常路径空指针解引用
   6) `[DONE]` `#23` RISC-V `vm_memset` 无故障恢复，可能把可恢复故障升级为 kernel panic
 - P1 / 高优先（高概率影响功能正确性）:
-  1) `#16` VFS 服务端点“先写后验”可能弱化代际校验
+  1) `[DONE]` `#77` `phys_copy` 缺页恢复 PC 区间覆盖 `phys_memset`，`catch_pagefaults` 可能拆错栈帧
   2) `#17` 启动期 safecopy 噪声错误闭环（定位根因并降噪）
-  3) `A3` 含盘场景 `minix-service`/`virtio_blk_mmio` SIGSEGV
-  4) `[DONE]` `#25` 内建 GCC 不支持 `-mabi=lp64d`，阻断部分 GCC-only 增量构建
-  5) `[DONE]` `#26` RS `do_up`/`do_update` 失败路径未回收 slot 资源，`RSS_COPY` 可触发可重复内存泄漏
+  3) `A3` `[WATCH]` 用户态 `memset` 栈顶 SIGSEGV（已缓解并经无盘/带盘 smoke；保留长跑回归）
+  4) `[DONE]` `#16` VFS 服务端点“先写后验”可能弱化代际校验
+  5) `[DONE]` `#25` 内建 GCC 不支持 `-mabi=lp64d`，阻断部分 GCC-only 增量构建
+  6) `[DONE]` `#26` RS `do_up`/`do_update` 失败路径未回收 slot 资源，`RSS_COPY` 可触发可重复内存泄漏
   6) `[DONE]` `#28` RS `init_state_data` 在多个错误出口缺少内存回收
   7) `[DONE]` `#29` safecopy 首错分类规则过宽，存在门禁假阴性风险
   8) `[DONE]` `#32` multi-smoke 缺少运行时命令探针，易漏报“能启动但功能退化”
   9) `[DONE]` `#34` lwIP raw socket 权限检查因 IPC 白名单缺失 `pm` 导致误拒绝（`ping/ping6` `Permission denied`）
   10) `[DONE]` `#35` `ping6 fe80::...%vio0` 在用户态崩溃（SIGSEGV，`bad addr 0x0`）
   11) `[DONE]` `#36` `lwip.conf` 与 RISC-V `system.conf` 的 IPC 策略漂移，可能在特定启动路径复现 `Permission denied`
-  12) `[DONE]` `#43` 原生 gcc `optionlist` 依赖 gcc13 的 `params.opt`，4.8.5 dist 上无法 make
-  13) `[DONE]` `#44` RISC-V `libm` 未定义 `_copysignl`（缺 `__HAVE_LONG_DOUBLE 128`）
-  14) `[DONE]` `#45` hosted tools 在 top-level configure 之后立刻要求 `build/bfd/Makefile`，GNU `configure-bfd` 尚未运行就 abort
-  15) `[DONE]` `#47` 原生 gcov/common-target 仍列出 gcc13 的 `json.cc`/`spellcheck.cc` 等，4.8.5 dist 上无法 make
-  16) `[DONE]` `#48` RISC-V `__HAVE_LONG_DOUBLE 128` 与 gcc 4.8.5 的 64 位 long double 冲突，`s_cbrtl.c` 因 `LDBL_MANT_DIG==53` 失败
-  17) `[DONE]` `#50` 原生 backend Makefile 写死 gcc13 的 `gengenrtl.cc` 等生成器，4.8.5 dist 上 `don't know how to make gengenrtl.cc`
-  18) `[DONE]` `#51` LLVM 3.6.1 `RISCVTargetInfo` 在不完整静态数组上调用 `array_lengthof`，tools 编译 `Targets.cpp` 失败
-  19) `[DONE]` `#52` 原生 backend 依赖 gcc13 的 `gcc/common.md`，4.8.5 dist 上 `don't know how to make common.md`
-  20) `[DONE]` `#53` 原生 backend 依赖 tools gcc 的 `build/gcc/version.h`，4.8.5 GNU 构建不生成该文件
-  21) `[DONE]` `#54` 原生 backend 调用 gcc13 的 `genmodes -i`，4.8.5 只接受 `-h|-m`；frontend/cc1 仍列出 `.cc`
-  22) `[DONE]` `#55` `#53` 合成了本地 `version.h` 后，backend `G_GCC_H` 仍依赖 tools 路径上的同一文件
-  23) `[DONE]` `#56` 原生 `Makefile.hooks` 写死 gcc13 的 `genhooks.cc`，4.8.5 dist 上 `don't know how to make genhooks.cc`
-  24) `[DONE]` `#57` 原生 gengtype 未链 4.8.5 的 `version.o`，链接缺 `version_string` / `pkgversion_string` / `bug_report_url`
-  25) `[DONE]` `#58` 原生 gengtype 的 `gtyp-input.list` 是 gcc13 的 `.cc` 清单，4.8.5 dist 上把实现源全部跳过，`-r` 在未定义 GTY 结构上 abort
-  26) `[DONE]` `#59` `#58` 把 `.for` 放进 `{ \` recipe 续行，shell 报 `sh: .for: not found`（exit 127）
-  27) `[DONE]` `#60` `#59` 独立 recipe 的 `printf '%s\n'` 被 make 把 `\n` 拆成真换行，gtyp-input 损坏后 `gengtype -r` abort
-  28) `[DONE]` `#61` gcc13 路径无条件丢掉 `cpp-id-data.h`，4.8.5 上 `answer` / `cpp_macro` 未定义，`gengtype -r` abort
-  29) `[DONE]` `#62` 4.8.5 `hash-table.c` 无条件 `#include "config.h"`，`-DGENERATOR_FILE` 下 host `config.h` 报 `#error` 并中止 `hash-table.lo`
-  30) `[DONE]` `#63` 原生 libcpp Makefile 把 `G_libcpp_a_OBJS` 写成 `.cc`，4.8.5 dist 上 `don't know how to make charset.cc`
-  31) `[DONE]` `#64` 4.8.5 `gcov-io.h` 包含 `gcov-iov.h`，原生 gcov/cc1 未加入 libgcov arch `-I`
-  32) `[DONE]` `#65` `#64` 的 `${.PARSEDIR}` `-I` 展开为空，编译行变成 `-I/../lib/...`
-  33) `[DONE]` `#66` LLVM packaging 编 libstdc++ 时 `compatibility-atomic-c++0x.cc` 踩单线程 `<atomic>` `#error`
-  34) `[DONE]` `#67` `#65` 编过 gcov.c 后，libcommon.a 只有 `input.o`，链接缺 `fnotice` / `version_string`
-  35) `[DONE]` `#68` `#67` 之后原生 cpp 把 gcpp 链成三份 `ggc-none.o`，缺 `main`
-  36) `[DONE]` `#69` `#68` 之后 gcpp 缺 `params.c` 的 `global_init_params`，且 `-lintl` 在 libcpp 之前
-  37) `[DONE]` `#70` `#54` 在 `NOMAN` 之前 include `Makefile.cc2c`，`bsd.own.mk` 把 `MKMAN` 钉成 yes，dependall 要 `lto1.1`
-  38) `[DONE]` `#71` backend `:Mininsn-*` 匹配 `ininsn-*`，`insn-*.o` 未进 `libbackend.a`；gcc13 `G_OBJS` 还少 4.8.5 的 `pointer-set` / `sched-vis` / `lto-symtab`
-  39) `[DONE]` `#72` gcc13 `G_C_OBJS` / `G_libcpp_a_OBJS` 丢掉 4.8.5 的 `tree-mudflap.o` 与 `directives-only.o`，`cc1` 缺 `mudflap_init` / `_cpp_preprocess_dir_only`
-  40) `[DONE]` `#42` LLVM packaging CI 补上 host IR/tblgen、DESTDIR ELF、来宾 clang 功能门禁（不再只看 `--version`）
-  41) `[DONE]` `#46` LLVM packaging 的 libc++ 头文件盖住 libstdc++，`functexcept.cc` 的 `<future>` 拉进 `pthread.h`
-  42) `[DONE]` `#49` LLVM host 门禁把 `nbllvm-tblgen` 写成 `nblvm-tblgen`，tools 已装 tblgen 仍失败
-  43) `[DONE]` `#73` 客端 LLVM 3.6.1 `std::max(UINT64_C(1), uint64_t)` 在 gcc 4.8 / LP64 上类型冲突
+  12) `[DONE]` `#39` `virtio_net_mmio.conf` 覆盖 RISC-V `system.conf` 后缺少 `PRIVCTL`/IRQ/完整 MMIO 窗口，磁盘轮廓网卡无法映射
+  13) `[DONE]` `#40` VirtIO 1.0 仍按 10 字节 `virtio_net_hdr` 收包，modern 12 字节头导致 RX 错位；未按 FreeBSD `if_vtnet` 做 checksum/CTRL_RX
+  14) `[DONE]` `#41` GitHub-hosted packaging CI 使用仓库内带 `/home/donz/minix` 路径的 `obj.intrgcc/tools` 与 `tooldir.*`，binutils 缺 `bfd.h`；full-suite 在 tools 失败后仍跑；net smoke 把 OpenSBI 的 `\ ` 当成 shell prompt
+  15) `[DONE]` `#43` 原生 gcc `optionlist` 依赖 gcc13 的 `params.opt`，4.8.5 dist 上 `don't know how to make params.opt`
+  16) `[DONE]` `#44` RISC-V `libm` 未定义 `_copysignl`：`math.h` 缺 `__HAVE_LONG_DOUBLE 128`，`s_copysign.S` 替换了会做 alias 的 C 文件
+  17) `[DONE]` `#45` hosted tools 在 top-level configure 之后立刻要求 `build/bfd/Makefile`，GNU `configure-bfd` 尚未运行就 abort
+  18) `[DONE]` `#46` virtio-net-mmio 未协商 MRG_RXBUF/EVENT_IDX，RX/TX 环只有 32 槽，与 FreeBSD if_vtnet 的 mergeable RX 和 kick 抑制不一致
+  19) `[DONE]` `#47` 原生 gcov/common-target 仍列出 gcc13 的 `json.cc`/`spellcheck.cc` 等，4.8.5 dist 上无法 make
+  20) `[DONE]` `#48` RISC-V `__HAVE_LONG_DOUBLE 128` 与 gcc 4.8.5 的 64 位 long double 冲突，`s_cbrtl.c` 因 `LDBL_MANT_DIG==53` 失败
+  21) `[DONE]` `#49` virtio-net-mmio 环深仍 128，未按 FreeBSD if_vtnet 做 CTRL_MAC 改址与 CTRL_RX_EXTRA NOBCAST
+  22) `[DONE]` `#50` 原生 backend Makefile 写死 gcc13 的 `gengenrtl.cc` 等生成器，4.8.5 dist 上 `don't know how to make gengenrtl.cc`
+  23) `[DONE]` `#52` 原生 backend 依赖 gcc13 的 `gcc/common.md`，4.8.5 dist 上 `don't know how to make common.md`
+  24) `[DONE]` `#53` 原生 backend 依赖 tools gcc 的 `build/gcc/version.h`，4.8.5 GNU 构建不生成该文件
+  25) `[DONE]` `#54` 原生 backend 调用 gcc13 的 `genmodes -i`，4.8.5 只接受 `-h|-m`；frontend/cc1 仍列出 `.cc`
+  26) `[DONE]` `#55` `#53` 合成了本地 `version.h` 后，backend `G_GCC_H` 仍依赖 tools 路径上的同一文件
+  27) `[DONE]` `#56` 原生 `Makefile.hooks` 写死 gcc13 的 `genhooks.cc`，4.8.5 dist 上 `don't know how to make genhooks.cc`
+  28) `[DONE]` `#57` 原生 gengtype 未链 4.8.5 的 `version.o`，链接缺 `version_string` / `pkgversion_string` / `bug_report_url`
+  29) `[DONE]` `#58` 原生 gengtype 的 `gtyp-input.list` 是 gcc13 的 `.cc` 清单，4.8.5 dist 上把实现源全部跳过，`-r` 在未定义 GTY 结构上 abort
+  30) `[DONE]` `#59` `#58` 把 `.for` 放进 `{ \` recipe 续行，shell 报 `sh: .for: not found`（exit 127）
+  31) `[DONE]` `#60` `#59` 独立 recipe 的 `printf '%s\n'` 被 make 把 `\n` 拆成真换行，gtyp-input 损坏后 `gengtype -r` abort
+  32) `[DONE]` `#61` gcc13 路径无条件丢掉 `cpp-id-data.h`，4.8.5 上 `answer` / `cpp_macro` 未定义，`gengtype -r` abort
+  33) `[DONE]` `#62` 4.8.5 `hash-table.c` 无条件 `#include "config.h"`，`-DGENERATOR_FILE` 下 host `config.h` 报 `#error` 并中止 `hash-table.lo`
+  34) `[DONE]` `#63` 原生 libcpp Makefile 把 `G_libcpp_a_OBJS` 写成 `.cc`，4.8.5 dist 上 `don't know how to make charset.cc`
+  35) `[DONE]` `#64` 4.8.5 `gcov-io.h` 包含 `gcov-iov.h`，原生 gcov/cc1 未加入 libgcov arch `-I`
+  36) `[DONE]` `#65` `#64` 的 `${.PARSEDIR}` `-I` 展开为空，编译行变成 `-I/../lib/...`
+  37) `[DONE]` `#67` `#65` 编过 gcov.c 后，libcommon.a 只有 `input.o`，链接缺 `fnotice` / `version_string`
+  38) `[DONE]` `#68` `#67` 之后原生 cpp 把 gcpp 链成三份 `ggc-none.o`，缺 `main`
+  39) `[DONE]` `#69` `#68` 之后 gcpp 缺 `params.c` 的 `global_init_params`，且 `-lintl` 在 libcpp 之前
+  40) `[DONE]` `#70` `#54` 在 `NOMAN` 之前 include `Makefile.cc2c`，`bsd.own.mk` 把 `MKMAN` 钉成 yes，dependall 要 `lto1.1`
+  41) `[DONE]` `#71` backend `:Mininsn-*` 匹配 `ininsn-*`，`insn-*.o` 未进 `libbackend.a`；gcc13 `G_OBJS` 还少 4.8.5 的 `pointer-set` / `sched-vis` / `lto-symtab`
+  42) `[DONE]` `#72` gcc13 `G_C_OBJS` / `G_libcpp_a_OBJS` 丢掉 4.8.5 的 `tree-mudflap.o` 与 `directives-only.o`，`cc1` 缺 `mudflap_init` / `_cpp_preprocess_dir_only`
+  43) `[DONE]` `#73` virtio-net `EVENT_IDX` 灌 RX 环时只 kick 第一槽，QEMU slirp `ping 10.0.2.2` 100% 丢包
+  44) `[DONE]` `#74` `#73` kick 之后 ping 仍 100% 丢包：used 环只在 IRQ 上排空，EVENT_IDX 错过第一次 used 通知后不再中断
+  45) `[DONE]` `#75` hosted nightly 仍要 30+ 分钟才能重现 EVENT_IDX avail/used 通知数学错误；本地/CI 用宿主可执行 `test_virtio_event_idx.c` + net smoke MAC/pcap 探测
+  46) `[DONE]` `#76` `#75` pcap 显示 guest ARP who-has `10.0.2.2` 但 slirp 不回：QEMU 8.2 `ipv6=on` 且未写 `ipv4` 会关掉 IPv4
+  47) `[DONE]` `#42` (LLVM packaging track) LLVM packaging CI 补上 host IR/tblgen、DESTDIR ELF、来宾 clang 功能门禁（不再只看 `--version`）
+  48) `[DONE]` `#46` (LLVM packaging track) LLVM packaging 的 libc++ 头文件盖住 libstdc++，`functexcept.cc` 的 `<future>` 拉进 `pthread.h`
+  49) `[DONE]` `#49` (LLVM packaging track) LLVM host 门禁把 `nbllvm-tblgen` 写成 `nblvm-tblgen`，tools 已装 tblgen 仍失败
+  50) `[DONE]` `#51` (LLVM packaging track) LLVM 3.6.1 `RISCVTargetInfo` 在不完整静态数组上调用 `array_lengthof`，tools 编译 `Targets.cpp` 失败
+  51) `[DONE]` `#66` (LLVM packaging track) LLVM packaging 编 libstdc++ 时 `compatibility-atomic-c++0x.cc` 踩单线程 `<atomic>` `#error`
+  52) `[DONE]` `#73` (LLVM packaging track) 客端 LLVM 3.6.1 `std::max(UINT64_C(1), uint64_t)` 在 gcc 4.8 / LP64 上类型冲突
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
-  3) `#13` `phys_copy` fault handler 注册缺失
+  3) `[DONE]` `#13` `phys_copy` 本地 TODO 未接线；缺页恢复见 `#77`
   4) `#14` DT 多段内存/保留区解析补齐
   5) `[DONE]` `#30` multi-smoke 默认复用磁盘镜像，削弱跨次可复现性
   6) `[DONE]` `#31` smoke/repro 门禁对退出语义与宿主可移植性校验不足
-  7) `#37` native toolchain（来宾内 `as/ld/ar/ranlib` + `cc/gcc`）已可过门禁；`clang` 由 `#42` 单独用全系统 packaging CI 覆盖
-  8) `#42` 打开 `MKLLVM=yes` 的 tools+distribution；LLVM 3.6.1 仍无 RISC-V codegen backend
+  7) `[DONE]` `#37` native toolchain（来宾内 `as/ld/ar/ranlib` + `cc/gcc/clang`）闭环；LLVM 分支补充：来宾 `clang` 亦可由 `#42` packaging CI 单独覆盖
+  8) `#42` (LLVM packaging track) 打开 `MKLLVM=yes` 的 tools+distribution；LLVM 3.6.1 仍无 RISC-V codegen backend
+  9) `[DONE]` `#78` `PLIC_NUM_SOURCES=1024` 超过 QEMU virt 的 96 个源，启动写非法 PLIC 寄存器
+  10) `[DONE]` `#79` legacy virtio-mmio 仍写 `GUEST_FEATURES_SEL=1`，QEMU 报 guest_error
+  11) `[DONE]` `#80` virtio-net `CTRL_RX` PROMISC 先于 `CTRL_MAC_TABLE_SET`（QEMU 上不挡 ping）
+  12) `[DONE]` `#81` 内核 `pg_walk()` 叶子拆分后未立刻 `sfence.vma`
+  13) `[DONE]` `#82` `VMCTL_SETADDRSPACE` 在 `root_v==NULL` 时把物理根当 VA
+  14) `[DONE]` `#84` `run_tests.sh` kernel boot 忽略 timeout 且 grep 任意 `MINIX`
+  15) `[DONE]` `#85` `multi_smoke_gate` `run_one` 的 boot marker 不要求 shell prompt
 - P3 / 低优先（可维护性与技术债）:
   1) `#19` kernel/VM/RS 无条件调试日志收敛
   2) `#11` `minimal_kernel` RISC-V 适配
   3) `TD1`/`TD2`/`TD3` 技术债
+  4) `#83` multiboot 模块起止被收成 `u32_t`，超过 4 GiB 会截断
 - Validation backlog / 已有代码修复待运行复验:
   - `#4`, `#5`, `#6`, `#7`, `#8`, `#9`（建议在每轮 P0/P1 修复后都做最小 QEMU 回归）
 
@@ -116,7 +149,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - `REQ_GETDENTS` may hit `sys_safecopyto` EFAULT with `CPF_TRY` grants; VFS retries and succeeds, but logs are noisy. / `REQ_GETDENTS` 在 `CPF_TRY` 下可能触发 `sys_safecopyto` EFAULT；VFS 会重试成功，但日志较噪。
     Evidence: `minix/kernel/system/do_safecopy.c`, `minix/servers/vfs/request.c`
 
-### A2) RV64 process support exists in loader/CPU mode but is not stable end-to-end / RV64 进程支持具备基础但端到端不稳定
+### A2) RV64 static userland is smoke-stable; dynamic loader still missing / RV64 静态用户态已可冒烟，动态加载器仍缺
 - Evidence / 证据:
   - U-mode is configured by clearing `SSTATUS_SPP` in `prot_init`. / 内核已配置 U-mode 入口。  
     Evidence: `minix/kernel/arch/riscv64/protect.c:48`
@@ -124,16 +157,15 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     Evidence: `minix/kernel/arch/riscv64/protect.c:138`
   - Exec loader is built as 64-bit on `__riscv64__`, and ELF target class is 64 for RISC-V. / exec 加载器按 RV64 构建并期望 ELF64。  
     Evidence: `minix/lib/libexec/exec_elf.c:4`, `sys/arch/riscv/include/elf_machdep.h:24`
-  - Current status explicitly says userland is not yet stable. / 现状明确用户态仍不稳定。  
-    Evidence: `README-RISCV64.md:27`
-  - `ld.elf_so` only builds when `MKPIC != "no"`, but current riscv64 builds report `MKPIC=no`, so no dynamic loader is produced/installed. / `ld.elf_so` 仅在 `MKPIC != "no"` 时构建，而当前 riscv64 构建为 `MKPIC=no`，动态加载器未生成/安装。  
+  - QEMU reaches a stable shell; static userland smoke (`echo SMOKE_OK`, `ps -aux`, `cat /proc/meminfo`) passes. / QEMU 可进入稳定 shell，静态用户态冒烟已通过。  
+    Evidence: `README-RISCV64.md` current-status section; `RISC64-STATUS.md`
+  - `ld.elf_so` only builds when `MKPIC != "no"`, but the local riscv64 baseline is `MKPIC=no`, so no dynamic loader is produced/installed. / `ld.elf_so` 仅在 `MKPIC != "no"` 时构建，本地 riscv64 基线为 `MKPIC=no`，动态加载器未生成/安装。  
     Evidence: `libexec/ld.elf_so/Makefile:31-47`
 - Impact / 影响:
-  - Kernel has RV64 U-mode + ELF64 exec plumbing, but user processes are not reliably runnable yet. / 内核具备基础通路，但 RV64 进程尚不可稳定运行。
-  - No `ld.elf_so` means dynamic binaries cannot be validated; only static ELF64 execs are currently exercised. / 缺少 `ld.elf_so` 导致动态二进制无法验证，当前仅运行静态 ELF64 可执行文件。
+  - Static ELF64 processes are exercised by smoke and gates. Remaining A2 gap is `MKPIC=no` / no `ld.elf_so`, not “userland cannot run”. / 静态 ELF64 进程已在冒烟与门禁中跑过。A2 剩余缺口是 `MKPIC=no` / 无 `ld.elf_so`，不是用户态无法运行。
+  - No `ld.elf_so` means dynamic binaries cannot be validated. / 缺少 `ld.elf_so` 导致动态二进制无法验证。
 - Suggested fix / 修复建议:
-  - Resolve A1 and top Major issues (VM/PT/TLB/IPI), then validate exec with a minimal ELF64 user binary + ld.so. / 先修复 A1 与主要问题（VM/PT/TLB/IPI），再用最小 ELF64 用户程序验证 exec/ld.so。
-  - Enable `MKPIC`/`MKPICLIB` for riscv64 and build/install `ld.elf_so`, then test a small dynamic binary with `PT_INTERP=/libexec/ld.elf_so`. / 为 riscv64 开启 `MKPIC`/`MKPICLIB` 并构建安装 `ld.elf_so`，再用带 `PT_INTERP=/libexec/ld.elf_so` 的小动态程序验证。
+  - Keep the static smoke path. Enable `MKPIC`/`MKPICLIB` for riscv64 and build/install `ld.elf_so`, then test a small dynamic binary with `PT_INTERP=/libexec/ld.elf_so`. / 保留静态冒烟路径。为 riscv64 开启 `MKPIC`/`MKPICLIB` 并构建安装 `ld.elf_so`，再用带 `PT_INTERP=/libexec/ld.elf_so` 的小动态程序验证。
   - Validation checklist (doc-only): / 验证清单（文档）:
     1) Confirm target ELF64/EM_RISCV via `readelf -h` on the test binary. / 通过 `readelf -h` 确认 ELF64/EM_RISCV。
     2) Prefer a minimal static executable if available; otherwise verify `PT_INTERP` points to `/libexec/ld.elf_so`. / 尽量使用静态可执行文件；否则确认 `PT_INTERP` 指向 `/libexec/ld.elf_so`。  
@@ -174,6 +206,11 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     `virtio-blk-mmio` reports capacity and initialization, no `minix-service` SIGSEGV signature observed.
     Log: `/tmp/qemu-smoke-disk.log`
   - Status / 状态: fixed + smoke-validated for current bring-up scope; keep long-run stress/regression under P1 follow-up.
+  - 2026-08-22 audit: hosted nightly/release virtio-blk I/O smoke and
+    net `ping_gw` stay green; no new stack-top `memset` SIGSEGV in
+    those logs. Keep as `[WATCH]`, not an active bring-up blocker.
+    2026-08-22 审计：hosted virtio-blk I/O 与 net `ping_gw` 仍绿，未见
+    新的栈顶 `memset` SIGSEGV。降为 `[WATCH]`，不再当启动阻断项。
 
 ### A4) virtio_blk_mmio startup failure in diskless QEMU smoke (configuration-driven) / 无盘 QEMU 冒烟中 virtio_blk_mmio 启动失败（配置驱动）
 - Evidence / 证据:
@@ -296,6 +333,19 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Suggested fix / 修复建议:
   - Validate endpoint/generation first (without mutating `fproc`), then apply resync only when explicitly proven safe.
   - Add a guarded path (and log) for legitimate RS republish cases.
+- Update / 进展:
+  - 2026-08-22 audit: `map_service()` no longer writes `fp_endpoint` before
+    validation. It calls `isokendpt()` first, then only sets `FP_SRV_PROC`.
+    `get_work()` panics on generation mismatch instead of masking it.
+    2026-08-22 审计：`map_service()` 不再先写 `fp_endpoint` 再校验。
+    现先 `isokendpt()`，再置 `FP_SRV_PROC`。`get_work()` 在代际不一致时
+    直接 panic，而不是掩盖。
+    Evidence: `minix/servers/vfs/dmap.c:209-215`,
+    `minix/servers/vfs/main.c:652-667`,
+    `minix/servers/vfs/utility.c:117`.
+- Status / 状态:
+  - Stale in current tree; archived. Remaining endpoint noise is `#17`.
+    当前树已不存在该路径；归档。残留端点噪声见 `#17`。
 
 ### 18) RS init-ready path may dereference null service slot on unexpected RS_INIT / RS 初始化就绪路径在异常 RS_INIT 下可能空指针解引用
 - Evidence / 证据:
@@ -640,6 +690,59 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     已在当前工作树修复；用既有 smoke 日志回放结果稳定
     （已知启动回退签名仍判定为 `acceptable_noise`）。
 
+### 77) `phys_copy` catch_pagefaults PC range includes `phys_memset` / `phys_copy` 缺页恢复区间覆盖 `phys_memset`
+- Evidence / 证据:
+  - i386 puts `phys_copy_fault` immediately after the copy loop, then
+    defines `phys_memset` later:
+    `minix/kernel/arch/i386/klib.S:173-214` (`ENTRY(phys_copy)` /
+    `LABEL(phys_copy_fault)`), `klib.S:354` (`ENTRY(phys_memset)`).
+  - RISC-V layout in `minix/kernel/arch/riscv64/phys_copy.S` is
+    `phys_copy` (line 48) → `phys_memset` (line 155) → `phys_copy_fault`
+    (line 217) → `memset_fault` (line 229).
+  - `handle_page_fault` tests
+    `sepc > phys_copy && sepc < phys_copy_fault` first, then
+    `sepc > phys_memset && sepc < memset_fault`:
+    `minix/kernel/arch/riscv64/exception.c:253-266`.
+    A fault inside `phys_memset` matches both; `if (in_physcopy)` wins
+    and jumps to `phys_copy_fault` → `.Lcopy_fault`.
+  - `.Lcopy_fault` pops a 16-byte `ra`/`s0` frame
+    (`phys_copy.S:130-140`) that `phys_memset` never pushed
+    (`phys_copy.S:155-206` has no stack frame).
+  - `vm_memset` sets `catch_pagefaults = 1` then calls `phys_memset`:
+    `minix/kernel/arch/riscv64/memory.c:435-459`.
+    `#23` added this catch path; the overlapping symbols can turn a
+    recoverable user-memset fault into stack corruption or panic.
+- Impact / 影响:
+  - `SYS_MEMSET` / `SYS_SAFEMEMSET` faults on user pages can restore the
+    wrong `ra` instead of returning an error. Boot smoke that never
+    faults `phys_memset` will not see this.
+    用户页上的 memset 缺页可能拆错栈而不是返回错误。未触发
+    `phys_memset` 缺页的 boot smoke 看不出这个问题。
+- Suggested fix / 修复建议:
+  - Move `phys_copy_fault` / `phys_copy_fault_in_kernel` to immediately
+    after `phys_copy`, matching i386, so the copy range excludes
+    `phys_memset`.
+  - Keep `memset_fault` immediately after `phys_memset`.
+  - Check `in_memset` before `in_physcopy`, or use non-overlapping
+    `[fn, fn_fault)` ranges.
+  - Drop the dead `la t0, .Lcopy_fault` / TODO (`#13`).
+- Priority assessment / 优先级评估:
+  - `P1`: kernel catch_pagefaults recovery is wrong for a path that is
+    already used (`vm_memset`). Not a ping regression.
+- Update / 进展:
+  - 2026-08-22: moved `phys_copy_fault` immediately after `phys_copy`
+    and `memset_fault` immediately after `phys_memset`. `handle_page_fault`
+    now prefers the memset window. Deleted the dead `la`/`TODO` (`#13`).
+    `run_tests.sh build` checks `nm -n` symbol order
+    `phys_copy < phys_copy_fault < phys_memset < memset_fault`.
+    Local QEMU 8.2.2 and hosted nightly `32559794636` / release
+    `32559794615` on `80163bebc` booted to shell (`VFS: init_root done`
+    + `exec /bin/sh`) and passed `ping_gw`.
+    2026-08-22：按 i386 把 `phys_copy_fault` 放到 copy 之后，并让
+    `handle_page_fault` 先判 memset 窗口。删掉死 `la`/`TODO`（`#13`）。
+    本地与 hosted 已复测启动与 `ping_gw`。
+- Status / 状态: `[DONE]` in working tree.
+
 ## Moderate / 中等
 
 ### 11) Minimal kernel build is not RISC-V-ready / minimal_kernel 未支持 RISC-V
@@ -653,11 +756,28 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 
 ### 13) phys_copy fault handler not registered / phys_copy 缺少故障处理注册
 - Evidence / 证据:
-  - `minix/kernel/arch/riscv64/phys_copy.S:71-74` leaves a TODO to register the fault handler
+  - `minix/kernel/arch/riscv64/phys_copy.S:84-86` still has a dead
+    `la t0, .Lcopy_fault` plus `TODO: Register fault handler`; `t0` is
+    overwritten by the alignment check.
+  - `minix/kernel/arch/riscv64/exception.c:253-271` already recovers by
+    PC range (`phys_copy` .. `phys_copy_fault`), like i386. That range is
+    wrong; see `#77`.
 - Impact / 影响:
-  - Faulting physical copies can trap instead of returning an error. / 物理复制缺页可能直接陷入异常而非返回错误。
+  - The leftover TODO is not what recovers faults. Overlapping symbols can
+    turn a recoverable `phys_memset` fault into stack corruption.
+    本地 TODO 并未真正注册恢复入口；符号区间重叠才是正确性风险（见 `#77`）。
 - Suggested fix / 修复建议:
-  - Hook into the arch fault-handling mechanism (as in other architectures) for safe phys_copy. / 接入架构故障处理机制以安全执行 phys_copy。
+  - Delete the dead `la`/`TODO`. Keep recovery in `exception.c`, with `#77`
+    fixing the symbol order to match i386 (`phys_copy_fault` immediately
+    after `phys_copy`).
+- Update / 进展:
+  - 2026-08-22 audit: handler registration exists via PC range; remaining
+    correctness bug is `#77`.
+    2026-08-22 审计：缺页恢复已按 PC 区间接线，剩余正确性见 `#77`。
+  - 2026-08-22 fix round: deleted the dead `la t0, .Lcopy_fault` / TODO.
+    `#77` placed `phys_copy_fault` immediately after `phys_copy`.
+    2026-08-22 修复轮：删掉死代码；`#77` 已把符号顺序改成 i386 布局。
+- Status / 状态: `[DONE]` in working tree.
 
 ### 14) Device tree parsing is minimal (single region, no reserved areas) / 设备树解析较简化（单一内存段、无保留区）
 - Evidence / 证据:
@@ -993,6 +1113,55 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Status / 状态:
   - Fixed in working tree.
 
+### 39) `virtio_net_mmio.conf` policy drift drops `PRIVCTL`/IRQ and pinches the MMIO window / `virtio_net_mmio.conf` 策略漂移丢掉 `PRIVCTL`/IRQ 并收窄 MMIO 窗口
+- Evidence / 证据:
+  - `minix-service` prefers `/etc/system.conf.d/<progname>` over global
+    `/etc/system.conf` (`minix/commands/minix-service/parse.c`).
+  - `minix/drivers/net/virtio_net_mmio/Makefile` installs
+    `virtio_net_mmio.conf` into `/etc/system.conf.d`.
+  - Before fix, that file only granted `UMAP/VUMAP/IRQCTL/DEVIO`.
+    `SYS_PRIVCTL` is not in `SYS_BASIC_CALLS` (`minix/include/minix/com.h`).
+  - Probe path `virtio_mmio_allow_mem()` uses
+    `sys_privctl(SELF, SYS_PRIV_ADD_MEM, ...)` in
+    `minix/lib/libvirtio_mmio/virtio_mmio.c`. Without `PRIVCTL` this fails,
+    `sys_privquery_mem` then returns `EPERM`, and `vm_map_phys` cannot map
+    VirtIO MMIO slots.
+  - Missing `irq` list still sets `CHECK_IRQ` with an empty table, so
+    `sys_irqsetpolicy()` is denied even if mapping somehow succeeded.
+  - RISC-V global policy in `minix/releasetools/riscv64/system.conf` listed
+    only `io 0x10002000:0x10003000` (slot 1). Diskless `-n` places
+    `virtio-net-device` at slot 0 (`0x10001000`) because QEMU also attaches
+    `virtio-rng-device`.
+- Impact / 影响:
+  - Ramdisk boots that use only `/etc/system.conf` can bring up `vio0`.
+  - Disk/distribution profiles with `/etc/system.conf.d/virtio_net_mmio`
+    fail to start the NIC, so `ifconfig vio0` / `ping 10.0.2.2` never work
+    even though `lwip` and `ping` are present.
+  - 磁盘轮廓下网卡无法映射 MMIO/IRQ，用户态只剩 loopback，QEMU slirp
+    连通性验收被静默跳过。
+- Fix / 修复:
+  - Expand `virtio_net_mmio.conf` to the full RISC-V policy: `uid 0`,
+    `PRIVCTL`, IRQs `1..8`, IPC including `lwip`, and MMIO window
+    `0x10001000:0x10008000`.
+  - Widen the same MMIO window in `minix/releasetools/riscv64/system.conf`.
+  - Program modern virtqueue DESC/AVAIL/USED addresses from `vring_init`
+    pointers; initialize `irq_hook` to `-1`; report NIC link from
+    `VIRTIO_NET_F_STATUS`; print `virtio-net-mmio: initialized`.
+  - Post RX buffers only after `DRIVER_OK`. QEMU virtio-mmio ignores
+    queue notifies until the device is ready, so a pre-ready refill
+    left the RX ring silent (`ping` TX with 0 replies).
+  - QEMU `-n` keeps user-net, adds `ipv6=on` and a stable MAC, and honors
+    `NET_HOSTFWD=none` so smoke/CI does not bind host port 2222.
+    (`#76` later adds `ipv4=on` because QEMU 8.2 `ipv6=on` alone
+    disables IPv4.)
+  - Add `minix/tests/riscv64/qemu_net_smoke.py` and wire it into
+    `run_tests.sh kernel`.
+- Priority assessment / 优先级评估:
+  - `P1` (network datapath missing on the disk profile; ramdisk-only
+    bring-up looked healthy while distribution images were not).
+- Status / 状态:
+  - Fixed in working tree; runtime revalidation in this change.
+
 ### 17) Repeated safecopy errors during boot are still noisy and unexplained / 启动期重复 safecopy 错误仍有噪声且原因未闭环
 - Evidence / 证据:
   - `/tmp/qemu-fix20.log:415` and `/tmp/qemu-fix20.log:1040` show `kcall safecopy err=...fc1c`.
@@ -1077,12 +1246,242 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - RS boot handshake prints `RS: wait init ready ...`/`RS: got init ready ...`:
     `minix/servers/rs/main.c:797-823`.
   - Corresponding QEMU logs (`/tmp/qemu-fix20.log`) are heavily saturated with trace lines.
+  - 2026-08-22 net smoke (`/tmp/qemu-net-smoke-debug.log`) still prints
+    `VFS: recv src=...`, `VFS: exec path=...`, `VM: pt_bind set_addrspace`,
+    `fsdriver: vfs src=...`, and `VFS: select ...` on every `ping`.
+    RISC-V-only VFS message dump: `minix/servers/vfs/main.c:637-646`.
 - Impact / 影响:
   - Log saturation makes real regressions harder to detect and can perturb timing-sensitive behavior.
   - 长期会降低回归测试可读性与排障效率。
 - Suggested fix / 修复建议:
   - Gate noisy traces behind build-time/runtime debug flags (or strict rate limits).
   - Keep only milestone-level boot markers enabled by default.
+  - Drop or `#ifdef DEBUG` the `__riscv` `VFS: recv` cap-64 dump.
+
+### 78) PLIC init writes past QEMU virt's 96 sources / PLIC 初始化写出 QEMU virt 的 96 个中断源
+- Evidence / 证据:
+  - MINIX uses `PLIC_NUM_SOURCES 1024` in
+    `minix/kernel/arch/riscv64/include/archconst.h:69`.
+  - `plic_init()` writes priority for `i = 1 .. 1023` and 32 enable
+    words for hart0 S-mode context:
+    `minix/kernel/arch/riscv64/plic.c:69-82`.
+    Priority offset `i*4`; source 96 is `0x180`. Enable base for
+    context 1 is `0x2000 + 0x80 = 0x2080`; word 3 is `0x208c`.
+  - QEMU 8.2.2 virt SiFive PLIC has 96 sources (valid priority
+    `0x4 .. 0x17c`, enable words 0-2). `/tmp/qemu-debug.log` with
+    `-d guest_errors,unimp`:
+    - 928 `sifive_plic_write: Invalid register write 0x180` .. `0xffc`
+      (sources 96-1023);
+    - 29 `sifive_plic_write: Invalid enable write 0x208c` .. (words 3-31).
+  - `minimal_kernel/arch/riscv64/plic.c` uses 128 sources; its
+    `archconst.h` still says 1024 (`#11`).
+- Impact / 影响:
+  - Boot and virtio IRQs 1-8 / UART 10 still work. QEMU guest_errors
+    flood the log and the extra stores are wasted MMIO. A future
+    tighter emulator or real 96-source PLIC would fault these stores.
+    启动与现有 IRQ 仍可用；guest_errors 刷屏。更严的模拟器或真机
+    96 源 PLIC 可能对越界写报错。
+- Suggested fix / 修复建议:
+  - Set `PLIC_NUM_SOURCES` to the QEMU virt count (96), or parse it
+    from the DT `riscv,ndev` / `interrupts-extended` on the PLIC node
+    (`#14`).
+  - Stop enable-word loops at `(ndev + 31) / 32`.
+- Update / 进展:
+  - 2026-08-22: `PLIC_NUM_SOURCES` is 96; `plic_init` / enable-word
+    loops follow that count. DT `riscv,ndev` remains `#14`.
+    2026-08-22：源数量改为 96，初始化不再写越界寄存器。
+- Status / 状态: `[DONE]` in working tree.
+
+### 79) Legacy virtio-mmio writes `GUEST_FEATURES_SEL=1` / legacy virtio-mmio 仍写高 32 位 guest features
+- Evidence / 证据:
+  - `exchange_features()` always writes selector 1 after the low word:
+    `minix/lib/libvirtio_mmio/virtio_mmio.c:165-169`.
+  - QEMU virt `virtio-net-device` / `virtio-blk-device` are legacy
+    MMIO (version 1). QEMU 8.2 logs a guest_error when the guest
+    writes `GUEST_FEATURES_SEL > 0` in legacy mode.
+  - `/tmp/qemu-debug.log:958`:
+    `virtio_mmio_write: attempt to write guest features with
+    guest_features_sel > 0 in legacy mode`.
+  - Version is read at `virtio_mmio.c:337-338`; page size is already
+    version-gated (`virtio_mmio.c:351-353`), but the SEL=1 store is not.
+  - `VIRTIO_F_VERSION_1` (bit 32) is only forced when `version >= 2`
+    (`virtio_mmio.c:151-153`), so the high-word write is unused on
+    legacy and only produces the guest_error.
+- Impact / 影响:
+  - Feature bits 0-31 (including `EVENT_IDX`) still negotiate. Ping
+    stays green. The log is a spec/QEMU violation that can hide real
+    MMIO bugs.
+    低 32 位功能（含 EVENT_IDX）仍能协商；ping 不受影响。该 guest_error
+    会掩盖真正的 MMIO 问题。
+- Suggested fix / 修复建议:
+  - If `dev->version == 1`, skip `GUEST_FEATURES_SEL=1` and the high
+    guest-features store. Keep the high-word path for version 2.
+- Update / 进展:
+  - 2026-08-22 virtio re-read: QEMU legacy ignores the hi guest-features
+    write; `EVENT_IDX` lives in the low word. Classify as log noise, not
+    a ping or feature-bit drop.
+    2026-08-22 virtio 复核：QEMU legacy 忽略高 32 位 guest features；
+    `EVENT_IDX` 在低字。按日志噪声处理，不是功能位丢失。
+  - 2026-08-22 fix round: skip `HOST_FEATURES_SEL=1` and
+    `GUEST_FEATURES_SEL=1` when `dev->version == 1`. Keep EVENT_IDX
+    in the low word.
+    2026-08-22 修复轮：legacy 不再写 SEL=1。
+- Status / 状态: `[DONE]` in working tree.
+
+### 80) virtio-net sets PROMISC before MAC table; unicast count is 1 / virtio-net 先关 PROMISC 再设 MAC 表，单播表写入本机地址
+- Evidence / 证据:
+  - `virtio_net_set_mode()` sends `CTRL_RX` PROMISC / ALLMULTI /
+    NOBCAST, then `CTRL_MAC_TABLE_SET`:
+    `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c:577-602`.
+  - Linux `virtnet_set_rx_mode` sends `CTRL_MAC_TABLE_SET` first, then
+    `CTRL_RX_PROMISC` (drivers/net/virtio_net.c).
+  - `virtio_net_ctrl_mac_table()` sets unicast `*count = 1` and copies
+    `hwaddr` (`virtio_net_mmio.c:461-463`). Linux walks
+    `netdev_for_each_uc_addr` and typically leaves the unicast table
+    empty; the primary MAC stays in device config (`n->mac`).
+  - QEMU `receive_filter()` accepts the config MAC even with an empty
+    table (`!memcmp(ptr, n->mac, ETH_ALEN)`), and accepts everything
+    when `n->promisc`. `#76` ping works because of that `n->mac`
+    shortcut plus slirp IPv4, not because PROMISC ordering is correct.
+- Impact / 影响:
+  - Default QEMU slirp unicast to `52:54:00:12:34:56` still passes.
+    Extra unicast MACs that exist only in the filter table, or a
+    backend without the `n->mac` bypass, can drop RX in the PROMISC-off
+    window.
+    默认 QEMU slirp 单播仍可通过。仅存在于过滤表的额外单播地址，
+    或没有 `n->mac` 旁路的后端，会在关 PROMISC 的窗口丢 RX。
+- Suggested fix / 修复建议:
+  - Program `CTRL_MAC_TABLE_SET` first, then PROMISC / ALLMULTI /
+    NOBCAST, matching Linux.
+  - Use unicast count 0 unless the stack added extra unicast
+    addresses; keep the primary MAC via `CTRL_MAC_ADDR_SET` /
+    config.
+  - Do not disable `EVENT_IDX` or IPv6 to paper over this.
+- Update / 进展:
+  - 2026-08-22: `virtio_net_set_mode` programs `CTRL_MAC_TABLE_SET`
+    first. Unicast count is 0; primary MAC stays in config /
+    `CTRL_MAC_ADDR_SET`. EVENT_IDX and ipv6 stay on.
+    2026-08-22：先写 MAC 表再设 PROMISC；单播表为空。
+- Status / 状态: `[DONE]` in working tree.
+
+### 81) Kernel `pg_walk()` leaf splits omit an immediate TLB flush / 内核 `pg_walk()` 叶子拆分后未立刻刷新 TLB
+- Evidence / 证据:
+  - `pg_walk()` converts a large-page leaf into a next-level table
+    without `pg_flush_tlb()`:
+    `minix/kernel/arch/riscv64/pg_utils.c:126-153`.
+  - `pg_map()` flushes only after the whole range is rewritten
+    (`pg_utils.c:258`). Between the split and that flush, a stale
+    gigapage/megapage TLB entry on the same hart can still satisfy
+    the old mapping.
+  - This is the kernel-side counterpart of validation-backlog `#4`
+    (VM-server `pagetable.c` already issues `VMCTL_FLUSHTLB` after
+    splits).
+- Impact / 影响:
+  - Boot or later `pg_map` across a prior large-page boundary can
+    observe the old mapping until the final flush. Single-hart QEMU
+    smoke may not hit the window.
+    跨越旧大页边界的 `pg_map` 在最终 flush 前可能仍走旧映射。
+- Suggested fix / 修复建议:
+  - Call `pg_flush_tlb()` (or `sfence.vma`) immediately after each
+    leaf→non-leaf store, matching `pagetable.c:87-89`.
+- Update / 进展:
+  - 2026-08-22: `pg_walk()` calls `pg_flush_tlb()` after each
+    leaf-to-table store.
+    2026-08-22：叶子拆分后立刻 `sfence.vma`。
+- Status / 状态: `[DONE]` in working tree.
+
+### 82) `VMCTL_SETADDRSPACE` treats a missing `root_v` as an identity VA / `VMCTL_SETADDRSPACE` 在缺少 `root_v` 时把物理根当 VA
+- Evidence / 证据:
+  - `set_satp()` stores `p_satp_v = (reg_t *)root` when `root_v` is
+    NULL: `minix/kernel/arch/riscv64/arch_do_vmctl.c:20-24`.
+  - Sv39 kernel maps DRAM at `KERNEL_BASE`, not at the physical
+    address (`pg_utils.c` `pg_phys_to_virt`, `protect.c` boot map).
+    `get_pgdir()` then uses `p_satp_v` (`memory.c:59-63`).
+  - VM currently passes `pdes` (`minix/servers/vm/pagetable.c` around
+    the `SVMCTL_PTROOT_V` setaddrspace). The kernel fallback is still
+    a latent footgun if any caller omits `SVMCTL_PTROOT_V`.
+- Impact / 影响:
+  - A missed `root_v` walks the page-table root at the wrong VA and
+    can corrupt mappings or panic. Not hit by the current VM caller.
+    漏传 `root_v` 会在错误 VA 上走页表。当前 VM 调用方有传，但是潜伏坑。
+- Suggested fix / 修复建议:
+  - On RV64 reject `VMCTL_SETADDRSPACE` with `EINVAL` when
+    `root_v == NULL`, or convert with `pt_phys_to_virt(root)`.
+  - Keep the existing VM `SVMCTL_PTROOT_V` path.
+- Update / 进展:
+  - 2026-08-22: `VMCTL_SETADDRSPACE` converts a missing `root_v`
+    with `KERNEL_BASE + (root - VIRT_DRAM_BASE)` and returns
+    `EINVAL` if the root is not DRAM. No identity-map of the PA.
+    2026-08-22：不再把物理根当 VA；非 DRAM 根返回 `EINVAL`。
+- Status / 状态: `[DONE]` in working tree.
+
+### 83) RISC-V multiboot module bounds are 32-bit / RISC-V multiboot 模块起止为 32 位
+- Evidence / 证据:
+  - `struct multiboot_mod_list` uses `u32_t mod_start` / `mod_end`:
+    `sys/arch/riscv/include/multiboot.h:41-46`.
+  - `riscv64_init_kinfo()` casts kernel physical bounds through
+    `(u32_t)`: `minix/kernel/arch/riscv64/kernel.c:89-92`.
+    `reserved_end` / `add_memmap()` then use those values
+    (`kernel.c:99-105`).
+  - `qemu-riscv64.sh` currently refuses module addresses above 4 GiB,
+    so today's 256 MiB virt map is safe.
+- Impact / 影响:
+  - RAM or modules above 4 GiB truncate and shrink or overlap the
+    free memmap. Latent until the memory map grows.
+    超过 4 GiB 的模块/内存在今天的 QEMU 256M 轮廓下不会触发。
+- Suggested fix / 修复建议:
+  - Carry 64-bit module bounds on RV64 (widen the struct or add a
+    parallel boot-info field) and stop narrowing through `(u32_t)`.
+
+### 84) Kernel boot test ignores timeout and greps any `MINIX` / kernel boot 测试忽略 timeout 且匹配任意 `MINIX`
+- Evidence / 证据:
+  - `run_kernel_tests` uses `timeout … || true` then
+    `grep -q "MINIX"`: `minix/tests/riscv64/run_tests.sh:167-177`.
+  - That substring matches banner text such as `MINIX booting` even
+    if QEMU was killed before a shell. SMP/timer tests similarly
+    skip or grep `timer` anywhere (`run_tests.sh:179-200`).
+- Impact / 影响:
+  - `[PASS] Kernel boot` can be a hang-after-early-printk. Nightly
+    `kernel` case still counts this as a pass.
+    内核很早打印 `MINIX` 后挂死仍可能 `[PASS]`。
+- Suggested fix / 修复建议:
+  - Fail on timeout unless a shell prompt or
+    `exec path="/bin/sh"` plus runtime probe succeeds.
+  - Stop treating `|| true` + any `MINIX` as boot success.
+- Update / 进展:
+  - 2026-08-22: kernel boot test records timeout vs other rc, allows
+    124 as the intended QEMU stop, and requires `VFS: init_root done`
+    plus a shell exec marker. Bare `MINIX` is not enough.
+    2026-08-22：不再用 `|| true` + 任意 `MINIX` 当成启动成功。
+- Status / 状态: `[DONE]` in working tree.
+
+### 85) `multi_smoke_gate` boot markers do not require a shell prompt / `multi_smoke_gate` 启动标记不要求 shell prompt
+- Evidence / 证据:
+  - `run_one` accepts `MINIX 3\.4\.0|exec path="/bin/sh"`
+    (`multi_smoke_gate.sh:184-188`). `safecopy_triage.py:22` treats
+    `^# ` as the shell. `exec path=` is logged on the exec attempt
+    (`minix/servers/vfs/exec.c:251`), not on a successful prompt.
+  - `run_one` prints `[PASS]` before `run_runtime_probe`
+    (`multi_smoke_gate.sh:231-233`, `277-280`). Default
+    `RUNTIME_PROBE=1` still fails the overall gate if the probe
+    misses a prompt (`qemu_runtime_probe.py:210-212`).
+  - `--no-runtime-probe` leaves only the weak log grep.
+- Impact / 影响:
+  - Hang-after-init can look like a smoke PASS if the runtime probe
+    is skipped. The `rc=124` whitelist itself stays the intended
+    QEMU stop (`#31`).
+    关掉 runtime probe 时，init 后挂死仍可能被当成 smoke 通过。
+- Suggested fix / 修复建议:
+  - Require the same prompt regex as the runtime probe, or make
+    runtime probe mandatory for `[PASS]`.
+  - Defer the `[PASS]` line until after the probe.
+- Update / 进展:
+  - 2026-08-22: `run_one` requires `VFS: init_root done`, a shell exec
+    marker, and a `#` prompt. `[PASS]` is deferred until the runtime
+    probe succeeds when `RUNTIME_PROBE=1`. `rc=124` stays the intended
+    QEMU stop (`#31`).
+    2026-08-22：启动标记要求 prompt；`[PASS]` 等到 runtime probe 之后。
+- Status / 状态: `[DONE]` in working tree.
 
 ### 37) [DONE] Native toolchain command set closure in guest image / 来宾 native 工具链命令集闭环（已完成）
 - Evidence / 证据:
@@ -1115,6 +1514,15 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Residual note / 残留说明:
   - Optional `link+run` validation may still need a writable target filesystem
     path with sufficient inode budget (root mfs is inode-constrained by design).
+  - 2026-08-22 audit: `native_toolchain_gate.sh` requires guest `c++`/`g++`
+    (`native_cxx_detect`, `native_cxx_link_check` at
+    `minix/tests/riscv64/native_toolchain_gate.sh:162-195`). Hosted
+    nightly/release set `MKCXX=yes`. The documented local distribution
+    baseline is `MKCXX=no`, so that image cannot pass the cxx steps.
+    This is a local/docs mismatch, not a hosted false pass.
+    2026-08-22 审计：native gate 要求来宾内 `c++`/`g++`。hosted CI 使用
+    `MKCXX=yes`；文档中的本地 distribution 基线是 `MKCXX=no`，该镜像
+    过不了 cxx 步骤。这不是 hosted 假阳性。
 
 ### 42) Enable in-tree LLVM/clang in RISC-V full-system packaging CI / 用全系统 packaging CI 打开 RISC-V 的 LLVM
 - Evidence / 证据:
@@ -1335,6 +1743,33 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 说明 / Note: 本节记录“已合入代码但可能仍待运行时复验”的归档项，并保留原始问题编号以便追溯。  
 This section archives items with code-level fixes landed (some may still require runtime re-validation), keeping original IDs for traceability.
 
+- Former P1 #77 / Moderate #13: `phys_copy_fault` sits immediately after
+  `phys_copy`; `memset_fault` after `phys_memset`. Dead `la`/`TODO`
+  removed. `handle_page_fault` prefers the memset window.
+  历史 P1 #77 / Moderate #13：缺页恢复符号顺序与 i386 对齐，删掉死 TODO。
+- Former Moderate #78: `PLIC_NUM_SOURCES` is 96 for QEMU virt.
+  历史 Moderate #78：PLIC 源数量改为 96。
+- Former Moderate #79: legacy virtio-mmio skips features selector 1.
+  历史 Moderate #79：legacy 不再写 `GUEST_FEATURES_SEL=1`。
+- Former Moderate #80: MAC table is programmed before PROMISC; unicast
+  count is 0. EVENT_IDX stays on.
+  历史 Moderate #80：先写 MAC 表；单播表为空。
+- Former Moderate #81: `pg_walk()` flushes the TLB after a leaf split.
+  历史 Moderate #81：叶子拆分后立刻 sfence。
+- Former Moderate #82: missing `root_v` is converted via `KERNEL_BASE`,
+  not used as an identity VA.
+  历史 Moderate #82：不再把物理根当 VA。
+- Former Moderate #84 / #85: kernel boot and multi-smoke require
+  `VFS: init_root done` / shell exec / prompt; `[PASS]` waits for the
+  runtime probe.
+  历史 Moderate #84 / #85：启动标记加严，`[PASS]` 延后到 probe。
+
+- Former P1 #16: 2026-08-22 audit found `map_service()` no longer rewrites
+  `fp_endpoint` before `isokendpt()`. It sets `FP_SRV_PROC` only after
+  validation; `get_work()` panics on generation mismatch.
+  历史 P1 #16：2026-08-22 审计确认 `map_service()` 已先校验端点再置
+  `FP_SRV_PROC`，不再先写后验。
+
 - Former Major #24: in-tree binutils now accepts `R_RISCV_RELAX` as a hint/no-op via
   `external/gpl3/binutils/patches/0011-riscv-relax-compat.patch`; in-tree `ld` no longer aborts
   on relocation `0x33` during archive link validation.
@@ -1359,6 +1794,338 @@ This section archives items with code-level fixes landed (some may still require
   历史 P1 #35：`sbin/ping6/ping6.c` 在 Minix 路径改为“单调时钟软定时发送节拍 +
   `SO_RCVTIMEO` 接收超时”，在 dual-VM `fe80::...%vio0` 验收中不再复现
   `SIGSEGV ... bad addr 0x0` 崩溃签名，并保持非 Minix 路径行为不变。
+- Former P1 #39: `virtio_net_mmio.conf` now matches RISC-V `system.conf`
+  (`PRIVCTL`, IRQs 1-8, full VirtIO MMIO window), so disk profiles can map
+  the NIC; QEMU `-n` and `qemu_net_smoke.py` cover `vio0` / `ping`.
+  历史 P1 #39：`virtio_net_mmio.conf` 已与 RISC-V `system.conf` 对齐
+  （`PRIVCTL`、IRQ 1-8、完整 VirtIO MMIO 窗口），磁盘轮廓可映射网卡；
+  QEMU `-n` 与 `qemu_net_smoke.py` 覆盖 `vio0` / `ping`。
+- Former P1 #40: virtio-net-mmio now follows FreeBSD `if_vtnet` for the
+  userspace NIC datapath: VirtIO 1.0 12-byte `virtio_net_hdr` (num_buffers),
+  dedicated RX/TX rings, TX `NEEDS_CSUM` + RX partial-csum fixup, CTRL_VQ
+  RX filter, and config-change link status. `qemu_net_smoke.py` requires
+  `virtio-net-mmio: hdr 12`.
+  历史 P1 #40：virtio-net-mmio 用户态 datapath 已按 FreeBSD `if_vtnet`
+  对齐：VirtIO 1.0 的 12 字节头、独立 RX/TX 环、TX/RX checksum offload、
+  CTRL_VQ 收包过滤、config ISR 链路状态；冒烟要求 `hdr 12`。
+- Former P1 #41: GitHub-hosted `ubuntu-24.04` packaging CI now wipes
+  tracked `obj.intrgcc/tooldir.*` and `obj.intrgcc/tools` before `build.sh
+  tools`, exports the runner-built `TOOLDIR`, and runs the full suite only
+  after a successful tools/distribution/package path. `qemu_net_smoke.py`
+  waits for `login:` or a real `# ` prompt (OpenSBI's `\ ` is not a shell),
+  and both smoke scripts treat PTY `EIO` as QEMU exit instead of crashing.
+  Hosted follow-up: generate `bfd.h` before parallel RISC-V bfd objects,
+  and skip gcc13-only libstdc++ names (`compare`, `any`, ...) when the
+  fetched dist is gcc 4.8.5.
+  历史 P1 #41：GitHub-hosted packaging CI 在 `tools` 前丢掉带宿主机路径的
+  `obj.intrgcc/tooldir.*` / `tools`，导出本次构建的 `TOOLDIR`，并仅在
+  tools/distribution 成功后跑完整套件。net smoke 等待真正的 `login:` / `# `
+  提示符，不再把 OpenSBI 的 `\ ` 当成 shell；PTY `EIO` 视为 QEMU 退出。
+  后续：并行 binutils 前先生成 `bfd.h`；gcc 4.8.5 dist 上跳过 gcc13 才有的
+  libstdc++ 头文件名。tools 侧改由宿主 GNU make 驱动 binutils，避免
+  nbmake+gnuwrap 在 `all-bfd` 里再次与 `stmp-bfd-h` 竞态。
+- Former P1 #43: native gcc `optionlist` now skips option files that are
+  absent from the fetched gcc 4.8.5 dist (`params.opt` is gcc13-only in
+  the riscv64 `defs.mk`). Hosted nightly `32479729555` failed here first.
+  历史 P1 #43：原生 gcc `optionlist` 跳过 gcc 4.8.5 dist 没有的 option
+  文件（riscv64 `defs.mk` 里的 `params.opt` 来自 gcc13 mknative）；
+  hosted nightly `32479729555` 先死在这里。
+- Former P1 #44: RISC-V `machine/math.h` briefly defined
+  `__HAVE_LONG_DOUBLE 128` so `s_copysignl.c` would emit `_copysignl`.
+  Hosted release `32479729556` failed linking `lua` with
+  `libm.so: undefined reference to _copysignl` because
+  `arch/riscv/s_copysign.S` replaced the C file that aliased
+  `_copysignl` to `copysign`. That 128-bit flag was the wrong ABI
+  for gcc 4.8.5; superseded by `#48`.
+  历史 P1 #44：为补 `_copysignl` 曾声明 128 位 long double。
+  汇编 `s_copysign.S` 替换了会做 alias 的 C 文件，release
+  `32479729556` 链接 `lua` 失败。该 128 位标记与 gcc 4.8.5 ABI
+  不符，由 `#48` 取代。
+- Former P1 #45: hosted tools `417e7bd94` aborted with
+  `error: bfd Makefile missing after configure` (nightly `32482801846`,
+  release `32482801856`). Top-level configure only writes `build/Makefile`.
+  The extra nbmake `bfd.h` prerequisite tested `build/bfd/Makefile` before
+  GNU make `configure-bfd`. Tools binutils now runs GNU `configure-bfd`
+  then `all-binutils` and does not depend `.build_done` on `bfd.h`.
+  历史 P1 #45：`417e7bd94` 的 hosted tools 在 top-level configure 之后因
+  `bfd Makefile missing after configure` 立刻失败。去掉过早的 nbmake
+  `bfd.h` 依赖，改由宿主 GNU make 先 `configure-bfd` 再编 `all-binutils`。
+- Former P1 #46: virtio-net-mmio now follows FreeBSD if_vtnet more closely:
+  mergeable RX (`VIRTIO_NET_F_MRG_RXBUF`, header at the start of each
+  buffer, `num_buffers` concat), 128-deep RX/TX rings, CTRL_ANNOUNCE ACK,
+  and transport `VIRTIO_RING_F_EVENT_IDX` kicks. Net smoke requires
+  `hdr 12`, `mrg on`, and `event_idx on`.
+  历史 P1 #46：virtio-net-mmio 按 FreeBSD if_vtnet 协商 MRG_RXBUF 与
+  EVENT_IDX，单缓冲 RX（头在缓冲区开头），环深 128，并 ACK
+  GUEST_ANNOUNCE。
+- Former P1 #47: native gcov drops `json.o` when `json.cc` is absent, and
+  common-target skips gcc13-only sources (`spellcheck.cc`, `selftest.cc`,
+  `opt-suggestions.cc`) or maps `.cc` to `.c` on the gcc 4.8.5 dist.
+  历史 P1 #47：gcov 在 4.8.5 dist 上跳过 `json.cc`；common-target 跳过
+  gcc13 才有的源文件，或把 `.cc` 映射到 `.c`。
+- Former P1 #48: hosted nightly `32483868137` (`2f74ddcdd`) passed
+  tools then failed distribution in `lib/libm` with
+  `s_cbrtl.c:128: error: Unsupported long double format`. In-tree
+  gcc 4.8.5 reports `__SIZEOF_LONG_DOUBLE__ 8` / `__LDBL_MANT_DIG__ 53`.
+  Drop `__HAVE_LONG_DOUBLE 128` and alias `copysignl` / `fabsl` /
+  `fmal` from the RISC-V `.S` files that replace the C sources.
+  历史 P1 #48：nightly `32483868137` 过了 tools，发行版在 `s_cbrtl.c`
+  因 long double 格式失败。gcc 4.8.5 的 long double 是 64 位；去掉
+  `__HAVE_LONG_DOUBLE 128`，在替换 C 源的 RISC-V 汇编里 alias `*l`。
+- Former P1 #49: virtio-net-mmio now fills 256-slot RX/TX rings (the
+  libvirtio_mmio queue cap), offers `VIRTIO_NET_F_CTRL_MAC` /
+  `CTRL_RX_EXTRA`, implements `ndr_set_hwaddr` via
+  `CTRL_MAC_ADDR_SET`, and sets `CTRL_RX_NOBCAST` like FreeBSD
+  if_vtnet. Net smoke requires `rx 256`.
+  历史 P1 #49：virtio-net-mmio 环深 256，按 FreeBSD if_vtnet 增加
+  CTRL_MAC 改址与 CTRL_RX_EXTRA NOBCAST；net smoke 要求 `rx 256`。
+- Former P1 #50: hosted nightly/release `32486378021` on `a4d3a69ff`
+  passed tools then failed native `external/gpl3/gcc/usr.bin/backend`
+  with `don't know how to make .../gengenrtl.cc`. gcc 4.8.5 ships
+  `gengenrtl.c`; riscv64 `defs.mk` is gcc 13 mknative. Resolve each
+  generator to `.cc` or `.c`, skip gcc13-only files (`gengtype-state`,
+  `hash-table`, `genenums`), and run 4.8.5 `gengtype` without state files.
+  历史 P1 #50：发行版在 backend 因 gcc13 的 `gengenrtl.cc` 失败。按
+  dist 把生成器映射到 `.c`，跳过 4.8.5 没有的源，并用无 state 的
+  gengtype 调用。
+- Former P1 #52: hosted nightly `32488937725` (`5fe3792d1`) passed tools
+  then failed backend with `don't know how to make .../gcc/common.md`.
+  riscv64 `defs.mk` lists gcc13 `common.md`; gcc 4.8.5 has only the
+  CPU `.md`. Keep `G_md_file` entries that exist.
+  历史 P1 #52：发行版在 backend 因 gcc13 的 `common.md` 失败。只保留
+  dist 里实际存在的 machine-description 文件。
+- Former P1 #53: hosted nightly `32491621998` (`6aa93380c`) passed tools
+  then failed backend with
+  `don't know how to make .../tools/gcc/build/gcc/version.h`. gcc 13
+  native Makefiles copy `version.h` from the GNU tools gcc build; gcc
+  4.8.5 does not emit it. Copy when present, otherwise synthesize
+  `version.h` / `bversion.h` / `plugin-version.h` and stub the gcc13-only
+  pass/cfn files.
+  历史 P1 #53：tools gcc 4.8.5 不生成 `version.h`。存在则拷贝，否则生成
+  最小头文件。
+- Former P1 #54: gcc 4.8.5 `genmodes` only accepts `-h|-m`; gcc 13
+  native backend runs `./genmodes -i` for `insn-modes-inline.h`. Stub
+  that header on 4.8.5. Map remaining frontend/cc1/gcc `.cc` SRCS to
+  `.c` when the dist has the C sources, and stub `specs.h` if tools gcc
+  omits it.
+  历史 P1 #54：4.8.5 的 genmodes 没有 `-i`；frontend/cc1 的 `.cc` 映射到
+  dist 里的 `.c`。
+- Former P1 #55: hosted nightly `32495453269` (`7c0b4cf15`) synthesized
+  local `version.h` then failed looking for
+  `tools/gcc/build/gcc/version.h`. `G_GCC_H` still listed the tools
+  path. Depend on the local stub when the tools copy is missing.
+  历史 P1 #55：本地 `version.h` 合成之后，backend 不再依赖 tools 路径。
+- Former P1 #56: hosted nightly `32497228532` (`744e854c3`) passed tools
+  then failed native backend with
+  `don't know how to make .../gcc/genhooks.cc`. `#50` mapped other
+  generators; `Makefile.hooks` still hardcoded the gcc13 name. gcc 4.8.5
+  ships `genhooks.c`. Resolve `.cc` or `.c` from dist. The 4.8.5 CLI
+  still takes `"Target Hook"` as argv[1].
+  历史 P1 #56：发行版在 backend 因 gcc13 的 `genhooks.cc` 失败。按 dist
+  映射到 `genhooks.c`。
+- Former P1 #57: hosted nightly `32499756350` (`e0766af8e`) compiled
+  `genhooks.c` then failed linking `gengtype` with undefined
+  `version_string`, `pkgversion_string`, and `bug_report_url`. gcc 4.8.5
+  still has `version.c` and `gengtype-state.c`; gcc 13 dropped `version.o`.
+  Link `version.lo` into `gengtype` and treat `gtype-desc.c` as the 4.8.5
+  GTY output.
+  历史 P1 #57：gengtype 补链 4.8.5 的 `version.c`，GTY 产出改回
+  `gtype-desc.c`。
+- Former P1 #58: hosted nightly `32502264930` (`b1686b5c3`) linked
+  `gengtype` then aborted in `s-gtype`:
+  `warning: structure 'named_label_entry' used but not defined`
+  and `gengtype: Internal error: abort in error_at_line`.
+  riscv64 `gtyp-input.list` is gcc13 (`.cc` names). The tmp filter only
+  mapped `.c` to `.cc`, so missing `.cc` files were dropped and 4.8.5
+  gengtype never parsed the defining sources. `defs.mk` `G_GTFILES` is
+  already the 4.8.5 list (`gimple.c`, `tree-flow.h`, `tree-cfg.c`).
+  Feed that list into `gtyp-input.list.tmp` on 4.8.5, and map `.cc` to
+  `.c` on the gcc13 path.
+  历史 P1 #58：4.8.5 上改用 `G_GTFILES` 生成 gengtype 输入，gcc13 路径
+  把 `.cc` 映射到 `.c`。
+- Former P1 #59: hosted nightly `32505629389` (`d93d49dcb`) failed
+  `gtyp-input.list.tmp` with `sh: .for: not found` (exit 127). `#58`
+  put `.for` inside a `{ \' recipe continuation, so nbmake passed it
+  to the shell. Emit one quoted `printf` per `G_GTFILES` word as its
+  own recipe line.
+  历史 P1 #59：`.for` 改成独立 recipe 行，不再卷进 `{ \` 续行。
+- Former P1 #60: hosted nightly `32508128890` (`f074b4a56`) expanded
+  `.for`, then make split the standalone recipe `printf '%s\n'` so the
+  format string became a real newline. `gtyp-input.list.tmp` was
+  garbage; `gengtype -r` warned `structure 'answer' used but not defined`
+  and aborted in `error_at_line`. Echo one `G_GTFILES` word per line so
+  make never sees `\n`.
+  历史 P1 #60：独立 recipe 改用 `echo`，不再写 `printf '%s\n'`。
+- Former P1 #61: hosted nightly `32511340050` (`bfb31c72d`) echoed a
+  well-formed `G_GTFILES` list, then `gengtype -r` still warned
+  `structure 'answer' used but not defined` / `cpp_macro` and aborted.
+  gcc 4.8.5 defines those GTY types in `libcpp/include/cpp-id-data.h`.
+  The gcc13 path dropped that header unconditionally. Keep it when the
+  file exists.
+  历史 P1 #61：4.8.5 上保留 `cpp-id-data.h`，只在文件不存在时丢掉。
+- Former P1 #62: hosted nightly `32513249750` (`a0707ca84`) finished
+  `s-gtype`, then failed compiling `hash-table.lo`:
+  `config.h:4:2: error: #error config.h is for the host, not build, machine`.
+  gcc 4.8.5 `hash-table.c` includes `config.h` unconditionally while
+  generator `.lo` objects compile with `-DGENERATOR_FILE`. Wrap
+  `config.h` so that case includes arch `bconfig.h`.
+  历史 P1 #62：`GENERATOR_FILE` 下 `config.h` 改包含 `bconfig.h`。
+- Former P1 #63: hosted nightly `32516002843` (`086dbe436`) compiled
+  `hash-table.lo`, then failed native `external/gpl3/gcc/usr.bin/libcpp`
+  with `don't know how to make charset.cc`. gcc 4.8.5 ships `libcpp/*.c`;
+  riscv64 `defs.mk` `G_libcpp_a_OBJS` is gcc 13 mknative and the Makefile
+  rewrites those objects to `.cc`. Map each name onto `libcpp/*.c` when
+  the dist has no `.cc`.
+  历史 P1 #63：libcpp 的 `.cc` 源按 dist 映射到 4.8.5 的 `.c`。
+- Former P1 #64: hosted nightly `32519022725` (`445b0e907`) built
+  `libcpp.a`, then failed native gcov/cc1 with
+  `gcov-io.h:292:22: fatal error: gcov-iov.h: No such file or directory`.
+  gcc 4.8.5 `gcov-io.h` includes that header; mknative ships it under
+  `lib/libgcc/libgcov/arch`. Backend already passed `-I` there; add the
+  same path in `usr.bin/Makefile.inc` so gcov and cc1 see it.
+  历史 P1 #64：usr.bin 补上 libgcov arch 的 `gcov-iov.h` 搜索路径。
+- Former P1 #65: hosted nightly `32521377902` (`6358e38bb`) still failed
+  native gcov/cc1 with the same `gcov-iov.h` error. `#64` added
+  `-I${.PARSEDIR}/../lib/libgcc/libgcov/arch/${GCC_MACHINE_ARCH}`;
+  `.PARSEDIR` expanded empty, so the compile line was
+  `-I/../lib/libgcc/libgcov/arch/riscv64`. Resolve the path from
+  `NETBSDSRCDIR` instead.
+  历史 P1 #65：`gcov-iov.h` 的 `-I` 改从 `NETBSDSRCDIR` 解析，避免
+  `${.PARSEDIR}` 为空。
+- Former P1 #67: hosted nightly `32524763481` (`7014a3bb6`) compiled
+  native gcov.c, then linking gcov failed with undefined `fnotice`,
+  `fancy_abort`, `diagnostic_initialize`, `version_string`,
+  `pkgversion_string`, and `bug_report_url`. `usr.bin/common` listed
+  gcc13 `.cc` names; `Makefile.cc2c` kept only `input.c`, so
+  `libcommon.a` was archived from `input.o`. Map
+  diagnostic/pretty-print/intl/input/version like common-target, and
+  restore `version.c` that gcc13 dropped.
+  历史 P1 #67：libcommon 按 dist 映射 diagnostic/pretty-print/intl/
+  input/version，补回 gcc13 丢掉的 `version.c`。
+- Former P1 #68: hosted nightly `32527820716` (`c952fa0c1`) compiled
+  native gcov, then linking `usr.bin/cpp` `gcpp` failed with
+  multiple `ggc_free` definitions and undefined `main`. The link
+  line was `ggc-none.o ggc-none.o ggc-none.o`. `#54`
+  `Makefile.cc2c` did `GCC_SRCS_MAPPED+= ${_gcc_cc2c}`; bmake
+  delays that expansion, so `SRCS:=` repeated the last match
+  (`ggc-none.c` for `cppspec.cc gcc.cc ggc-none.cc`). Add `${s}` /
+  `${s:R}.c` directly, like common-target.
+  历史 P1 #68：`Makefile.cc2c` 直接追加循环变量，避免 bmake 把所有
+  `.cc` 收成最后一个匹配。
+- Former P1 #69: hosted nightly `32530101083` (`92237adf3`) linked
+  native `gcpp` as `cppspec.o gcc.o ggc-none.o` (`#68` held), then
+  failed with undefined `global_init_params` / `compiler_params`
+  from gcc 4.8.5 `params.c`, and `dgettext` / `bindtextdomain` from
+  libcpp. gcc13 dropped `params.cc` from common-target; map it back
+  onto `params.c`. Repeat `-lintl` after frontend archives so the
+  static RISC-V link sees libintl after libcpp.a.
+  历史 P1 #69：common-target 补回 4.8.5 的 `params.c`，frontend 在
+  静态库后再链一次 `-lintl`。
+- Former P1 #70: hosted nightly `32532469511` (`9cb398c22`) linked
+  native `gcpp` with `-lintl` after `libdecnumber.a` (`#69` held),
+  then died `nbmake: don't know how to make lto1.1` in
+  `external/gpl3/gcc/usr.bin/lto1` after `.depend`. `#54` put
+  `.include "../Makefile.cc2c"` at the top of `lto1` / `cc1` /
+  `cc1obj` / `cc1plus`; that file includes `Makefile.inc` →
+  `bsd.own.mk` before `NOMAN`. `bsd.own.mk` is include-guarded
+  (`_BSD_OWN_MK_`); first parse sees `NOMAN` unset so `MKMAN`
+  stays yes, and `Makefile.backend`'s later `NOMAN` cannot flip
+  it. `bsd.prog.mk` then `_APPEND_MANS=yes` → `MAN+= ${PROG}.1`.
+  gcc 4.8.5 does not ship `lto1.1` / `cc1.1` / `cc1obj.1` /
+  `cc1plus.1`. Original 4.8.5 `lto1` included `Makefile.backend`
+  first (`NOMAN` then `bsd.own.mk`); `lto-wrapper` already set
+  `NOMAN=1` before `Makefile.cc2c`. Set `NOMAN=1` in those four
+  program Makefiles before `Makefile.cc2c`.
+  历史 P1 #70：在 `Makefile.cc2c` 拉入 `bsd.own.mk` 之前设置
+  `NOMAN`，避免 `MKMAN=yes` 去要 gcc 4.8.5 没有的 `lto1.1` /
+  `cc1.1` / `cc1obj.1` / `cc1plus.1`。
+- Former P1 #71: hosted nightly `32534503524` (`88ec45927`) linked
+  native `lto1` then failed with undefined `pointer_set_create`,
+  `lto_symtab_prevailing_decl`, `dump_insn_slim`, `insn_data` /
+  `gen_*` / `lookup_constraint`, GTY `gt_ggc_r_gt_dbxout_h`, and
+  `madvise`. `libbackend.a` started at `ggc-page.o` with no
+  `insn-*.o`. `#47` used `!empty(_b:Mininsn-*)`; that is `:M` +
+  `ininsn-*`, so every generated `insn-*.o` was dropped (source
+  lives in OBJDIR, not dist). gcc13 `G_OBJS` also omits 4.8.5
+  `pointer-set.o`, `lto-symtab.o`, `sched-vis.o` (`dump_insn_slim`),
+  `dbxout.o` / `sdbout.o` / `tree-nomudflap.o`. Fix the `:M` pattern
+  to `:Minsn-*` and add those objects when the dist source exists.
+  Undef `HAVE_MADVISE` in native `config.h` so `ggc-page.c` does
+  not call `madvise` (tools `config.h` is the Linux host).
+  历史 P1 #71：backend `:Minsn-*` 保留生成的 `insn-*.o`，并补回
+  gcc13 `G_OBJS` 丢掉的 4.8.5 对象；MINIX 上关掉 `HAVE_MADVISE`。
+- Former P1 #72: hosted nightly `32537278919` (`6954a7e6c`) linked
+  native `lto1` (`#71` held) then failed linking `cc1` with
+  undefined `mudflap_init()` and `_cpp_preprocess_dir_only`.
+  gcc13 `G_C_OBJS` dropped 4.8.5 `tree-mudflap.o` (i386 defs still
+  list it); `G_libcpp_a_OBJS` dropped `directives-only.o`. Also
+  restore `cp/repo.o` in `G_CXX_OBJS` for `cc1plus`. Add those
+  objects in `usr.bin/Makefile.inc` when the dist source exists.
+  历史 P1 #72：补回 gcc13 丢掉的 4.8.5 `tree-mudflap.o` /
+  `directives-only.o` / `repo.o`，让原生 `cc1` 链上 `mudflap_init`
+  与 `_cpp_preprocess_dir_only`。
+- Former P1 #73: hosted nightly `32539264449` (`6a08be70f`) passed
+  tools, distribution, native, and virtio-net init (`hdr 12`,
+  `mrg on`, `event_idx on`, `rx 256`, `ifconfig vio0`,
+  `ping6 ::1`), then `ping -c 2 10.0.2.2` reported
+  `2 packets transmitted, 0 packets received`. `#46` negotiated
+  `VIRTIO_RING_F_EVENT_IDX`; `virtio_mmio_to_queue` kicks only when
+  `vring_need_event(avail_event=0)` is true, which is the first
+  buffer of a burst. A 256-slot RX refill left QEMU looking at one
+  buffer (IPv6 RA can consume it); later TX packets had the same
+  hole. Kick RX after refill, TX after send, and CTRL after
+  `to_queue`. Keep EVENT_IDX negotiated; virtio-blk still posts
+  one request at a time, so its `need_event` kick stays true.
+  历史 P1 #73：RX 灌环与 TX 之后补 `QUEUE_NOTIFY`，避免 EVENT_IDX
+  只通知第一槽导致 slirp 网关 ping 丢包。
+- Former P1 #74: hosted nightly `32546187525` (`45418c7fb`) still
+  failed VirtIO net smoke at `ping -c 2 10.0.2.2` (`2 packets
+  transmitted, 0 packets received`) after `#73` kicked RX/TX/CTRL.
+  virtio-blk busy-waits on `from_queue`; virtio-net only drained RX
+  from the VRING IRQ. `from_queue` published `used_event = last_used`
+  on every consume, so a missed first used-notify (IPv6 RA, `ipv6=on`)
+  left QEMU's `signalled_used_valid` set with `used_event=0` and
+  suppressed later interrupts. Drain the used ring after TX kick and
+  on a 10 Hz tick (Linux `virtqueue_enable_cb` after the drain),
+  `IRQ_REENABLE` the MMIO line, and read the MAC with byte accesses.
+  Keep EVENT_IDX negotiated; virtio-blk still busy-waits and does not
+  need used-ring IRQs.
+  历史 P1 #74：`#73` kick 之后仍丢包。按 virtio-blk 在 TX 后排空
+  used 环，并用 Linux `enable_cb` 发布 `used_event`，避免错过第一次
+  used 通知后 EVENT_IDX 永久抑制 RX 中断。
+- Former P1 #75: hosted nightly still burns 30+ min rediscovering
+  EVENT_IDX avail/used notify math. `run_tests.sh build` compiles and
+  runs host `test_virtio_event_idx.c` for `#73`/`#74` `vring_need_event`
+  cases. `qemu-riscv64.sh` honors `QEMU=${QEMU:-qemu-system-riscv64}`
+  and appends a `filter-dump` after `-netdev` when `NET_PCAP` is set.
+  `qemu_net_smoke.py` requires `virtio-net-mmio: mac 52:54:00:12:34:56`,
+  dumps the pcap, logs ARP/echo counts, and hints TX vs RX when
+  `ping_gw` fails. Local QEMU 8.2.2 against a rebuilt ramdisk passed
+  init/MAC/mrg/event_idx/rx256/ifconfig/ping6; `ping -c 2 10.0.2.2`
+  still lost every packet. Endian-fixed pcap showed guest ARP who-has
+  (`arp_req=6`) and no ARP reply or ICMP echo (`arp_rep=0 echo_req=0`).
+  历史 P1 #75：hosted nightly 仍要 30+ 分钟才能重现 EVENT_IDX
+  avail/used 通知数学错误。`run_tests.sh build` 用宿主 cc 编译并运行
+  `test_virtio_event_idx.c`（覆盖 `#73`/`#74` 的 `vring_need_event`）。
+  net smoke 要求 QEMU MAC `52:54:00:12:34:56`，可选 `NET_PCAP` 在
+  `-netdev` 之后抓包，并在 `ping_gw` 失败时按 ARP/echo 计数区分
+  TX 与 RX。本地 QEMU 对重建 ramdisk 已跑：网关 ping 仍 100% 丢包，
+  pcap 只有 guest ARP who-has。
+- Former P1 #76: after `#73`/`#74`/`#75`, local QEMU 8.2.2 pcap still
+  showed well-formed guest ARP who-has `10.0.2.2` and no slirp ARP
+  reply. QEMU 8.2 `net/slirp.c` `net_init_slirp()` sets `ipv4=0` when
+  `ipv6=on` is present and `has_ipv4` is false, so libslirp
+  `in_enabled` is off and `arp_input` returns immediately.
+  `qemu-riscv64.sh -n` now passes `ipv4=on,ipv6=on`. Keep EVENT_IDX.
+  Local net smoke then passed `ping_gw` (`arp_req=2 arp_rep=1
+  echo_req=2 echo_rep=2`). Hosted nightly `32552319291` and release
+  `32552319287` on `dc53ecdd9` both passed `ping_gw` with the same
+  pcap counts; virtio-blk I/O smoke stayed green.
+  历史 P1 #76：`#75` 的 pcap 已证明 guest ARP 离卡，但 slirp 不回。
+  QEMU 8.2 只写 `ipv6=on` 会关掉 IPv4。`-netdev` 改为
+  `ipv4=on,ipv6=on`；本地与 hosted nightly/release 的 `ping 10.0.2.2`
+  均通过。
+
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the
   required S-mode U-Boot launch chain (`-bios default -kernel ..._smode/uboot.elf`);

@@ -12,16 +12,23 @@
 static phys_bytes get_current_pgdir(void);
 static void set_satp(struct proc *p, phys_bytes root, reg_t *root_v);
 
+static reg_t *
+satp_root_v(phys_bytes root, reg_t *root_v)
+{
+    if (root_v != NULL)
+        return root_v;
+    /* Sv39 DRAM is high-mapped, not identity-mapped (#82). */
+    if (root >= VIRT_DRAM_BASE)
+        return (reg_t *)(vir_bytes)(KERNEL_BASE + (root - VIRT_DRAM_BASE));
+    return NULL;
+}
+
 static void set_satp(struct proc *p, phys_bytes root, reg_t *root_v)
 {
     static int switch_trace_count;
 
     p->p_seg.p_satp = root;
-    /* Prefer kernel-mapped root; fall back to identity mapping. */
-    if (root_v != NULL)
-        p->p_seg.p_satp_v = root_v;
-    else
-        p->p_seg.p_satp_v = (reg_t *)root;
+    p->p_seg.p_satp_v = root_v;
 
     if (p == get_cpulocal_var(ptproc)) {
         if (switch_trace_count < 4)
@@ -76,6 +83,11 @@ int arch_do_vmctl(message *m_ptr, struct proc *p)
         /* Set address space for process */
         {
             phys_bytes root = (phys_bytes)(vir_bytes)m_ptr->SVMCTL_PTROOT;
+            reg_t *root_v;
+
+            root_v = satp_root_v(root, (reg_t *)m_ptr->SVMCTL_PTROOT_V);
+            if (root_v == NULL)
+                return EINVAL;
             if (vmctl_trace_count < 8) {
                 direct_print("rv64: vmctl setaddrspace ep=");
                 direct_print_hex((u64_t)p->p_endpoint);
@@ -86,7 +98,7 @@ int arch_do_vmctl(message *m_ptr, struct proc *p)
                 direct_print("\n");
                 vmctl_trace_count++;
             }
-            set_satp(p, root, (reg_t *)m_ptr->SVMCTL_PTROOT_V);
+            set_satp(p, root, root_v);
             return OK;
         }
 

@@ -9,18 +9,18 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.29
-- 最后更新：2026-02-21
+- 版本：1.36
+- 最后更新：2026-08-22
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.29
-- Last updated: 2026-02-21
+- Version: 1.36
+- Last updated: 2026-08-22
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
 
-## 当前状态（截至 2026-02-20）/ Current Status (as of 2026-02-20)
+## 当前状态（截至 2026-08-22）/ Current Status (as of 2026-08-22)
 
 **中文**
 - 构建：可通过（需使用 workaround 组合，见本文构建命令与 `RISC64-STATUS.md`）
@@ -49,7 +49,8 @@ targeting the QEMU virt platform.
   必须齐全）。
 - Release/Nightly 现执行分阶段“完整测试”阻断门禁：
   `build -> user -> native -> kernel -> gate(timeout 900s)`。
-- 关键风险：`procfs` safecopy 回退噪声、SMP 未实现（详见 `issue.md`）
+- 关键风险：`procfs` safecopy 回退噪声（#17）、`phys_copy` 缺页恢复区间（#77）、kernel `pg_walk` 拆分未立刻 sfence（#81）、SMP 未实现（#15）；门禁弱标记见 `#84`/`#85`（详见 `issue.md`）
+- 2026-08-22 审计：新开 `issue.md` `#77`–`#85`；`#16` 已归档；网关 ping（#76）保持关闭。
 - A4 已闭环：`mkdisk` 产物在 S-mode U-Boot 链路下可从磁盘镜像启动到 shell。
 - 进度估计：约 80%（启动链路与基础用户态已稳定，主要剩余问题集中在噪声收敛与稳定性增强）
 - 代码更新（至 2026-01-06 01:00 前）：用户态 gp 初始化（crt0 + gp.c）、exec/ucontext 与
@@ -89,8 +90,8 @@ targeting the QEMU virt platform.
   native payload precheck (`cc/gcc/c++/g++/binutils/libgcc/libstdc++`) in DESTDIR.
 - Release/nightly now enforce a staged full-suite blocking sequence:
   `build -> user -> native -> kernel -> gate(timeout 900s)`.
-- Key risks: procfs safecopy fallback noise and SMP not implemented
-  (see `issue.md`)
+- Key risks: procfs safecopy fallback noise (#17), `phys_copy` fault PC range (#77), kernel `pg_walk` split without an immediate sfence (#81), SMP not implemented (#15); weak gate markers in `#84`/`#85` (see `issue.md`)
+- 2026-08-22 audit: filed `issue.md` `#77`–`#85`; `#16` archived; gateway ping (#76) stays closed.
 - A4 is closed: `mkdisk` artifacts now boot from disk image via the S-mode U-Boot chain.
 - Progress estimate: ~80% (boot + basic userland path stabilized; remaining work is mostly
   noise/toolchain convergence)
@@ -205,6 +206,8 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
 **说明 / Notes**
 - 若交叉编译器支持 `-march=rv64gc -mabi=lp64d`，可移除 `RISCV_ARCH_FLAGS`。  
   If the toolchain supports `-march=rv64gc -mabi=lp64d`, remove `RISCV_ARCH_FLAGS`.
+- 本地手册基线保持 `MKCXX=no`。GitHub-hosted packaging CI 使用 `MKCXX=yes`，以便 native cxx 门禁能找到来宾 `c++`/`g++`（见 `docs/RISCV64_NATIVE_TOOLCHAIN_GUIDE.md` 与 `issue.md` `#37`）。  
+  The local manual baseline keeps `MKCXX=no`. Hosted packaging CI uses `MKCXX=yes` so the native cxx gate can find guest `c++`/`g++` (see `docs/RISCV64_NATIVE_TOOLCHAIN_GUIDE.md` and `issue.md` `#37`).
 - `CHECKFLIST_FLAGS='-m -e'` 允许缺失/多余文件，适用于当前不完整的 sets；若需严格检查，请移除该标志并恢复 `MKPIC/MKCXX/MKATF`。  
   `CHECKFLIST_FLAGS='-m -e'` allows missing/extra files while sets are incomplete; remove it
   and restore `MKPIC/MKCXX/MKATF` for strict checks.
@@ -279,7 +282,7 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
 ./minix/tests/riscv64/run_tests.sh all
 ```
 
-**中文（截至 2026-02-18）**
+**中文（截至 2026-08-22）**
 - 用户态编译测试：通过（脚本使用 in-tree toolchain + sysroot，统一 `-std=gnu99`）。
 - 内核启动：通过，日志可见 `MINIX` banner、`VFS: init_root done`、`init: exec /bin/sh /etc/rc`。
 - 交互冒烟：通过，在 QEMU shell 中执行 `echo SMOKE_OK` 返回 `SMOKE_OK`。
@@ -289,9 +292,9 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
   `fe80::...%vio0` 均不再复现 `SIGSEGV`。
 - 公网可达性：通过，QEMU user-net（slirp）模式下可 `ping 10.0.2.2` 与
   `ping 1.1.1.1`。
-- 已知未完成：SMP 仍为 skip（not yet implemented）；`procfs` safecopy 噪声仍待收敛。
+- 已知未完成：SMP 仍为 skip（#15）；`procfs` safecopy 噪声（#17）；`phys_copy` 缺页恢复区间（#77）；kernel boot/smoke 弱标记（#84/#85）。
 
-**English (as of 2026-02-18)**
+**English (as of 2026-08-22)**
 - Userland compile tests: pass (in-tree toolchain + sysroot, `-std=gnu99`).
 - Kernel boot: pass; logs show `MINIX` banner, `VFS: init_root done`, and `init: exec /bin/sh /etc/rc`.
 - Interactive smoke: pass; running `echo SMOKE_OK` in QEMU shell returns `SMOKE_OK`.
@@ -302,8 +305,9 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
   `fe80::...%vio0` no longer reproduce `SIGSEGV`.
 - Public reachability: pass in QEMU user-net (slirp) with successful
   `ping 10.0.2.2` and `ping 1.1.1.1`.
-- Remaining gaps: SMP remains skipped (not yet implemented); procfs safecopy noise
-  still needs convergence.
+- Remaining gaps: SMP remains skipped (#15); procfs safecopy noise (#17);
+  `phys_copy`/`phys_memset` fault recovery (#77); weak kernel/smoke boot
+  markers (#84/#85).
 
 #### 5.1 启动稳定化验证记录 / Boot Stabilization Validation
 
@@ -699,11 +703,14 @@ cd minix/tests/riscv64
 # 基本运行 / Basic run
 ./minix/scripts/qemu-riscv64.sh -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
-# 调试模式 / Debug mode
+# 调试模式 / Debug mode（`-d` 等 GDB；`-s` 是单 CPU，不是 QEMU gdb stub）
 ./minix/scripts/qemu-riscv64.sh -d -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
 # 使用 GDB 调试 / GDB
 ./minix/scripts/gdb-riscv64.sh obj.intrgcc/minix/kernel/kernel
+
+# 用户态网络 / user-net（slirp；脚本会传 ipv4=on,ipv6=on，见 #76）
+./minix/scripts/qemu-riscv64.sh -n -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
 # 交互冒烟 / Interactive smoke
 # 在 shell 提示符下执行：echo SMOKE_OK
@@ -713,10 +720,48 @@ cd minix/tests/riscv64
 - 默认 `qemu-riscv64.sh -n` 使用 user-net（slirp），可先用于公网连通性验收。
   Default `qemu-riscv64.sh -n` uses user-net (slirp), which is suitable for
   first-pass public reachability checks.
-- 若出现 `hostfwd=tcp::2222-:22` 端口占用，可改用
-  `/tmp/qemu-riscv64-nohostfwd.sh` 或先释放宿主 2222 端口。
-  If `hostfwd=tcp::2222-:22` conflicts, use `/tmp/qemu-riscv64-nohostfwd.sh`
-  or free host port 2222 first.
+- virtio-net-mmio datapath follows FreeBSD `if_vtnet` in userspace: VirtIO 1.0
+  12-byte `virtio_net_hdr`, dedicated RX/TX rings, checksum offload, CTRL_VQ
+  RX filter, and `VIRTIO_RING_F_EVENT_IDX`. Kick RX after a refill batch and
+  TX/CTRL after each post: EVENT_IDX in `to_queue` only notifies the first
+  posted slot (`avail_event` starts at 0), which left QEMU looking at one RX
+  buffer and dropped slirp `ping 10.0.2.2`. Drain the used ring after each TX
+  kick and on a 10 Hz tick, and publish `used_event` with Linux
+  `virtqueue_enable_cb` after the drain: EVENT_IDX also suppresses later used
+  interrupts if the first VRING notify is missed. The stack remains lwIP in
+  userspace (not a FreeBSD kernel port).
+  virtio-net-mmio 用户态 datapath 参照 FreeBSD `if_vtnet`：VirtIO 1.0 的
+  12 字节头、独立收发环、checksum offload、CTRL_VQ 过滤、EVENT_IDX。
+  RX 灌环与 TX/CTRL 之后补 kick：`to_queue` 在 EVENT_IDX 下只通知第一槽，
+  否则 QEMU 只看见一个 RX buffer，slirp 网关 ping 会丢包。TX 之后与
+  tick 再排空 used 环，并在 drain 后按 Linux `enable_cb` 发布
+  `used_event`，避免错过第一次 used 通知后 EVENT_IDX 抑制后续中断。
+  协议栈仍是用户态 lwIP，而不是把 FreeBSD 内核协议栈搬进微内核。
+- `run_tests.sh build` 用宿主 cc 编译并运行 `test_virtio_event_idx.c`，
+  本地覆盖 `#73`/`#74` 的 EVENT_IDX `vring_need_event` 数学，无需等
+  hosted nightly QEMU。
+  `run_tests.sh build` compiles and runs `test_virtio_event_idx.c` on the
+  host to exercise `#73`/`#74` EVENT_IDX `vring_need_event` math without
+  waiting on hosted nightly QEMU.
+- `qemu_net_smoke.py` 要求串口日志出现 `virtio-net-mmio: mac
+  52:54:00:12:34:56`；设置 `NET_PCAP` 时 `qemu-riscv64.sh` 在 `-netdev`
+  之后追加 `filter-dump`，smoke 解析 pcap 并在 `ping_gw` 失败时提示
+  TX vs RX。
+  `qemu_net_smoke.py` requires the QEMU MAC in the serial log; when
+  `NET_PCAP` is set, `qemu-riscv64.sh` appends a `filter-dump` after
+  `-netdev`, and the smoke script parses the pcap and hints TX vs RX on
+  `ping_gw` failure.
+- QEMU 8.2 `ipv6=on` without `ipv4=on` disables slirp IPv4 (`net_init_slirp`
+  clears `ipv4` when only IPv6 is present). `qemu-riscv64.sh -n` now uses
+  `ipv4=on,ipv6=on`. Local QEMU 8.2.2 net smoke passed `ping -c 2 10.0.2.2`
+  (`arp_rep=1 echo_req=2 echo_rep=2`). Hosted nightly `32552319291` and
+  release `32552319287` on `dc53ecdd9` passed the same `ping_gw` check.
+  QEMU 8.2 只写 `ipv6=on` 会关掉 IPv4。脚本改为 `ipv4=on,ipv6=on`；
+  本地与 hosted nightly/release 网关 ping 已通过。
+- 若出现 `hostfwd=tcp::2222-:22` 端口占用，设置 `NET_HOSTFWD=none` 再跑
+  `qemu-riscv64.sh -n`（网络冒烟默认如此）。
+  If `hostfwd=tcp::2222-:22` conflicts, rerun `qemu-riscv64.sh -n` with
+  `NET_HOSTFWD=none` (network smoke does this by default).
 
 ### 使用 mkdisk 进行 U-Boot 纯磁盘启动 / Disk-only Boot with mkdisk + U-Boot
 
@@ -840,35 +885,62 @@ LLVM_GATE_REQUIRE=all ./minix/tests/riscv64/run_tests.sh llvm
 仓库已提供自动构建并发布到 GitHub Release 的流水线：  
 `/.github/workflows/release-riscv64.yml`
 
+`release-riscv64.yml` 与 `nightly-riscv64.yml` 同为 OS 打包 CI；二者均在每次提交时运行
+（任意分支 `push` + `pull_request`），用于审查 OS 完整性与打包可复现性。  
+`release-riscv64.yml` and `nightly-riscv64.yml` are the two OS packaging CIs; both run on
+every commit (`push` to any branch + `pull_request`) to review OS completeness and packaging
+reproducibility.
+
 触发方式 / Triggers:
-- `push` 到 tag（模式：`v*`）
-- 手动触发 `workflow_dispatch`（需输入 tag）
+- `push` 到任意分支 + `pull_request`（每次提交审查 run；**不**创建 GitHub Release）
+- `push` 到 tag（模式：`v*`）— 官方发布 run
+- 手动触发 `workflow_dispatch`（需输入 tag）— 官方发布 run
+
+审查 run vs 发布 run / Review-only vs publish runs:
+- **审查 run**（feature 分支 `push` / `pull_request`）：执行完整打包链路与门禁，上传
+  workflow artifacts，**不**创建或更新 GitHub Release。
+- **发布 run**（`v*` tag push 或 `workflow_dispatch`）：同上，并在通过后创建/更新
+  GitHub Release 并上传资产。
 
 流水线行为 / Pipeline behavior:
 1. 安装宿主依赖并按 `obj.intrgcc` 基线执行 `tools -> distribution`
-2. 调用 `minix/releasetools/riscv64/mkdisk.sh` 生成磁盘镜像并压缩
-3. 导出内核 ELF 与开发用 sysroot（头文件/库）
-4. 生成统一 `SHA256SUMS.txt`
-5. 预检 native payload（`DESTDIR` 中 `cc/gcc/c++/g++/binutils`、
+2. 从 git 提交时间戳固定 `SOURCE_DATE_EPOCH`；压缩使用 `gzip -n`
+3. 调用 `minix/releasetools/riscv64/mkdisk.sh` 生成磁盘镜像并压缩
+4. 导出内核 ELF 与开发用 sysroot（头文件/库）
+5. 生成 `BUILDINFO.txt` 与 `SHA256SUMS`（可复现性记录）
+6. 预检 payload 完整性（`DESTDIR` 中 native 工具链 **以及**
+   `virtio_net_mmio`、`lwip`、`ifconfig`、`ping`、`ping6` 必须齐全）
+7. 预检 native payload（`cc/gcc/c++/g++/binutils`、
    `libgcc.a/libgcc_eh.a/libstdc++.a`、关键头文件）
-6. 执行 QEMU 交互式 gate（`neofetch` + 关机链），失败则阻断发布
-7. 执行分阶段完整测试（阻断式）：
+8. 执行 QEMU 交互式 gate（`neofetch` + 关机链），失败则阻断
+9. 执行分阶段完整测试（阻断式）：
    `build -> user -> native -> kernel -> gate(timeout 900s)`
-8. 上传 full-suite 日志到 workflow artifact（步骤 `if: always()`）
-9. 自动创建/更新 GitHub Release 并上传以下产物
+10. 上传 full-suite 日志到 workflow artifact（步骤 `if: always()`）
+11. **仅发布 run**：自动创建/更新 GitHub Release 并上传以下产物
 
 构建产物命名规范（含构建提交 hash）/ Artifact naming (with commit hash):
 - `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>.img`
 - `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>.img.gz`
 - `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>.elf`
 - `minix-cat-<tag>-riscv64-ci-<UTCYYYYMMDDhhmmss>-<shortsha>-sysroot.tar.gz`
-- `SHA256SUMS.txt`
+- `BUILDINFO.txt`
+- `SHA256SUMS`
 
 注意 / Notes:
 - Release workflow 依赖 GitHub Actions 默认 `GITHUB_TOKEN`（`contents: write`）。
 - 若首次启用失败，请确认仓库 Actions 权限允许 workflow 写 Release。
 - `shortsha` 来自当前构建提交（release: `--short=11`；nightly: `--short=12`）。
-- 构建时间较长（完整 `distribution`），建议通过 tag 触发正式发布。
+- Runner 使用 GitHub-hosted `ubuntu-24.04`（不再依赖 self-hosted）。作业开始时清盘并
+  `apt` 安装 `qemu-system-misc` / `u-boot-qemu` / 构建依赖。
+- `Build tools` 会先删掉仓库里带宿主机路径的 `obj.intrgcc/tooldir.*` 与
+  `obj.intrgcc/tools`（否则 binutils 增量编译会报 `bfd.h: No such file`），
+  并导出本次 runner 生成的 `TOOLDIR`。完整测试套件仅在 tools/distribution/
+  打包成功后运行（`if: success()`）；日志上传仍是 `if: always()`。
+- `qemu_net_smoke.py` 等待 `login:` 或真正的 `# ` 提示符。OpenSBI 横幅里的
+  `\ ` 不是 shell，不能当 prompt。
+- 构建时间较长（完整 `distribution`）；feature 分支/PR 上的审查 run 可在合并前验证
+  完整性与可复现性，正式发布仍通过 `v*` tag 或 `workflow_dispatch` 触发。
+- `SOURCE_DATE_EPOCH`、`BUILDINFO.txt` 与 `SHA256SUMS` 共同构成可复现性记录。
 - 若发布在 QEMU gate 阶段失败，请优先下载
   `riscv64-qemu-smoke-log-<tag>-<sha>` 排查来宾输出。
 - 为降低 GitHub hosted runner 磁盘不足风险，workflow 在安装依赖前会执行
@@ -918,20 +990,36 @@ LLVM_GATE_REQUIRE=all ./minix/tests/riscv64/run_tests.sh llvm
 
 Nightly workflow 文件：`/.github/workflows/nightly-riscv64.yml`
 
+与 release 同为 OS 打包 CI；二者均在每次提交时运行（任意分支 `push` +
+`pull_request`），用于审查 OS 完整性与打包可复现性。  
+Same as release: an OS packaging CI that also runs on every commit (`push` to any branch +
+`pull_request`) for completeness and reproducibility review.
+
 触发方式 / Triggers:
-- `schedule`（UTC `20 18 * * *`，每日一次）
-- 手动触发 `workflow_dispatch`
+- `push` 到任意分支 + `pull_request`（每次提交审查 run；**不**发布 nightly tag /
+  GitHub Release）
+- `schedule`（UTC `20 18 * * *`，每日一次）— 可发布 run
+- 手动触发 `workflow_dispatch` — 可发布 run
+- `push` 到 tag 被忽略（`tags-ignore`），避免与 release-on-tag 重复
+
+审查 run vs 发布 run / Review-only vs publish runs:
+- **审查 run**（feature 分支 `push` / `pull_request`）：执行完整打包链路与门禁，上传
+  workflow artifacts，**不**创建 nightly tag 或 GitHub Release。
+- **发布 run**（`schedule`、`workflow_dispatch`、或 `master` 分支 `push`）：同上，并在
+  通过后创建 nightly tag 并发布 prerelease 资产。
 
 Nightly 行为 / Pipeline behavior:
 1. 与 release 相同的 `obj.intrgcc` 基线构建：`tools -> distribution`
-2. 产出并打包 5 件标准产物（`img/img.gz/elf/sysroot/SHA256SUMS`）
-3. 预检 native payload（阻断式）
-4. 执行 QEMU 交互式 gate（`neofetch` + 关机链）
-5. 执行分阶段完整测试（阻断式）：
+2. 从 git 提交时间戳固定 `SOURCE_DATE_EPOCH`；压缩使用 `gzip -n`
+3. 产出并打包标准产物（`img/img.gz/elf/sysroot/BUILDINFO.txt/SHA256SUMS`）
+4. 预检 payload 完整性（`virtio_net_mmio`、`lwip`、`ifconfig`、`ping`、`ping6` 等）
+5. 预检 native payload（阻断式）
+6. 执行 QEMU 交互式 gate（`neofetch` + 关机链）
+7. 执行分阶段完整测试（阻断式）：
    `build -> user -> native -> kernel -> gate(timeout 900s)`
-6. 上传 full-suite 日志 artifact
-7. 上传构建产物 artifact：`riscv64-nightly-<date>-<sha>`
-8. 创建 nightly tag 并发布 prerelease
+8. 上传 full-suite 日志 artifact
+9. 上传构建产物 artifact：`riscv64-nightly-<date>-<sha>`
+10. **仅发布 run**：创建 nightly tag 并发布 prerelease
 
 Nightly tag 规则 / Nightly tag format:
 - `nightly-master-riscv64-YYYYMMDD-<shortsha>`
@@ -942,11 +1030,18 @@ Nightly 产物命名 / Nightly asset naming:
 - `minix-cat-nightly-master-riscv64-<YYYYMMDD>-<shortsha>-ci-<UTCYYYYMMDDhhmmss>.img.gz`
 - `minix-cat-nightly-master-riscv64-<YYYYMMDD>-<shortsha>-ci-<UTCYYYYMMDDhhmmss>.elf`
 - `minix-cat-nightly-master-riscv64-<YYYYMMDD>-<shortsha>-ci-<UTCYYYYMMDDhhmmss>-sysroot.tar.gz`
-- `SHA256SUMS.txt`
+- `BUILDINFO.txt`
+- `SHA256SUMS`
 
 说明 / Notes:
-- Nightly 会把上述 5 件产物同时放入：
+- Runner 使用 GitHub-hosted `ubuntu-24.04`（不再依赖 self-hosted），并在构建前清盘、
+  安装 QEMU/U-Boot 与宿主工具链依赖。
+- `Build tools` 同样先丢掉带 `/home/donz/minix` 路径的 `obj.intrgcc/tooldir.*`
+  与 `obj.intrgcc/tools`，并只在 tools/distribution 成功后跑完整套件。
+- 发布 run 会把上述产物同时放入：
   1) Actions workflow artifacts；2) GitHub Release（prerelease）资产。
+- 审查 run 仅上传 workflow artifacts，不触碰 GitHub Release / nightly tag。
+- `SOURCE_DATE_EPOCH`、`BUILDINFO.txt` 与 `SHA256SUMS` 共同构成可复现性记录。
 - 若出现“某次 nightly 没有产物”，先确认该 run 是否被取消；取消的 run 可能显示
   `0 artifact`，不代表成功 run 未上传。
 
@@ -1012,5 +1107,5 @@ MINIX is licensed under BSD. See LICENSE in the source tree.
 
 ---
 
-**最后更新 / Last updated**：2026-02-21  
-**版本 / Version**：1.29
+**最后更新 / Last updated**：2026-08-22  
+**版本 / Version**：1.36

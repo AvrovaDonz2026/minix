@@ -279,18 +279,25 @@ mkdir -p $DESTDIR/usr/include/g++/bits/riscv64
 ```
 
 ### Running with QEMU
+Baseline paths are under `obj.intrgcc`. Use `/usr/bin/qemu-system-riscv64`
+(8.2.2 in the current cloud image). `-n` passes `ipv4=on,ipv6=on` (`#76`);
+`-s` means single CPU, not the QEMU gdb stub.
+
 ```bash
 # Basic run with pre-built kernel
-./minix/scripts/qemu-riscv64.sh -k minix/kernel/obj/kernel -B obj/destdir.evbriscv64
+./minix/scripts/qemu-riscv64.sh -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
 # Debug mode with GDB server
-./minix/scripts/qemu-riscv64.sh -d -k minix/kernel/obj/kernel -B obj/destdir.evbriscv64
+./minix/scripts/qemu-riscv64.sh -d -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
 # Connect GDB client to debug session
-./minix/scripts/gdb-riscv64.sh minix/kernel/obj/kernel
+./minix/scripts/gdb-riscv64.sh obj.intrgcc/minix/kernel/kernel
+
+# User-net (slirp)
+./minix/scripts/qemu-riscv64.sh -n -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
 # Run with specific memory and CPU configuration
-./minix/scripts/qemu-riscv64.sh -k minix/kernel/obj/kernel -B obj/destdir.evbriscv64 -m 512M -smp 4
+./minix/scripts/qemu-riscv64.sh -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64 -m 512M -smp 4
 ```
 
 ### RISC-V Architecture Files
@@ -304,6 +311,7 @@ mkdir -p $DESTDIR/usr/include/g++/bits/riscv64
 - **minix/lib/libc/arch/riscv64/**: C library architecture-specific stubs
 - **minix/lib/libsys/arch/riscv64/**: System library architecture-specific code
 - **minix/drivers/storage/virtio_blk_mmio/**: VirtIO block device driver for MMIO
+- **minix/drivers/net/virtio_net_mmio/**: VirtIO net MMIO (EVENT_IDX; do not disable)
 - **minix/drivers/tty/ns16550/**: UART driver for QEMU's NS16550 serial port
 
 ### Memory Map (QEMU virt platform)

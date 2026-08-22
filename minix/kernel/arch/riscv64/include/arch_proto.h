@@ -100,6 +100,8 @@ phys_bytes phys_copy(phys_bytes src, phys_bytes dst, phys_bytes size);
 phys_bytes phys_memset(phys_bytes dst, unsigned long c, phys_bytes size);
 void phys_copy_fault(void);
 void phys_copy_fault_in_kernel(void);
+void memset_fault(void);
+void memset_fault_in_kernel(void);
 
 /* direct_tty_utils.c */
 void direct_init(void);

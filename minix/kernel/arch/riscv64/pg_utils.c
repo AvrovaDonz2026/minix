@@ -151,6 +151,11 @@ static u64_t *pg_walk(u64_t *pgdir, vir_bytes va, int create)
 
 			pt[idx] = PA_TO_PTE(new_pt) | PTE_V;
 			pte = pt[idx];
+			/*
+			 * Drop the stale gigapage/megapage TLB entry
+			 * before walking the new table (#81).
+			 */
+			pg_flush_tlb();
 		}
 
 		pt = (u64_t *)pg_phys_to_virt(PTE_TO_PA(pte));

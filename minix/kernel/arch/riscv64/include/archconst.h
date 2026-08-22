@@ -66,7 +66,7 @@
 #define RISCV_BOOTINFO_MAGIC RISCV_UL(0x584E494D) /* "MINX" */
 
 /* PLIC constants */
-#define PLIC_NUM_SOURCES    1024
+#define PLIC_NUM_SOURCES    96	/* QEMU virt SiFive PLIC ndev */
 #define PLIC_NUM_PRIORITIES 7
 
 /* Interrupt numbers for QEMU virt */

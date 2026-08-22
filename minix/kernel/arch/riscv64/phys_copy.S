@@ -81,10 +81,6 @@ phys_copy:
     add     a1, a1, t1
 2:
 
-    /* Set up fault handler */
-    la      t0, .Lcopy_fault
-    /* TODO: Register fault handler */
-
     /* Align check - if both aligned to 8 bytes, use doubleword copy */
     or      t0, a0, a1
     andi    t0, t0, 7
@@ -127,6 +123,15 @@ phys_copy:
     addi    sp, sp, 16
     ret
 
+/*
+ * Fault recovery for phys_copy. exception.c uses
+ * (phys_copy, phys_copy_fault) as the catch_pagefaults PC window, so
+ * these labels must sit immediately after the copy loop (i386 layout)
+ * and before phys_memset.
+ */
+    .globl phys_copy_fault
+    .type phys_copy_fault, @function
+phys_copy_fault:
 .Lcopy_fault:
     beqz    s0, .Lcopy_fault_ret
     li      t4, 'F'
@@ -138,6 +143,11 @@ phys_copy:
     ld      ra, 8(sp)
     addi    sp, sp, 16
     ret
+
+    .globl phys_copy_fault_in_kernel
+    .type phys_copy_fault_in_kernel, @function
+phys_copy_fault_in_kernel:
+    j       phys_copy_fault
 
 /*
  * phys_bytes phys_memset(phys_bytes dst, unsigned long c, phys_bytes size)
@@ -205,34 +215,17 @@ phys_memset:
     li      a0, 0
     ret
 
+    .globl memset_fault
+    .type memset_fault, @function
+memset_fault:
 .Lmemset_fault:
     li      a0, -1
     ret
 
-/*
- * Fault handler entry points (called from exception handler)
- */
-    .globl phys_copy_fault
-    .type phys_copy_fault, @function
-phys_copy_fault:
-    /* Jump to fault recovery */
-    j       .Lcopy_fault
-
-    .globl phys_copy_fault_in_kernel
-    .type phys_copy_fault_in_kernel, @function
-phys_copy_fault_in_kernel:
-    /* Same as above for kernel faults */
-    j       .Lcopy_fault
-
-    .globl memset_fault
-    .type memset_fault, @function
-memset_fault:
-    j       .Lmemset_fault
-
     .globl memset_fault_in_kernel
     .type memset_fault_in_kernel, @function
 memset_fault_in_kernel:
-    j       .Lmemset_fault
+    j       memset_fault
 
 /*
  * void *memcpy(void *dst, const void *src, size_t n)

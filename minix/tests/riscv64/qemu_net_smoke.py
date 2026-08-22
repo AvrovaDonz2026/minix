@@ -297,7 +297,6 @@ def main() -> int:
     log("Starting QEMU net smoke...")
     io = spawn(qemu_cmd)
     proc = io.proc
-    ping_gw_failed = False
 
     try:
         login_pat = re.compile(r"login:", re.IGNORECASE)
@@ -404,7 +403,6 @@ def main() -> int:
             return 1
 
         log("PASS: qemu net smoke")
-        exit_rc = 0
         return 0
     finally:
         try:

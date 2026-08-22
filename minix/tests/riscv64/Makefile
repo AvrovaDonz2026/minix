@@ -21,7 +21,7 @@ CC=	riscv64-unknown-elf-gcc
 CFLAGS=	-march=rv64gc -mabi=lp64d -O2 -Wall
 LDFLAGS= -nostdlib -static
 
-.PHONY: all clean test test-kernel test-user
+.PHONY: all clean test test-kernel test-user test-llvm
 
 all: $(TESTS)
 
@@ -63,3 +63,6 @@ test-kernel:
 
 test-user:
 	./run_tests.sh user
+
+test-llvm:
+	./run_tests.sh llvm

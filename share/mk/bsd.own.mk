@@ -93,12 +93,14 @@ CFLAGS+= -mno-unaligned-access
 RISCV_ARCH_FLAGS?= -march=rv64imafd -mcmodel=medany
 CFLAGS+= ${RISCV_ARCH_FLAGS}
 AFLAGS+= ${RISCV_ARCH_FLAGS}
+CPUFLAGS+= ${RISCV_ARCH_FLAGS}
 CFLAGS+= -fcommon
 CFLAGS+= -fno-delete-null-pointer-checks
 .elif ${MACHINE_ARCH} == "riscv32"
 RISCV_ARCH_FLAGS?= -march=rv32gc -mabi=ilp32d
 CFLAGS+= ${RISCV_ARCH_FLAGS}
 AFLAGS+= ${RISCV_ARCH_FLAGS}
+CPUFLAGS+= ${RISCV_ARCH_FLAGS}
 CFLAGS+= -fcommon
 CFLAGS+= -fno-delete-null-pointer-checks
 .endif

@@ -134,7 +134,8 @@ install_wrappers() {
     local bin="$2"
     cat > "${dest}" <<EOF
 #!/bin/sh
-exec "${bin}" --target=riscv64-elf32-minix "\$@"
+exec "${bin}" --target=riscv64-elf32-minix \\
+  -D__minix=3 -D__minix__=3 -D__Minix__=3 "\$@"
 EOF
     chmod 755 "${dest}"
   }
@@ -175,7 +176,8 @@ install_destdir() {
     local bin="$2"
     cat > "${dest}" <<EOF
 #!/bin/sh
-exec "${bin}" --target=riscv64-elf32-minix "\$@"
+exec "${bin}" --target=riscv64-elf32-minix \\
+  -D__minix=3 -D__minix__=3 -D__Minix__=3 "\$@"
 EOF
     chmod 755 "${dest}"
   }

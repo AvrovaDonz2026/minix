@@ -3,13 +3,13 @@
 ## Document Info / 文档信息
 
 **中文**
-- 版本：1.2
+- 版本：1.3
 - 最后更新：2026-08-22
 - 适用范围：`evbriscv64` + QEMU `virt`
 - 基线：`obj.intrgcc`
 
 **English**
-- Version: 1.2
+- Version: 1.3
 - Last updated: 2026-08-22
 - Scope: `evbriscv64` + QEMU `virt`
 - Baseline: `obj.intrgcc`
@@ -20,6 +20,8 @@
 - Native toolchain N1/N2 已闭环：来宾内 `as/ld/ar/ranlib` 与 `cc -c` 路径可稳定通过。
 - 关键修复在 `minix/servers/vm/alloc.c`：修正 RV64 下 `NO_MEM` 哨兵宽度/符号扩展问题，消除 `native_as_stdin` / `cc -c` VM panic。
 - Release/Nightly 的 native gate 已改为阻断式（blocking）。
+- 2026-08-22：hosted CI 使用 `MKCXX=yes`。本地手册 distribution 基线是 `MKCXX=no`，该镜像过不了 `native_cxx_detect` / `native_cxx_link_check`（`issue.md` `#37` 残留）。可选 `if command -v c++` 步骤在跳过时仍可按命令记 PASS。
+- 静态用户态已可冒烟；A2 剩余缺口是 `MKPIC=no` / 无 `ld.elf_so`，不是“用户态无法运行”。
 
 **English**
 - Native toolchain N1/N2 is closed: guest-side `as/ld/ar/ranlib` and `cc -c` are stable.
@@ -30,6 +32,8 @@
   `native_cxx_detect` / `native_cxx_link_check` (`issue.md` `#37`
   residual). Optional `if command -v c++` steps can still log
   per-command PASS when skipped (`native_toolchain_gate.sh`).
+- Static userland is smoke-stable; remaining A2 gap is `MKPIC=no` / no
+  `ld.elf_so`, not “userland cannot run”.
 
 ## Stage Model / 阶段模型
 

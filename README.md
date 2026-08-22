@@ -4,7 +4,7 @@ This repository contains the full MINIX 3 source tree plus an active RISC-V 64-b
 (evbriscv64) port targeting the QEMU virt platform.
 本仓库包含完整的 MINIX 3 源码树，以及面向 QEMU virt 平台的 RISC-V 64 位移植版本。
 
-**Documentation Version / 文档版本**: 1.5 (2026-08-22)
+**Documentation Version / 文档版本**: 1.6 (2026-08-22)
 
 ## Current Status / 当前状态（as of 2026-08-22 / 截至 2026-08-22）
 
@@ -32,8 +32,16 @@ This repository contains the full MINIX 3 source tree plus an active RISC-V 64-b
   `Passed: 21, Failed: 0, Skipped: 1` (SMP still marked not implemented).
   最新回归：`./minix/tests/riscv64/run_tests.sh all` 结果为
   `Passed: 21, Failed: 0, Skipped: 1`（SMP 仍标注为未实现）。
-- Risk tracking: code-review issues with file/line evidence are in `issue.md`.
-  风险跟踪：带文件/行号证据的评审问题见 `issue.md`。
+- Gateway ping: hosted nightly `32552319291` and release `32552319287`
+  passed `ping_gw` (`#76` closed). Do not treat ping as red.
+  网关 ping：hosted nightly `32552319291` 与 release `32552319287` 已通过
+  `ping_gw`（`#76` 已关闭）。不要把 ping 当成红灯。
+- Open P1: `#77` `phys_copy` catch_pagefaults PC range covers `phys_memset`.
+  开放 P1：`#77`，`phys_copy` 缺页恢复 PC 区间覆盖 `phys_memset`。
+- Risk tracking: code-review issues with file/line evidence are in `issue.md`
+  (`#77`–`#85` from the 2026-08-22 audit; gateway ping `#76` is closed).
+  风险跟踪：带文件/行号证据的评审问题见 `issue.md`
+  （2026-08-22 审计为 `#77`–`#85`；网关 ping `#76` 已关闭）。
 
 ## Quick Links / 快速链接
 
@@ -44,6 +52,8 @@ This repository contains the full MINIX 3 source tree plus an active RISC-V 64-b
 - `docs/RISCV64_KERNEL_BUILD_LOG.md` — build log and commands / 构建日志与命令记录
 - `docs/RISCV64_PORT_PLAN.md` — plan and checklist / 计划与检查清单
 - `docs/RISCV64_NATIVE_TOOLCHAIN_GUIDE.md` — native toolchain stage model and validation / 本地工具链阶段模型与验收
+- `docs/RISCV64_VIRTIO_DRIVER_GUIDE.md` — VirtIO MMIO bring-up and failure signatures / VirtIO MMIO 启动与故障签名
+- `docs/RISCV64_TEST_MATRIX.md` — test tiers and gate gaps (`#84`/`#85`) / 测试分层与门禁缺口（`#84`/`#85`）
 - `.github/workflows/release-riscv64.yml` — release pipeline (packaging CI; per-commit review) / 发布流水线（打包 CI；每次提交审查）
 - `.github/workflows/nightly-riscv64.yml` — nightly pipeline (packaging CI; per-commit review) / 夜间流水线（打包 CI；每次提交审查）
 
@@ -58,8 +68,10 @@ This repository contains the full MINIX 3 source tree plus an active RISC-V 64-b
 
 ## Build (RISC-V 64) / 构建（RISC-V 64）
 
-Recommended baseline (GCC, no LLVM/C++). See `README-RISCV64.md` for details.
-推荐基线（GCC、禁用 LLVM/C++），详细说明见 `README-RISCV64.md`。
+Recommended local baseline (GCC, no LLVM/C++). Hosted packaging CI uses
+`MKCXX=yes` for the native cxx gate; see `README-RISCV64.md`.
+推荐本地基线（GCC、禁用 LLVM/C++）。GitHub-hosted packaging CI 为 native cxx
+门禁用 `MKCXX=yes`；详见 `README-RISCV64.md`。
 
 ```bash
 MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
@@ -78,12 +90,23 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
 
 ```bash
 ./minix/scripts/qemu-riscv64.sh -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
+./minix/scripts/qemu-riscv64.sh -n -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 ```
+
+`-n` uses user-net with `ipv4=on,ipv6=on` (`issue.md` `#76`). `-s` means
+single CPU, not the QEMU gdb stub.
+`-n` 走 user-net 并传 `ipv4=on,ipv6=on`（`issue.md` `#76`）。`-s` 是单 CPU，不是 QEMU gdb stub。
 
 ## Tests / 测试
 
 ```bash
 ./minix/tests/riscv64/run_tests.sh all
+```
+
+Network smoke / 网络冒烟（`#76` 已关闭；不要把 ping 当成红灯）:
+
+```bash
+python3 minix/tests/riscv64/qemu_net_smoke.py
 ```
 
 Native toolchain gate / 本地工具链门禁:

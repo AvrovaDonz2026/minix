@@ -9,18 +9,18 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.35
+- 版本：1.36
 - 最后更新：2026-08-22
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.35
+- Version: 1.36
 - Last updated: 2026-08-22
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
 
-## 当前状态（截至 2026-02-20）/ Current Status (as of 2026-02-20)
+## 当前状态（截至 2026-08-22）/ Current Status (as of 2026-08-22)
 
 **中文**
 - 构建：可通过（需使用 workaround 组合，见本文构建命令与 `RISC64-STATUS.md`）
@@ -49,7 +49,7 @@ targeting the QEMU virt platform.
   必须齐全）。
 - Release/Nightly 现执行分阶段“完整测试”阻断门禁：
   `build -> user -> native -> kernel -> gate(timeout 900s)`。
-- 关键风险：`procfs` safecopy 回退噪声（#17）、`phys_copy` 缺页恢复区间（#77）、SMP 未实现（详见 `issue.md`）
+- 关键风险：`procfs` safecopy 回退噪声（#17）、`phys_copy` 缺页恢复区间（#77）、kernel `pg_walk` 拆分未立刻 sfence（#81）、SMP 未实现（#15）；门禁弱标记见 `#84`/`#85`（详见 `issue.md`）
 - 2026-08-22 审计：新开 `issue.md` `#77`–`#85`；`#16` 已归档；网关 ping（#76）保持关闭。
 - A4 已闭环：`mkdisk` 产物在 S-mode U-Boot 链路下可从磁盘镜像启动到 shell。
 - 进度估计：约 80%（启动链路与基础用户态已稳定，主要剩余问题集中在噪声收敛与稳定性增强）
@@ -90,9 +90,8 @@ targeting the QEMU virt platform.
   native payload precheck (`cc/gcc/c++/g++/binutils/libgcc/libstdc++`) in DESTDIR.
 - Release/nightly now enforce a staged full-suite blocking sequence:
   `build -> user -> native -> kernel -> gate(timeout 900s)`.
-- Key risks: procfs safecopy fallback noise (#17), `phys_copy` fault PC range (#77), SMP not implemented (see `issue.md`)
+- Key risks: procfs safecopy fallback noise (#17), `phys_copy` fault PC range (#77), kernel `pg_walk` split without an immediate sfence (#81), SMP not implemented (#15); weak gate markers in `#84`/`#85` (see `issue.md`)
 - 2026-08-22 audit: filed `issue.md` `#77`–`#85`; `#16` archived; gateway ping (#76) stays closed.
-  (see `issue.md`)
 - A4 is closed: `mkdisk` artifacts now boot from disk image via the S-mode U-Boot chain.
 - Progress estimate: ~80% (boot + basic userland path stabilized; remaining work is mostly
   noise/toolchain convergence)
@@ -207,6 +206,8 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
 **说明 / Notes**
 - 若交叉编译器支持 `-march=rv64gc -mabi=lp64d`，可移除 `RISCV_ARCH_FLAGS`。  
   If the toolchain supports `-march=rv64gc -mabi=lp64d`, remove `RISCV_ARCH_FLAGS`.
+- 本地手册基线保持 `MKCXX=no`。GitHub-hosted packaging CI 使用 `MKCXX=yes`，以便 native cxx 门禁能找到来宾 `c++`/`g++`（见 `docs/RISCV64_NATIVE_TOOLCHAIN_GUIDE.md` 与 `issue.md` `#37`）。  
+  The local manual baseline keeps `MKCXX=no`. Hosted packaging CI uses `MKCXX=yes` so the native cxx gate can find guest `c++`/`g++` (see `docs/RISCV64_NATIVE_TOOLCHAIN_GUIDE.md` and `issue.md` `#37`).
 - `CHECKFLIST_FLAGS='-m -e'` 允许缺失/多余文件，适用于当前不完整的 sets；若需严格检查，请移除该标志并恢复 `MKPIC/MKCXX/MKATF`。  
   `CHECKFLIST_FLAGS='-m -e'` allows missing/extra files while sets are incomplete; remove it
   and restore `MKPIC/MKCXX/MKATF` for strict checks.
@@ -281,7 +282,7 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
 ./minix/tests/riscv64/run_tests.sh all
 ```
 
-**中文（截至 2026-02-18）**
+**中文（截至 2026-08-22）**
 - 用户态编译测试：通过（脚本使用 in-tree toolchain + sysroot，统一 `-std=gnu99`）。
 - 内核启动：通过，日志可见 `MINIX` banner、`VFS: init_root done`、`init: exec /bin/sh /etc/rc`。
 - 交互冒烟：通过，在 QEMU shell 中执行 `echo SMOKE_OK` 返回 `SMOKE_OK`。
@@ -291,9 +292,9 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
   `fe80::...%vio0` 均不再复现 `SIGSEGV`。
 - 公网可达性：通过，QEMU user-net（slirp）模式下可 `ping 10.0.2.2` 与
   `ping 1.1.1.1`。
-- 已知未完成：SMP 仍为 skip（not yet implemented）；`procfs` safecopy 噪声仍待收敛。
+- 已知未完成：SMP 仍为 skip（#15）；`procfs` safecopy 噪声（#17）；`phys_copy` 缺页恢复区间（#77）；kernel boot/smoke 弱标记（#84/#85）。
 
-**English (as of 2026-02-18)**
+**English (as of 2026-08-22)**
 - Userland compile tests: pass (in-tree toolchain + sysroot, `-std=gnu99`).
 - Kernel boot: pass; logs show `MINIX` banner, `VFS: init_root done`, and `init: exec /bin/sh /etc/rc`.
 - Interactive smoke: pass; running `echo SMOKE_OK` in QEMU shell returns `SMOKE_OK`.
@@ -304,8 +305,9 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
   `fe80::...%vio0` no longer reproduce `SIGSEGV`.
 - Public reachability: pass in QEMU user-net (slirp) with successful
   `ping 10.0.2.2` and `ping 1.1.1.1`.
-- Remaining gaps: SMP remains skipped (not yet implemented); procfs safecopy noise
-  (#17) and `phys_copy`/`phys_memset` fault recovery (#77) are still open.
+- Remaining gaps: SMP remains skipped (#15); procfs safecopy noise (#17);
+  `phys_copy`/`phys_memset` fault recovery (#77); weak kernel/smoke boot
+  markers (#84/#85).
 
 #### 5.1 启动稳定化验证记录 / Boot Stabilization Validation
 
@@ -688,11 +690,14 @@ cd minix/tests/riscv64
 # 基本运行 / Basic run
 ./minix/scripts/qemu-riscv64.sh -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
-# 调试模式 / Debug mode
+# 调试模式 / Debug mode（`-d` 等 GDB；`-s` 是单 CPU，不是 QEMU gdb stub）
 ./minix/scripts/qemu-riscv64.sh -d -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
 # 使用 GDB 调试 / GDB
 ./minix/scripts/gdb-riscv64.sh obj.intrgcc/minix/kernel/kernel
+
+# 用户态网络 / user-net（slirp；脚本会传 ipv4=on,ipv6=on，见 #76）
+./minix/scripts/qemu-riscv64.sh -n -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64
 
 # 交互冒烟 / Interactive smoke
 # 在 shell 提示符下执行：echo SMOKE_OK
@@ -1055,5 +1060,5 @@ MINIX is licensed under BSD. See LICENSE in the source tree.
 
 ---
 
-**最后更新 / Last updated**：2026-02-21  
-**版本 / Version**：1.29
+**最后更新 / Last updated**：2026-08-22  
+**版本 / Version**：1.36

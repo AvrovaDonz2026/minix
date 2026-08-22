@@ -6,10 +6,10 @@ This document is a practical, code-driven porting guide that emphasizes an itera
 
 **Document Info / 文档信息**
 - Last updated / 最后更新: 2026-08-22
-- Version / 版本: 1.3
+- Version / 版本: 1.4
 - Scope / 范围: evbriscv64 on QEMU virt; kernel + VM + UART + build pipeline
 - Update rule / 更新规则: append notes after code review; file issues in `issue.md`
-- Change note / 变更说明: 2026-08-22 审计增量见 `issue.md` `#77`–`#85` 与 `RISC64-STATUS.md`；本手册不重复展开每条证据。
+- Change note / 变更说明: 2026-08-22 审计增量见 `issue.md` `#77`–`#85` 与 `RISC64-STATUS.md`；本手册不重复展开每条证据。QEMU 基线路径为 `obj.intrgcc`。
 
 ---
 
@@ -21,7 +21,7 @@ This document is a practical, code-driven porting guide that emphasizes an itera
   - `minix/servers/vm/*`（页表管理、缺页处理、sys_vmctl 交互）
   - `minix/drivers/tty/ns16550/*`（UART 驱动）
   - `minix/lib/libsys/sys_vmctl.c` 与 `minix/include/minix/com.h`
-  - 现有文档：`README-RISCV64.md`, `docs/RISCV64_PORT_PLAN.md`, `docs/RISCV64_KERNEL_BUILD_LOG.md`
+  - 现有文档：`README-RISCV64.md`, `docs/RISCV64_PORT_PLAN.md`, `docs/RISCV64_KERNEL_BUILD_LOG.md`, `docs/RISCV64_VIRTIO_DRIVER_GUIDE.md`, `docs/RISCV64_TEST_MATRIX.md`, `issue.md`
 
 **English**
 - Code areas reviewed and included in this documentation (representative files):
@@ -29,7 +29,7 @@ This document is a practical, code-driven porting guide that emphasizes an itera
   - `minix/servers/vm/*` (page tables, page faults, sys_vmctl path)
   - `minix/drivers/tty/ns16550/*` (UART)
   - `minix/lib/libsys/sys_vmctl.c` and `minix/include/minix/com.h`
-  - Existing docs: `README-RISCV64.md`, `docs/RISCV64_PORT_PLAN.md`, `docs/RISCV64_KERNEL_BUILD_LOG.md`
+  - Existing docs: `README-RISCV64.md`, `docs/RISCV64_PORT_PLAN.md`, `docs/RISCV64_KERNEL_BUILD_LOG.md`, `docs/RISCV64_VIRTIO_DRIVER_GUIDE.md`, `docs/RISCV64_TEST_MATRIX.md`, `issue.md`
 
 > 建议实践方式：读完一个模块（例如 arch/riscv64/exception.c），立即在对应章节补充“流程+约束+已知问题”。
 > Suggested practice: after finishing a module (e.g., arch/riscv64/exception.c), immediately
@@ -210,14 +210,16 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
 
 **中文**
 - RISC-V 测试：`./minix/tests/riscv64/run_tests.sh all`
-- QEMU 启动：`./minix/scripts/qemu-riscv64.sh -k minix/kernel/obj/kernel -B obj/destdir.evbriscv64`
-- GDB：`./minix/scripts/gdb-riscv64.sh /path/to/kernel`
+- QEMU 启动：`./minix/scripts/qemu-riscv64.sh -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64`
+- 网络：同上命令加 `-n`（脚本传 `ipv4=on,ipv6=on`，见 `#76`）
+- GDB：`./minix/scripts/gdb-riscv64.sh obj.intrgcc/minix/kernel/kernel`
 - 关键日志参考：`README-RISCV64.md` 与 `docs/RISCV64_KERNEL_BUILD_LOG.md`
 
 **English**
 - Tests: `./minix/tests/riscv64/run_tests.sh all`
-- QEMU boot: `./minix/scripts/qemu-riscv64.sh -k minix/kernel/obj/kernel -B obj/destdir.evbriscv64`
-- GDB: `./minix/scripts/gdb-riscv64.sh /path/to/kernel`
+- QEMU boot: `./minix/scripts/qemu-riscv64.sh -k obj.intrgcc/minix/kernel/kernel -B obj.intrgcc/destdir.evbriscv64`
+- Networking: add `-n` (script passes `ipv4=on,ipv6=on`; see `#76`)
+- GDB: `./minix/scripts/gdb-riscv64.sh obj.intrgcc/minix/kernel/kernel`
 - Logs: `README-RISCV64.md`, `docs/RISCV64_KERNEL_BUILD_LOG.md`
 
 ---
@@ -225,13 +227,17 @@ MKPCI=no HOST_CFLAGS="-O -fcommon" HAVE_GOLD=no HAVE_LLVM=no MKLLVM=no \
 ## 10. Known Issues / 已知问题
 
 **中文**
-详见 `issue.md` 与 `RISC64-STATUS.md`，其中包含 PTROOT 传参截断、TLB 刷新缺失、
-UART 延迟回复缺口、SBI legacy IPI/fence 传参问题等关键问题与状态摘要。
+详见 `issue.md` 与 `RISC64-STATUS.md`。当前开放项包括 `#17` safecopy 噪声、
+P1 `#77` `phys_copy` 缺页恢复区间、`#78`–`#85`（PLIC 越界写、legacy features sel、
+CTRL_MAC 顺序、`pg_walk` sfence、`root_v`、multiboot 32 位截断、弱 boot 标记）。
+不要把已归档的 PTROOT 截断或旧 TLB 项当成当前阻塞。
 
 **English**
-See `issue.md` and `RISC64-STATUS.md` for detailed issues and status snapshots, including
-PTROOT truncation, missing TLB flushes, UART deferred reply gaps, SBI legacy IPI/fence issues,
-and others.
+See `issue.md` and `RISC64-STATUS.md`. Live items include `#17` safecopy noise,
+P1 `#77` `phys_copy` fault PC range, and `#78`–`#85` (PLIC overscan, legacy
+feature sel, CTRL_MAC order, `pg_walk` sfence, `root_v`, multiboot u32 bounds,
+weak boot markers). Do not treat archived PTROOT truncation or old TLB items
+as current blockers.
 
 ---
 

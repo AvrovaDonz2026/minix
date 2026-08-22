@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-22
-**Version / 版本**: 1.57
+**Version / 版本**: 1.58
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2340,3 +2340,23 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `minix/kernel/arch/riscv64/arch_do_vmctl.c`
 - `minix/tests/riscv64/run_tests.sh`
 - `minix/tests/riscv64/multi_smoke_gate.sh`
+
+## Entry 72 — 2026-08-22 07:15 UTC
+
+**Change / 变更**: Docs-only sync after `#77`–`#85`. Align living manuals with the current `obj.intrgcc` baseline, hosted `ping_gw` (`#76` closed), and A2 evidence (static userland is smoke-stable; remaining gap is `MKPIC=no` / no `ld.elf_so`). Refresh QEMU examples (`ipv4=on,ipv6=on`; `-s` is single CPU), virtio failure-list numbering, `arch.md` inventories, kernel README FPU/`#77`/`#78`/`#81` notes, and CLAUDE.md run commands. Do not rewrite `docs/archive/*`.
+
+**Issue ID**: docs sync (`#77`–`#85`, A2)
+
+**Result / 结果**: Documentation only. No kernel/driver change.
+
+**Evidence / 证据**:
+- `issue.md` 1.72 (A2)
+- `README-RISCV64.md` 1.36
+- `README.md` 1.6
+- `RISC64-STATUS.md` 1.51
+- `docs/RISCV64_VIRTIO_DRIVER_GUIDE.md` 1.4
+- `docs/RISCV64_PORTING_GUIDE.md` 1.4
+- `docs/RISCV64_PORT_PLAN.md` 1.4
+- `docs/RISCV64_TEST_MATRIX.md` 1.1
+- `minix/kernel/arch/riscv64/README.md`
+- `docs/arch.md`, `minix/tests/riscv64/arch.md`

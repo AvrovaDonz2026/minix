@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.71
+**Version / 版本**: 1.72
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -12,6 +12,9 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 
 **2026-08-22 系统审计 / system audit**: 对照当前工作树与 `/tmp/qemu-debug.log`（QEMU 8.2.2 `-d guest_errors,unimp`）复核开放项。`#73`–`#76` 的网关 ping 保持已关闭；新开 `#77`–`#85`。`#16` 的“先写后验”路径已不在 `map_service()` 中。`multi_smoke_gate.sh` 把 `timeout` 的 `rc=124` 记成 `[INFO]` 再查 boot marker，这是停 QEMU 的预期语义，不另开假阳性单。
 **2026-08-22 system audit**: Re-checked open items against the current tree and `/tmp/qemu-debug.log` (QEMU 8.2.2 `-d guest_errors,unimp`). `#73`–`#76` gateway ping stays closed. Newly filed: `#77`–`#85`. The `#16` write-then-validate path is gone from `map_service()`. `multi_smoke_gate.sh` logging `rc=124` then `[PASS]` after boot-marker checks is the intended way to stop QEMU, not a separate false-positive issue.
+
+**2026-08-22 docs sync / 文档对齐**: A2 证据已按当前手册改写：静态用户态可冒烟，剩余缺口是 `MKPIC=no` / 无 `ld.elf_so`。活文档基线路径为 `obj.intrgcc`；QEMU `-n` 必须 `ipv4=on,ipv6=on`（`#76`）。
+**2026-08-22 docs sync**: A2 evidence now matches the living manuals: static userland is smoke-stable; remaining gap is `MKPIC=no` / no `ld.elf_so`. Baseline paths are `obj.intrgcc`. QEMU `-n` must pass `ipv4=on,ipv6=on` (`#76`).
 
 **审计否决 / audit rejected**:
 - `VIRTIO_MMIO_IRQ(i - 1)` is not an off-by-one: the `for` loop increments `i` after the matching slot, so slot `k` yields IRQ `k+1` (`virtio_mmio.c:287-334`).
@@ -136,7 +139,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - `REQ_GETDENTS` may hit `sys_safecopyto` EFAULT with `CPF_TRY` grants; VFS retries and succeeds, but logs are noisy. / `REQ_GETDENTS` 在 `CPF_TRY` 下可能触发 `sys_safecopyto` EFAULT；VFS 会重试成功，但日志较噪。
     Evidence: `minix/kernel/system/do_safecopy.c`, `minix/servers/vfs/request.c`
 
-### A2) RV64 process support exists in loader/CPU mode but is not stable end-to-end / RV64 进程支持具备基础但端到端不稳定
+### A2) RV64 static userland is smoke-stable; dynamic loader still missing / RV64 静态用户态已可冒烟，动态加载器仍缺
 - Evidence / 证据:
   - U-mode is configured by clearing `SSTATUS_SPP` in `prot_init`. / 内核已配置 U-mode 入口。  
     Evidence: `minix/kernel/arch/riscv64/protect.c:48`
@@ -144,16 +147,15 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     Evidence: `minix/kernel/arch/riscv64/protect.c:138`
   - Exec loader is built as 64-bit on `__riscv64__`, and ELF target class is 64 for RISC-V. / exec 加载器按 RV64 构建并期望 ELF64。  
     Evidence: `minix/lib/libexec/exec_elf.c:4`, `sys/arch/riscv/include/elf_machdep.h:24`
-  - Current status explicitly says userland is not yet stable. / 现状明确用户态仍不稳定。  
-    Evidence: `README-RISCV64.md:27`
-  - `ld.elf_so` only builds when `MKPIC != "no"`, but current riscv64 builds report `MKPIC=no`, so no dynamic loader is produced/installed. / `ld.elf_so` 仅在 `MKPIC != "no"` 时构建，而当前 riscv64 构建为 `MKPIC=no`，动态加载器未生成/安装。  
+  - QEMU reaches a stable shell; static userland smoke (`echo SMOKE_OK`, `ps -aux`, `cat /proc/meminfo`) passes. / QEMU 可进入稳定 shell，静态用户态冒烟已通过。  
+    Evidence: `README-RISCV64.md` current-status section; `RISC64-STATUS.md`
+  - `ld.elf_so` only builds when `MKPIC != "no"`, but the local riscv64 baseline is `MKPIC=no`, so no dynamic loader is produced/installed. / `ld.elf_so` 仅在 `MKPIC != "no"` 时构建，本地 riscv64 基线为 `MKPIC=no`，动态加载器未生成/安装。  
     Evidence: `libexec/ld.elf_so/Makefile:31-47`
 - Impact / 影响:
-  - Kernel has RV64 U-mode + ELF64 exec plumbing, but user processes are not reliably runnable yet. / 内核具备基础通路，但 RV64 进程尚不可稳定运行。
-  - No `ld.elf_so` means dynamic binaries cannot be validated; only static ELF64 execs are currently exercised. / 缺少 `ld.elf_so` 导致动态二进制无法验证，当前仅运行静态 ELF64 可执行文件。
+  - Static ELF64 processes are exercised by smoke and gates. Remaining A2 gap is `MKPIC=no` / no `ld.elf_so`, not “userland cannot run”. / 静态 ELF64 进程已在冒烟与门禁中跑过。A2 剩余缺口是 `MKPIC=no` / 无 `ld.elf_so`，不是用户态无法运行。
+  - No `ld.elf_so` means dynamic binaries cannot be validated. / 缺少 `ld.elf_so` 导致动态二进制无法验证。
 - Suggested fix / 修复建议:
-  - Resolve A1 and top Major issues (VM/PT/TLB/IPI), then validate exec with a minimal ELF64 user binary + ld.so. / 先修复 A1 与主要问题（VM/PT/TLB/IPI），再用最小 ELF64 用户程序验证 exec/ld.so。
-  - Enable `MKPIC`/`MKPICLIB` for riscv64 and build/install `ld.elf_so`, then test a small dynamic binary with `PT_INTERP=/libexec/ld.elf_so`. / 为 riscv64 开启 `MKPIC`/`MKPICLIB` 并构建安装 `ld.elf_so`，再用带 `PT_INTERP=/libexec/ld.elf_so` 的小动态程序验证。
+  - Keep the static smoke path. Enable `MKPIC`/`MKPICLIB` for riscv64 and build/install `ld.elf_so`, then test a small dynamic binary with `PT_INTERP=/libexec/ld.elf_so`. / 保留静态冒烟路径。为 riscv64 开启 `MKPIC`/`MKPICLIB` 并构建安装 `ld.elf_so`，再用带 `PT_INTERP=/libexec/ld.elf_so` 的小动态程序验证。
   - Validation checklist (doc-only): / 验证清单（文档）:
     1) Confirm target ELF64/EM_RISCV via `readelf -h` on the test binary. / 通过 `readelf -h` 确认 ELF64/EM_RISCV。
     2) Prefer a minimal static executable if available; otherwise verify `PT_INTERP` points to `/libexec/ld.elf_so`. / 尽量使用静态可执行文件；否则确认 `PT_INTERP` 指向 `/libexec/ld.elf_so`。  

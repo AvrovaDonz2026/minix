@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.50
+**Version / 版本**: 1.51
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -159,7 +159,7 @@
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
   `as/ld/ar/ranlib` 与本地 `hello.c` 编译运行闭环。
-- 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）；`phys_copy`/`phys_memset` 缺页恢复区间（#77）。
+- 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）；`phys_copy`/`phys_memset` 缺页恢复区间（#77）；kernel `pg_walk` 拆分未立刻 sfence（#81）；kernel/smoke 弱 boot 标记（#84/#85）。
 - Nightly 与 Release 两条 OS 打包 CI 现已在每次提交时运行，作为完整性与可复现性
   门禁；GitHub Release / nightly tag 发布仍仅限官方触发（tag、`workflow_dispatch`、
   nightly 的 schedule / `master` push）。Runner 为 GitHub-hosted `ubuntu-24.04`。
@@ -343,7 +343,7 @@
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate
   `as/ld/ar/ranlib` and native `hello.c` compile-and-run closure.
-- Remaining open risk: procfs safecopy retry noise (#17); `phys_copy`/`phys_memset` fault PC range (#77).
+- Remaining open risk: procfs safecopy retry noise (#17); `phys_copy`/`phys_memset` fault PC range (#77); kernel `pg_walk` split without an immediate sfence (#81); weak kernel/smoke boot markers (#84/#85).
 - Nightly and Release OS packaging CIs now run on every commit as
   completeness/reproducibility gates; GitHub Release / nightly tag publish
   remains gated to official triggers (tag, `workflow_dispatch`, nightly
@@ -353,9 +353,8 @@
 
 **中文**
 - 基线命令：使用 GCC、禁用 LLVM/C++、放宽 `checkflist`（见 `README-RISCV64.md`）。
-- 产物：`minix/kernel/obj/kernel` 与 `obj/destdir.evbriscv64`。
-- 已补充 `obj.intrgcc` 自举输出：`obj.intrgcc/minix/kernel/kernel` 与
-  `obj.intrgcc/destdir.evbriscv64` 可直接用于 QEMU。
+- 当前产物：`obj.intrgcc/minix/kernel/kernel` 与 `obj.intrgcc/destdir.evbriscv64`。
+- 历史路径 `minix/kernel/obj/kernel` / `obj/destdir.evbriscv64` 不再作为基线。
 - 限制：`CHECKFLIST_FLAGS='-m -e'` 为临时绕过，需在 sets 完整后移除。
 - ramdisk 更新：新增 `/bin/neofetch`（`pfetch` 兼容包装）与 `/etc/build-id` 注入。
 - 工具链进展：in-tree `ld`（NetBSD binutils 2.23.2）已通过补丁兼容
@@ -365,9 +364,10 @@
 
 **English**
 - Baseline: GCC, LLVM/C++ disabled, relaxed `checkflist` (see `README-RISCV64.md`).
-- Outputs: `minix/kernel/obj/kernel` and `obj/destdir.evbriscv64`.
-- Added validated self-bootstrap outputs: `obj.intrgcc/minix/kernel/kernel` and
-  `obj.intrgcc/destdir.evbriscv64` are bootable in QEMU.
+- Current outputs: `obj.intrgcc/minix/kernel/kernel` and
+  `obj.intrgcc/destdir.evbriscv64`.
+- Historical `minix/kernel/obj/kernel` / `obj/destdir.evbriscv64` paths are
+  no longer the baseline.
 - Limitation: `CHECKFLIST_FLAGS='-m -e'` is a temporary workaround until sets are complete.
 - Ramdisk update: adds `/bin/neofetch` (with `pfetch` compatibility wrapper)
   and injects `/etc/build-id`.

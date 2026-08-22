@@ -11,7 +11,7 @@ debugging, and acceptance.
 
 ## Document Info / 文档信息
 
-- Version / 版本: `1.3`
+- Version / 版本: `1.4`
 - Last updated / 最后更新: `2026-08-22`
 - Baseline / 基线: `obj.intrgcc`
 - Scope / 范围: VirtIO MMIO transport (`virtio_blk_mmio`, `virtio_net_mmio`)
@@ -206,26 +206,33 @@ ping6 -q -c 1 fe80::...%vio0
 - Cause: no virtio-net device attached or startup mode is strict.
 - Action: attach `-netdev ... -device virtio-net-device,...` and retry.
 
-3. `ping/ping6: Permission denied` on raw socket path
+3. `ping/ping6: Permission denied` on raw socket path (historical `#34`, closed)
 - Cause: policy drift where `lwip` cannot talk to `pm`.
-- Action: verify `lwip` IPC includes `pm` in both:
+- Action: already fixed; if it regresses, verify `lwip` IPC includes `pm` in:
   - `minix/releasetools/riscv64/system.conf`
   - `minix/net/lwip/lwip.conf`
 
-6. `unable to add mmio mem range` / no `vio0` on disk images
+4. `unable to add mmio mem range` / no `vio0` on disk images (historical `#39`, closed)
 - Cause: `/etc/system.conf.d/virtio_net_mmio` overrode RISC-V `system.conf`
   without `PRIVCTL` / IRQ / the full MMIO window (`issue.md` `#39`).
 - Action: keep `virtio_net_mmio.conf` aligned with
   `minix/releasetools/riscv64/system.conf`.
 
-4. `hostfwd=tcp::2222-:22` already in use
+5. `hostfwd=tcp::2222-:22` already in use
 - Cause: host port conflict.
 - Action: set `NET_HOSTFWD=none` or pick a different `hostfwd` port.
 
-5. `-netdev bridge` fails with bridge-helper errors
+6. `-netdev bridge` fails with bridge-helper errors
 - Cause: host bridge prerequisites missing (for example `/etc/qemu/bridge.conf`).
 - Action: validate functionality with user-net (slirp) first, then configure
   host bridge environment.
+
+7. Gateway ARP with no slirp reply (historical `#76`, closed)
+- Cause: QEMU 8.2 `ipv6=on` without `ipv4=on` disables slirp IPv4
+  (`net_init_slirp` clears `ipv4` when only IPv6 is present).
+- Action: `qemu-riscv64.sh -n` must pass `ipv4=on,ipv6=on`. Do not disable
+  EVENT_IDX or ipv6. Hosted nightly `32552319291` and release `32552319287`
+  already passed `ping_gw`.
 
 ## 9) Implementation Notes for Developers / 开发实现要点
 

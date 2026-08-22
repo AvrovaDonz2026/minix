@@ -6,6 +6,9 @@
 #   ./scripts/build-riscv64-llvm-local.sh tools
 #   ./scripts/build-riscv64-llvm-local.sh distribution
 #   ./scripts/build-riscv64-llvm-local.sh all
+#   ./scripts/build-riscv64-llvm-local.sh servers   # vm+kernel after tree edits
+#   ./scripts/build-riscv64-llvm-local.sh image     # mkdisk only
+#   ./scripts/build-riscv64-llvm-local.sh verify    # gates + llvm guest smoke (local acceptance)
 #
 
 set -euo pipefail
@@ -111,15 +114,122 @@ run_distribution() {
     2>&1 | tee "${LOG_DIR}/distribution.log"
 }
 
+pick_tooldir() {
+  local tooldir="" d mt best=0
+  for d in "${OBJDIR}"/tooldir.*; do
+    [[ -d "${d}" ]] || continue
+    [[ -x "${d}/bin/nbmake" ]] || continue
+    mt="$(stat -c %Y "${d}" 2>/dev/null || echo 0)"
+    if (( mt >= best )); then
+      best="${mt}"
+      tooldir="${d}"
+    fi
+  done
+  [[ -n "${tooldir}" ]] || {
+    echo "[local] ERROR: no TOOLDIR under ${OBJDIR}" >&2
+    exit 1
+  }
+  printf '%s' "${tooldir}"
+}
+
+run_servers() {
+  local tooldir nbmake
+  tooldir="$(pick_tooldir)"
+  nbmake="${tooldir}/bin/nbmake-${MACHINE}"
+  export MKPCI=no
+  export MAKEOBJDIR='${.CURDIR:C,^'${REPO_ROOT}','${REPO_ROOT}'/'${OBJDIR}',}'
+
+  echo "[local] rebuilding vm + kernel (STATELEN / server fixes)"
+  "${nbmake}" -C minix/servers/vm -j"${JOBS}"
+  "${nbmake}" -C minix/servers/vm install
+  "${nbmake}" -C minix/kernel -j"${JOBS}"
+}
+
+run_image() {
+  local image="${IMAGE_PATH:-${LOG_DIR}/minix-riscv64-llvm.img}"
+  echo "[local] mkdisk -> ${image}"
+  minix/releasetools/riscv64/mkdisk.sh \
+    -d "${OBJDIR}" \
+    -o "${image}" \
+    -s 1024 \
+    -u 768 \
+    -U
+  echo "[local] IMAGE=${image}"
+}
+
+run_verify() {
+  local tooldir log="${LOG_DIR}/verify.log"
+  local image="${IMAGE_PATH:-${LOG_DIR}/minix-riscv64-llvm.img}"
+  tooldir="$(pick_tooldir)"
+  install_cross_as_flock_wrapper "${tooldir}"
+
+  : >"${log}"
+  export TOOLDIR="${tooldir}"
+  export KERNEL="${REPO_ROOT}/${OBJDIR}/minix/kernel/kernel"
+  export DESTDIR="${REPO_ROOT}/${OBJDIR}/destdir.evbriscv64"
+  export SMOKE_DISK_IMAGE="${image}"
+  export SMOKE_DD_UNSAFE=1
+  export LLVM_GATE_REQUIRE=all
+
+  echo "[local] verify log: ${log}"
+
+  run_gate() {
+    local name="$1"
+    shift
+    echo "[local] >>> ${name}" | tee -a "${log}"
+    if "$@" >>"${log}" 2>&1; then
+      echo "[local] ${name}: PASS" | tee -a "${log}"
+    else
+      local rc=$?
+      echo "[local] ${name}: FAIL (rc=${rc})" | tee -a "${log}"
+      tail -n 80 "${log}" >&2 || true
+      exit "${rc}"
+    fi
+  }
+
+  [[ -x "${DESTDIR}/usr/bin/clang" ]] || {
+    echo "[local] ERROR: ${DESTDIR}/usr/bin/clang missing; run distribution first" >&2
+    exit 1
+  }
+  [[ -f "${KERNEL}" ]] || {
+    echo "[local] ERROR: ${KERNEL} missing; run servers or distribution" >&2
+    exit 1
+  }
+
+  run_gate host ./minix/tests/riscv64/llvm_toolchain_gate.sh \
+    --mode host --require host --tooldir "${tooldir}"
+  run_gate destdir ./minix/tests/riscv64/llvm_toolchain_gate.sh \
+    --mode destdir --require destdir --destdir "${DESTDIR}"
+
+  if [[ ! -f "${image}" ]]; then
+    run_image
+  fi
+
+  run_gate llvm-guest ./minix/tests/riscv64/llvm_toolchain_gate.sh \
+    --mode guest --require guest \
+    --tooldir "${tooldir}" \
+    --destdir "${DESTDIR}" \
+    --kernel "${KERNEL}" \
+    --disk-image "${image}"
+
+  echo "[local] verify: all PASS (see ${log})"
+}
+
 case "${TARGET}" in
   tools) run_tools ;;
   distribution) run_distribution ;;
+  servers) run_servers ;;
+  image) run_image ;;
+  verify) run_verify ;;
   all)
     run_tools
     run_distribution
+    run_servers
+    run_image
+    run_verify
     ;;
   *)
-    echo "usage: $0 [tools|distribution|all]" >&2
+    echo "usage: $0 [tools|distribution|servers|image|verify|all]" >&2
     exit 1
     ;;
 esac

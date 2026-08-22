@@ -9,14 +9,14 @@ targeting the QEMU virt platform.
 ## 文档信息 / Document Info
 
 **中文**
-- 版本：1.30
-- 最后更新：2026-08-21
+- 版本：1.31
+- 最后更新：2026-08-22
 - 适用范围：evbriscv64（QEMU virt）
 - 文档性质：构建/运行/测试操作手册，不是开发计划
 
 **English**
-- Version: 1.30
-- Last updated: 2026-08-21
+- Version: 1.31
+- Last updated: 2026-08-22
 - Scope: evbriscv64 (QEMU virt)
 - Doc type: build/run/test manual, not a development plan
 
@@ -717,6 +717,20 @@ cd minix/tests/riscv64
   tick 再排空 used 环，并在 drain 后按 Linux `enable_cb` 发布
   `used_event`，避免错过第一次 used 通知后 EVENT_IDX 抑制后续中断。
   协议栈仍是用户态 lwIP，而不是把 FreeBSD 内核协议栈搬进微内核。
+- `run_tests.sh build` 用宿主 cc 编译并运行 `test_virtio_event_idx.c`，
+  本地覆盖 `#73`/`#74` 的 EVENT_IDX `vring_need_event` 数学，无需等
+  hosted nightly QEMU。
+  `run_tests.sh build` compiles and runs `test_virtio_event_idx.c` on the
+  host to exercise `#73`/`#74` EVENT_IDX `vring_need_event` math without
+  waiting on hosted nightly QEMU.
+- `qemu_net_smoke.py` 要求串口日志出现 `virtio-net-mmio: mac
+  52:54:00:12:34:56`；设置 `NET_PCAP` 时 `qemu-riscv64.sh` 在 `-netdev`
+  之后追加 `filter-dump`，smoke 解析 pcap 并在 `ping_gw` 失败时提示
+  TX vs RX。
+  `qemu_net_smoke.py` requires the QEMU MAC in the serial log; when
+  `NET_PCAP` is set, `qemu-riscv64.sh` appends a `filter-dump` after
+  `-netdev`, and the smoke script parses the pcap and hints TX vs RX on
+  `ping_gw` failure.
 - 若出现 `hostfwd=tcp::2222-:22` 端口占用，设置 `NET_HOSTFWD=none` 再跑
   `qemu-riscv64.sh -n`（网络冒烟默认如此）。
   If `hostfwd=tcp::2222-:22` conflicts, rerun `qemu-riscv64.sh -n` with

@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.66
+**Version / 版本**: 1.67
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -67,6 +67,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   42) `[DONE]` `#72` gcc13 `G_C_OBJS` / `G_libcpp_a_OBJS` 丢掉 4.8.5 的 `tree-mudflap.o` 与 `directives-only.o`，`cc1` 缺 `mudflap_init` / `_cpp_preprocess_dir_only`
   43) `[DONE]` `#73` virtio-net `EVENT_IDX` 灌 RX 环时只 kick 第一槽，QEMU slirp `ping 10.0.2.2` 100% 丢包
   44) `[DONE]` `#74` `#73` kick 之后 ping 仍 100% 丢包：used 环只在 IRQ 上排空，EVENT_IDX 错过第一次 used 通知后不再中断
+  45) `[DONE]` `#75` hosted nightly 仍要 30+ 分钟才能重现 EVENT_IDX avail/used 通知数学错误；本地/CI 用宿主可执行 `test_virtio_event_idx.c` + net smoke MAC/pcap 探测
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1622,6 +1623,24 @@ This section archives items with code-level fixes landed (some may still require
   历史 P1 #74：`#73` kick 之后仍丢包。按 virtio-blk 在 TX 后排空
   used 环，并用 Linux `enable_cb` 发布 `used_event`，避免错过第一次
   used 通知后 EVENT_IDX 永久抑制 RX 中断。
+- Former P1 #75: hosted nightly still burns 30+ min rediscovering
+  EVENT_IDX avail/used notify math. `run_tests.sh build` compiles and
+  runs host `test_virtio_event_idx.c` for `#73`/`#74` `vring_need_event`
+  cases. `qemu-riscv64.sh` honors `QEMU=${QEMU:-qemu-system-riscv64}`
+  and appends a `filter-dump` after `-netdev` when `NET_PCAP` is set.
+  `qemu_net_smoke.py` requires `virtio-net-mmio: mac 52:54:00:12:34:56`,
+  dumps the pcap, logs ARP/echo counts, and hints TX vs RX when
+  `ping_gw` fails. Local QEMU 8.2.2 against a rebuilt ramdisk passed
+  init/MAC/mrg/event_idx/rx256/ifconfig/ping6; `ping -c 2 10.0.2.2`
+  still lost every packet. Endian-fixed pcap showed guest ARP who-has
+  (`arp_req=6`) and no ARP reply or ICMP echo (`arp_rep=0 echo_req=0`).
+  历史 P1 #75：hosted nightly 仍要 30+ 分钟才能重现 EVENT_IDX
+  avail/used 通知数学错误。`run_tests.sh build` 用宿主 cc 编译并运行
+  `test_virtio_event_idx.c`（覆盖 `#73`/`#74` 的 `vring_need_event`）。
+  net smoke 要求 QEMU MAC `52:54:00:12:34:56`，可选 `NET_PCAP` 在
+  `-netdev` 之后抓包，并在 `ping_gw` 失败时按 ARP/echo 计数区分
+  TX 与 RX。本地 QEMU 对重建 ramdisk 已跑：网关 ping 仍 100% 丢包，
+  pcap 只有 guest ARP who-has。
 
 - Former A4 (disk-only U-Boot handoff): `mkdisk.sh` now emits a BSS-inclusive
   `kernel.bin` payload, boots it with `go 0x80200000`, and documents the

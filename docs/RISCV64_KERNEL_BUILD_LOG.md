@@ -2282,3 +2282,18 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `minix/lib/libvirtio_mmio/virtio_mmio.c`
 - `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
 
+## Entry 68 — 2026-08-22 04:00 UTC
+
+**Change / 变更**: Hosted nightly still burns 30+ min rediscovering EVENT_IDX avail/used notify math after `#73`/`#74` driver fixes. Add host-executable `minix/tests/riscv64/test_virtio_event_idx.c` (`vring_need_event` cases for `#73`/`#74`); `run_tests.sh` `run_build_tests` compiles and runs it with the host compiler. `qemu-riscv64.sh` uses `QEMU=${QEMU:-qemu-system-riscv64}` and appends `filter-dump` after `-netdev` when `NET_PCAP` is set. `qemu_net_smoke.py` requires `virtio-net-mmio: mac 52:54:00:12:34:56`, dumps the pcap, logs ARP/echo counts, and hints TX vs RX when `ping_gw` fails.
+
+**Issue ID**: `#75`
+
+**Result / 结果**: local host EVENT_IDX test added (`run_tests.sh build` 9/0/0). Local QEMU 8.2.2 net smoke against rebuilt ramdisk passed init/MAC/mrg/event_idx/rx256/ifconfig/ping6; `ping -c 2 10.0.2.2` still 100% loss. Endian-fixed pcap: `arp_req=6 arp_rep=0 echo_req=0 echo_rep=0`. Gateway ping not claimed green.
+
+**Evidence / 证据**:
+- `issue.md` `#75`
+- `minix/tests/riscv64/test_virtio_event_idx.c`
+- `minix/tests/riscv64/run_tests.sh`
+- `minix/scripts/qemu-riscv64.sh`
+- `minix/tests/riscv64/qemu_net_smoke.py`
+

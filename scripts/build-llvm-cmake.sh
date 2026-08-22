@@ -89,6 +89,12 @@ build_llvm() {
 
   mkdir -p "${LLVM_BUILDDIR}" "${TOOLDIR}/bin" "${TOOLDIR}/lib"
 
+  # build.sh exports DESTDIR for the target rootfs; host LLVM must install
+  # into TOOLDIR only (DESTDIR would prefix CMAKE_INSTALL_PREFIX).
+  local saved_destdir="${DESTDIR:-}"
+  DESTDIR=
+  export DESTDIR
+
   log "configuring LLVM ${LLVM_VERSION} (jobs=${LLVM_JOBS})"
   export LIBRARY_PATH="${LIBRARY_PATH:-/usr/lib/gcc/$(gcc -dumpmachine)/$(gcc -dumpversion):/usr/lib/$(gcc -dumpmachine)}"
   cmake -G Ninja -S "${LLVM_SRCDIR}/llvm" -B "${LLVM_BUILDDIR}" \
@@ -111,9 +117,16 @@ build_llvm() {
   ninja -C "${LLVM_BUILDDIR}" -j"${LLVM_JOBS}" clang lld
 
   log "installing to ${TOOLDIR}/llvm-${LLVM_VERSION}"
-  ninja -C "${LLVM_BUILDDIR}" install
+  DESTDIR= ninja -C "${LLVM_BUILDDIR}" install
 
   install_wrappers
+
+  if [ -n "${saved_destdir}" ]; then
+    DESTDIR="${saved_destdir}"
+    export DESTDIR
+  else
+    unset DESTDIR
+  fi
 }
 
 install_wrappers() {
@@ -202,7 +215,10 @@ main() {
   fetch_sources
   apply_patches
   build_llvm
-  install_destdir
+
+  if [ -n "${LLVM_DESTDIR_INSTALL:-}" ] && [ -n "${DESTDIR:-}" ]; then
+    install_destdir
+  fi
 
   log "done"
 }

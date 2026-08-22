@@ -12,15 +12,13 @@ LLVM_VERSION=	18.1.8
 LLVM_BINDIR=	${TOOLDIR}/bin
 WRAPPER=	${LLVM_BINDIR}/${MACHINE_GNU_PLATFORM}-clang
 
-realall realdepend: .PHONY .ORDERED ${WRAPPER}
+realdepends realall: stamp-llvm-cmake-clang
 
-${WRAPPER}: stamp-llvm-cmake
+stamp-llvm-cmake-clang: .MAKE
 	@test -x ${WRAPPER} || (echo "missing ${WRAPPER}" >&2; exit 1)
+	@touch ${.TARGET}
 
-stamp-llvm-cmake:
-	@test -x ${WRAPPER}
-
-CLEANFILES+=
+CLEANFILES+=	stamp-llvm-cmake-clang
 
 .include <bsd.hostprog.mk>
 

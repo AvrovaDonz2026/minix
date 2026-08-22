@@ -11,7 +11,7 @@ LLVM_VERSION=	18.1.8
 
 LLVM_CMAKE_SCRIPT= ${NETBSDSRCDIR}/scripts/build-llvm-cmake.sh
 
-realall realdepend: .PHONY .ORDERED stamp-llvm-cmake
+realdepends realall: stamp-llvm-cmake
 
 stamp-llvm-cmake: ${LLVM_CMAKE_SCRIPT}
 	@test -n "${TOOLDIR}" || (echo "TOOLDIR not set" >&2; exit 1)

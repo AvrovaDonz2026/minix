@@ -451,6 +451,8 @@ virtio_net_ctrl_mac_table(const netdriver_addr_t * mcast_list,
 	uint32_t *count;
 	unsigned int i, n;
 
+	if (mcast_list == NULL)
+		mcast_count = 0;
 	if (mcast_count > CTRL_MCAST_MAX)
 		mcast_count = CTRL_MCAST_MAX;
 
@@ -459,8 +461,8 @@ virtio_net_ctrl_mac_table(const netdriver_addr_t * mcast_list,
 	ch->cmd = VIRTIO_NET_CTRL_MAC_TABLE_SET;
 
 	count = (uint32_t *)(ctrl_vir + CTRL_UNI_OFF);
-	*count = 1;
-	memcpy(ctrl_vir + CTRL_UNI_OFF + 4, hwaddr.na_addr, 6);
+	/* Primary MAC stays in device config / CTRL_MAC_ADDR_SET (#80). */
+	*count = 0;
 
 	count = (uint32_t *)(ctrl_vir + CTRL_MULTI_OFF);
 	*count = mcast_count;
@@ -471,7 +473,7 @@ virtio_net_ctrl_mac_table(const netdriver_addr_t * mcast_list,
 	phys[0].vp_addr = ctrl_phys + CTRL_HDR_OFF;
 	phys[0].vp_size = sizeof(*ch);
 	phys[1].vp_addr = ctrl_phys + CTRL_UNI_OFF;
-	phys[1].vp_size = 4 + 6;
+	phys[1].vp_size = 4;
 	phys[2].vp_addr = ctrl_phys + CTRL_MULTI_OFF;
 	phys[2].vp_size = 4 + 6 * mcast_count;
 	phys[3].vp_addr = (ctrl_phys + CTRL_ACK_OFF) | 1;
@@ -574,6 +576,13 @@ virtio_net_set_mode(unsigned int mode,
 	if (!have_ctrl || mode == NDEV_MODE_DOWN)
 		return;
 
+	if (mcast_list == NULL)
+		mcast_count = 0;
+	r = virtio_net_ctrl_mac_table(mcast_list, mcast_count);
+	if (r != OK)
+		printf("%s: CTRL_MAC table failed (%d)\n",
+		    netdriver_name(), r);
+
 	r = virtio_net_ctrl_rx_mode(VIRTIO_NET_CTRL_RX_PROMISC,
 	    (mode & NDEV_MODE_PROMISC) != 0);
 	if (r != OK)
@@ -593,13 +602,6 @@ virtio_net_set_mode(unsigned int mode,
 			printf("%s: CTRL_RX nobcast failed (%d)\n",
 			    netdriver_name(), r);
 	}
-
-	if (mcast_list == NULL)
-		mcast_count = 0;
-	r = virtio_net_ctrl_mac_table(mcast_list, mcast_count);
-	if (r != OK)
-		printf("%s: CTRL_MAC table failed (%d)\n",
-		    netdriver_name(), r);
 }
 
 static int

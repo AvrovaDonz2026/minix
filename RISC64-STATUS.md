@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.51
+**Version / 版本**: 1.52
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -159,7 +159,7 @@
   `minix/tests/riscv64/native_toolchain_build.sh` 与自动验收脚本
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
   `as/ld/ar/ranlib` 与本地 `hello.c` 编译运行闭环。
-- 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）；`phys_copy`/`phys_memset` 缺页恢复区间（#77）；kernel `pg_walk` 拆分未立刻 sfence（#81）；kernel/smoke 弱 boot 标记（#84/#85）。
+- 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）；SMP（#15）；`MKPIC`/`ld.elf_so`（A2）；multiboot 32 位模块界（#83）。
 - Nightly 与 Release 两条 OS 打包 CI 现已在每次提交时运行，作为完整性与可复现性
   门禁；GitHub Release / nightly tag 发布仍仅限官方触发（tag、`workflow_dispatch`、
   nightly 的 schedule / `master` push）。Runner 为 GitHub-hosted `ubuntu-24.04`。
@@ -343,7 +343,7 @@
   (`minix/tests/riscv64/native_toolchain_build.sh`) and an automated in-guest
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate
   `as/ld/ar/ranlib` and native `hello.c` compile-and-run closure.
-- Remaining open risk: procfs safecopy retry noise (#17); `phys_copy`/`phys_memset` fault PC range (#77); kernel `pg_walk` split without an immediate sfence (#81); weak kernel/smoke boot markers (#84/#85).
+- Remaining open risk: procfs safecopy retry noise (#17); SMP (#15); `MKPIC`/`ld.elf_so` (A2); multiboot u32 module bounds (#83).
 - Nightly and Release OS packaging CIs now run on every commit as
   completeness/reproducibility gates; GitHub Release / nightly tag publish
   remains gated to official triggers (tag, `workflow_dispatch`, nightly
@@ -488,12 +488,9 @@
 - None newly confirmed in current workspace.
 
 **Major / 重要**
-- #77: `phys_copy` catch_pagefaults PC range includes `phys_memset`.
 - #17: recoverable safecopy fallback noise on `/proc/*` path remains.
-- #23: RV64 `vm_memset` recovery plumbing is implemented and smoke-validated; targeted
-  fault-injection validation is still required for full closure (`#77` overlaps this path).
-- #78 / #79 / #80: QEMU virt PLIC overscan (log noise for IRQ 1–10), legacy virtio-mmio high feature sel, virtio-net RX filter order (not ping-limiting on QEMU `n->mac`).
-- #81 / #82 / #84 / #85: kernel `pg_walk` split flush, `VMCTL` missing `root_v`, kernel-boot grep, weak multi-smoke markers.
+- #23: RV64 `vm_memset` recovery plumbing is implemented and smoke-validated; `#77` closed the overlapping PC-range footgun.
+- #15: SMP not implemented.
 
 详见 `issue.md` 的证据与修复建议 / See `issue.md` for evidence and fixes.
 
@@ -506,23 +503,21 @@
 ## Next Priorities / 下一阶段优先级
 
 **中文**
-1) 修复 #77：按 i386 把 `phys_copy_fault` 放到 `phys_copy` 之后，避免覆盖 `phys_memset`。
-2) 继续收敛 #17（统计/限流 + 负载下验证），区分噪声与真实功能缺陷。
-3) 将 native toolchain 阻断门禁持续运行在 release/nightly，并补充可写介质场景下
+1) 继续收敛 #17（统计/限流 + 负载下验证），区分噪声与真实功能缺陷。
+2) 将 native toolchain 阻断门禁持续运行在 release/nightly，并补充可写介质场景下
    的可选 `link+run` 验收（规避 root mfs inode 上限带来的假阴性）。
-4) 收敛 `#78`–`#85`：PLIC 源数量、legacy features sel、CTRL_MAC 顺序、`pg_walk` sfence、`root_v`、kernel/smoke 门禁标记。
-5) 在稳定后恢复动态装载链路（`MKPIC/MKPICLIB`）并验证最小动态程序。
-6) 将 `repro_build_gate.sh` 纳入例行流水（至少每日一次），验证构建链路不依赖手工注入。
+3) 在稳定后恢复动态装载链路（`MKPIC/MKPICLIB`）并验证最小动态程序。
+4) 将 `repro_build_gate.sh` 纳入例行流水，验证构建链路不依赖手工注入。
+5) SMP（#15）、DT 多段内存（#14）、multiboot 64 位模块界（#83）。
 
 **English**
-1) Fix #77 by placing `phys_copy_fault` immediately after `phys_copy` (i386 layout) so the range excludes `phys_memset`.
-2) Continue closing #17 with counters/rate-limit + stress validation.
-3) Keep native toolchain gate blocking in release/nightly and add optional
+1) Continue closing #17 with counters/rate-limit + stress validation.
+2) Keep native toolchain gate blocking in release/nightly and add optional
    writable-filesystem `link+run` acceptance to avoid false negatives from
    root mfs inode limits.
-4) Close `#78`–`#85` (PLIC count, legacy feature sel, CTRL_MAC order, `pg_walk` flush, `root_v`, kernel/smoke markers).
-5) Restore dynamic loader path (`MKPIC/MKPICLIB`) and test a minimal dynamic binary.
-6) Run `repro_build_gate.sh` in routine CI (at least daily) to enforce source-driven reproducibility.
+3) Restore dynamic loader path (`MKPIC/MKPICLIB`) and test a minimal dynamic binary.
+4) Keep `repro_build_gate.sh` in the regular pipeline.
+5) SMP (#15), DT multi-region memory (#14), multiboot 64-bit module bounds (#83).
 
 ## Success Criteria / 下一里程碑判定
 

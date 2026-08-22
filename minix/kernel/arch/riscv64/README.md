@@ -73,7 +73,7 @@ riscv64/
 - Per-CPU interrupt enable/disable
 - Priority management
 - SMP support via `plic_irq_cpu_mask()`
-- QEMU virt has 96 sources; kernel still walks `PLIC_NUM_SOURCES=1024` (`issue.md` `#78`)
+- QEMU virt has 96 sources (`PLIC_NUM_SOURCES`); init no longer writes past that range (`issue.md` `#78`)
 
 ### Page Tables (Sv39)
 - 3-level page tables
@@ -164,9 +164,8 @@ and `obj/destdir.evbriscv64` are not the current profile.
    wired from `arch_system.c`. Remaining FPU work is broader process-switch
    coverage, not a missing stub.
 3. Debug registers (hardware breakpoints) not yet supported
-4. Open audit items: `#77` `phys_copy` catch_pagefaults PC range includes
-   `phys_memset`; `#78` PLIC 1024 vs QEMU virt 96 sources; `#81` `pg_walk`
-   leaf-to-table split without an immediate TLB flush. See `issue.md`.
+4. Open audit items: `#77`/`#13` phys_copy fault PC range (fixed this
+   round); residual watch: `#17` safecopy noise. See `issue.md`.
 
 ## References
 

@@ -255,17 +255,22 @@ static void handle_page_fault(struct trapframe *tf, u64_t cause, u64_t addr)
     in_memset = (tf->tf_sepc > (vir_bytes)phys_memset) &&
         (tf->tf_sepc < (vir_bytes)memset_fault);
 
+    /*
+     * Prefer memset recovery when both windows could match. The
+     * symbols are laid out phys_copy < phys_copy_fault < phys_memset
+     * < memset_fault so the ranges do not overlap (#77).
+     */
     if (catch_pagefaults && (in_physcopy || in_memset)) {
         if (tf->tf_sstatus & SSTATUS_SPP) {
-            if (in_physcopy)
-                tf->tf_sepc = (u64_t)phys_copy_fault_in_kernel;
-            else
+            if (in_memset)
                 tf->tf_sepc = (u64_t)memset_fault_in_kernel;
-        } else if (pr != NULL) {
-            if (in_physcopy)
-                pr->p_reg.pc = (reg_t)phys_copy_fault;
             else
+                tf->tf_sepc = (u64_t)phys_copy_fault_in_kernel;
+        } else if (pr != NULL) {
+            if (in_memset)
                 pr->p_reg.pc = (reg_t)memset_fault;
+            else
+                pr->p_reg.pc = (reg_t)phys_copy_fault;
             pr->p_reg.retreg = (reg_t)addr;
         }
         return;

@@ -181,8 +181,18 @@ run_one() {
             ;;
     esac
 
-    if ! grep -Eq 'MINIX 3\.4\.0|exec path="/bin/sh"' "$log_file"; then
-        echo "[FAIL] ${case_name} round ${round}: boot marker missing"
+    if ! grep -Eq 'VFS: init_root done' "$log_file"; then
+        echo "[FAIL] ${case_name} round ${round}: VFS init_root marker missing"
+        failed=$((failed + 1))
+        return 1
+    fi
+    if ! grep -Eq 'exec path="/bin/sh"|init: exec /bin/sh' "$log_file"; then
+        echo "[FAIL] ${case_name} round ${round}: shell exec marker missing"
+        failed=$((failed + 1))
+        return 1
+    fi
+    if ! grep -Eq '(^|\r)#($|[[:space:]])' "$log_file"; then
+        echo "[FAIL] ${case_name} round ${round}: shell prompt missing"
         failed=$((failed + 1))
         return 1
     fi
@@ -228,8 +238,7 @@ run_one() {
         fi
     fi
 
-    echo "[PASS] ${case_name} round ${round}"
-    passed=$((passed + 1))
+    echo "[INFO] ${case_name} round ${round}: boot markers ok"
     return 0
 }
 
@@ -276,7 +285,13 @@ while [ "$i" -le "$ROUNDS" ]; do
 
     if run_one "diskless" "$i"; then
         if [ "$RUNTIME_PROBE" -eq 1 ]; then
-            run_runtime_probe "diskless" "$i" || true
+            if run_runtime_probe "diskless" "$i"; then
+                echo "[PASS] diskless round ${i}"
+                passed=$((passed + 1))
+            fi
+        else
+            echo "[PASS] diskless round ${i}"
+            passed=$((passed + 1))
         fi
     fi
 
@@ -287,7 +302,13 @@ while [ "$i" -le "$ROUNDS" ]; do
         fi
         if run_one "withdisk" "$i" -i "$round_disk_image"; then
             if [ "$RUNTIME_PROBE" -eq 1 ]; then
-                run_runtime_probe "withdisk" "$i" "$round_disk_image" || true
+                if run_runtime_probe "withdisk" "$i" "$round_disk_image"; then
+                    echo "[PASS] withdisk round ${i}"
+                    passed=$((passed + 1))
+                fi
+            else
+                echo "[PASS] withdisk round ${i}"
+                passed=$((passed + 1))
             fi
         fi
     fi

@@ -123,11 +123,14 @@ static int exchange_features(struct virtio_mmio_dev *dev)
     u32_t guest_features_hi = 0;
     int i;
 
-    /* Read host features */
+    /* Read host features. Legacy MMIO (version 1) only has 32 bits. */
     virtio_mmio_write32(dev, VIRTIO_MMIO_HOST_FEATURES_SEL, 0);
     host_features_lo = virtio_mmio_read32(dev, VIRTIO_MMIO_HOST_FEATURES);
-    virtio_mmio_write32(dev, VIRTIO_MMIO_HOST_FEATURES_SEL, 1);
-    host_features_hi = virtio_mmio_read32(dev, VIRTIO_MMIO_HOST_FEATURES);
+    host_features_hi = 0;
+    if (dev->version != 1) {
+        virtio_mmio_write32(dev, VIRTIO_MMIO_HOST_FEATURES_SEL, 1);
+        host_features_hi = virtio_mmio_read32(dev, VIRTIO_MMIO_HOST_FEATURES);
+    }
 
     /* Check which features we support */
     for (i = 0; i < dev->num_features; i++) {
@@ -165,8 +168,11 @@ static int exchange_features(struct virtio_mmio_dev *dev)
     /* Write guest features */
     virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES_SEL, 0);
     virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES, guest_features_lo);
-    virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES_SEL, 1);
-    virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES, guest_features_hi);
+    /* Legacy MMIO rejects GUEST_FEATURES_SEL > 0 (#79). */
+    if (dev->version != 1) {
+        virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES_SEL, 1);
+        virtio_mmio_write32(dev, VIRTIO_MMIO_GUEST_FEATURES, guest_features_hi);
+    }
 
     return OK;
 }

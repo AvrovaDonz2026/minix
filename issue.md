@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.72
+**Version / 版本**: 1.73
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -13,8 +13,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **2026-08-22 系统审计 / system audit**: 对照当前工作树与 `/tmp/qemu-debug.log`（QEMU 8.2.2 `-d guest_errors,unimp`）复核开放项。`#73`–`#76` 的网关 ping 保持已关闭；新开 `#77`–`#85`。`#16` 的“先写后验”路径已不在 `map_service()` 中。`multi_smoke_gate.sh` 把 `timeout` 的 `rc=124` 记成 `[INFO]` 再查 boot marker，这是停 QEMU 的预期语义，不另开假阳性单。
 **2026-08-22 system audit**: Re-checked open items against the current tree and `/tmp/qemu-debug.log` (QEMU 8.2.2 `-d guest_errors,unimp`). `#73`–`#76` gateway ping stays closed. Newly filed: `#77`–`#85`. The `#16` write-then-validate path is gone from `map_service()`. `multi_smoke_gate.sh` logging `rc=124` then `[PASS]` after boot-marker checks is the intended way to stop QEMU, not a separate false-positive issue.
 
-**2026-08-22 docs sync / 文档对齐**: A2 证据已按当前手册改写：静态用户态可冒烟，剩余缺口是 `MKPIC=no` / 无 `ld.elf_so`。活文档基线路径为 `obj.intrgcc`；QEMU `-n` 必须 `ipv4=on,ipv6=on`（`#76`）。
-**2026-08-22 docs sync**: A2 evidence now matches the living manuals: static userland is smoke-stable; remaining gap is `MKPIC=no` / no `ld.elf_so`. Baseline paths are `obj.intrgcc`. QEMU `-n` must pass `ipv4=on,ipv6=on` (`#76`).
+**2026-08-22 fix round / 修复轮次**: Landed `#77`/`#13` (phys_copy fault layout), `#78` (PLIC 96), `#79` (legacy features sel), `#80` (MAC table before PROMISC, UC count 0), `#81` (`pg_walk` sfence), `#82` (no PA-as-VA `root_v`), `#84`/`#85` (stronger boot markers). Left `#17`, A2/`MKPIC`, `#15` SMP, `#14` DT, `#83` multiboot u32, `#19`/`#11`. Do not disable EVENT_IDX or ipv6.
+**2026-08-22 fix round**: Closed `#77`/`#13`/`#78`–`#82`/`#84`/`#85` in tree. Open remain `#17`, A2, `#15`, `#14`, `#83`, `#19`, `#11`.
 
 **审计否决 / audit rejected**:
 - `VIRTIO_MMIO_IRQ(i - 1)` is not an off-by-one: the `for` loop increments `i` after the matching slot, so slot `k` yields IRQ `k+1` (`virtio_mmio.c:287-334`).
@@ -22,8 +22,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 - `for` 循环在命中槽位后仍会 `i++`，`VIRTIO_MMIO_IRQ(i-1)` 对槽 `k` 得到 IRQ `k+1`，不是 off-by-one。
 - 旧 SBI `REMOTE_SFENCE_VMA` 的 `start`/`size` 是要刷新的 VA 范围，不是指针；`#5` 只需 hart-mask 指针为 PA。
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#13`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`, `#77`, `#78`, `#79`, `#80`, `#81`, `#82`, `#84`, `#85`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#13`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`, `#77`, `#78`, `#79`, `#80`, `#81`, `#82`, `#84`, `#85`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -35,7 +35,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   5) `[DONE]` `#18` RS `do_init_ready()` / `catch_boot_init_ready()` 异常路径空指针解引用
   6) `[DONE]` `#23` RISC-V `vm_memset` 无故障恢复，可能把可恢复故障升级为 kernel panic
 - P1 / 高优先（高概率影响功能正确性）:
-  1) `#77` `phys_copy` 缺页恢复 PC 区间覆盖 `phys_memset`，`catch_pagefaults` 可能拆错栈帧
+  1) `[DONE]` `#77` `phys_copy` 缺页恢复 PC 区间覆盖 `phys_memset`，`catch_pagefaults` 可能拆错栈帧
   2) `#17` 启动期 safecopy 噪声错误闭环（定位根因并降噪）
   3) `A3` `[WATCH]` 用户态 `memset` 栈顶 SIGSEGV（已缓解并经无盘/带盘 smoke；保留长跑回归）
   4) `[DONE]` `#16` VFS 服务端点“先写后验”可能弱化代际校验
@@ -85,18 +85,18 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
-  3) `#13` `phys_copy` 本地 TODO 未接线；缺页恢复见 `#77`
+  3) `[DONE]` `#13` `phys_copy` 本地 TODO 未接线；缺页恢复见 `#77`
   4) `#14` DT 多段内存/保留区解析补齐
   5) `[DONE]` `#30` multi-smoke 默认复用磁盘镜像，削弱跨次可复现性
   6) `[DONE]` `#31` smoke/repro 门禁对退出语义与宿主可移植性校验不足
   7) `[DONE]` `#37` native toolchain（来宾内 `as/ld/ar/ranlib` + `cc/gcc/clang`）闭环未完成
-  8) `#78` `PLIC_NUM_SOURCES=1024` 超过 QEMU virt 的 96 个源，启动写非法 PLIC 寄存器
-  9) `#79` legacy virtio-mmio 仍写 `GUEST_FEATURES_SEL=1`，QEMU 报 guest_error
-  10) `#80` virtio-net `CTRL_RX` PROMISC 先于 `CTRL_MAC_TABLE_SET`（QEMU 上不挡 ping）
-  11) `#81` 内核 `pg_walk()` 叶子拆分后未立刻 `sfence.vma`
-  12) `#82` `VMCTL_SETADDRSPACE` 在 `root_v==NULL` 时把物理根当 VA
-  13) `#84` `run_tests.sh` kernel boot 忽略 timeout 且 grep 任意 `MINIX`
-  14) `#85` `multi_smoke_gate` `run_one` 的 boot marker 不要求 shell prompt
+  8) `[DONE]` `#78` `PLIC_NUM_SOURCES=1024` 超过 QEMU virt 的 96 个源，启动写非法 PLIC 寄存器
+  9) `[DONE]` `#79` legacy virtio-mmio 仍写 `GUEST_FEATURES_SEL=1`，QEMU 报 guest_error
+  10) `[DONE]` `#80` virtio-net `CTRL_RX` PROMISC 先于 `CTRL_MAC_TABLE_SET`（QEMU 上不挡 ping）
+  11) `[DONE]` `#81` 内核 `pg_walk()` 叶子拆分后未立刻 `sfence.vma`
+  12) `[DONE]` `#82` `VMCTL_SETADDRSPACE` 在 `root_v==NULL` 时把物理根当 VA
+  13) `[DONE]` `#84` `run_tests.sh` kernel boot 忽略 timeout 且 grep 任意 `MINIX`
+  14) `[DONE]` `#85` `multi_smoke_gate` `run_one` 的 boot marker 不要求 shell prompt
 - P3 / 低优先（可维护性与技术债）:
   1) `#19` kernel/VM/RS 无条件调试日志收敛
   2) `#11` `minimal_kernel` RISC-V 适配
@@ -719,6 +719,15 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Priority assessment / 优先级评估:
   - `P1`: kernel catch_pagefaults recovery is wrong for a path that is
     already used (`vm_memset`). Not a ping regression.
+- Update / 进展:
+  - 2026-08-22: moved `phys_copy_fault` immediately after `phys_copy`
+    and `memset_fault` immediately after `phys_memset`. `handle_page_fault`
+    now prefers the memset window. Deleted the dead `la`/`TODO` (`#13`).
+    `run_tests.sh build` checks `nm -n` symbol order
+    `phys_copy < phys_copy_fault < phys_memset < memset_fault`.
+    2026-08-22：按 i386 把 `phys_copy_fault` 放到 copy 之后，并让
+    `handle_page_fault` 先判 memset 窗口。删掉死 `la`/`TODO`（`#13`）。
+- Status / 状态: `[DONE]` in working tree.
 
 ## Moderate / 中等
 
@@ -751,6 +760,10 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - 2026-08-22 audit: handler registration exists via PC range; remaining
     correctness bug is `#77`.
     2026-08-22 审计：缺页恢复已按 PC 区间接线，剩余正确性见 `#77`。
+  - 2026-08-22 fix round: deleted the dead `la t0, .Lcopy_fault` / TODO.
+    `#77` placed `phys_copy_fault` immediately after `phys_copy`.
+    2026-08-22 修复轮：删掉死代码；`#77` 已把符号顺序改成 i386 布局。
+- Status / 状态: `[DONE]` in working tree.
 
 ### 14) Device tree parsing is minimal (single region, no reserved areas) / 设备树解析较简化（单一内存段、无保留区）
 - Evidence / 证据:
@@ -1259,6 +1272,11 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     from the DT `riscv,ndev` / `interrupts-extended` on the PLIC node
     (`#14`).
   - Stop enable-word loops at `(ndev + 31) / 32`.
+- Update / 进展:
+  - 2026-08-22: `PLIC_NUM_SOURCES` is 96; `plic_init` / enable-word
+    loops follow that count. DT `riscv,ndev` remains `#14`.
+    2026-08-22：源数量改为 96，初始化不再写越界寄存器。
+- Status / 状态: `[DONE]` in working tree.
 
 ### 79) Legacy virtio-mmio writes `GUEST_FEATURES_SEL=1` / legacy virtio-mmio 仍写高 32 位 guest features
 - Evidence / 证据:
@@ -1290,6 +1308,11 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     a ping or feature-bit drop.
     2026-08-22 virtio 复核：QEMU legacy 忽略高 32 位 guest features；
     `EVENT_IDX` 在低字。按日志噪声处理，不是功能位丢失。
+  - 2026-08-22 fix round: skip `HOST_FEATURES_SEL=1` and
+    `GUEST_FEATURES_SEL=1` when `dev->version == 1`. Keep EVENT_IDX
+    in the low word.
+    2026-08-22 修复轮：legacy 不再写 SEL=1。
+- Status / 状态: `[DONE]` in working tree.
 
 ### 80) virtio-net sets PROMISC before MAC table; unicast count is 1 / virtio-net 先关 PROMISC 再设 MAC 表，单播表写入本机地址
 - Evidence / 证据:
@@ -1320,6 +1343,12 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     addresses; keep the primary MAC via `CTRL_MAC_ADDR_SET` /
     config.
   - Do not disable `EVENT_IDX` or IPv6 to paper over this.
+- Update / 进展:
+  - 2026-08-22: `virtio_net_set_mode` programs `CTRL_MAC_TABLE_SET`
+    first. Unicast count is 0; primary MAC stays in config /
+    `CTRL_MAC_ADDR_SET`. EVENT_IDX and ipv6 stay on.
+    2026-08-22：先写 MAC 表再设 PROMISC；单播表为空。
+- Status / 状态: `[DONE]` in working tree.
 
 ### 81) Kernel `pg_walk()` leaf splits omit an immediate TLB flush / 内核 `pg_walk()` 叶子拆分后未立刻刷新 TLB
 - Evidence / 证据:
@@ -1341,6 +1370,11 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Suggested fix / 修复建议:
   - Call `pg_flush_tlb()` (or `sfence.vma`) immediately after each
     leaf→non-leaf store, matching `pagetable.c:87-89`.
+- Update / 进展:
+  - 2026-08-22: `pg_walk()` calls `pg_flush_tlb()` after each
+    leaf-to-table store.
+    2026-08-22：叶子拆分后立刻 `sfence.vma`。
+- Status / 状态: `[DONE]` in working tree.
 
 ### 82) `VMCTL_SETADDRSPACE` treats a missing `root_v` as an identity VA / `VMCTL_SETADDRSPACE` 在缺少 `root_v` 时把物理根当 VA
 - Evidence / 证据:
@@ -1360,6 +1394,12 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - On RV64 reject `VMCTL_SETADDRSPACE` with `EINVAL` when
     `root_v == NULL`, or convert with `pt_phys_to_virt(root)`.
   - Keep the existing VM `SVMCTL_PTROOT_V` path.
+- Update / 进展:
+  - 2026-08-22: `VMCTL_SETADDRSPACE` converts a missing `root_v`
+    with `KERNEL_BASE + (root - VIRT_DRAM_BASE)` and returns
+    `EINVAL` if the root is not DRAM. No identity-map of the PA.
+    2026-08-22：不再把物理根当 VA；非 DRAM 根返回 `EINVAL`。
+- Status / 状态: `[DONE]` in working tree.
 
 ### 83) RISC-V multiboot module bounds are 32-bit / RISC-V multiboot 模块起止为 32 位
 - Evidence / 证据:
@@ -1394,6 +1434,12 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - Fail on timeout unless a shell prompt or
     `exec path="/bin/sh"` plus runtime probe succeeds.
   - Stop treating `|| true` + any `MINIX` as boot success.
+- Update / 进展:
+  - 2026-08-22: kernel boot test records timeout vs other rc, allows
+    124 as the intended QEMU stop, and requires `VFS: init_root done`
+    plus a shell exec marker. Bare `MINIX` is not enough.
+    2026-08-22：不再用 `|| true` + 任意 `MINIX` 当成启动成功。
+- Status / 状态: `[DONE]` in working tree.
 
 ### 85) `multi_smoke_gate` boot markers do not require a shell prompt / `multi_smoke_gate` 启动标记不要求 shell prompt
 - Evidence / 证据:
@@ -1415,6 +1461,13 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   - Require the same prompt regex as the runtime probe, or make
     runtime probe mandatory for `[PASS]`.
   - Defer the `[PASS]` line until after the probe.
+- Update / 进展:
+  - 2026-08-22: `run_one` requires `VFS: init_root done`, a shell exec
+    marker, and a `#` prompt. `[PASS]` is deferred until the runtime
+    probe succeeds when `RUNTIME_PROBE=1`. `rc=124` stays the intended
+    QEMU stop (`#31`).
+    2026-08-22：启动标记要求 prompt；`[PASS]` 等到 runtime probe 之后。
+- Status / 状态: `[DONE]` in working tree.
 
 ### 37) [DONE] Native toolchain command set closure in guest image / 来宾 native 工具链命令集闭环（已完成）
 - Evidence / 证据:
@@ -1592,6 +1645,27 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 
 说明 / Note: 本节记录“已合入代码但可能仍待运行时复验”的归档项，并保留原始问题编号以便追溯。  
 This section archives items with code-level fixes landed (some may still require runtime re-validation), keeping original IDs for traceability.
+
+- Former P1 #77 / Moderate #13: `phys_copy_fault` sits immediately after
+  `phys_copy`; `memset_fault` after `phys_memset`. Dead `la`/`TODO`
+  removed. `handle_page_fault` prefers the memset window.
+  历史 P1 #77 / Moderate #13：缺页恢复符号顺序与 i386 对齐，删掉死 TODO。
+- Former Moderate #78: `PLIC_NUM_SOURCES` is 96 for QEMU virt.
+  历史 Moderate #78：PLIC 源数量改为 96。
+- Former Moderate #79: legacy virtio-mmio skips features selector 1.
+  历史 Moderate #79：legacy 不再写 `GUEST_FEATURES_SEL=1`。
+- Former Moderate #80: MAC table is programmed before PROMISC; unicast
+  count is 0. EVENT_IDX stays on.
+  历史 Moderate #80：先写 MAC 表；单播表为空。
+- Former Moderate #81: `pg_walk()` flushes the TLB after a leaf split.
+  历史 Moderate #81：叶子拆分后立刻 sfence。
+- Former Moderate #82: missing `root_v` is converted via `KERNEL_BASE`,
+  not used as an identity VA.
+  历史 Moderate #82：不再把物理根当 VA。
+- Former Moderate #84 / #85: kernel boot and multi-smoke require
+  `VFS: init_root done` / shell exec / prompt; `[PASS]` waits for the
+  runtime probe.
+  历史 Moderate #84 / #85：启动标记加严，`[PASS]` 延后到 probe。
 
 - Former P1 #16: 2026-08-22 audit found `map_service()` no longer rewrites
   `fp_endpoint` before `isokendpt()`. It sets `FP_SRV_PROC` only after

@@ -164,13 +164,19 @@ run_kernel_tests() {
 
     # Test 1: Kernel boots
     log_info "Test: Kernel boot"
+    set +e
     timeout $TIMEOUT "$QEMU_SCRIPT" \
         -s -k "$KERNEL" -B "$BOOTMODROOT" \
-        > /tmp/boot_test.log 2>&1 || true
+        > /tmp/boot_test.log 2>&1
+    boot_rc=$?
+    set -e
 
-    if grep -q "MINIX" /tmp/boot_test.log 2>/dev/null || \
-       grep -q "rv64: arch_post_init" /tmp/boot_test.log 2>/dev/null || \
-       grep -q "rv64: arch_boot_proc VM" /tmp/boot_test.log 2>/dev/null; then
+    # timeout(1) uses 124 when the watchdog fires; qemu-riscv64.sh does
+    # not exit on its own. Other non-zero codes are runner failures.
+    if [ "$boot_rc" -ne 0 ] && [ "$boot_rc" -ne 124 ]; then
+        log_fail "Kernel boot (runner rc=${boot_rc})"
+    elif grep -Eq 'VFS: init_root done' /tmp/boot_test.log 2>/dev/null && \
+         grep -Eq 'exec path="/bin/sh"|init: exec /bin/sh' /tmp/boot_test.log 2>/dev/null; then
         log_pass "Kernel boot"
     else
         log_fail "Kernel boot"
@@ -492,6 +498,47 @@ run_build_tests() {
         log_pass "QEMU user-net keeps ipv4 with ipv6"
     else
         log_fail "QEMU user-net keeps ipv4 with ipv6"
+    fi
+
+    # Test 6: phys_copy_fault must sit before phys_memset (#77).
+    if [ -f "$KERNEL" ] && command -v nm >/dev/null 2>&1; then
+        if python3 - "$KERNEL" <<'PY'
+import subprocess, sys
+out = subprocess.check_output(["nm", "-n", sys.argv[1]], text=True, errors="replace")
+addrs = {}
+for line in out.splitlines():
+    parts = line.split()
+    if len(parts) >= 3:
+        addrs[parts[-1]] = int(parts[0], 16)
+need = ("phys_copy", "phys_copy_fault", "phys_memset", "memset_fault")
+if any(n not in addrs for n in need):
+    sys.exit(1)
+c, cf, m, mf = (addrs[n] for n in need)
+sys.exit(0 if c < cf < m < mf else 1)
+PY
+        then
+            log_pass "phys_copy fault symbol order"
+        else
+            log_fail "phys_copy fault symbol order"
+        fi
+    else
+        log_skip "phys_copy fault symbol order (no kernel/nm)"
+    fi
+
+    # Test 7: QEMU virt PLIC has 96 sources (#78).
+    PLIC_HDR="$MINIX_ROOT/minix/kernel/arch/riscv64/include/archconst.h"
+    if grep -Eq '^#define[[:space:]]+PLIC_NUM_SOURCES[[:space:]]+96' "$PLIC_HDR"; then
+        log_pass "PLIC_NUM_SOURCES is 96"
+    else
+        log_fail "PLIC_NUM_SOURCES is 96"
+    fi
+
+    # Test 8: legacy virtio-mmio must not write GUEST_FEATURES_SEL=1 (#79).
+    VIRTIO_MMIO_C="$MINIX_ROOT/minix/lib/libvirtio_mmio/virtio_mmio.c"
+    if grep -A8 'Write guest features' "$VIRTIO_MMIO_C" | grep -q 'version != 1'; then
+        log_pass "legacy virtio-mmio skips GUEST_FEATURES_SEL=1"
+    else
+        log_fail "legacy virtio-mmio skips GUEST_FEATURES_SEL=1"
     fi
 }
 

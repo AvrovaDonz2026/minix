@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-22
-**Version / 版本**: 1.58
+**Version / 版本**: 1.59
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2360,3 +2360,20 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `docs/RISCV64_TEST_MATRIX.md` 1.1
 - `minix/kernel/arch/riscv64/README.md`
 - `docs/arch.md`, `minix/tests/riscv64/arch.md`
+
+## Entry 73 — 2026-08-22 07:30 UTC
+
+**Change / 变更**: Fix-round from `issue.md`. `#77`/`#13`: move `phys_copy_fault` immediately after `phys_copy`, drop the dead `la`/`TODO`, prefer the memset window in `handle_page_fault`. `#78`: `PLIC_NUM_SOURCES=96`. `#79`: skip features selector 1 on legacy virtio-mmio. `#80`: MAC table before PROMISC, unicast count 0. `#81`: `pg_walk` `sfence.vma` after leaf splits. `#82`: convert missing `root_v` via `KERNEL_BASE`, never identity-map the PA. `#84`/`#85`: stronger boot markers; defer `[PASS]` until the runtime probe. Keep EVENT_IDX and `ipv4=on,ipv6=on`.
+
+**Issue ID**: `#77` `#13` `#78` `#79` `#80` `#81` `#82` `#84` `#85`
+
+**Result / 结果**: Code landed; runtime revalidation follows this commit.
+
+**Evidence / 证据**:
+- `minix/kernel/arch/riscv64/phys_copy.S`
+- `minix/kernel/arch/riscv64/exception.c`
+- `minix/kernel/arch/riscv64/plic.c`
+- `minix/lib/libvirtio_mmio/virtio_mmio.c`
+- `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
+- `minix/tests/riscv64/run_tests.sh`
+- `minix/tests/riscv64/multi_smoke_gate.sh`

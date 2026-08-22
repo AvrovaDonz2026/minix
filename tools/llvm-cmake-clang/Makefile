@@ -1,5 +1,7 @@
 # MINIX: install CMake-built cross clang into TOOLDIR.
 
+NOMAN=		# defined
+
 HOSTPROGNAME=	${MACHINE_GNU_PLATFORM}-clang
 HOSTPROG_CXX=	${MACHINE_GNU_PLATFORM}-clang
 

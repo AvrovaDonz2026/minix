@@ -8,7 +8,7 @@
 #   ./scripts/build-riscv64-llvm-local.sh all
 #
 
-set -eu
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -85,7 +85,7 @@ run_distribution() {
   MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" \
     HOST_CXXFLAGS="-O -std=c++11 -fno-rtti -fno-exceptions ${HARDENING_OFF}" \
     HAVE_GOLD=no MKLLVM=yes \
-    ./build.sh -u "${COMMON_FLAGS[@]}" distribution \
+    ./build.sh -U -u "${COMMON_FLAGS[@]}" distribution \
     2>&1 | tee "${LOG_DIR}/distribution.log"
 }
 

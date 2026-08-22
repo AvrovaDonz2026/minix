@@ -74,14 +74,16 @@ install_cross_as_flock_wrapper() {
   local as
 
   wrap_one_as() {
+    local as_abs
     as="$1"
     [[ -e "${as}" || -x "${as}.real" ]] || return 0
-    [[ -x "${as}.real" ]] || mv "${as}" "${as}.real"
-    cat > "${as}" <<EOF
+    as_abs="$(cd "$(dirname "${as}")" && pwd)/$(basename "${as}")"
+    [[ -x "${as_abs}.real" ]] || mv "${as_abs}" "${as_abs}.real"
+    cat > "${as_abs}" <<EOF
 #!/bin/bash
-exec flock -w 600 ${lock} ${as}.real "\$@"
+exec flock -w 600 ${lock} ${as_abs}.real "\$@"
 EOF
-    chmod +x "${as}"
+    chmod +x "${as_abs}"
   }
 
   # nbmake may invoke either path; serialize both under one lock.
@@ -95,6 +97,48 @@ install_cross_as_flock_wrapper_all() {
     [[ -d "${tooldir}" ]] || continue
     install_cross_as_flock_wrapper "${tooldir}"
   done
+}
+
+prepare_libstdcxx_guest() {
+  local destdir_root="${REPO_ROOT}/${OBJDIR}/destdir.evbriscv64"
+  local functexcept_src="${REPO_ROOT}/external/gpl3/gcc/dist/libstdc++-v3/src/c++11/functexcept.cc"
+
+  # MKUPDATE keeps a tracked DESTDIR. Drop libc++ headers so they cannot
+  # shadow libstdc++ even after MKLIBCXX=no removes -I c++.
+  rm -rf "${destdir_root}/usr/include/c++"
+  rm -f \
+    "${destdir_root}/usr/lib/libc++.a" \
+    "${destdir_root}/usr/lib/libc++_pic.a"
+
+  sanitize_cxxconfig() {
+    local cfg="$1"
+    [[ -f "${cfg}" ]] || return 0
+    sed -i -E \
+      's@^#define[[:space:]]+_GLIBCXX_HAS_GTHREADS([[:space:]]+.*)?$@/* #undef _GLIBCXX_HAS_GTHREADS */@' \
+      "${cfg}"
+  }
+
+  sanitize_cxxconfig "${REPO_ROOT}/external/gpl3/gcc/lib/libstdc++-v3/arch/riscv64/c++config.h"
+  if [[ -d "${destdir_root}/usr/include/g++" ]]; then
+    while IFS= read -r -d '' cfg; do
+      sanitize_cxxconfig "${cfg}"
+    done < <(find "${destdir_root}/usr/include/g++" -type f -name 'c++config.h' -print0)
+  fi
+
+  [[ -f "${functexcept_src}" ]] || {
+    echo "[local] ERROR: missing ${functexcept_src}" >&2
+    exit 1
+  }
+  if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
+    perl -0777 -i -pe \
+      's@\{\s*_GLIBCXX_THROW_OR_ABORT\s*\(\s*future_error\s*\(\s*make_error_code\s*\(\s*future_errc\s*\(\s*__i\s*\)\s*\)\s*\)\s*\)\s*;@{\n#if !defined(_GLIBCXX_MINIX_NO_FUTURE)\n    _GLIBCXX_THROW_OR_ABORT(future_error(make_error_code(future_errc(__i))));\n#else\n    __throw_system_error(__i);\n#endif\n@g' \
+      "${functexcept_src}"
+  fi
+  if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
+    echo "[local] ERROR: no MINIX future fallback in ${functexcept_src}" >&2
+    exit 1
+  fi
+  echo "[local] libstdc++ guest prep: functexcept no-future profile ok"
 }
 
 run_tools() {
@@ -124,6 +168,8 @@ run_distribution() {
   local tooldir
   tooldir="$(ls -d "${OBJDIR}"/tooldir.* 2>/dev/null | head -1)"
   [[ -n "${tooldir}" ]] && install_cross_as_flock_wrapper "${tooldir}"
+
+  prepare_libstdcxx_guest
 
   echo "[local] building distribution (jobs=${DIST_JOBS}) -> ${LOG_DIR}/distribution.log"
   install_cross_as_flock_wrapper "${tooldir}"

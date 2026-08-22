@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.70
+**Version / 版本**: 1.71
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,14 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**2026-08-22 系统审计 / system audit**: 对照当前工作树与 `/tmp/qemu-debug.log`（QEMU 8.2.2 `-d guest_errors,unimp`）复核开放项。`#73`–`#76` 的网关 ping 保持已关闭；新开 `#77`–`#80`。`#16` 的“先写后验”路径已不在 `map_service()` 中。`multi_smoke_gate.sh` 把 `timeout` 的 `rc=124` 记成 `[INFO]` 再查 boot marker，这是停 QEMU 的预期语义，不另开假阳性单。
-**2026-08-22 system audit**: Re-checked open items against the current tree and `/tmp/qemu-debug.log` (QEMU 8.2.2 `-d guest_errors,unimp`). `#73`–`#76` gateway ping stays closed. Newly filed: `#77`–`#80`. The `#16` write-then-validate path is gone from `map_service()`. `multi_smoke_gate.sh` logging `rc=124` then `[PASS]` after boot-marker checks is the intended way to stop QEMU, not a separate false-positive issue.
+**2026-08-22 系统审计 / system audit**: 对照当前工作树与 `/tmp/qemu-debug.log`（QEMU 8.2.2 `-d guest_errors,unimp`）复核开放项。`#73`–`#76` 的网关 ping 保持已关闭；新开 `#77`–`#85`。`#16` 的“先写后验”路径已不在 `map_service()` 中。`multi_smoke_gate.sh` 把 `timeout` 的 `rc=124` 记成 `[INFO]` 再查 boot marker，这是停 QEMU 的预期语义，不另开假阳性单。
+**2026-08-22 system audit**: Re-checked open items against the current tree and `/tmp/qemu-debug.log` (QEMU 8.2.2 `-d guest_errors,unimp`). `#73`–`#76` gateway ping stays closed. Newly filed: `#77`–`#85`. The `#16` write-then-validate path is gone from `map_service()`. `multi_smoke_gate.sh` logging `rc=124` then `[PASS]` after boot-marker checks is the intended way to stop QEMU, not a separate false-positive issue.
+
+**审计否决 / audit rejected**:
+- `VIRTIO_MMIO_IRQ(i - 1)` is not an off-by-one: the `for` loop increments `i` after the matching slot, so slot `k` yields IRQ `k+1` (`virtio_mmio.c:287-334`).
+- Legacy SBI `REMOTE_SFENCE_VMA` `start`/`size` are VA range operands (register values), not pointers. `#5` only needed a PA for the hart-mask pointer.
+- `for` 循环在命中槽位后仍会 `i++`，`VIRTIO_MMIO_IRQ(i-1)` 对槽 `k` 得到 IRQ `k+1`，不是 off-by-one。
+- 旧 SBI `REMOTE_SFENCE_VMA` 的 `start`/`size` 是要刷新的 VA 范围，不是指针；`#5` 只需 hart-mask 指针为 PA。
 
 **编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`。  
 Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`.
@@ -83,15 +89,16 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   7) `[DONE]` `#37` native toolchain（来宾内 `as/ld/ar/ranlib` + `cc/gcc/clang`）闭环未完成
   8) `#78` `PLIC_NUM_SOURCES=1024` 超过 QEMU virt 的 96 个源，启动写非法 PLIC 寄存器
   9) `#79` legacy virtio-mmio 仍写 `GUEST_FEATURES_SEL=1`，QEMU 报 guest_error
-  10) `#80` virtio-net `CTRL_RX` PROMISC 先于 `CTRL_MAC_TABLE_SET`，单播表填本机 MAC 而非 Linux 空表
+  10) `#80` virtio-net `CTRL_RX` PROMISC 先于 `CTRL_MAC_TABLE_SET`（QEMU 上不挡 ping）
+  11) `#81` 内核 `pg_walk()` 叶子拆分后未立刻 `sfence.vma`
+  12) `#82` `VMCTL_SETADDRSPACE` 在 `root_v==NULL` 时把物理根当 VA
+  13) `#84` `run_tests.sh` kernel boot 忽略 timeout 且 grep 任意 `MINIX`
+  14) `#85` `multi_smoke_gate` `run_one` 的 boot marker 不要求 shell prompt
 - P3 / 低优先（可维护性与技术债）:
   1) `#19` kernel/VM/RS 无条件调试日志收敛
   2) `#11` `minimal_kernel` RISC-V 适配
   3) `TD1`/`TD2`/`TD3` 技术债
-- P3 / 低优先（可维护性与技术债）:
-  1) `#19` kernel/VM/RS 无条件调试日志收敛
-  2) `#11` `minimal_kernel` RISC-V 适配
-  3) `TD1`/`TD2`/`TD3` 技术债
+  4) `#83` multiboot 模块起止被收成 `u32_t`，超过 4 GiB 会截断
 - Validation backlog / 已有代码修复待运行复验:
   - `#4`, `#5`, `#6`, `#7`, `#8`, `#9`（建议在每轮 P0/P1 修复后都做最小 QEMU 回归）
 
@@ -1275,6 +1282,12 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
 - Suggested fix / 修复建议:
   - If `dev->version == 1`, skip `GUEST_FEATURES_SEL=1` and the high
     guest-features store. Keep the high-word path for version 2.
+- Update / 进展:
+  - 2026-08-22 virtio re-read: QEMU legacy ignores the hi guest-features
+    write; `EVENT_IDX` lives in the low word. Classify as log noise, not
+    a ping or feature-bit drop.
+    2026-08-22 virtio 复核：QEMU legacy 忽略高 32 位 guest features；
+    `EVENT_IDX` 在低字。按日志噪声处理，不是功能位丢失。
 
 ### 80) virtio-net sets PROMISC before MAC table; unicast count is 1 / virtio-net 先关 PROMISC 再设 MAC 表，单播表写入本机地址
 - Evidence / 证据:
@@ -1288,16 +1301,16 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     `netdev_for_each_uc_addr` and typically leaves the unicast table
     empty; the primary MAC stays in device config (`n->mac`).
   - QEMU `receive_filter()` accepts the config MAC even with an empty
-    table, and accepts everything when `n->promisc`. Clearing PROMISC
-    before the table is programmed is a drop window. `#76` ping works
-    because QEMU matches `n->mac` and slirp IPv4 is on.
+    table (`!memcmp(ptr, n->mac, ETH_ALEN)`), and accepts everything
+    when `n->promisc`. `#76` ping works because of that `n->mac`
+    shortcut plus slirp IPv4, not because PROMISC ordering is correct.
 - Impact / 影响:
-  - QEMU slirp unicast to `52:54:00:12:34:56` still passes. A host
-    that filters strictly on the programmed table, or a mode change
-    that clears PROMISC while the table is empty, can drop guest RX
-    until the CTRL command completes.
-    QEMU slirp 单播仍可通过。严格按过滤表的后端，或在空表时清
-    PROMISC，会丢掉 RX。
+  - Default QEMU slirp unicast to `52:54:00:12:34:56` still passes.
+    Extra unicast MACs that exist only in the filter table, or a
+    backend without the `n->mac` bypass, can drop RX in the PROMISC-off
+    window.
+    默认 QEMU slirp 单播仍可通过。仅存在于过滤表的额外单播地址，
+    或没有 `n->mac` 旁路的后端，会在关 PROMISC 的窗口丢 RX。
 - Suggested fix / 修复建议:
   - Program `CTRL_MAC_TABLE_SET` first, then PROMISC / ALLMULTI /
     NOBCAST, matching Linux.
@@ -1305,6 +1318,101 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     addresses; keep the primary MAC via `CTRL_MAC_ADDR_SET` /
     config.
   - Do not disable `EVENT_IDX` or IPv6 to paper over this.
+
+### 81) Kernel `pg_walk()` leaf splits omit an immediate TLB flush / 内核 `pg_walk()` 叶子拆分后未立刻刷新 TLB
+- Evidence / 证据:
+  - `pg_walk()` converts a large-page leaf into a next-level table
+    without `pg_flush_tlb()`:
+    `minix/kernel/arch/riscv64/pg_utils.c:126-153`.
+  - `pg_map()` flushes only after the whole range is rewritten
+    (`pg_utils.c:258`). Between the split and that flush, a stale
+    gigapage/megapage TLB entry on the same hart can still satisfy
+    the old mapping.
+  - This is the kernel-side counterpart of validation-backlog `#4`
+    (VM-server `pagetable.c` already issues `VMCTL_FLUSHTLB` after
+    splits).
+- Impact / 影响:
+  - Boot or later `pg_map` across a prior large-page boundary can
+    observe the old mapping until the final flush. Single-hart QEMU
+    smoke may not hit the window.
+    跨越旧大页边界的 `pg_map` 在最终 flush 前可能仍走旧映射。
+- Suggested fix / 修复建议:
+  - Call `pg_flush_tlb()` (or `sfence.vma`) immediately after each
+    leaf→non-leaf store, matching `pagetable.c:87-89`.
+
+### 82) `VMCTL_SETADDRSPACE` treats a missing `root_v` as an identity VA / `VMCTL_SETADDRSPACE` 在缺少 `root_v` 时把物理根当 VA
+- Evidence / 证据:
+  - `set_satp()` stores `p_satp_v = (reg_t *)root` when `root_v` is
+    NULL: `minix/kernel/arch/riscv64/arch_do_vmctl.c:20-24`.
+  - Sv39 kernel maps DRAM at `KERNEL_BASE`, not at the physical
+    address (`pg_utils.c` `pg_phys_to_virt`, `protect.c` boot map).
+    `get_pgdir()` then uses `p_satp_v` (`memory.c:59-63`).
+  - VM currently passes `pdes` (`minix/servers/vm/pagetable.c` around
+    the `SVMCTL_PTROOT_V` setaddrspace). The kernel fallback is still
+    a latent footgun if any caller omits `SVMCTL_PTROOT_V`.
+- Impact / 影响:
+  - A missed `root_v` walks the page-table root at the wrong VA and
+    can corrupt mappings or panic. Not hit by the current VM caller.
+    漏传 `root_v` 会在错误 VA 上走页表。当前 VM 调用方有传，但是潜伏坑。
+- Suggested fix / 修复建议:
+  - On RV64 reject `VMCTL_SETADDRSPACE` with `EINVAL` when
+    `root_v == NULL`, or convert with `pt_phys_to_virt(root)`.
+  - Keep the existing VM `SVMCTL_PTROOT_V` path.
+
+### 83) RISC-V multiboot module bounds are 32-bit / RISC-V multiboot 模块起止为 32 位
+- Evidence / 证据:
+  - `struct multiboot_mod_list` uses `u32_t mod_start` / `mod_end`:
+    `sys/arch/riscv/include/multiboot.h:41-46`.
+  - `riscv64_init_kinfo()` casts kernel physical bounds through
+    `(u32_t)`: `minix/kernel/arch/riscv64/kernel.c:89-92`.
+    `reserved_end` / `add_memmap()` then use those values
+    (`kernel.c:99-105`).
+  - `qemu-riscv64.sh` currently refuses module addresses above 4 GiB,
+    so today's 256 MiB virt map is safe.
+- Impact / 影响:
+  - RAM or modules above 4 GiB truncate and shrink or overlap the
+    free memmap. Latent until the memory map grows.
+    超过 4 GiB 的模块/内存在今天的 QEMU 256M 轮廓下不会触发。
+- Suggested fix / 修复建议:
+  - Carry 64-bit module bounds on RV64 (widen the struct or add a
+    parallel boot-info field) and stop narrowing through `(u32_t)`.
+
+### 84) Kernel boot test ignores timeout and greps any `MINIX` / kernel boot 测试忽略 timeout 且匹配任意 `MINIX`
+- Evidence / 证据:
+  - `run_kernel_tests` uses `timeout … || true` then
+    `grep -q "MINIX"`: `minix/tests/riscv64/run_tests.sh:167-177`.
+  - That substring matches banner text such as `MINIX booting` even
+    if QEMU was killed before a shell. SMP/timer tests similarly
+    skip or grep `timer` anywhere (`run_tests.sh:179-200`).
+- Impact / 影响:
+  - `[PASS] Kernel boot` can be a hang-after-early-printk. Nightly
+    `kernel` case still counts this as a pass.
+    内核很早打印 `MINIX` 后挂死仍可能 `[PASS]`。
+- Suggested fix / 修复建议:
+  - Fail on timeout unless a shell prompt or
+    `exec path="/bin/sh"` plus runtime probe succeeds.
+  - Stop treating `|| true` + any `MINIX` as boot success.
+
+### 85) `multi_smoke_gate` boot markers do not require a shell prompt / `multi_smoke_gate` 启动标记不要求 shell prompt
+- Evidence / 证据:
+  - `run_one` accepts `MINIX 3\.4\.0|exec path="/bin/sh"`
+    (`multi_smoke_gate.sh:184-188`). `safecopy_triage.py:22` treats
+    `^# ` as the shell. `exec path=` is logged on the exec attempt
+    (`minix/servers/vfs/exec.c:251`), not on a successful prompt.
+  - `run_one` prints `[PASS]` before `run_runtime_probe`
+    (`multi_smoke_gate.sh:231-233`, `277-280`). Default
+    `RUNTIME_PROBE=1` still fails the overall gate if the probe
+    misses a prompt (`qemu_runtime_probe.py:210-212`).
+  - `--no-runtime-probe` leaves only the weak log grep.
+- Impact / 影响:
+  - Hang-after-init can look like a smoke PASS if the runtime probe
+    is skipped. The `rc=124` whitelist itself stays the intended
+    QEMU stop (`#31`).
+    关掉 runtime probe 时，init 后挂死仍可能被当成 smoke 通过。
+- Suggested fix / 修复建议:
+  - Require the same prompt regex as the runtime probe, or make
+    runtime probe mandatory for `[PASS]`.
+  - Defer the `[PASS]` line until after the probe.
 
 ### 37) [DONE] Native toolchain command set closure in guest image / 来宾 native 工具链命令集闭环（已完成）
 - Evidence / 证据:

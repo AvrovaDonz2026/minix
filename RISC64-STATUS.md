@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.49
+**Version / 版本**: 1.50
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -102,12 +102,13 @@
   本地 QEMU 8.2.2 net smoke `ping_gw` 通过（`echo_req=2 echo_rep=2`）。
   hosted nightly `32552319291` 与 release `32552319287`（`dc53ecdd9`）
   同样 `ping_gw` 通过，virtio-blk smoke 仍绿。
-- 2026-08-22 系统审计（`issue.md` `#77`–`#80`）：网关 ping 保持已关闭。
+- 2026-08-22 系统审计（`issue.md` `#77`–`#85`）：网关 ping 保持已关闭。
   新开 P1 `#77`（`phys_copy` 缺页恢复 PC 区间覆盖 `phys_memset`）。
-  P2 `#78`（PLIC 1024 源写出 QEMU virt 96 源）、`#79`（legacy
-  virtio-mmio 写 `GUEST_FEATURES_SEL=1`）、`#80`（PROMISC 先于
-  MAC 表）。`#16` 先写后验路径已不在当前 `map_service()`；`#37`
-  按已完成从 P2 开放列表拿掉。`A3` 改为 `[WATCH]`。
+  P2 `#78`–`#82`/`#84`/`#85`（PLIC 越界写、legacy virtio-mmio 高位
+  features、CTRL_MAC 顺序、`pg_walk` 拆分未立刻 sfence、`root_v`
+  空指针回退、kernel boot grep、smoke 弱 boot marker）。P3 `#83`
+  （multiboot 32 位截断）。`#16` 已归档。否决 virtio IRQ off-by-one
+  与把 SBI `sfence` 的 VA 范围当成指针。
 - 本轮继续修 native gcc 在 gcc 4.8.5 dist 上的缺口（`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`）：
   gcov 跳过 `json.cc`；common-target 跳过 gcc13 才有的源或把 `.cc` 映射到 `.c`。
   `#50`：backend 生成器按 dist 选择 `.cc`/`.c`。`#52`：丢掉 4.8.5
@@ -271,12 +272,11 @@
   smoke passed `ping -c 2 10.0.2.2` (`echo_req=2 echo_rep=2`).
   Hosted nightly `32552319291` and release `32552319287` on
   `dc53ecdd9` passed the same `ping_gw` check; virtio-blk stayed green.
-- 2026-08-22 system audit (`issue.md` `#77`–`#80`): gateway ping stays
-  closed. New P1 `#77` (`phys_copy` fault PC range covers `phys_memset`).
-  P2 `#78` (PLIC 1024 vs QEMU virt 96 sources), `#79` (legacy
-  virtio-mmio `GUEST_FEATURES_SEL=1`), `#80` (PROMISC before MAC
-  table). `#16` write-then-validate is gone from `map_service()`;
-  `#37` is off the open P2 list. `A3` is `[WATCH]`.
+- 2026-08-22 system audit (`issue.md` `#77`–`#85`): gateway ping stays
+  closed. New P1 `#77`. P2 `#78`–`#82`/`#84`/`#85`. P3 `#83`.
+  `#16` archived. Rejected a virtio IRQ off-by-one reading of
+  `VIRTIO_MMIO_IRQ(i-1)` and treating SBI `sfence` start/size as
+  pointers.
 - Native gcc on the gcc 4.8.5 dist (`issue.md` `#47` / `#50` / `#52` / `#53` / `#55` / `#56` / `#57` / `#58` / `#59` / `#60` / `#61` / `#62` / `#63` / `#64` / `#65` / `#67` / `#68` / `#69` / `#70` / `#71` / `#72`): gcov skips
   `json.cc`; common-target skips gcc13-only sources or maps `.cc` to `.c`.
   `#50`: backend generators resolve `.cc`/`.c` from dist.
@@ -479,9 +479,8 @@
 - `#75` adds a host-run `test_virtio_event_idx.c` and net-smoke pcap probes.
 - `#76` keeps QEMU slirp IPv4 enabled alongside IPv6; local and hosted
   `ping 10.0.2.2` now succeed (nightly `32552319291`, release `32552319287`).
-- `#77`–`#80` filed from the 2026-08-22 audit (phys_copy PC range, PLIC
-  overscan, legacy virtio-mmio feature sel, virtio-net RX filter order).
-  `#16` archived after the `map_service()` re-read.
+- `#77`–`#85` filed from the 2026-08-22 audit. `#16` archived after the
+  `map_service()` re-read.
 
 ## Key Issues (Snapshot) / 关键问题（摘要）
 
@@ -493,7 +492,8 @@
 - #17: recoverable safecopy fallback noise on `/proc/*` path remains.
 - #23: RV64 `vm_memset` recovery plumbing is implemented and smoke-validated; targeted
   fault-injection validation is still required for full closure (`#77` overlaps this path).
-- #78 / #79 / #80: QEMU virt PLIC overscan, legacy virtio-mmio high feature sel, virtio-net RX filter order.
+- #78 / #79 / #80: QEMU virt PLIC overscan (log noise for IRQ 1–10), legacy virtio-mmio high feature sel, virtio-net RX filter order (not ping-limiting on QEMU `n->mac`).
+- #81 / #82 / #84 / #85: kernel `pg_walk` split flush, `VMCTL` missing `root_v`, kernel-boot grep, weak multi-smoke markers.
 
 详见 `issue.md` 的证据与修复建议 / See `issue.md` for evidence and fixes.
 
@@ -510,7 +510,7 @@
 2) 继续收敛 #17（统计/限流 + 负载下验证），区分噪声与真实功能缺陷。
 3) 将 native toolchain 阻断门禁持续运行在 release/nightly，并补充可写介质场景下
    的可选 `link+run` 验收（规避 root mfs inode 上限带来的假阴性）。
-4) 收敛 #78/#79/#80：PLIC 源数量、legacy virtio-mmio 高位 features、CTRL_MAC 顺序。
+4) 收敛 `#78`–`#85`：PLIC 源数量、legacy features sel、CTRL_MAC 顺序、`pg_walk` sfence、`root_v`、kernel/smoke 门禁标记。
 5) 在稳定后恢复动态装载链路（`MKPIC/MKPICLIB`）并验证最小动态程序。
 6) 将 `repro_build_gate.sh` 纳入例行流水（至少每日一次），验证构建链路不依赖手工注入。
 
@@ -520,7 +520,7 @@
 3) Keep native toolchain gate blocking in release/nightly and add optional
    writable-filesystem `link+run` acceptance to avoid false negatives from
    root mfs inode limits.
-4) Close #78 / #79 / #80 (PLIC source count, legacy virtio-mmio high feature sel, CTRL_MAC order).
+4) Close `#78`–`#85` (PLIC count, legacy feature sel, CTRL_MAC order, `pg_walk` flush, `root_v`, kernel/smoke markers).
 5) Restore dynamic loader path (`MKPIC/MKPICLIB`) and test a minimal dynamic binary.
 6) Run `repro_build_gate.sh` in routine CI (at least daily) to enforce source-driven reproducibility.
 

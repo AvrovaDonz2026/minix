@@ -1,10 +1,11 @@
 # MINIX 3 RISC-V 64 Port Plan / MINIX 3 RISC-V 64 移植项目计划（可执行版）
 
 **Document Info / 文档信息**
-- Last updated / 最后更新: 2026-01-07
-- Version / 版本: 1.2
+- Last updated / 最后更新: 2026-08-22
+- Version / 版本: 1.3
 - Scope / 范围: evbriscv64 on QEMU virt
 - Purpose / 用途: actionable checklist; do not re-apply steps already present in tree
+- 2026-08-22 audit pointer / 审计指针: live issues are in `issue.md` (`#77`–`#85`). `PLIC_NUM_SOURCES 1024` in this plan matches the current kernel and is tracked as `#78` against QEMU virt's 96 sources. Do not treat this plan as the issue tracker.
 
 **Status Legend / 状态标识**
 - Done / 已完成：已在代码树中观察到

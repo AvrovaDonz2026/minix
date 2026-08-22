@@ -3,14 +3,14 @@
 ## Document Info / 文档信息
 
 **中文**
-- 版本：1.1
-- 最后更新：2026-02-20
+- 版本：1.2
+- 最后更新：2026-08-22
 - 适用范围：`evbriscv64` + QEMU `virt`
 - 基线：`obj.intrgcc`
 
 **English**
-- Version: 1.1
-- Last updated: 2026-02-20
+- Version: 1.2
+- Last updated: 2026-08-22
 - Scope: `evbriscv64` + QEMU `virt`
 - Baseline: `obj.intrgcc`
 
@@ -25,6 +25,11 @@
 - Native toolchain N1/N2 is closed: guest-side `as/ld/ar/ranlib` and `cc -c` are stable.
 - Key fix is in `minix/servers/vm/alloc.c`: RV64 `NO_MEM` sentinel width/sign-extension handling in `alloc_pages()`.
 - Native gate is now blocking in both release and nightly CI workflows.
+- 2026-08-22: hosted CI builds with `MKCXX=yes`. The README local
+  distribution baseline is `MKCXX=no`, so that image cannot pass
+  `native_cxx_detect` / `native_cxx_link_check` (`issue.md` `#37`
+  residual). Optional `if command -v c++` steps can still log
+  per-command PASS when skipped (`native_toolchain_gate.sh`).
 
 ## Stage Model / 阶段模型
 

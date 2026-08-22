@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-22
-**Version / 版本**: 1.56
+**Version / 版本**: 1.57
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2325,3 +2325,18 @@ NET_HOSTFWD=none python3 minix/tests/riscv64/qemu_net_smoke.py \
 - `minix/lib/libvirtio_mmio/virtio_mmio.c`
 - `minix/drivers/net/virtio_net_mmio/virtio_net_mmio.c`
 - `/tmp/qemu-debug.log`
+
+## Entry 71 — 2026-08-22 07:00 UTC
+
+**Change / 变更**: Follow-up audit from smoke-gate, virtio-mmio, and kernel/VM/RS scans. Keep `#77`–`#80`. Add `#81` (`pg_walk` leaf split without immediate TLB flush), `#82` (`VMCTL_SETADDRSPACE` NULL `root_v`), `#83` (multiboot `u32_t` module bounds), `#84` (`run_tests.sh` kernel boot `|| true` + `grep MINIX`), `#85` (multi-smoke boot markers vs shell prompt). Reject virtio `VIRTIO_MMIO_IRQ(i-1)` off-by-one (for-loop increments after the hit) and treating SBI `REMOTE_SFENCE_VMA` start/size as pointers (they are VA range operands). `#80` is not ping-limiting on QEMU because `receive_filter` accepts `n->mac`.
+
+**Issue ID**: `#81` `#82` `#83` `#84` `#85`
+
+**Result / 结果**: Docs only.
+
+**Evidence / 证据**:
+- `issue.md` `#81`–`#85`
+- `minix/kernel/arch/riscv64/pg_utils.c`
+- `minix/kernel/arch/riscv64/arch_do_vmctl.c`
+- `minix/tests/riscv64/run_tests.sh`
+- `minix/tests/riscv64/multi_smoke_gate.sh`

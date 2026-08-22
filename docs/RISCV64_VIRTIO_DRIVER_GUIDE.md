@@ -11,7 +11,7 @@ debugging, and acceptance.
 
 ## Document Info / 文档信息
 
-- Version / 版本: `1.2`
+- Version / 版本: `1.3`
 - Last updated / 最后更新: `2026-08-22`
 - Baseline / 基线: `obj.intrgcc`
 - Scope / 范围: VirtIO MMIO transport (`virtio_blk_mmio`, `virtio_net_mmio`)
@@ -252,6 +252,12 @@ ping6 -q -c 1 fe80::...%vio0
 - for network, include both IPv4 (`10.0.2.2`) and IPv6 (`ping6 ::1`) checks.
 - automated: `python3 minix/tests/riscv64/qemu_net_smoke.py` (also run from
   `minix/tests/riscv64/run_tests.sh kernel`).
+- QEMU `-netdev` must pass `ipv4=on,ipv6=on` (`issue.md` `#76`).
+- Open residuals (`issue.md`): `#78` PLIC init overscan vs QEMU virt 96
+  sources; `#79` skip `GUEST_FEATURES_SEL=1` on legacy MMIO; `#80` send
+  `CTRL_MAC_TABLE_SET` before PROMISC (QEMU `n->mac` still accepts default
+  unicast). Do not disable `EVENT_IDX`. `VIRTIO_MMIO_IRQ(i-1)` is not an
+  off-by-one: the scan loop increments `i` after the matching slot.
 
 ## 10) Related Docs / 关联文档
 

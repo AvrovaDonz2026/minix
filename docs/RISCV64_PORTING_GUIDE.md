@@ -5,11 +5,11 @@ This document is a practical, code-driven porting guide that emphasizes an itera
 **read-code → write-doc** workflow.
 
 **Document Info / 文档信息**
-- Last updated / 最后更新: 2026-01-07
-- Version / 版本: 1.2
+- Last updated / 最后更新: 2026-08-22
+- Version / 版本: 1.3
 - Scope / 范围: evbriscv64 on QEMU virt; kernel + VM + UART + build pipeline
 - Update rule / 更新规则: append notes after code review; file issues in `issue.md`
-- Change note / 变更说明: 2026-01-07 补充 2026-01-06 01:00 前代码变更，未重新构建或测试。
+- Change note / 变更说明: 2026-08-22 审计增量见 `issue.md` `#77`–`#85` 与 `RISC64-STATUS.md`；本手册不重复展开每条证据。
 
 ---
 

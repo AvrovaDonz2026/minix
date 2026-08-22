@@ -3,6 +3,9 @@
 This document describes a stricter test strategy for the RISC-V port, with
 clear tiers and example commands.
 
+**Last updated / 最后更新**: 2026-08-22  
+Known gate gaps live in `issue.md` `#84` / `#85`.
+
 ## Tiers
 
 ### Tier 0: Quick checks (local)
@@ -16,6 +19,10 @@ clear tiers and example commands.
 - Command:
   - `./minix/tests/riscv64/run_tests.sh kernel`
 - Notes:
+  - `run_kernel_tests` currently does `timeout … || true` then
+    `grep -q "MINIX"` (`issue.md` `#84`). Treat `[PASS] Kernel boot` as a
+    weak signal; prefer `qemu_runtime_probe.py` / `multi_smoke_gate.sh`
+    with runtime probe for shell readiness (`#85`).
   - The smoke test builds `test_virtio_blk_mmio` into
     `obj/destdir.evbriscv64/bin/test_virtio_blk_mmio` when a cross-compiler is
     available. If the binary is not present in the guest, the test falls back

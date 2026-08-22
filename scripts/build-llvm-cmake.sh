@@ -14,7 +14,7 @@
 #   LLVM_SKIP_FETCH  set non-empty to skip download
 #
 
-set -euo pipefail
+set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"

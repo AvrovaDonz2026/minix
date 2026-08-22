@@ -131,20 +131,11 @@ SUBDIR += .WAIT texinfo \
 .endif
 SUBDIR+= stat .WAIT
 
-.if defined(__MINIX)
-SUBDIR += \
-	mkfs.mfs \
-	partition \
-	toproto
-.else
-SUBDIR+= .WAIT config
-.endif # defined(__MINIX)
-
 .if ${MKLLVM} != "no"
 .if ${MKLLVM_CMAKE:Uno} == "yes"
 SUBDIR+= \
 	llvm-cmake .WAIT \
-	llvm-cmake-clang
+	llvm-cmake-clang .WAIT
 .else
 SUBDIR+= \
 	llvm .WAIT \
@@ -161,6 +152,15 @@ SUBDIR+=	llvm-mcld
 . endif
 .endif # ${MKLLVM_CMAKE:Uno} == "yes"
 .endif
+
+.if defined(__MINIX)
+SUBDIR += \
+	mkfs.mfs \
+	partition \
+	toproto
+.else
+SUBDIR+= .WAIT config
+.endif # defined(__MINIX)
 
 .if ${MKMAN} != "no" || ${MKDOC} != "no" || ${MKHTML} != "no"
 . if ${MKGROFF} != "no"

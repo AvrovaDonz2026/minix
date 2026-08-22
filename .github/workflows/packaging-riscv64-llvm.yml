@@ -742,6 +742,24 @@ jobs:
           image="${{ steps.meta.outputs.image_path }}"
           echo "[full-suite] log: ${log}"
           : >"${log}"
+          if [[ -z "${TOOLDIR:-}" ]]; then
+            tooldir=""
+            newest=0
+            for d in "${OBJDIR}"/tooldir.*; do
+              [[ -d "${d}" ]] || continue
+              [[ -x "${d}/bin/nbmake" ]] || continue
+              mt="$(stat -c %Y "${d}")"
+              if (( mt >= newest )); then
+                newest="${mt}"
+                tooldir="$(cd "${d}" && pwd)"
+              fi
+            done
+            export TOOLDIR="${tooldir}"
+          fi
+          if [[ -z "${TOOLDIR:-}" ]]; then
+            echo "[full-suite] TOOLDIR not set and no tooldir under ${OBJDIR}" >&2
+            exit 1
+          fi
           export KERNEL="${OBJDIR}/minix/kernel/kernel"
           export DESTDIR="${OBJDIR}/destdir.evbriscv64"
           export SMOKE_DISK_IMAGE="${image}"
@@ -751,7 +769,7 @@ jobs:
           export NATIVE_GATE_TIMEOUT=300
           export NATIVE_GATE_CMD_TIMEOUT=180
           export LLVM_GATE_REQUIRE=all
-          export TOOLDIR="${TOOLDIR}"
+          echo "[full-suite] TOOLDIR=${TOOLDIR}"
           run_case() {
             local name="$1"
             shift

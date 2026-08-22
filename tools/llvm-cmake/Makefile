@@ -17,7 +17,7 @@ stamp-llvm-cmake: ${LLVM_CMAKE_SCRIPT}
 	@test -n "${TOOLDIR}" || (echo "TOOLDIR not set" >&2; exit 1)
 	@env TOOLDIR="${TOOLDIR}" LLVM_VERSION="${LLVM_VERSION}" \
 	    LLVM_JOBS="${_TOOL_JOBS:U4}" \
-	    ${HOST_SH} ${LLVM_CMAKE_SCRIPT}
+	    /bin/bash ${LLVM_CMAKE_SCRIPT}
 	@touch ${.TARGET}
 
 CLEANFILES+=	stamp-llvm-cmake

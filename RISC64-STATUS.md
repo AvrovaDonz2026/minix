@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-21  
-**Version / 版本**: 1.41
+**Version / 版本**: 1.42
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -62,6 +62,11 @@
   `32534503524`（`88ec45927`）链上 `lto1` 后缺 `pointer_set_*` /
   `insn_data`。本分支仍死在 `pthread.h`，不要把 pthread 修到
   网络 PR。
+  `#72`：从网络分支拣入 4.8.5 `tree-mudflap.o` /
+  `directives-only.o` / `cp/repo.o`。网络 nightly
+  `32537278919`（`6954a7e6c`）链上 `lto1` 后链 `cc1` 缺
+  `mudflap_init()` / `_cpp_preprocess_dir_only`。本分支仍死在
+  `pthread.h`，不要把 pthread 修到网络 PR。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -171,6 +176,12 @@
   (`88ec45927`) linked `lto1` then missed `pointer_set_*` /
   `insn_data`. This branch still dies in `pthread.h`. Do not
   mix pthread onto the network PR.
+  `#72`: cherry-pick 4.8.5 `tree-mudflap.o` /
+  `directives-only.o` / `cp/repo.o` (no virtio-net). Network
+  nightly `32537278919` (`6954a7e6c`) linked `lto1` then missed
+  `mudflap_init()` / `_cpp_preprocess_dir_only` while linking
+  `cc1`. This branch still dies in `pthread.h`. Do not mix
+  pthread onto the network PR.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

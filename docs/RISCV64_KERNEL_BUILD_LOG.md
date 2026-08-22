@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-21
-**Version / 版本**: 1.53
+**Version / 版本**: 1.54
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2182,4 +2182,30 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `issue.md` `#71`
 - GitHub Actions run `32534503524`
 - `external/gpl3/gcc/usr.bin/backend/Makefile`
+
+### Entry 66 — gcc 4.8.5 tree-mudflap and directives-only (2026-08-21) / gcc 4.8.5 tree-mudflap 与 directives-only
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Network packaging `32537278919` (`6954a7e6c`) linked native
+  `lto1`, then failed linking `cc1` with undefined
+  `mudflap_init()` and `_cpp_preprocess_dir_only`.
+- gcc13 `G_C_OBJS` dropped 4.8.5 `tree-mudflap.o`;
+  `G_libcpp_a_OBJS` dropped `directives-only.o`.
+- This branch still dies in libstdc++ `functexcept.cc`
+  (`pthread.h` missing). That is LLVM-only and is not this
+  cherry-pick.
+
+**Fix / 修复**:
+- Cherry-pick `#72` (no virtio-net): restore `tree-mudflap.o`,
+  `directives-only.o`, and `cp/repo.o` in `usr.bin/Makefile.inc`
+  when the dist source exists. Do not mix the LLVM `pthread.h` /
+  `functexcept` residual onto the network PR.
+
+**Evidence / 证据**:
+- `issue.md` `#72`
+- GitHub Actions run `32537278919`
+- `external/gpl3/gcc/usr.bin/Makefile.inc`
+- `external/gpl3/gcc/usr.bin/libcpp/Makefile`
 

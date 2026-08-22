@@ -8,7 +8,9 @@
 #   ./scripts/build-riscv64-llvm-local.sh all
 #   ./scripts/build-riscv64-llvm-local.sh servers   # vm+kernel after tree edits
 #   ./scripts/build-riscv64-llvm-local.sh image     # mkdisk only
-#   ./scripts/build-riscv64-llvm-local.sh verify    # gates + llvm guest smoke (local acceptance)
+#   DIST_JOBS=<n>         distribution parallelism (default: nproc)
+#   TOOLS_CPU_COUNT=<n>    cap tools -j (default: min(nproc, 8))
+#   WORLD_CPU_COUNT=<n>    override distribution -j
 #
 
 set -euo pipefail
@@ -20,8 +22,13 @@ cd "${REPO_ROOT}"
 TARGET="${1:-all}"
 OBJDIR="${OBJDIR:-obj.intrgcc}"
 MACHINE="${MACHINE:-evbriscv64}"
-JOBS="${JOBS:-$(nproc 2>/dev/null || echo 4)}"
-DIST_JOBS="${DIST_JOBS:-1}"  # parallel cross-as aborts on Ubuntu hosts
+VISIBLE_CPUS="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
+# Mirror packaging-riscv64-llvm.yml: tools capped, world/distribution uses all CPUs.
+JOBS="${JOBS:-${TOOLS_CPU_COUNT:-${VISIBLE_CPUS}}}"
+if (( JOBS > 8 )) && [[ -z "${TOOLS_CPU_COUNT:-}" ]]; then
+  JOBS=8
+fi
+DIST_JOBS="${DIST_JOBS:-${WORLD_CPU_COUNT:-${VISIBLE_CPUS}}}"
 LOG_DIR="${LOG_DIR:-/tmp/minix-riscv64-llvm}"
 
 mkdir -p "${LOG_DIR}"
@@ -63,17 +70,31 @@ COMMON_FLAGS=(
 
 install_cross_as_flock_wrapper() {
   local tooldir="$1"
-  local as="${tooldir}/riscv64-elf32-minix/bin/as"
-  local lock="/tmp/minix-cross-as.lock"
+  local lock="/tmp/minix-cross-as-${OBJDIR//\//-}.lock"
+  local as
 
-  [[ -e "${as}" || -x "${as}.real" ]] || return 0
-  [[ -x "${as}.real" ]] || mv "${as}" "${as}.real"
-
-  cat > "${as}" <<EOF
+  wrap_one_as() {
+    as="$1"
+    [[ -e "${as}" || -x "${as}.real" ]] || return 0
+    [[ -x "${as}.real" ]] || mv "${as}" "${as}.real"
+    cat > "${as}" <<EOF
 #!/bin/bash
 exec flock -w 600 ${lock} ${as}.real "\$@"
 EOF
-  chmod +x "${as}"
+    chmod +x "${as}"
+  }
+
+  # nbmake may invoke either path; serialize both under one lock.
+  wrap_one_as "${tooldir}/riscv64-elf32-minix/bin/as"
+  wrap_one_as "${tooldir}/bin/riscv64-elf32-minix-as"
+}
+
+install_cross_as_flock_wrapper_all() {
+  local tooldir
+  for tooldir in "${OBJDIR}"/tooldir.*; do
+    [[ -d "${tooldir}" ]] || continue
+    install_cross_as_flock_wrapper "${tooldir}"
+  done
 }
 
 run_tools() {
@@ -105,7 +126,7 @@ run_distribution() {
   [[ -n "${tooldir}" ]] && install_cross_as_flock_wrapper "${tooldir}"
 
   echo "[local] building distribution (jobs=${DIST_JOBS}) -> ${LOG_DIR}/distribution.log"
-  # Propagate -j1 to all sub-makes; parallel cross-as aborts on Ubuntu.
+  install_cross_as_flock_wrapper "${tooldir}"
   export MAKEFLAGS="-j${DIST_JOBS}"
   MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" \
     HOST_CXXFLAGS="-O -std=c++11 -fno-rtti -fno-exceptions ${HARDENING_OFF}" \

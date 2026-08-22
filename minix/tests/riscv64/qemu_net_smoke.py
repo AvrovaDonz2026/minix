@@ -171,6 +171,25 @@ def _selftest() -> None:
     finally:
         os.unlink(be_path)
 
+    # ARP who-has should not be classified as an ICMP echo request.
+    arp = bytearray(42)
+    arp[0:6] = b"\xff\xff\xff\xff\xff\xff"
+    arp[6:12] = bytes.fromhex("525400123456")
+    arp[12:14] = b"\x08\x06"
+    arp[16:18] = b"\x08\x00"  # proto IPv4
+    arp[20:22] = b"\x00\x01"  # opcode request
+    arp_rec = struct.pack("<IIII", 0, 0, len(arp), len(arp))
+    arp_path = None
+    with tempfile.NamedTemporaryFile(suffix=".pcap", delete=False) as f:
+        arp_path = f.name
+        f.write(hdr + arp_rec + bytes(arp))
+    try:
+        arp_req, arp_rep, echo_req, echo_rep, nbytes = parse_pcap(arp_path)
+        assert arp_req >= 1 and arp_rep == 0 and echo_req == 0, (
+            arp_req, arp_rep, echo_req, echo_rep, nbytes)
+    finally:
+        os.unlink(arp_path)
+
     # Truncated file: header only, no complete record.
     with tempfile.NamedTemporaryFile(suffix=".pcap", delete=False) as f:
         trunc_path = f.name
@@ -191,13 +210,19 @@ def analyze_pcap(pcap_path: str, ping_gw_failed: bool) -> None:
     if nbytes <= 0:
         return
 
+    log(f"pcap file: {pcap_path}")
     log(
         f"pcap: arp_req={arp_req} arp_rep={arp_rep} "
         f"echo_req={echo_req} echo_rep={echo_rep} bytes={nbytes}"
     )
 
     if ping_gw_failed:
-        if echo_req == 0:
+        if arp_req > 0 and arp_rep == 0 and echo_req == 0:
+            log(
+                "ping_gw failed: guest ARP who-has left the NIC but no ARP "
+                "reply is in the dump (RX/MAC filter, or dump was TX-only)"
+            )
+        elif echo_req == 0:
             log("ping_gw failed: no ICMP echo request left the guest (TX path)")
         elif echo_rep == 0:
             log(

@@ -281,7 +281,7 @@ if [ "$NETWORK" -eq 1 ]; then
     )
     if [ -n "${NET_PCAP:-}" ]; then
         QEMU_ARGS+=(
-            -object "filter-dump,id=netdump0,netdev=net0,file=${NET_PCAP}"
+            -object "filter-dump,id=netdump0,netdev=net0,file=${NET_PCAP},queue=all"
         )
     fi
 fi

@@ -7,11 +7,11 @@
 #include "arch_proto.h"
 #include "hw_intr.h"
 
-/* Current CPU (for SMP) */
 #ifdef CONFIG_SMP
-#define CURRENT_CPU cpu_number()
+#include "arch_smp.h"
+#define CURRENT_CPU	riscv_cpu_to_hart[cpuid]
 #else
-#define CURRENT_CPU 0
+#define CURRENT_CPU	0
 #endif
 
 /*

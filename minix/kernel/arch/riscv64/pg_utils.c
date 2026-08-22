@@ -343,6 +343,11 @@ void pg_flush_tlb(void)
     sfence_vma_all();
 }
 
+void refresh_tlb(void)
+{
+    pg_flush_tlb();
+}
+
 /*
  * Flush TLB for specific address
  */

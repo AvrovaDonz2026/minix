@@ -182,16 +182,16 @@ run_kernel_tests() {
         log_fail "Kernel boot"
     fi
 
-    # Test 2: SMP initialization
+    # Test 2: SMP initialization (requires CONFIG_SMP kernel)
     log_info "Test: SMP initialization"
     timeout $TIMEOUT "$QEMU_SCRIPT" \
         -k "$KERNEL" -B "$BOOTMODROOT" \
         > /tmp/smp_test.log 2>&1 || true
 
-    if grep -q "CPU.*online" /tmp/smp_test.log 2>/dev/null; then
+    if grep -qE "SMP: [0-9]+ CPUs online|CPU [0-9]+ is online" /tmp/smp_test.log 2>/dev/null; then
         log_pass "SMP initialization"
     else
-        log_skip "SMP initialization (not yet implemented)"
+        log_skip "SMP initialization (build kernel with CONFIG_SMP=yes CONFIG_MAX_CPUS=4)"
     fi
 
     # Test 3: Timer interrupt

@@ -683,6 +683,21 @@ void memory_init(void)
 {
 }
 
+#ifdef CONFIG_SMP
+#include "kernel/smp.h"
+#endif
+
+int arch_enable_paging(struct proc *caller)
+{
+	(void)caller;
+
+#ifdef CONFIG_SMP
+	barrier();
+	wait_for_APs_to_finish_booting();
+#endif
+	return OK;
+}
+
 /*===========================================================================*
  *				arch_proc_init				     *
  *===========================================================================*/

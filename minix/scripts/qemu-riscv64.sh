@@ -57,7 +57,7 @@ MODINFO_MAGIC="${MODINFO_MAGIC:-0x584e494d}"
 MODULE_ALIGN="${MODULE_ALIGN:-0x1000}"
 
 # QEMU binary
-QEMU="qemu-system-riscv64"
+QEMU="${QEMU:-qemu-system-riscv64}"
 
 # Parse arguments
 while getopts "dsm:k:i:B:ng" opt; do
@@ -279,6 +279,11 @@ if [ "$NETWORK" -eq 1 ]; then
         -netdev "user,id=net0,ipv6=on${hostfwd_arg}"
         -device virtio-net-device,netdev=net0,mac=52:54:00:12:34:56
     )
+    if [ -n "${NET_PCAP:-}" ]; then
+        QEMU_ARGS+=(
+            -object "filter-dump,id=netdump0,netdev=net0,file=${NET_PCAP}"
+        )
+    fi
 fi
 
 # Graphics

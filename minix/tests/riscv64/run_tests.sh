@@ -466,6 +466,25 @@ run_build_tests() {
     else
         log_fail "VirtIO block driver directory"
     fi
+
+    # Test 4: Host virtio EVENT_IDX compile/run
+    EVENT_IDX_SRC="$SCRIPT_DIR/test_virtio_event_idx.c"
+    if [ ! -f "$EVENT_IDX_SRC" ]; then
+        log_skip "Host virtio EVENT_IDX (source missing)"
+    else
+        HOST_CC="${HOST_CC:-cc}"
+        EVENT_IDX_BIN=$(mktemp /tmp/test_virtio_event_idx.XXXXXX)
+        if ${HOST_CC} -O2 -Wall -std=c99 -o "$EVENT_IDX_BIN" "$EVENT_IDX_SRC"; then
+            if "$EVENT_IDX_BIN"; then
+                log_pass "Host virtio EVENT_IDX"
+            else
+                log_fail "Host virtio EVENT_IDX (runtime)"
+            fi
+        else
+            log_fail "Host virtio EVENT_IDX (compile)"
+        fi
+        rm -f "$EVENT_IDX_BIN"
+    fi
 }
 
 run_smoke_gate() {

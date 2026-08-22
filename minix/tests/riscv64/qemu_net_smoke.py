@@ -14,8 +14,10 @@ import pty
 import re
 import select
 import signal
+import struct
 import subprocess
 import sys
+import tempfile
 import time
 
 SKIP_RC = 2
@@ -26,10 +28,13 @@ FATAL_RE = re.compile(
 )
 
 INIT_MARKER = "virtio-net-mmio: initialized"
+MAC_MARKER = "virtio-net-mmio: mac 52:54:00:12:34:56"
 HDR_MARKER = "virtio-net-mmio: hdr 12"
 MRG_MARKER = "mrg on"
 EVENT_IDX_MARKER = "event_idx on"
 RX_RING_MARKER = "rx 256"
+
+SLIRP_IPS = frozenset({"10.0.2.2", "10.0.2.15"})
 
 
 def log(msg: str) -> None:
@@ -39,6 +44,117 @@ def log(msg: str) -> None:
 def log_tail(buf: str, label: str, limit: int = 4000) -> None:
     tail = buf[-limit:] if buf else ""
     log(f"{label} output tail:\n{tail}")
+
+
+def setup_net_pcap() -> str:
+    existing = os.environ.get("NET_PCAP")
+    if existing:
+        return existing
+    fd, path = tempfile.mkstemp(suffix=".pcap")
+    os.close(fd)
+    os.environ["NET_PCAP"] = path
+    return path
+
+
+def ipv4_addr(pkt: bytes, offset: int) -> str:
+    return ".".join(str(pkt[offset + i]) for i in range(4))
+
+
+def parse_pcap(path: str) -> tuple[int, int, int, int, int]:
+    arp_req = 0
+    arp_rep = 0
+    echo_req = 0
+    echo_rep = 0
+
+    try:
+        with open(path, "rb") as f:
+            data = f.read()
+    except OSError:
+        return 0, 0, 0, 0, 0
+
+    size = len(data)
+    if size < 24:
+        return 0, 0, 0, 0, size
+
+    magic = struct.unpack_from("<I", data, 0)[0]
+    if magic == 0xa1b2c3d4:
+        endian = ">"
+        rec_endian = ">"
+    elif magic == 0xd4c3b2a1:
+        endian = "<"
+        rec_endian = "<"
+    else:
+        return 0, 0, 0, 0, size
+
+    offset = 24
+    while offset + 16 <= len(data):
+        _, _, incl_len, _ = struct.unpack_from(rec_endian + "IIII", data, offset)
+        offset += 16
+        if incl_len > len(data) - offset:
+            pkt = data[offset:]
+        else:
+            pkt = data[offset:offset + incl_len]
+        offset += incl_len
+
+        caplen = len(pkt)
+        if caplen < 14:
+            continue
+
+        ethertype = struct.unpack_from(">H", pkt, 12)[0]
+        if ethertype == 0x0806:
+            if caplen >= 22:
+                opcode = struct.unpack_from(">H", pkt, 20)[0]
+                if opcode == 1:
+                    arp_req += 1
+                elif opcode == 2:
+                    arp_rep += 1
+        elif ethertype == 0x0800:
+            ip_off = 14
+            if caplen < ip_off + 20:
+                continue
+            ihl = (pkt[ip_off] & 0x0f) * 4
+            if caplen < ip_off + ihl + 1:
+                continue
+            if pkt[ip_off + 9] != 1:
+                continue
+            src = ipv4_addr(pkt, ip_off + 12)
+            dst = ipv4_addr(pkt, ip_off + 16)
+            icmp_off = ip_off + ihl
+            icmp_type = pkt[icmp_off]
+            if icmp_type == 8 and (src in SLIRP_IPS or dst in SLIRP_IPS):
+                echo_req += 1
+            elif icmp_type == 0 and (src in SLIRP_IPS or dst in SLIRP_IPS):
+                echo_rep += 1
+
+    return arp_req, arp_rep, echo_req, echo_rep, size
+
+
+def analyze_pcap(pcap_path: str, ping_gw_failed: bool) -> None:
+    if not pcap_path or not os.path.exists(pcap_path):
+        return
+
+    arp_req, arp_rep, echo_req, echo_rep, nbytes = parse_pcap(pcap_path)
+    if nbytes <= 0:
+        return
+
+    log(
+        f"pcap: arp_req={arp_req} arp_rep={arp_rep} "
+        f"echo_req={echo_req} echo_rep={echo_rep} bytes={nbytes}"
+    )
+
+    if ping_gw_failed:
+        if echo_req == 0:
+            log("ping_gw failed: no ICMP echo request left the guest (TX path)")
+        elif echo_rep == 0:
+            log(
+                "ping_gw failed: SLIRP saw echo request but no reply "
+                "(RX/EVENT_IDX path)"
+            )
+        else:
+            log(
+                "ping_gw failed: echo request/reply frames were on the wire "
+                "but guest ping still failed"
+            )
 
 
 class ProcIO:
@@ -163,6 +279,8 @@ def main() -> int:
         return SKIP_RC
 
     os.environ["NET_HOSTFWD"] = "none"
+    pcap_path = setup_net_pcap()
+    ping_gw_failed = False
 
     qemu_cmd = [
         args.qemu_script,
@@ -179,6 +297,7 @@ def main() -> int:
     log("Starting QEMU net smoke...")
     io = spawn(qemu_cmd)
     proc = io.proc
+    ping_gw_failed = False
 
     try:
         login_pat = re.compile(r"login:", re.IGNORECASE)
@@ -222,6 +341,12 @@ def main() -> int:
             return 1
         log(f"[PASS] {INIT_MARKER}")
 
+        if MAC_MARKER not in boot:
+            log_tail(boot, "Missing virtio-net-mmio MAC marker")
+            log(f"FAIL: {MAC_MARKER} not found")
+            return 1
+        log(f"[PASS] {MAC_MARKER}")
+
         if HDR_MARKER not in boot:
             log_tail(boot, "Missing modern virtio-net header marker")
             log(f"FAIL: {HDR_MARKER} not found")
@@ -263,6 +388,8 @@ def main() -> int:
 
         for name, command in commands:
             if not run_command(io, name, command, args.cmd_timeout):
+                if name == "ping_gw":
+                    ping_gw_failed = True
                 return 1
 
         send(io, "echo __RUNTIME_OK__\n")
@@ -277,6 +404,7 @@ def main() -> int:
             return 1
 
         log("PASS: qemu net smoke")
+        exit_rc = 0
         return 0
     finally:
         try:
@@ -288,6 +416,7 @@ def main() -> int:
             proc.wait(timeout=5)
         except Exception:
             proc.kill()
+        analyze_pcap(pcap_path, ping_gw_failed)
 
 
 if __name__ == "__main__":

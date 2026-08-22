@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.45
+**Version / 版本**: 1.46
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -83,6 +83,10 @@
   `#49`：`32543353223`（`6e97a7c26`）tools 已装
   `nbllvm-tblgen`，host 门禁写成 `nblvm-tblgen` 失败；其余
   host 检查（含 `clang -c` 不得产出 RISC-V 对象）均通过。
+  `#73`：`32545143308`（`2044ddfb4`）host 门禁已过，distribution
+  编客端 `libLLVMAnalysis` 时 `std::max(UINT64_C(1), uint64_t)`
+  在 gcc 4.8 上报类型冲突（ULL vs `unsigned long`）。三处
+  `std::max` 改用 `uint64_t(1)`。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -214,6 +218,10 @@
   `#49`: `32543353223` (`6e97a7c26`) installed `nbllvm-tblgen`
   then the host gate looked for `nblvm-tblgen`. Other host checks
   passed, including `clang -c` not emitting a RISC-V object.
+  `#73`: `32545143308` (`2044ddfb4`) passed the host gate, then
+  guest `libLLVMAnalysis` failed `std::max(UINT64_C(1), uint64_t)`
+  on gcc 4.8 (ULL vs `unsigned long`). Use `uint64_t(1)` at the
+  three `std::max` sites.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`

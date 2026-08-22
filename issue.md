@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.66
+**Version / 版本**: 1.67
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -10,8 +10,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 **复核说明**：2026-02-16 完成启动链路稳定化验证；QEMU 可进入交互 shell 并通过 `echo SMOKE_OK`。同日补充代码/日志复核问题，并完成一轮 RS P0 端点映射防护加固（定向编译 + QEMU 启动复测），随后在带盘 smoke 中确认 `virtio_blk_mmio` 可正常初始化。
 **Review note**: 2026-02-16 validated boot-path stabilization; QEMU reaches interactive shell and passes `echo SMOKE_OK`. Additional code/log review findings were added the same day, followed by an RS P0 endpoint-mapping hardening pass (targeted build + QEMU boot revalidation), and a with-disk smoke that confirms `virtio_blk_mmio` initialization.
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`。  
+Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#24`, `#25`, `#34`, `#35`, `#36`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -65,6 +65,7 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   40) `[DONE]` `#42` LLVM packaging CI 补上 host IR/tblgen、DESTDIR ELF、来宾 clang 功能门禁（不再只看 `--version`）
   41) `[DONE]` `#46` LLVM packaging 的 libc++ 头文件盖住 libstdc++，`functexcept.cc` 的 `<future>` 拉进 `pthread.h`
   42) `[DONE]` `#49` LLVM host 门禁把 `nbllvm-tblgen` 写成 `nblvm-tblgen`，tools 已装 tblgen 仍失败
+  43) `[DONE]` `#73` 客端 LLVM 3.6.1 `std::max(UINT64_C(1), uint64_t)` 在 gcc 4.8 / LP64 上类型冲突
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -1624,6 +1625,21 @@ This section archives items with code-level fixes landed (some may still require
   `nbllvm-tblgen`. Look for that name. LLVM-only gate fix.
   历史 P1 #49：host 门禁改为查找 `nbllvm-tblgen`（`nb` +
   `llvm-tblgen`），不再写成 `nblvm-tblgen`。
+- Former P1 #73: LLVM packaging `32545143308` (`2044ddfb4`) passed
+  tools and the host gate, then distribution died compiling guest
+  `libLLVMAnalysis` `BlockFrequencyInfoImpl.cpp`:
+  `std::max(UINT64_C(1), uint64_t)` with conflicting
+  `long long unsigned int` and `__uint64_t` (`unsigned long`).
+  gcc 4.8 `std::max` requires identical types. RISC-V LP64
+  `uint64_t` is `unsigned long`; gcc 4.8 has no
+  `__INTMAX_C_SUFFIX__`, so `machine/int_const.h` makes
+  `UINT64_C` `unsigned long long`. Use `uint64_t(1)` at the three
+  `std::max` sites (`BlockFrequencyInfoImpl.cpp` twice,
+  `SpillPlacement.cpp` once). LLVM-only; do not mix onto the
+  network PR.
+  历史 P1 #73：客端 LLVM 把 `std::max` 的 `UINT64_C(1)` 改成
+  `uint64_t(1)`，避开 gcc 4.8 在 LP64 上 ULL 与 `unsigned long`
+  的模板冲突。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

@@ -1,7 +1,7 @@
 # RISC-V MINIX Kernel Build Log / RISC-V MINIX 内核构建日志
 
 **Last updated / 最后更新**: 2026-08-22
-**Version / 版本**: 1.57
+**Version / 版本**: 1.58
 **Purpose / 用途**: Append-only record of build commands and outcomes. / 记录构建命令与结果（追加式）。
 
 **Baseline note / 基线说明**: active build/run baseline is `obj.intrgcc`; any
@@ -2302,4 +2302,29 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - GitHub Actions run `32543353223`
 - `minix/tests/riscv64/llvm_toolchain_gate.sh`
 - `tools/llvm-tblgen/Makefile`
+
+### Entry 70 — guest LLVM std::max UINT64_C vs uint64_t (2026-08-22) / 客端 LLVM std::max 类型
+**Workspace / 工作区**: `/workspace`  
+**Target / 目标**: `evbriscv64` + `MKLLVM=yes`
+
+**Symptom / 现象**:
+- Push `32545143308` (`2044ddfb4`) built tools and passed the
+  host LLVM gate, then distribution failed compiling guest
+  `libLLVMAnalysis`:
+  `std::max(UINT64_C(1), uint64_t)` with conflicting
+  `long long unsigned int` and `__uint64_t` (`unsigned long`).
+- Same pattern in `SpillPlacement.cpp`.
+- gcc 4.8 `std::max` requires identical types. RISC-V LP64
+  `uint64_t` is `unsigned long`. gcc 4.8 has no
+  `__INTMAX_C_SUFFIX__`, so `UINT64_C` is `unsigned long long`.
+
+**Fix / 修复**:
+- Use `uint64_t(1)` instead of `UINT64_C(1)` at the three
+  `std::max` sites. LLVM-only; do not mix onto the network PR.
+
+**Evidence / 证据**:
+- `issue.md` `#73`
+- GitHub Actions run `32545143308`
+- `external/bsd/llvm/dist/llvm/lib/Analysis/BlockFrequencyInfoImpl.cpp`
+- `external/bsd/llvm/dist/llvm/lib/CodeGen/SpillPlacement.cpp`
 

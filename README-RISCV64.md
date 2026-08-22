@@ -614,7 +614,9 @@ See `issue.md` for evidence and file/line references.
 做全系统 tools→distribution 门禁；世界仍用 GCC（`ACTIVE_CC=gcc`，riscv64 保留 libgcc）。
 Clang 已识别 `riscv64-elf32-minix`，但 3.6.1 没有 RISC-V codegen backend，
 来宾内 `cc` 仍指向 gcc。riscv64 强制 `MKLIBCXX=no`，避免 libc++ 头文件
-盖住 libstdc++（`issue.md` `#46`）。CI 在 tools 之后跑
+盖住 libstdc++（`issue.md` `#46`）。客端 LLVM 用 `uint64_t(1)` 代替
+`UINT64_C(1)` 做 `std::max`，避开 gcc 4.8 在 LP64 上 ULL 与
+`unsigned long` 的模板冲突（`issue.md` `#73`）。CI 在 tools 之后跑
 `llvm_toolchain_gate.sh --mode host`（IR/tblgen/macros），distribution
 之后跑 DESTDIR ELF 检查，full suite 增加 `run_tests.sh llvm`。
 详见 `issue.md` `#42`。

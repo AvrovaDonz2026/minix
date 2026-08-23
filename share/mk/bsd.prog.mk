@@ -487,6 +487,13 @@ CFLAGS+= -flto
 #    a sysroot parameter has been given.
 LDFLAGS+= -L ${DESTDIR}/usr/lib
 .endif # ${USE_BITCODE:U} == "no"
+
+# RISC-V static-link workaround (gp.c / __global_pointer$) must not leak
+# into i386 and other architectures.
+.if ${MACHINE_ARCH} != "riscv64" && ${MACHINE_ARCH} != "riscv"
+LDFLAGS:= ${LDFLAGS:N-Wl,--defsym,__global_pointer$$=_gp}
+SRCS:= ${SRCS:Ngp.c}
+.endif
 .endif # defined(__MINIX)
 
 .for _P in ${PROGS} ${PROGS_CXX}					# {

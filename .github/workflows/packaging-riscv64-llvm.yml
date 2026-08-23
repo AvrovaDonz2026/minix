@@ -278,7 +278,13 @@ jobs:
             ls -l "${tooldir}/bin/"*clang* >&2 || true
             exit 1
           fi
+          if [[ ! -x "${tooldir}/bin/i586-elf32-minix-clang" ]]; then
+            echo "MKLLVM tools build did not install i586-elf32-minix-clang" >&2
+            ls -l "${tooldir}/bin/"*clang* >&2 || true
+            exit 1
+          fi
           "${tooldir}/bin/riscv64-elf32-minix-clang" --version | head -n 5
+          "${tooldir}/bin/i586-elf32-minix-clang" --version | head -n 5
 
       - name: LLVM host toolchain gate (tools)
         shell: bash
@@ -875,7 +881,7 @@ jobs:
             echo "- Sysroot: \`${{ steps.meta.outputs.sysroot_name }}\`"
             echo ""
             echo "### LLVM gates (before packaging)"
-            echo "- Host: \`llvm_toolchain_gate.sh --mode host --require host\`"
+            echo "- Host: \`llvm_toolchain_gate.sh --mode host --require host\` (riscv64 + i586 MINIX)"
             echo "- DESTDIR: \`llvm_toolchain_gate.sh --mode destdir --require destdir\`"
             echo "- Build flags: \`MKLLVM=yes MKLLVM_CMAKE=yes MKLIBCXX=no\`"
             echo ""

@@ -171,6 +171,10 @@ run_tools() {
     echo "[local] ERROR: missing ${tooldir}/bin/riscv64-elf32-minix-clang" >&2
     exit 1
   }
+  [[ -x "${tooldir}/bin/i586-elf32-minix-clang" ]] || {
+    echo "[local] ERROR: missing ${tooldir}/bin/i586-elf32-minix-clang" >&2
+    exit 1
+  }
   echo "[local] TOOLDIR=${tooldir}"
   install_cross_as_flock_wrapper "${tooldir}"
   TOOLDIR="${tooldir}" ./minix/tests/riscv64/llvm_toolchain_gate.sh \

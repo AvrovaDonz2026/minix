@@ -7,6 +7,7 @@
 #
 # Layers:
 #   host     TOOLDIR clang/tblgen frontend, IR, RISC-V/Minix macros
+#            and i586-elf32-minix when the wrapper is installed
 #   destdir  guest clang ELF payload; /usr/bin/cc stays gcc;
 #            libc++ must not install __mutex_base over libstdc++
 #   guest    QEMU: clang --version, -dM, -emit-llvm; LLVM 18+ also tests -c
@@ -34,6 +35,7 @@ DISK_IMAGE="${SMOKE_DISK_IMAGE:-}"
 TIMEOUT="${NATIVE_GATE_TIMEOUT:-180}"
 CMD_TIMEOUT="${NATIVE_GATE_CMD_TIMEOUT:-60}"
 CLANG_TARGET="${LLVM_CLANG_TARGET:-riscv64-elf32-minix}"
+X86_CLANG_TARGET="${LLVM_X86_CLANG_TARGET:-i586-elf32-minix}"
 
 passed=0
 failed=0
@@ -56,7 +58,8 @@ Options:
   --qemu-script <path>   QEMU launcher
   --timeout <sec>        Guest prompt timeout (default: 180)
   --cmd-timeout <sec>    Guest per-command timeout (default: 60)
-  --target <triple>      Clang target (default: riscv64-elf32-minix)
+  --target <triple>      Primary clang target (default: riscv64-elf32-minix)
+  --x86-target <triple>  x86 MINIX clang target (default: i586-elf32-minix)
   -h, --help             Show this help
 USAGE
 }
@@ -198,10 +201,169 @@ elf_has_interp() {
   "$readelf" -l "$bin" 2>/dev/null | grep -q 'INTERP'
 }
 
+object_matches_arch() {
+  local machine="$1"
+  local arch="$2"
+
+  case "$arch" in
+    riscv)
+      case "$machine" in
+        *RISC-V*|*RiscV*|*riscv*) return 0 ;;
+      esac
+      ;;
+    x86)
+      case "$machine" in
+        *80386*|*i386*|*i686*|*x86*) return 0 ;;
+      esac
+      ;;
+  esac
+  return 1
+}
+
+run_host_target_checks() {
+  local label="$1"
+  local clang="$2"
+  local clangxx="$3"
+  local target="$4"
+  local arch="$5"
+  local llvm_gen="$6"
+  local readelf="$7"
+  local tmp="$8"
+  local src="$9"
+  local macros ir cxxir obj stderrf machine rc
+
+  log "host target ${label}: ${target}"
+
+  macros="${tmp}/${label}-macros.h"
+  if ! "$clang" -target "$target" -ffreestanding -nostdinc \
+      -dM -E -x c /dev/null >"$macros" 2>"${tmp}/${label}-macros.err"; then
+    log_fail "${label}: clang -dM -E -target ${target}"
+    cat "${tmp}/${label}-macros.err" >&2 || true
+  else
+    case "$arch" in
+      riscv)
+        if grep -q '#define __riscv ' "$macros" && \
+           grep -Eq '#define __riscv_xlen 64' "$macros"; then
+          log_pass "${label}: clang RISC-V macros (__riscv, __riscv_xlen 64)"
+        else
+          log_fail "${label}: clang RISC-V macros missing from -dM output"
+          grep -E '__riscv|__minix' "$macros" >&2 || true
+        fi
+        ;;
+      x86)
+        if grep -Eq '#define __i386(__)? 1' "$macros"; then
+          log_pass "${label}: clang x86 macros (__i386)"
+        else
+          log_fail "${label}: clang x86 macros missing from -dM output"
+          grep -E '__i386|__minix' "$macros" >&2 || true
+        fi
+        ;;
+    esac
+    if grep -Eq '#define __minix(__)? 3' "$macros" || \
+       grep -q '#define __Minix__ 3' "$macros"; then
+      log_pass "${label}: clang Minix macros (__minix)"
+    else
+      log_fail "${label}: clang Minix macros missing from -dM output"
+      grep -E '__minix|__Minix' "$macros" >&2 || true
+    fi
+  fi
+
+  if "$clang" -target "$target" -ffreestanding -nostdinc \
+      -fsyntax-only -x c "$src" 2>"${tmp}/${label}-syntax.err"; then
+    log_pass "${label}: clang -fsyntax-only freestanding C"
+  else
+    log_fail "${label}: clang -fsyntax-only"
+    cat "${tmp}/${label}-syntax.err" >&2 || true
+  fi
+
+  printf '#define V 9\nV\n' >"${tmp}/${label}-pp.c"
+  if "$clang" -target "$target" -E -P -nostdinc "${tmp}/${label}-pp.c" \
+      >"${tmp}/${label}-pp.out" 2>"${tmp}/${label}-pp.err" && \
+     grep -q '9' "${tmp}/${label}-pp.out"; then
+    log_pass "${label}: clang -E preprocessor"
+  else
+    log_fail "${label}: clang -E preprocessor"
+    cat "${tmp}/${label}-pp.err" >&2 || true
+  fi
+
+  ir="${tmp}/${label}-add.ll"
+  if "$clang" -target "$target" -ffreestanding -nostdinc \
+      -emit-llvm -S -x c "$src" -o "$ir" 2>"${tmp}/${label}-ir.err"; then
+    if grep -Eq 'define[[:space:]].*@add' "$ir"; then
+      log_pass "${label}: clang -emit-llvm -S (C IR)"
+    else
+      log_fail "${label}: clang -emit-llvm produced IR without @add"
+      head -n 40 "$ir" >&2 || true
+    fi
+  else
+    if grep -Eqi 'no available targets|unable to create target|cannot be turned into an executable' \
+         "${tmp}/${label}-ir.err"; then
+      log_pass "${label}: clang -emit-llvm skipped (no backend, expected)"
+    else
+      log_fail "${label}: clang -emit-llvm -S"
+      cat "${tmp}/${label}-ir.err" >&2 || true
+    fi
+  fi
+
+  cxxir="${tmp}/${label}-add.ll.cpp"
+  if [ -n "$clangxx" ]; then
+    if "$clangxx" -target "$target" -ffreestanding -nostdinc \
+        -emit-llvm -S -x c++ "$src" -o "$cxxir" 2>"${tmp}/${label}-cxxir.err"; then
+      if grep -Eq 'define[[:space:]].*@' "$cxxir"; then
+        log_pass "${label}: clang++ -emit-llvm -S (C++ IR)"
+      else
+        log_fail "${label}: clang++ -emit-llvm produced empty-looking IR"
+      fi
+    else
+      if grep -Eqi 'no available targets|unable to create target' \
+           "${tmp}/${label}-cxxir.err"; then
+        log_pass "${label}: clang++ -emit-llvm skipped (no backend, expected)"
+      else
+        log_fail "${label}: clang++ -emit-llvm -S"
+        cat "${tmp}/${label}-cxxir.err" >&2 || true
+      fi
+    fi
+  fi
+
+  obj="${tmp}/${label}-add.o"
+  stderrf="${tmp}/${label}-c.err"
+  set +e
+  "$clang" -target "$target" -ffreestanding -nostdinc \
+    -c -x c "$src" -o "$obj" >"$stderrf" 2>&1
+  rc=$?
+  set -e
+  if [ "$rc" -ge 128 ]; then
+    log_fail "${label}: clang -c crashed (rc=${rc})"
+    cat "$stderrf" >&2 || true
+  elif [ "$llvm_gen" = "modern" ]; then
+    if [ "$rc" -eq 0 ] && [ -s "$obj" ]; then
+      machine="$(host_machine_of "$obj" "$readelf" || true)"
+      if object_matches_arch "$machine" "$arch"; then
+        log_pass "${label}: clang -c emitted ${arch} object (LLVM modern backend)"
+      else
+        log_fail "${label}: clang -c succeeded but object is not ${arch} (${machine})"
+      fi
+    else
+      log_fail "${label}: clang -c failed on modern LLVM (expected ${arch} object)"
+      cat "$stderrf" >&2 || true
+    fi
+  elif [ "$rc" -eq 0 ] && [ -s "$obj" ]; then
+    machine="$(host_machine_of "$obj" "$readelf" || true)"
+    if object_matches_arch "$machine" "$arch"; then
+      log_fail "${label}: clang -c emitted a ${arch} object; legacy 3.6.1 has no backend"
+    else
+      log_fail "${label}: clang -c unexpectedly succeeded (machine='${machine}')"
+    fi
+    cat "$stderrf" >&2 || true
+  else
+    log_pass "${label}: clang -c does not emit ${arch} objects (legacy 3.6.1, expected)"
+  fi
+}
+
 run_host_layer() {
   local tooldir clang clangxx clangcpp tblgen ctblgen readelf
   local tmp macros ir cxxir obj stderrf src
-  local machine
+  local machine llvm_gen x86_clang x86_clangxx
 
   tooldir="$(detect_tooldir || true)"
   if [ -z "$tooldir" ]; then
@@ -316,123 +478,18 @@ run_host_layer() {
       ;;
   esac
 
-  macros="${tmp}/macros.h"
-  if ! "$clang" -target "$CLANG_TARGET" -ffreestanding -nostdinc \
-      -dM -E -x c /dev/null >"$macros" 2>"${tmp}/macros.err"; then
-    log_fail "clang -dM -E -target ${CLANG_TARGET}"
-    cat "${tmp}/macros.err" >&2 || true
-  else
-    if grep -q '#define __riscv ' "$macros" && \
-       grep -Eq '#define __riscv_xlen 64' "$macros"; then
-      log_pass "clang RISC-V macros (__riscv, __riscv_xlen 64)"
-    else
-      log_fail "clang RISC-V macros missing from -dM output"
-      grep -E '__riscv|__minix' "$macros" >&2 || true
-    fi
-    if grep -Eq '#define __minix(__)? 3' "$macros" || \
-       grep -q '#define __Minix__ 3' "$macros"; then
-      log_pass "clang Minix macros (__minix)"
-    else
-      log_fail "clang Minix macros missing from -dM output"
-      grep -E '__minix|__Minix' "$macros" >&2 || true
-    fi
-  fi
+  run_host_target_checks "riscv64" "$clang" "$clangxx" "$CLANG_TARGET" \
+    riscv "$llvm_gen" "$readelf" "$tmp" "$src"
 
-  if "$clang" -target "$CLANG_TARGET" -ffreestanding -nostdinc \
-      -fsyntax-only -x c "$src" 2>"${tmp}/syntax.err"; then
-    log_pass "clang -fsyntax-only freestanding C"
+  x86_clang="$(find_host_bin "$tooldir" i586-elf32-minix-clang || true)"
+  x86_clangxx="$(find_host_bin "$tooldir" i586-elf32-minix-clang++ || true)"
+  if [ -n "$x86_clang" ]; then
+    run_host_target_checks "i586" "$x86_clang" "$x86_clangxx" "$X86_CLANG_TARGET" \
+      x86 "$llvm_gen" "$readelf" "$tmp" "$src"
+  elif want_require host; then
+    log_fail "host i586-elf32-minix-clang missing under $tooldir/bin"
   else
-    log_fail "clang -fsyntax-only"
-    cat "${tmp}/syntax.err" >&2 || true
-  fi
-
-  printf '#define V 9\nV\n' >"${tmp}/pp.c"
-  if "$clang" -target "$CLANG_TARGET" -E -P -nostdinc "${tmp}/pp.c" \
-      >"${tmp}/pp.out" 2>"${tmp}/pp.err" && grep -q '9' "${tmp}/pp.out"; then
-    log_pass "clang -E preprocessor"
-  else
-    log_fail "clang -E preprocessor"
-    cat "${tmp}/pp.err" >&2 || true
-  fi
-
-  ir="${tmp}/add.ll"
-  if "$clang" -target "$CLANG_TARGET" -ffreestanding -nostdinc \
-      -emit-llvm -S -x c "$src" -o "$ir" 2>"${tmp}/ir.err"; then
-    if grep -Eq 'define[[:space:]].*@add' "$ir"; then
-      log_pass "clang -emit-llvm -S (C IR)"
-    else
-      log_fail "clang -emit-llvm produced IR without @add"
-      head -n 40 "$ir" >&2 || true
-    fi
-  else
-    # Frontend TargetInfo exists; LLVM 3.6.1 still has no RISC-V CodeGen.
-    # -emit-llvm may refuse without a TargetMachine. Syntax-only is enough.
-    if grep -Eqi 'no available targets|unable to create target|cannot be turned into an executable' \
-         "${tmp}/ir.err"; then
-      log_pass "clang -emit-llvm skipped (no RISC-V LLVM backend, expected)"
-    else
-      log_fail "clang -emit-llvm -S"
-      cat "${tmp}/ir.err" >&2 || true
-    fi
-  fi
-
-  cxxir="${tmp}/add.ll.cpp"
-  if [ -n "$clangxx" ]; then
-    if "$clangxx" -target "$CLANG_TARGET" -ffreestanding -nostdinc \
-        -emit-llvm -S -x c++ "$src" -o "$cxxir" 2>"${tmp}/cxxir.err"; then
-      if grep -Eq 'define[[:space:]].*@' "$cxxir"; then
-        log_pass "clang++ -emit-llvm -S (C++ IR)"
-      else
-        log_fail "clang++ -emit-llvm produced empty-looking IR"
-      fi
-    else
-      if grep -Eqi 'no available targets|unable to create target' "${tmp}/cxxir.err"; then
-        log_pass "clang++ -emit-llvm skipped (no RISC-V LLVM backend, expected)"
-      else
-        log_fail "clang++ -emit-llvm -S"
-        cat "${tmp}/cxxir.err" >&2 || true
-      fi
-    fi
-  fi
-
-  obj="${tmp}/add.o"
-  stderrf="${tmp}/c.err"
-  set +e
-  "$clang" -target "$CLANG_TARGET" -ffreestanding -nostdinc \
-    -c -x c "$src" -o "$obj" >"$stderrf" 2>&1
-  rc=$?
-  set -e
-  if [ "$rc" -ge 128 ]; then
-    log_fail "clang -c crashed (rc=${rc})"
-    cat "$stderrf" >&2 || true
-  elif [ "$llvm_gen" = "modern" ]; then
-    if [ "$rc" -eq 0 ] && [ -s "$obj" ]; then
-      machine="$(host_machine_of "$obj" "$readelf" || true)"
-      case "$machine" in
-        *RISC-V*|*RiscV*|*riscv*)
-          log_pass "clang -c emitted RISC-V object (LLVM modern backend)"
-          ;;
-        *)
-          log_fail "clang -c succeeded but object is not RISC-V (${machine})"
-          ;;
-      esac
-    else
-      log_fail "clang -c failed on modern LLVM (expected RISC-V object)"
-      cat "$stderrf" >&2 || true
-    fi
-  elif [ "$rc" -eq 0 ] && [ -s "$obj" ]; then
-    machine="$(host_machine_of "$obj" "$readelf" || true)"
-    case "$machine" in
-      *RISC-V*|*RiscV*|*riscv*)
-        log_fail "clang -c emitted a RISC-V object; legacy 3.6.1 has no backend"
-        ;;
-      *)
-        log_fail "clang -c unexpectedly succeeded (machine='${machine}')"
-        ;;
-    esac
-    cat "$stderrf" >&2 || true
-  else
-    log_pass "clang -c does not emit RISC-V objects (legacy 3.6.1, expected)"
+    log_skip "host i586-elf32-minix-clang missing (x86 MINIX cross-compile)"
   fi
 }
 
@@ -691,6 +748,10 @@ while [ $# -gt 0 ]; do
       ;;
     --target)
       CLANG_TARGET="$2"
+      shift 2
+      ;;
+    --x86-target)
+      X86_CLANG_TARGET="$2"
       shift 2
       ;;
     -h|--help)

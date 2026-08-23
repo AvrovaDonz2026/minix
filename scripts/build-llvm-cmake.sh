@@ -1,9 +1,10 @@
 #!/bin/bash
 #
-# Build modern LLVM/clang via CMake for MINIX riscv64 cross-toolchain.
+# Build modern LLVM/clang via CMake for MINIX cross-toolchain.
 #
-# Produces host clang with RISC-V codegen backend.  Installs into TOOLDIR
-# with riscv64-elf32-minix-* names expected by llvm_toolchain_gate.sh.
+# Produces host clang with RISC-V and x86 codegen backends.  Installs into
+# TOOLDIR with riscv64-elf32-minix-* and i586-elf32-minix-* wrappers
+# expected by llvm_toolchain_gate.sh.
 #
 # Environment:
 #   TOOLDIR          install prefix (required)
@@ -103,7 +104,7 @@ build_llvm() {
     -DCMAKE_CXX_COMPILER="${CXX:-g++}" \
     -DCMAKE_C_COMPILER="${CC:-gcc}" \
     -DLLVM_ENABLE_PROJECTS="clang;lld" \
-    -DLLVM_TARGETS_TO_BUILD="RISCV;X86;AArch64;ARM;Mips;PowerPC;Sparc" \
+    -DLLVM_TARGETS_TO_BUILD="RISCV;X86" \
     -DLLVM_ENABLE_TERMINFO=OFF \
     -DLLVM_ENABLE_ZLIB=ON \
     -DLLVM_INCLUDE_EXAMPLES=OFF \
@@ -132,11 +133,11 @@ build_llvm() {
 install_wrappers() {
   local prefix="${TOOLDIR}/llvm-${LLVM_VERSION}"
   local bindir="${TOOLDIR}/bin"
-  local triple_prefix="riscv64-elf32-minix"
   local clang="${prefix}/bin/clang"
   local clangxx="${prefix}/bin/clang++"
   local clangcpp="${prefix}/bin/clang-cpp"
   local lld="${prefix}/bin/ld.lld"
+  local triple
 
   [ -x "${clang}" ] || die "installed clang not found: ${clang}"
 
@@ -145,21 +146,23 @@ install_wrappers() {
   write_wrapper() {
     local dest="$1"
     local bin="$2"
+    local triple_target="$3"
     cat > "${dest}" <<EOF
 #!/bin/sh
-exec "${bin}" --target=riscv64-elf32-minix \\
+exec "${bin}" --target=${triple_target} \\
   -D__minix=3 -D__minix__=3 -D__Minix__=3 "\$@"
 EOF
     chmod 755 "${dest}"
   }
 
-  write_wrapper "${bindir}/${triple_prefix}-clang" "${clang}"
-  write_wrapper "${bindir}/${triple_prefix}-clang++" "${clangxx}"
-  write_wrapper "${bindir}/${triple_prefix}-clang-cpp" "${clangcpp}"
-
-  if [ -x "${lld}" ]; then
-    ln -sf "${lld}" "${bindir}/${triple_prefix}-ld"
-  fi
+  for triple in riscv64-elf32-minix i586-elf32-minix; do
+    write_wrapper "${bindir}/${triple}-clang" "${clang}" "${triple}"
+    write_wrapper "${bindir}/${triple}-clang++" "${clangxx}" "${triple}"
+    write_wrapper "${bindir}/${triple}-clang-cpp" "${clangcpp}" "${triple}"
+    if [ -x "${lld}" ]; then
+      ln -sf "${lld}" "${bindir}/${triple}-ld"
+    fi
+  done
 
   for tool in llvm-tblgen clang-tblgen; do
     if [ -x "${prefix}/bin/${tool}" ]; then
@@ -168,8 +171,11 @@ EOF
   done
 
   log "installed wrappers:"
-  ls -l "${bindir}/${triple_prefix}-clang"* "${bindir}/nbllvm-tblgen-cmake" 2>/dev/null || true
-  "${bindir}/${triple_prefix}-clang" --version | head -n 3
+  ls -l "${bindir}/riscv64-elf32-minix-clang"* \
+    "${bindir}/i586-elf32-minix-clang"* \
+    "${bindir}/nbllvm-tblgen-cmake" 2>/dev/null || true
+  "${bindir}/riscv64-elf32-minix-clang" --version | head -n 3
+  "${bindir}/i586-elf32-minix-clang" --version | head -n 3
 }
 
 install_destdir() {
@@ -203,7 +209,7 @@ EOF
 }
 
 main() {
-  log "LLVM ${LLVM_VERSION} CMake build for MINIX riscv64"
+  log "LLVM ${LLVM_VERSION} CMake build for MINIX (riscv64 + i586)"
   log "TOOLDIR=${TOOLDIR:-unset} DESTDIR=${DESTDIR:-unset}"
 
   if [ -n "${LLVM_INSTALL_ONLY:-}" ]; then

@@ -66,7 +66,6 @@ COMMON_FLAGS=(
   -V MKLIBGOMP=no
   -V MKATF=no
   -V CHECKFLIST_FLAGS='-m -e'
-  -V USE_PCI=no
 )
 
 pick_tooldir() {
@@ -90,7 +89,7 @@ run_tools() {
   rm -rf "${OBJDIR}/tooldir."* "${OBJDIR}/tools"
 
   echo "[i386] building tools -> ${LOG_DIR}/tools.log"
-  MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" \
+  MKPCI=yes HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" \
     HOST_CXXFLAGS="-O -std=c++11 -fno-rtti -fno-exceptions ${HARDENING_OFF}" \
     HAVE_GOLD=no MKLLVM=no \
     ./build.sh -U -j"${JOBS}" "${COMMON_FLAGS[@]}" tools \
@@ -113,7 +112,7 @@ run_distribution() {
 
   echo "[i386] building distribution (jobs=${DIST_JOBS}) -> ${LOG_DIR}/distribution.log"
   export MAKEFLAGS="-j${DIST_JOBS}"
-  MKPCI=no HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" \
+  MKPCI=yes HOST_CFLAGS="-O -fcommon ${HARDENING_OFF}" \
     HOST_CXXFLAGS="-O -std=c++11 -fno-rtti -fno-exceptions ${HARDENING_OFF}" \
     HAVE_GOLD=no MKLLVM=no \
     ./build.sh -U -u -V MKUPDATE=yes -j"${DIST_JOBS}" "${COMMON_FLAGS[@]}" distribution \

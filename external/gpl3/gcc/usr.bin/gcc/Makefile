@@ -25,9 +25,9 @@ CPPFLAGS.gcc.cc+=	-DBASEVER=${BASEVERSTR}
 
 COPTS.builtins.c = -Wno-stack-protector
 
-.if defined(__MINIX) && ${HAVE_LLVM:Uno} == "no"
+.if defined(__MINIX) && (${HAVE_LLVM:Uno} == "no" || ${MACHINE_CPU} == "riscv")
 LINKS+=		${BINDIR}/gcc ${BINDIR}/cc 
-.endif # defined(__MINIX) && ${HAVE_LLVM:Uno} == "no"
+.endif # defined(__MINIX) && (HAVE_LLVM=no || RISC-V)
 
 MAN=		gcc.1
 MLINKS=		gcc.1 cc.1 gcc.1 g++.1 gcc.1 c++.1

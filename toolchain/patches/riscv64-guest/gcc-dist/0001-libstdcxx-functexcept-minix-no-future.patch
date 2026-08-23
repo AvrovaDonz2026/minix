@@ -1,0 +1,17 @@
+--- a/libstdc++-v3/src/c++11/functexcept.cc	2026-08-23 02:23:23.688597992 +0000
++++ b/libstdc++-v3/src/c++11/functexcept.cc	2026-08-22 14:37:55.081478849 +0000
+@@ -106,7 +106,13 @@
+ 
+   void
+   __throw_future_error(int __i __attribute__((unused)))
+-  { _GLIBCXX_THROW_OR_ABORT(future_error(make_error_code(future_errc(__i)))); }
++  {
++#if !defined(_GLIBCXX_MINIX_NO_FUTURE)
++    _GLIBCXX_THROW_OR_ABORT(future_error(make_error_code(future_errc(__i))));
++#else
++    __throw_system_error(__i);
++#endif
++  }
+ 
+   void
+   __throw_bad_function_call()

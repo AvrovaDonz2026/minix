@@ -92,11 +92,15 @@ CFLAGS+= -mno-unaligned-access
 .if ${MACHINE_ARCH} == "riscv64"
 RISCV_ARCH_FLAGS?= -march=rv64imafd -mcmodel=medany
 CFLAGS+= ${RISCV_ARCH_FLAGS}
+AFLAGS+= ${RISCV_ARCH_FLAGS}
+CPUFLAGS+= ${RISCV_ARCH_FLAGS}
 CFLAGS+= -fcommon
 CFLAGS+= -fno-delete-null-pointer-checks
 .elif ${MACHINE_ARCH} == "riscv32"
 RISCV_ARCH_FLAGS?= -march=rv32gc -mabi=ilp32d
 CFLAGS+= ${RISCV_ARCH_FLAGS}
+AFLAGS+= ${RISCV_ARCH_FLAGS}
+CPUFLAGS+= ${RISCV_ARCH_FLAGS}
 CFLAGS+= -fcommon
 CFLAGS+= -fno-delete-null-pointer-checks
 .endif
@@ -187,8 +191,21 @@ MKBINUTILS?=	yes # We are installing clang, so trigger binutils.
 .endif # ${MKLLVM:Uno} == "yes"
 
 .if ${HAVE_LLVM:Dyes} == "yes"
+.  if ${MACHINE_ARCH} != "riscv64" && ${MACHINE_ARCH} != "riscv"
 HAVE_LIBGCC?=	no
+.  endif
 .endif # ${HAVE_LLVM:Dyes} == "yes"
+
+# RISC-V still uses GCC as ACTIVE_CC; keep libgcc even when clang is built.
+# Prefer CMake LLVM 18+ (RISC-V codegen) over in-tree autoconf LLVM 3.6.1.
+# Do not install libc++ into /usr/include/c++: bsd.sys.mk then adds
+# -I${DESTDIR}/usr/include/c++ ahead of libstdc++ /usr/include/g++.
+.if ${MACHINE_ARCH} == "riscv64" || ${MACHINE_ARCH} == "riscv"
+HAVE_LIBGCC=		yes
+HAVE_LIBGCC_EH=		yes
+MKLIBCXX=		no
+MKLLVM_CMAKE?=		yes
+.endif
 
 # The default value has to be set after we have figured out if we are using GCC
 # or not.

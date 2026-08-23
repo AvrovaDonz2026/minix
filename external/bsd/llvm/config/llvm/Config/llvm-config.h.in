@@ -25,7 +25,11 @@
 #define LLVM_DATADIR "/usr/share/llvm"
 
 /* Target triple LLVM will generate code for by default */
+#if defined(__riscv) && (__riscv_xlen == 64)
+#define LLVM_DEFAULT_TARGET_TRIPLE "riscv64-elf32-minix"
+#else
 #define LLVM_DEFAULT_TARGET_TRIPLE "i586-elf32-minix"
+#endif
 
 /* Installation directory for documentation */
 #define LLVM_DOCSDIR "/usr/share/doc/llvm"
@@ -42,7 +46,11 @@
 #define LLVM_HAS_ATOMICS 1
 
 /* Host triple LLVM will be executed on */
+#if defined(__riscv) && (__riscv_xlen == 64)
+#define LLVM_HOST_TRIPLE "riscv64-elf32-minix"
+#else
 #define LLVM_HOST_TRIPLE "i586-elf32-minix"
+#endif
 
 /* Installation directory for include files */
 #define LLVM_INCLUDEDIR "/usr/include"
@@ -53,6 +61,7 @@
 /* Installation directory for man pages */
 #define LLVM_MANDIR "/usr/man"
 
+#if !(defined(__riscv) && (__riscv_xlen == 64))
 /* LLVM architecture name for the native architecture, if available */
 #define LLVM_NATIVE_ARCH X86
 
@@ -73,6 +82,7 @@
 
 /* LLVM name for the native target MC init function, if available */
 #define LLVM_NATIVE_TARGETMC LLVMInitializeX86TargetMC
+#endif /* !riscv64 */
 
 /* Define if this is Unixish platform */
 #define LLVM_ON_UNIX 1

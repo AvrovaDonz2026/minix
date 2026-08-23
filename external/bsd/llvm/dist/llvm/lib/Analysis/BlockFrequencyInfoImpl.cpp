@@ -231,7 +231,8 @@ void Distribution::normalize() {
     // Scale down below UINT32_MAX.  Since Shift is larger than necessary, we
     // can round here without concern about overflow.
     assert(W.TargetNode.isValid());
-    W.Amount = std::max(UINT64_C(1), shiftRightAndRound(W.Amount, Shift));
+    // uint64_t not UINT64_C: gcc 4.8 std::max rejects ULL vs unsigned long.
+    W.Amount = std::max(uint64_t(1), shiftRightAndRound(W.Amount, Shift));
     assert(W.Amount <= UINT32_MAX);
 
     // Update the total.
@@ -439,7 +440,7 @@ static void convertFloatingToInteger(BlockFrequencyInfoImplBase &BFI,
                << ", factor = " << ScalingFactor << "\n");
   for (size_t Index = 0; Index < BFI.Freqs.size(); ++Index) {
     Scaled64 Scaled = BFI.Freqs[Index].Scaled * ScalingFactor;
-    BFI.Freqs[Index].Integer = std::max(UINT64_C(1), Scaled.toInt<uint64_t>());
+    BFI.Freqs[Index].Integer = std::max(uint64_t(1), Scaled.toInt<uint64_t>());
     DEBUG(dbgs() << " - " << BFI.getBlockName(Index) << ": float = "
                  << BFI.Freqs[Index].Scaled << ", scaled = " << Scaled
                  << ", int = " << BFI.Freqs[Index].Integer << "\n");

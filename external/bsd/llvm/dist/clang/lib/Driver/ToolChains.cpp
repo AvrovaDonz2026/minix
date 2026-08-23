@@ -2732,7 +2732,13 @@ Minix::GetCXXStdlibType(const ArgList &Args) const {
   }
   return ToolChain::CST_Libstdcxx;
 #else
-  return ToolChain::CST_Libcxx;
+  switch (getArch()) {
+  case llvm::Triple::riscv32:
+  case llvm::Triple::riscv64:
+    return ToolChain::CST_Libstdcxx;
+  default:
+    return ToolChain::CST_Libcxx;
+  }
 #endif /* 0 */
 }
 

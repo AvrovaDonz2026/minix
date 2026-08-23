@@ -8,6 +8,8 @@ cscope.*
 *.patch
 !toolchain/patches/gcc13/**/*.patch
 !toolchain/patches/gcc13/*.patch
+!toolchain/patches/riscv64-guest/**/*.patch
+!toolchain/patches/riscv64-guest/*.patch
 *.rej
 *.[1-9].gz
 *.o
@@ -55,6 +57,8 @@ external/bsd/llvm/dist/clang/test/CodeGenCXX/microsoft-abi-vtables-multiple-nonv
 external/bsd/llvm/dist/clang/test/CodeGenCXX/microsoft-abi-vtables-multiple-nonvirtual-inheritance-this-a
 external/bsd/llvm/dist/clang/test/CodeGenCXX/microsoft-abi-vtables-multiple-nonvirtual-inheritance-vdtors
 external/bsd/llvm/dist/llvm/test/Verifier/bitcast-address-space-through-constant-inttoptr-inside-gep-i
+external/apache2/llvm-cmake/dist/
+external/apache2/llvm-cmake/build/
 lib/libc/compat__*
 .gdbinit
 *.img

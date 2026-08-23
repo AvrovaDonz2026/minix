@@ -129,20 +129,30 @@ run_distribution() {
 }
 
 run_image() {
+  local objdir="${OBJDIR}"
+  case "${objdir}" in
+  /*) ;;
+  *) objdir="${REPO_ROOT}/${objdir}" ;;
+  esac
   echo "[i386] mkdisk -> ${IMAGE_PATH}"
-  OBJDIR="${OBJDIR}" DESTDIR="${REPO_ROOT}/${OBJDIR}/destdir.${ARCH}" \
+  OBJDIR="${objdir}" DESTDIR="${objdir}/destdir.${ARCH}" \
     OUTPUT="${IMAGE_PATH}" \
-    minix/releasetools/i386/mkdisk.sh -d "${REPO_ROOT}/${OBJDIR}" -o "${IMAGE_PATH}"
+    minix/releasetools/i386/mkdisk.sh -d "${objdir}" -o "${IMAGE_PATH}"
   echo "[i386] IMAGE=${IMAGE_PATH}"
 }
 
 run_qemu() {
   local image="${IMAGE_PATH}"
+  local objdir="${OBJDIR}"
   [[ -f "${image}" ]] || {
     echo "[i386] ERROR: disk image missing: ${image} (run image first)" >&2
     exit 1
   }
-  OBJDIR="${REPO_ROOT}/${OBJDIR}" \
+  case "${objdir}" in
+  /*) ;;
+  *) objdir="${REPO_ROOT}/${objdir}" ;;
+  esac
+  OBJDIR="${objdir}" \
     minix/scripts/qemu-i386.sh -i "${image}" -m 256M
 }
 

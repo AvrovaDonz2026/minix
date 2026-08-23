@@ -18,8 +18,8 @@ DESTDIR="${DESTDIR:-${OBJDIR}/destdir.${ARCH}}"
 OUTPUT="${OUTPUT:-minix-i386.img}"
 BOOTXX_SECS=32
 ROOT_SIZE=$((64 * 1024 * 1024))
-USR_SIZE=$((128 * 1024 * 1024))
-HOME_SIZE=$((32 * 1024 * 1024))
+USR_SIZE=$((512 * 1024 * 1024))
+HOME_SIZE=$((64 * 1024 * 1024))
 EFI_SIZE=0
 
 usage() {
@@ -43,6 +43,17 @@ done
 
 log() { echo "[mkdisk-i386] $*"; }
 die() { echo "[mkdisk-i386] ERROR: $*" >&2; exit 1; }
+
+filter_existing_entries() {
+  local root="$1"
+  local path
+  while IFS= read -r line; do
+    path="${line%% *}"
+    path="${path#./}"
+    [[ -e "${root}/${path}" ]] || continue
+    printf '%s\n' "${line}"
+  done
+}
 
 [[ -d "${DESTDIR}" ]] || die "DESTDIR not found: ${DESTDIR}"
 [[ -x "${DESTDIR}/boot/minix/.temp/kernel" ]] || \
@@ -78,6 +89,13 @@ if [[ -d "${DESTDIR}/home" ]]; then
 fi
 
 cp "${DESTDIR}/usr/mdec/boot_monitor" "${ROOT_DIR}/boot_monitor"
+cat >"${ROOT_DIR}/boot.cfg" <<EOF
+menu=Start MINIX 3:load_mods /boot/minix/.temp/mod*; multiboot /boot/minix/.temp/kernel rootdevname=c0d0p0
+menu=Drop to boot prompt:prompt
+clear=1
+timeout=1
+default=1
+EOF
 cat >"${ROOT_DIR}/etc/fstab" <<'EOF'
 /dev/c0d0p1	/usr		mfs	rw			0	2
 /dev/c0d0p2	/home		mfs	rw			0	2
@@ -85,19 +103,30 @@ none		/sys		devman	rw,rslabel=devman	0	0
 none		/dev/pts	ptyfs	rw,rslabel=ptyfs	0	0
 EOF
 
-log "building mtree specs"
-"${CROSS_TOOLS}/nbmtree" -C -K uname=root -K grname=wheel \
-  -p "${ROOT_DIR}" > "${WORK_DIR}/input"
+log "building mtree specs from METALOG"
+"${CROSS_TOOLS}/nbmtree" -N "${ROOT_DIR}/etc" -C -K device \
+  < "${DESTDIR}/METALOG" | filter_existing_entries "${ROOT_DIR}" > "${WORK_DIR}/input"
+
+if [[ -f "${ROOT_DIR}/boot_monitor" ]] && \
+    ! grep -q '^\./boot_monitor ' "${WORK_DIR}/input"; then
+  printf './boot_monitor type=file uid=0 gid=0 mode=0444 size=%s\n' \
+    "$(stat -c%s "${ROOT_DIR}/boot_monitor")" >> "${WORK_DIR}/input"
+fi
+if [[ -f "${ROOT_DIR}/boot.cfg" ]] && \
+    ! grep -q '^\./boot\.cfg ' "${WORK_DIR}/input"; then
+  printf './boot.cfg type=file uid=0 gid=0 mode=0644 size=%s\n' \
+    "$(stat -c%s "${ROOT_DIR}/boot.cfg")" >> "${WORK_DIR}/input"
+fi
 
 grep -v '^\./usr/\|^\./home/' "${WORK_DIR}/input" | \
   "${CROSS_TOOLS}/nbtoproto" -b "${ROOT_DIR}" > "${WORK_DIR}/proto.root"
 
-grep -E '^\./usr/|^\./usr$|^\.$' "${WORK_DIR}/input" | \
-  sed 's,^\./usr,\.,' | \
+{ echo '. type=dir uid=0 gid=0 mode=0755'; \
+  { grep -E '^\./usr/|^\./usr ' "${WORK_DIR}/input" || true; } | sed 's,^\./usr,\.,'; } | \
   "${CROSS_TOOLS}/nbtoproto" -b "${ROOT_DIR}/usr" > "${WORK_DIR}/proto.usr"
 
-grep -E '^\./home/|^\./home$|^\.$' "${WORK_DIR}/input" | \
-  sed 's,^\./home,\.,' | \
+{ echo '. type=dir uid=0 gid=0 mode=0755'; \
+  { grep -E '^\./home/|^\./home ' "${WORK_DIR}/input" || true; } | sed 's,^\./home,\.,'; } | \
   "${CROSS_TOOLS}/nbtoproto" -b "${ROOT_DIR}/home" > "${WORK_DIR}/proto.home"
 
 rm -f "${OUTPUT}"

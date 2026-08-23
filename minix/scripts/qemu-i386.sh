@@ -35,6 +35,13 @@ else
   OBJDIR="${REPO_ROOT}/obj.i386"
 fi
 
+DESTDIR_RESOLVED=""
+if [[ -n "${DESTDIR:-}" && -d "${DESTDIR}" ]]; then
+  DESTDIR_RESOLVED="$(cd "${DESTDIR}" && pwd)"
+elif [[ -d "${OBJDIR}/destdir.i386" ]]; then
+  DESTDIR_RESOLVED="${OBJDIR}/destdir.i386"
+fi
+
 QEMU="${QEMU:-qemu-system-i386}"
 KVM_ARGS=()
 if [[ "${QEMU_KVM:-auto}" != "0" ]] && [[ -r /dev/kvm ]] && groups | grep -q '\bkvm\b'; then
@@ -65,12 +72,8 @@ if [[ -n "${MODROOT}" && -d "${MODROOT}/boot/minix/.temp" ]]; then
 fi
 
 resolve_destdir() {
-  if [[ -n "${DESTDIR:-}" && -d "${DESTDIR}" ]]; then
-    echo "${DESTDIR}"
-    return 0
-  fi
-  if [[ -d "${OBJDIR}/destdir.i386" ]]; then
-    echo "${OBJDIR}/destdir.i386"
+  if [[ -n "${DESTDIR_RESOLVED}" ]]; then
+    echo "${DESTDIR_RESOLVED}"
     return 0
   fi
   return 1
@@ -119,16 +122,19 @@ fi
 QEMU_ARGS=(
   "${KVM_ARGS[@]}"
   -m "${MEMORY}"
-  -kernel "${KERNEL}"
-  -append "${APPEND}"
-  -initrd "${mods}"
   -nographic
   -serial mon:stdio
   -display none
 )
 
 if [[ -n "${DISK}" ]]; then
-  QEMU_ARGS+=(-hda "${DISK}")
+  QEMU_ARGS+=(-drive "file=${DISK},format=raw" -boot order=c)
+else
+  QEMU_ARGS+=(
+    -kernel "${KERNEL}"
+    -append "${APPEND}"
+    -initrd "${mods}"
+  )
 fi
 
 if (( DEBUG == 1 )); then

@@ -103,12 +103,54 @@ run_tools() {
   echo "[i386] TOOLDIR=${tooldir}"
 }
 
+prepare_libstdcxx_guest() {
+  local destdir_root="${REPO_ROOT}/${OBJDIR}/destdir.${ARCH}"
+  local functexcept_src="${REPO_ROOT}/external/gpl3/gcc/dist/libstdc++-v3/src/c++11/functexcept.cc"
+
+  rm -rf "${REPO_ROOT}/${OBJDIR}/external/gpl3/gcc/lib/libstdc++-v3"
+  rm -f \
+    "${destdir_root}/usr/lib/libstdc++.a" \
+    "${destdir_root}/usr/lib/libstdc++_pic.a" \
+    "${destdir_root}/usr/include/g++/bits/c++config.h"
+  rm -rf "${destdir_root}/usr/include/c++"
+  rm -f \
+    "${destdir_root}/usr/lib/libc++.a" \
+    "${destdir_root}/usr/lib/libc++_pic.a"
+
+  sanitize_cxxconfig() {
+    local cfg="$1"
+    [[ -f "${cfg}" ]] || return 0
+    sed -i -E \
+      's@^#define[[:space:]]+_GLIBCXX_HAS_GTHREADS([[:space:]]+.*)?$@/* #undef _GLIBCXX_HAS_GTHREADS */@' \
+      "${cfg}"
+  }
+
+  sanitize_cxxconfig "${REPO_ROOT}/external/gpl3/gcc/lib/libstdc++-v3/arch/i386/c++config.h"
+  if [[ -d "${destdir_root}/usr/include/g++" ]]; then
+    while IFS= read -r -d '' cfg; do
+      sanitize_cxxconfig "${cfg}"
+    done < <(find "${destdir_root}/usr/include/g++" -type f -name 'c++config.h' -print0)
+  fi
+
+  [[ -f "${functexcept_src}" ]] || {
+    echo "[i386] ERROR: missing ${functexcept_src}" >&2
+    exit 1
+  }
+  if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
+    echo "[i386] ERROR: no MINIX future fallback in ${functexcept_src}" >&2
+    exit 1
+  fi
+  echo "[i386] libstdc++ guest prep: functexcept no-future profile ok"
+}
+
 run_distribution() {
   local tooldir
   tooldir="$(pick_tooldir)" || {
     echo "[i386] ERROR: run tools first" >&2
     exit 1
   }
+
+  prepare_libstdcxx_guest
 
   echo "[i386] building distribution (jobs=${DIST_JOBS}) -> ${LOG_DIR}/distribution.log"
   export MAKEFLAGS="-j${DIST_JOBS}"

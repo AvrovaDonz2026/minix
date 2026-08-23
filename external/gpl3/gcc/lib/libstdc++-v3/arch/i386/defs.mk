@@ -49,3 +49,15 @@ G_CLOCALE_H=config/locale/generic/c_locale.h
 G_CMESSAGES_H=config/locale/generic/messages_members.h
 G_CTIME_H=config/locale/generic/time_members.h
 G_CONFIGLINKS=${GNUHOSTDIST}/libgcc/enable-execute-stack-empty.c  enable-execute-stack.c ${GNUHOSTDIST}/libgcc/unwind-generic.h  unwind.h ${GNUHOSTDIST}/libgcc/config/no-unwind.h  md-unwind-support.h ${GNUHOSTDIST}/libgcc/config/i386/sfp-machine.h  sfp-machine.h ${GNUHOSTDIST}/libgcc/gthr-single.h  gthr-default.h 
+
+# MINIX/i386 currently uses gthr-single (no pthread backend). Exclude
+# libstdc++ sources that require __gthread condition variable/thread types.
+# c++config.h also leaves _GLIBCXX_ATOMIC_BUILTINS undefined, so <atomic>
+# is a hard #error; skip the C++11 atomic ABI compat object too.
+G_SRC_SOURCES:=	${G_SRC_SOURCES:Ncompatibility-thread-c++0x.cc}
+G_SRC_SOURCES:=	${G_SRC_SOURCES:Ncompatibility-atomic-c++0x.cc}
+G_CPP11_SOURCES:= ${G_CPP11_SOURCES:Ncondition_variable.cc:Nfuture.cc:Nmutex.cc:Nthread.cc}
+
+# Keep functexcept.cc aligned with the reduced source set above. Without
+# future.cc in this profile, avoid emitting future_* references here.
+CPPFLAGS.functexcept.cc+= -D_GLIBCXX_MINIX_NO_FUTURE=1

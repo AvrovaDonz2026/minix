@@ -309,6 +309,16 @@ jobs:
             done < <(find "${destdir_root}/usr/include/g++" -type f -name 'c++config.h' -print0)
           fi
 
+          functexcept_src="${PWD}/external/gpl3/gcc/dist/libstdc++-v3/src/c++11/functexcept.cc"
+          if [[ ! -f "${functexcept_src}" ]]; then
+            echo "Missing ${functexcept_src}" >&2
+            exit 1
+          fi
+          if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
+            echo "Failed: no MINIX future fallback found in ${functexcept_src}" >&2
+            exit 1
+          fi
+
       - name: Build distribution (obj.i386)
         shell: bash
         run: |
@@ -457,12 +467,12 @@ jobs:
               >"$(basename "${{ steps.meta.outputs.sums_path }}")"
           )
 
-      - name: QEMU interactive smoke test (neofetch + shutdown chain)
+      - name: QEMU boot smoke test (runtime probe)
         timeout-minutes: 8
         shell: bash
         env:
           CI_IMAGE_PATH: ${{ steps.meta.outputs.image_path }}
-          QEMU_SMOKE_LOG: /tmp/qemu-i386-neofetch-smoke.log
+          QEMU_SMOKE_LOG: /tmp/qemu-i386-boot-smoke.log
         run: |
           set -euo pipefail
           smoke_image="${CI_IMAGE_PATH}.smoke"
@@ -471,156 +481,35 @@ jobs:
             rm -f "${smoke_image}" || true
           }
           trap cleanup_smoke_image EXIT
-          export CI_SMOKE_IMAGE_PATH="${smoke_image}"
           export OBJDIR="${PWD}/${OBJDIR}"
           export DESTDIR="${OBJDIR}/destdir.i386"
-          python3 - <<'PY'
-          import os
-          import re
-          import time
-          import fcntl
-          import select
-          import subprocess
-          import sys
+          boot_kernel="${DESTDIR}/boot/minix/.temp/kernel"
+          probe="${PWD}/minix/tests/i386/qemu_runtime_probe.py"
+          log_path="${QEMU_SMOKE_LOG}"
 
-          image_path = os.environ["CI_SMOKE_IMAGE_PATH"]
-          log_path = os.environ["QEMU_SMOKE_LOG"]
-          objdir = os.environ["OBJDIR"]
-          destdir = os.environ["DESTDIR"]
-          qemu_script = os.path.join(os.getcwd(), "minix/scripts/qemu-i386.sh")
-          boot_kernel = os.path.join(destdir, "boot/minix/.temp/kernel")
+          if [[ ! -f "${probe}" ]]; then
+            echo "[smoke] missing probe: ${probe}" >&2
+            exit 1
+          fi
 
-          if not os.path.isfile(image_path):
-            print(f"[smoke] missing image: {image_path}", file=sys.stderr)
-            sys.exit(1)
-          if not os.path.isfile(boot_kernel):
-            print(f"[smoke] missing boot kernel: {boot_kernel}", file=sys.stderr)
-            sys.exit(1)
-          if not os.path.isfile(qemu_script):
-            print(f"[smoke] missing qemu script: {qemu_script}", file=sys.stderr)
-            sys.exit(1)
+          : >"${log_path}"
+          set +e
+          python3 "${probe}" \
+            --qemu-script "${PWD}/minix/scripts/qemu-i386.sh" \
+            --kernel "${boot_kernel}" \
+            --destdir "${DESTDIR}" \
+            --disk "${smoke_image}" \
+            --timeout 240 \
+            | tee -a "${log_path}"
+          rc=$?
+          set -e
 
-          cmd = [
-            qemu_script,
-            "-s",
-            "-k", boot_kernel,
-            "-B", destdir,
-            "-i", image_path,
-            "-m", "256M",
-          ]
-          print("[smoke] launching qemu:", " ".join(cmd))
-
-          proc = subprocess.Popen(
-            cmd,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-          )
-          if proc.stdin is None or proc.stdout is None:
-            print("[smoke] failed to open qemu stdio", file=sys.stderr)
-            sys.exit(1)
-
-          fd = proc.stdout.fileno()
-          flags = fcntl.fcntl(fd, fcntl.F_GETFL)
-          fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
-
-          os.makedirs(os.path.dirname(log_path), exist_ok=True)
-          logf = open(log_path, "w", encoding="utf-8", errors="ignore")
-          buf = ""
-
-          def pump(seconds=0.4):
-            global buf
-            end = time.time() + seconds
-            while time.time() < end:
-              r, _, _ = select.select([fd], [], [], 0.1)
-              if not r:
-                if proc.poll() is not None:
-                  return
-                continue
-              try:
-                data = os.read(fd, 65536)
-              except BlockingIOError:
-                data = b""
-              if not data:
-                if proc.poll() is not None:
-                  return
-                continue
-              text = data.decode("utf-8", errors="ignore")
-              buf += text
-              if len(buf) > 800000:
-                buf = buf[-400000:]
-              logf.write(text)
-              logf.flush()
-
-          def wait_for(pattern, timeout, label):
-            rx = re.compile(pattern, re.M)
-            end = time.time() + timeout
-            while time.time() < end:
-              if rx.search(buf):
-                print(f"[smoke] ok: {label}")
-                return True
-              if proc.poll() is not None:
-                break
-              pump(0.5)
-            print(f"[smoke] timeout: {label}", file=sys.stderr)
-            return False
-
-          def send_line(line):
-            print(f"[smoke] send: {line}")
-            proc.stdin.write((line + "\n").encode("utf-8"))
-            proc.stdin.flush()
-
-          def shutdown_qemu():
-            if proc.poll() is not None:
-              return
-            try:
-              proc.stdin.write(b"\x01x")
-              proc.stdin.flush()
-            except Exception:
-              pass
-            end = time.time() + 8
-            while time.time() < end and proc.poll() is None:
-              pump(0.3)
-            if proc.poll() is None:
-              proc.terminate()
-              try:
-                proc.wait(timeout=5)
-              except subprocess.TimeoutExpired:
-                proc.kill()
-                proc.wait(timeout=5)
-
-          ok = True
-          try:
-            ok &= wait_for(r"(?:login:|(?:^|\n)#\s)", 240, "shell prompt")
-
-            if ok:
-              send_line("neofetch")
-              ok &= wait_for(r"Donz Fetch", 90, "neofetch banner")
-              ok &= wait_for(r"OS:\s+Minix Cat", 90, "neofetch os line")
-              ok &= wait_for(r"(?:^|\n)#\s", 90, "prompt after neofetch")
-
-            if ok:
-              send_line("/sbin/shutdown -p now || /sbin/halt -p || /sbin/poweroff || /sbin/reboot -p || /sbin/reboot")
-              ok &= wait_for(
-                r"MINIX has halted and will now power off|MINIX will now be shut down",
-                150,
-                "shutdown banner",
-              )
-
-            if re.search(r"sh:\s+/sbin/(shutdown|halt|poweroff|reboot): not found", buf):
-              print("[smoke] detected missing shutdown binary in guest output", file=sys.stderr)
-              ok = False
-          finally:
-            shutdown_qemu()
-            pump(1.0)
-            logf.close()
-
-          if not ok:
-            print(f"[smoke] failed. log saved to: {log_path}", file=sys.stderr)
-            sys.exit(1)
-
-          print(f"[smoke] passed. log saved to: {log_path}")
-          PY
+          if [[ "${rc}" -ne 0 ]]; then
+            echo "[smoke] failed (rc=${rc}). log: ${log_path}" >&2
+            tail -n 200 "${log_path}" || true
+            exit "${rc}"
+          fi
+          echo "[smoke] passed. log: ${log_path}"
 
       - name: Upload QEMU smoke log
         if: always()
@@ -628,7 +517,7 @@ jobs:
         with:
           name: i386-smoke-log-${{ steps.meta.outputs.nightly_stamp }}-${{ steps.meta.outputs.short_sha }}
           if-no-files-found: ignore
-          path: /tmp/qemu-i386-neofetch-smoke.log
+          path: /tmp/qemu-i386-boot-smoke.log
           retention-days: 14
 
       - name: Full i386 test suite (blocking)

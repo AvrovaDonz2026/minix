@@ -1,7 +1,7 @@
 # MINIX RISC-V Port Issues / MINIX RISC-V 移植问题清单
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.74
+**Version / 版本**: 1.75 (merges LLVM track 1.67 + virtio-net track 1.74)
 **Scope / 范围**: RISC-V 64-bit port, evidence includes file/line references.
 
 本文件记录 RISC-V 64 位移植的具体问题与证据（含文件/行号），并给出修复建议。  
@@ -25,8 +25,8 @@ This file records concrete issues in the RISC-V 64-bit port with evidence and su
 - `for` 循环在命中槽位后仍会 `i++`，`VIRTIO_MMIO_IRQ(i-1)` 对槽 `k` 得到 IRQ `k+1`，不是 off-by-one。
 - 旧 SBI `REMOTE_SFENCE_VMA` 的 `start`/`size` 是要刷新的 VA 范围，不是指针；`#5` 只需 hart-mask 指针为 PA。
 
-**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#13`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`, `#77`, `#78`, `#79`, `#80`, `#81`, `#82`, `#84`, `#85`。  
-Issue IDs are historically stable and intentionally non-contiguous; archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#13`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`, `#77`, `#78`, `#79`, `#80`, `#81`, `#82`, `#84`, `#85`.
+**编号说明 / Numbering note**: 问题编号采用历史保留，不保证连续；部分编号在 virtio-net 与 LLVM packaging 并行分支中复用，下文 P1/P2 对复用编号保留双方原始描述。已归档到 “Fixed in Current Working Tree” 的历史编号包括 `#1`, `#2`, `#3`, `#10`, `#12`, `#13`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`, `#77`, `#78`, `#79`, `#80`, `#81`, `#82`, `#84`, `#85`。  
+Issue IDs are historically stable and intentionally non-contiguous; some IDs were reused across parallel virtio-net and LLVM packaging tracks — both original descriptions are kept in P1/P2 below. Archived IDs moved to “Fixed in Current Working Tree” include `#1`, `#2`, `#3`, `#10`, `#12`, `#13`, `#16`, `#24`, `#25`, `#34`, `#35`, `#36`, `#38`, `#39`, `#40`, `#41`, `#43`, `#44`, `#45`, `#46`, `#47`, `#48`, `#49`, `#50`, `#51`, `#52`, `#53`, `#54`, `#55`, `#56`, `#57`, `#58`, `#59`, `#60`, `#61`, `#62`, `#63`, `#64`, `#65`, `#66`, `#67`, `#68`, `#69`, `#70`, `#71`, `#72`, `#73`, `#74`, `#75`, `#76`, `#77`, `#78`, `#79`, `#80`, `#81`, `#82`, `#84`, `#85`.
 
 ## Repair Priority / 修复优先级（从重到轻）
 
@@ -85,6 +85,12 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   44) `[DONE]` `#74` `#73` kick 之后 ping 仍 100% 丢包：used 环只在 IRQ 上排空，EVENT_IDX 错过第一次 used 通知后不再中断
   45) `[DONE]` `#75` hosted nightly 仍要 30+ 分钟才能重现 EVENT_IDX avail/used 通知数学错误；本地/CI 用宿主可执行 `test_virtio_event_idx.c` + net smoke MAC/pcap 探测
   46) `[DONE]` `#76` `#75` pcap 显示 guest ARP who-has `10.0.2.2` 但 slirp 不回：QEMU 8.2 `ipv6=on` 且未写 `ipv4` 会关掉 IPv4
+  47) `[DONE]` `#42` (LLVM packaging track) LLVM packaging CI 补上 host IR/tblgen、DESTDIR ELF、来宾 clang 功能门禁（不再只看 `--version`）
+  48) `[DONE]` `#46` (LLVM packaging track) LLVM packaging 的 libc++ 头文件盖住 libstdc++，`functexcept.cc` 的 `<future>` 拉进 `pthread.h`
+  49) `[DONE]` `#49` (LLVM packaging track) LLVM host 门禁把 `nbllvm-tblgen` 写成 `nblvm-tblgen`，tools 已装 tblgen 仍失败
+  50) `[DONE]` `#51` (LLVM packaging track) LLVM 3.6.1 `RISCVTargetInfo` 在不完整静态数组上调用 `array_lengthof`，tools 编译 `Targets.cpp` 失败
+  51) `[DONE]` `#66` (LLVM packaging track) LLVM packaging 编 libstdc++ 时 `compatibility-atomic-c++0x.cc` 踩单线程 `<atomic>` `#error`
+  52) `[DONE]` `#73` (LLVM packaging track) 客端 LLVM 3.6.1 `std::max(UINT64_C(1), uint64_t)` 在 gcc 4.8 / LP64 上类型冲突
 - P2 / 中优先（功能完备性与平台能力）:
   1) `A2` RV64 动态装载链路（`MKPIC`/`ld.elf_so`）补齐与验证
   2) `#15` RISC-V SMP 核心实现缺失
@@ -92,14 +98,15 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
   4) `#14` DT 多段内存/保留区解析补齐
   5) `[DONE]` `#30` multi-smoke 默认复用磁盘镜像，削弱跨次可复现性
   6) `[DONE]` `#31` smoke/repro 门禁对退出语义与宿主可移植性校验不足
-  7) `[DONE]` `#37` native toolchain（来宾内 `as/ld/ar/ranlib` + `cc/gcc/clang`）闭环未完成
-  8) `[DONE]` `#78` `PLIC_NUM_SOURCES=1024` 超过 QEMU virt 的 96 个源，启动写非法 PLIC 寄存器
-  9) `[DONE]` `#79` legacy virtio-mmio 仍写 `GUEST_FEATURES_SEL=1`，QEMU 报 guest_error
-  10) `[DONE]` `#80` virtio-net `CTRL_RX` PROMISC 先于 `CTRL_MAC_TABLE_SET`（QEMU 上不挡 ping）
-  11) `[DONE]` `#81` 内核 `pg_walk()` 叶子拆分后未立刻 `sfence.vma`
-  12) `[DONE]` `#82` `VMCTL_SETADDRSPACE` 在 `root_v==NULL` 时把物理根当 VA
-  13) `[DONE]` `#84` `run_tests.sh` kernel boot 忽略 timeout 且 grep 任意 `MINIX`
-  14) `[DONE]` `#85` `multi_smoke_gate` `run_one` 的 boot marker 不要求 shell prompt
+  7) `[DONE]` `#37` native toolchain（来宾内 `as/ld/ar/ranlib` + `cc/gcc/clang`）闭环；LLVM 分支补充：来宾 `clang` 亦可由 `#42` packaging CI 单独覆盖
+  8) `#42` (LLVM packaging track) 打开 `MKLLVM=yes` 的 tools+distribution；LLVM 3.6.1 仍无 RISC-V codegen backend
+  9) `[DONE]` `#78` `PLIC_NUM_SOURCES=1024` 超过 QEMU virt 的 96 个源，启动写非法 PLIC 寄存器
+  10) `[DONE]` `#79` legacy virtio-mmio 仍写 `GUEST_FEATURES_SEL=1`，QEMU 报 guest_error
+  11) `[DONE]` `#80` virtio-net `CTRL_RX` PROMISC 先于 `CTRL_MAC_TABLE_SET`（QEMU 上不挡 ping）
+  12) `[DONE]` `#81` 内核 `pg_walk()` 叶子拆分后未立刻 `sfence.vma`
+  13) `[DONE]` `#82` `VMCTL_SETADDRSPACE` 在 `root_v==NULL` 时把物理根当 VA
+  14) `[DONE]` `#84` `run_tests.sh` kernel boot 忽略 timeout 且 grep 任意 `MINIX`
+  15) `[DONE]` `#85` `multi_smoke_gate` `run_one` 的 boot marker 不要求 shell prompt
 - P3 / 低优先（可维护性与技术债）:
   1) `#19` kernel/VM/RS 无条件调试日志收敛
   2) `#11` `minimal_kernel` RISC-V 适配
@@ -1517,6 +1524,89 @@ Issue IDs are historically stable and intentionally non-contiguous; archived IDs
     `MKCXX=yes`；文档中的本地 distribution 基线是 `MKCXX=no`，该镜像
     过不了 cxx 步骤。这不是 hosted 假阳性。
 
+### 42) Enable in-tree LLVM/clang in RISC-V full-system packaging CI / 用全系统 packaging CI 打开 RISC-V 的 LLVM
+- Evidence / 证据:
+  - Baseline docs and CI skipped LLVM because host LLVM 3.6.1 failed on
+    modern GCC and the tree had no RISC-V triple/TargetInfo:
+    `README-RISCV64.md` “LLVM 编译问题”,
+    `.github/workflows/nightly-riscv64.yml` `HAVE_LLVM=no MKLLVM=no`.
+  - In-tree LLVM is 3.6.1 (`external/bsd/llvm/Makefile.inc`) with
+    `--enable-targets=x86,powerpc,sparc,aarch64,arm,mips` and no RISC-V
+    backend. Clang therefore cannot codegen RV64 yet.
+  - MINIX `bsd.own.mk` used to set `HAVE_LIBGCC?= no` whenever
+    `HAVE_LLVM=yes`, which would drop libgcc on a GCC-based RISC-V world.
+- Fix in this tree / 本树修复:
+  - Keep GCC as `ACTIVE_CC` and force `HAVE_LIBGCC=yes` on riscv64.
+  - Do not let clang steal `/usr/bin/cc` on RISC-V; gcc still provides `cc`.
+  - Teach LLVM/clang the `riscv32`/`riscv64` triples, Minix TargetInfo,
+    GNU `as`/`ld` flags, and target triple in `config.h.in`.
+  - Host LLVM build: extra `HOST_CXXFLAGS` so GCC 13 can compile LLVM 3.6.
+  - New workflow `.github/workflows/packaging-riscv64-llvm.yml` runs the
+    same hosted tools→distribution→QEMU suite with `MKLLVM=yes` and
+    requires `riscv64-elf32-minix-clang` plus DESTDIR `clang`/`clang++`.
+  - Functional LLVM gates (not just `--version`):
+    - After tools: `minix/tests/riscv64/llvm_toolchain_gate.sh --mode host
+      --require host` checks clang 3.6, clang++/clang-cpp, nbllvm-tblgen,
+      nbclang-tblgen, RISC-V/Minix `-dM` macros, `-fsyntax-only`, `-E`,
+      optional `-emit-llvm`, and that `clang -c` does **not** emit a
+      RISC-V object (no backend).
+    - After distribution: `--mode destdir --require destdir` checks
+      DESTDIR clang is RISC-V ELF, `/usr/bin/cc` is not clang, and
+      libc++ `__mutex_base` is absent (`#46`).
+    - Full suite: `./minix/tests/riscv64/run_tests.sh llvm` with
+      `LLVM_GATE_REQUIRE=all` also boots QEMU for guest `clang --version`
+      / macros / IR.
+    - GCC nightly `run_tests.sh all` still skips this layer when clang
+      is absent (exit 2).
+- Residual / 残留:
+  - No in-tree RISC-V LLVM backend, so `clang -c` for RV64 still cannot
+    emit code. Guest native compile stays on gcc until a later backend
+    import.
+  - Push `c2e1100aa` (`32482987335` / `32482990730`) still aborted in
+    tools with `error: bfd Makefile missing after configure`. The extra
+    nbmake `bfd.h` prerequisite ran right after top-level configure,
+    which only writes `build/Makefile`. `#45` drops that prerequisite
+    and lets GNU make run `configure-bfd` then `all-binutils`.
+  - This branch `MKCXX=yes`, so distribution builds libstdc++. HEAD
+    `adc524d54` (`32521564417`) failed in `compatibility-atomic-c++0x.cc`
+    (`<atomic>` is not supported on this single threaded system). `#66`
+    skips that source on riscv64. Do not mix onto the network PR
+    (`MKCXX=no`). After `#66`, this branch reaches native gcov; `#67`
+    maps libcommon onto gcc 4.8.5 diagnostic/`version.c` sources.
+    `#68` expands `Makefile.cc2c` mapped names immediately so cpp/gcc
+    keep `cppspec.c`/`gcc.c`/`ggc-none.c` instead of three copies of
+    the last match. `#69` restores gcc 4.8.5 `params.c` in
+    common-target and repeats `-lintl` after frontend archives.
+    `#70` sets `NOMAN` before `Makefile.cc2c` so `bsd.own.mk` does
+    not leave `MKMAN=yes` for `lto1` / `cc1` / `cc1obj` / `cc1plus`
+    (network nightly `32532469511` died `don't know how to make
+    lto1.1`). `#71` keeps generated `insn-*.o` (`:Minsn-*` not
+    `:Mininsn-*`) and adds 4.8.5-only backend objects gcc13
+    `G_OBJS` dropped (network nightly `32534503524` linked `lto1`
+    then missed `pointer_set_*` / `insn_data`). `#72` restores
+    gcc 4.8.5 `tree-mudflap.o` and libcpp `directives-only.o`
+    (network nightly `32537278919` linked `lto1` then missed
+    `mudflap_init()` / `_cpp_preprocess_dir_only` while linking
+    `cc1`). LLVM packaging
+    `32530212770` (`7cd93be42`) and `32539330823` (`cb5799c36`)
+    got past `#66` then failed compiling `functexcept.cc`:
+    `usr/include/c++/__mutex_base:17:21: fatal error: pthread.h`.
+    That path is LLVM libc++ (`INCSDIR=/usr/include/c++`), not
+    libstdc++ (`/usr/include/g++`). `bsd.own.mk` sets
+    `MKLIBCXX?= yes` after `HAVE_GCC` is filled in, so `MKLLVM=yes`
+    on riscv64 still turns libc++ on; `bsd.sys.mk` then adds
+    `-I${DESTDIR}/usr/include/c++` ahead of g++. `#46` forces
+    `MKLIBCXX=no` on riscv64, passes `-V MKLIBCXX=no` in LLVM CI,
+    and drops stale DESTDIR libc++ headers under MKUPDATE. Do not
+    mix onto the network PR (`MKCXX=no`). The host LLVM gate still
+    runs after tools even if a later C++ residual blocks
+    distribution. `#49`: first hosted host-gate run (`32543353223`
+    on `6e97a7c26`) failed `llvm-tblgen missing (nblvm-tblgen)`
+    while tools had installed `nbllvm-tblgen` (`nb` + `llvm-tblgen`).
+    The rest of the host layer passed, including `clang -c` not
+    emitting a RISC-V object.
+- Priority / 优先级: P2 (toolchain completeness; gated by packaging CI)
+
 ### 38) [DONE] release-riscv64 libstdc++ `functexcept` no-future gate stabilization / release-riscv64 中 libstdc++ `functexcept` no-future 门禁稳定化（已完成）
 - Evidence / 证据:
   - First failure mode (run `22290330786`): step 8 warned that dist-source patch
@@ -2098,6 +2188,225 @@ This section archives items with code-level fixes landed (some may still require
   `minix/tests/riscv64/qemu_runtime_probe.py` 接入
   `minix/tests/riscv64/multi_smoke_gate.sh`，默认覆盖
   `meminfo/ps/srv_status`，并在带盘轮次校验 `/dev/c0d0` 存在性。
+- Former P1 #43: native gcc `optionlist` skips option files missing from
+  the fetched gcc 4.8.5 dist (`params.opt` is gcc13-only in riscv64
+  `defs.mk`).
+  历史 P1 #43：原生 gcc `optionlist` 跳过 gcc 4.8.5 dist 没有的 option
+  文件。
+- Former P1 #44: RISC-V `machine/math.h` briefly defined
+  `__HAVE_LONG_DOUBLE 128` so `s_copysignl.c` would emit `_copysignl`.
+  That 128-bit flag was the wrong ABI for gcc 4.8.5; superseded by `#48`.
+  历史 P1 #44：为补 `_copysignl` 曾声明 128 位 long double，由 `#48` 取代。
+- Former P1 #45: tools binutils no longer has an nbmake `bfd.h`
+  prerequisite on `.configure_done`. Host GNU make runs `configure-bfd`
+  then `all-binutils` so `build/bfd/Makefile` exists before `elfxx-riscv.lo`.
+  历史 P1 #45：去掉 configure 之后立刻检查 `bfd/Makefile` 的 nbmake 依赖；
+  改由宿主 GNU make 先 `configure-bfd` 再编 `all-binutils`。
+- Former P1 #47: native gcov drops `json.o` when `json.cc` is absent, and
+  common-target skips gcc13-only sources or maps `.cc` to `.c` on gcc 4.8.5.
+  历史 P1 #47：gcov 在 4.8.5 dist 上跳过 `json.cc`；common-target 跳过
+  gcc13 才有的源文件，或把 `.cc` 映射到 `.c`。
+- Former P1 #48: nightly `32483868137` on the packaging branch passed
+  tools then failed `s_cbrtl.c` (`Unsupported long double format`).
+  gcc 4.8.5 long double is 64-bit. Drop `__HAVE_LONG_DOUBLE 128` and
+  alias `copysignl` / `fabsl` / `fmal` from the RISC-V `.S` files.
+  历史 P1 #48：发行版在 `s_cbrtl.c` 因 long double 格式失败。去掉
+  `__HAVE_LONG_DOUBLE 128`，在替换 C 源的 RISC-V 汇编里 alias `*l`。
+- Former P1 #50: hosted packaging `32486378021` failed native backend
+  looking for `gengenrtl.cc` on gcc 4.8.5. Cherry-picked the `.cc`/`.c`
+  generator fallback (no virtio-net).
+  历史 P1 #50：从网络分支拣入 backend 生成器 `.cc`/`.c` 回退。
+- Former P1 #51: LLVM tools `32486375962` (`66b109f29`) failed
+  `Targets.cpp` with `no matching function for call to 'array_lengthof'`
+  because `RISCVTargetInfo` called it on incomplete in-class arrays.
+  Define `getGCCRegNames` / `getGCCRegAliases` out of line after the
+  complete arrays, like PPC/NVPTX.
+  历史 P1 #51：把 RISC-V `array_lengthof` 移到完整数组定义之后。
+- Former P1 #52: hosted packaging `32488937725` failed native backend
+  looking for gcc13 `common.md` on gcc 4.8.5. Cherry-picked the
+  `G_md_file` exists() filter (no virtio-net).
+  历史 P1 #52：从网络分支拣入 `G_md_file` 存在性过滤。
+- Former P1 #53: hosted nightly `32491621998` (`6aa93380c`) passed tools
+  then failed backend with
+  `don't know how to make .../tools/gcc/build/gcc/version.h`. gcc 13
+  native Makefiles copy `version.h` from the GNU tools gcc build; gcc
+  4.8.5 does not emit it. Cherry-picked `Makefile.toolsgccfiles` (no
+  virtio-net): copy when present, otherwise synthesize `version.h` /
+  `bversion.h` / `plugin-version.h` and stub gcc13-only pass/cfn files.
+  历史 P1 #53：从网络分支拣入 tools gcc `version.h` 合成。
+- Former P1 #54: gcc 4.8.5 `genmodes` only accepts `-h|-m`. Cherry-picked
+  the `insn-modes-inline.h` stub, `Makefile.cc2c` `.cc` to `.c` mapping,
+  and `specs.h` stand-in (no virtio-net).
+  历史 P1 #54：从网络分支拣入 genmodes `-i` 空头文件与 `.cc` 映射。
+- Former P1 #55: hosted nightly `32495453269` synthesized local
+  `version.h` then failed looking for `tools/gcc/build/gcc/version.h`.
+  Cherry-picked the `G_GCC_H` local-stub dependency (no virtio-net).
+  历史 P1 #55：从网络分支拣入 `G_GCC_H` 本地 version.h 依赖。
+- Former P1 #56: hosted nightly `32497228532` (`744e854c3`) failed
+  native backend looking for `genhooks.cc`. Cherry-picked the
+  `Makefile.hooks` `.cc`/`.c` fallback (no virtio-net). gcc 4.8.5 ships
+  `genhooks.c`.
+  历史 P1 #56：从网络分支拣入 `genhooks.cc`/`genhooks.c` 映射。
+- Former P1 #57: hosted nightly `32499756350` (`e0766af8e`) compiled
+  `genhooks.c` then failed linking `gengtype`. Cherry-picked the
+  `version.lo` link and `gtype-desc.c` GTY output (no virtio-net).
+  历史 P1 #57：从网络分支拣入 gengtype `version.c` 链接。
+- Former P1 #58: hosted nightly `32502264930` (`b1686b5c3`) linked
+  `gengtype` then aborted in `s-gtype` (`named_label_entry` used but
+  not defined, then `abort in error_at_line`). Cherry-picked the
+  4.8.5 `G_GTFILES` feed and `.cc` to `.c` mapping (no virtio-net).
+  历史 P1 #58：从网络分支拣入 gengtype `G_GTFILES` 输入。
+- Former P1 #59: hosted nightly `32505629389` (`d93d49dcb`) failed
+  `gtyp-input.list.tmp` with `sh: .for: not found`. Cherry-picked the
+  per-word `printf` recipe (no virtio-net).
+  历史 P1 #59：从网络分支拣入 `.for` recipe 展开修复。
+- Former P1 #60: hosted nightly `32508128890` (`f074b4a56`) expanded
+  `.for`, then make split the standalone recipe `printf '%s\n'` so
+  `gtyp-input.list.tmp` was garbage and `gengtype -r` aborted.
+  Cherry-picked the per-word `echo` recipe (no virtio-net).
+  历史 P1 #60：从网络分支拣入 `echo` 替代独立 recipe 里的 `printf '%s\n'`。
+- Former P1 #61: hosted nightly `32511340050` (`bfb31c72d`) echoed a
+  well-formed list, then `gengtype -r` still aborted on undefined
+  `answer` / `cpp_macro`. Cherry-picked keeping `cpp-id-data.h` when
+  the file exists (no virtio-net).
+  历史 P1 #61：从网络分支拣入 4.8.5 `cpp-id-data.h` 保留。
+- Former P1 #62: hosted nightly `32513249750` (`a0707ca84`) finished
+  `s-gtype`, then failed compiling `hash-table.lo` on the host/build
+  `config.h` guard. Cherry-picked wrapping `config.h` so
+  `GENERATOR_FILE` includes arch `bconfig.h` (no virtio-net).
+  历史 P1 #62：从网络分支拣入 `config.h` → `bconfig.h` 包装。
+- Former P1 #63: hosted nightly `32516002843` (`086dbe436`) compiled
+  `hash-table.lo`, then failed native libcpp with
+  `don't know how to make charset.cc`. Cherry-picked mapping
+  `G_libcpp_a_OBJS` onto `libcpp/*.c` when the dist has no `.cc`
+  (no virtio-net).
+  历史 P1 #63：从网络分支拣入 libcpp `.cc` 到 4.8.5 `.c` 映射。
+- Former P1 #64: hosted nightly `32519022725` (`445b0e907`) built
+  `libcpp.a`, then failed native gcov/cc1 with
+  `gcov-io.h:292:22: fatal error: gcov-iov.h`. Cherry-picked the
+  libgcov arch `-I` in `usr.bin/Makefile.inc` (no virtio-net).
+  历史 P1 #64：从网络分支拣入 usr.bin 的 `gcov-iov.h` 搜索路径。
+- Former P1 #65: hosted nightly `32521377902` (`6358e38bb`) still
+  failed native gcov/cc1 with the same `gcov-iov.h` error. `#64`
+  `${.PARSEDIR}` expanded empty (`-I/../lib/...`). Cherry-picked
+  resolving the path from `NETBSDSRCDIR` (no virtio-net). This
+  branch's HEAD `adc524d54` (`32521564417`) failed earlier in
+  libstdc++ `<atomic>` (`MKCXX=yes`) and did not re-hit gcov.
+  历史 P1 #65：从网络分支拣入 `gcov-iov.h` `-I` 改从 `NETBSDSRCDIR`
+  解析。
+- Former P1 #66: LLVM packaging `32521564417` (`adc524d54`) failed
+  during `lib` compiling `compatibility-atomic-c++0x.cc`:
+  `usr/include/c++/atomic:537: #error <atomic> is not supported on
+  this single threaded system`. riscv64 `c++config.h` leaves
+  `_GLIBCXX_HAS_GTHREADS` and `_GLIBCXX_ATOMIC_BUILTINS` undefined.
+  Skip that compat source next to the existing
+  `compatibility-thread-c++0x.cc` skip. LLVM-only (`MKCXX=yes`); do
+  not mix onto the network PR.
+  历史 P1 #66：riscv64 libstdc++ 跳过 `compatibility-atomic-c++0x.cc`
+  （单线程 `<atomic>`）。仅本 LLVM 分支。
+- Former P1 #67: hosted nightly `32524763481` (`7014a3bb6`) compiled
+  native gcov.c, then linking gcov failed with undefined `fnotice`,
+  `fancy_abort`, `diagnostic_initialize`, `version_string`,
+  `pkgversion_string`, and `bug_report_url`. Cherry-picked mapping
+  libcommon diagnostic/pretty-print/intl/input/version onto gcc 4.8.5
+  `.c` and restoring `version.c` (no virtio-net). This branch's HEAD
+  died in libstdc++ until `#66`, so it may not have re-hit gcov yet.
+  历史 P1 #67：从网络分支拣入 libcommon 按 dist 映射 diagnostic/
+  pretty-print/intl/input/version，补回 gcc13 丢掉的 `version.c`。
+- Former P1 #68: hosted nightly `32527820716` (`c952fa0c1`) compiled
+  native gcov, then linking `usr.bin/cpp` `gcpp` failed with
+  multiple `ggc_free` definitions and undefined `main`
+  (`ggc-none.o` three times). Cherry-picked expanding
+  `Makefile.cc2c` mapped names immediately (no virtio-net). This
+  branch may still be in libstdc++ until `#66` lands.
+  历史 P1 #68：从网络分支拣入 `Makefile.cc2c` 直接追加 `${s}` /
+  `${s:R}.c`，避免 bmake 延迟展开 `_gcc_cc2c`。
+- Former P1 #69: hosted nightly `32530101083` (`92237adf3`) linked
+  native `gcpp` as `cppspec.o gcc.o ggc-none.o`, then failed with
+  undefined `global_init_params` / `compiler_params` and
+  `dgettext` / `bindtextdomain`. Cherry-picked mapping `params.cc`
+  onto gcc 4.8.5 `params.c` and repeating `-lintl` after frontend
+  archives (no virtio-net). This branch's HEAD `7cd93be42`
+  (`32530212770`) got past `#66` then died in libstdc++
+  `functexcept.cc` (`pthread.h` missing).
+  历史 P1 #69：从网络分支拣入 4.8.5 `params.c` 与 frontend 档案后
+  再链 `-lintl`。
+- Former P1 #70: hosted nightly `32532469511` (`9cb398c22`) linked
+  native `gcpp` with `-lintl` after `libdecnumber.a`, then died
+  `nbmake: don't know how to make lto1.1`. Cherry-picked setting
+  `NOMAN` in `lto1` / `cc1` / `cc1obj` / `cc1plus` before
+  `Makefile.cc2c` (no virtio-net). `#54` parsed `bsd.own.mk`
+  before `NOMAN`, so `MKMAN` stayed yes and `bsd.prog.mk` wanted
+  pages gcc 4.8.5 does not ship. This branch still dies in
+  libstdc++ `functexcept.cc` / `pthread.h` (`32530212770` on
+  `7cd93be42`) until a later LLVM-only fix.
+  历史 P1 #70：从网络分支拣入在 `Makefile.cc2c` 之前设置 `NOMAN`，
+  避免 `MKMAN=yes` 去要 gcc 4.8.5 没有的 `lto1.1`。
+- Former P1 #71: hosted nightly `32534503524` (`88ec45927`) linked
+  native `lto1` then missed `pointer_set_*`, `lto_symtab_*`,
+  `dump_insn_slim`, and `insn-*.o`. Cherry-picked `:Minsn-*` (not
+  `:Mininsn-*`) and 4.8.5-only backend objects (no virtio-net).
+  This branch still dies in libstdc++ `functexcept.cc` /
+  `pthread.h` (`32530212770` on `7cd93be42`) until a later
+  LLVM-only fix.
+  历史 P1 #71：从网络分支拣入保留生成的 `insn-*.o` 并补回 gcc13
+  `G_OBJS` 丢掉的 4.8.5 对象。
+- Former P1 #72: hosted nightly `32537278919` (`6954a7e6c`) linked
+  native `lto1` then missed `mudflap_init()` and
+  `_cpp_preprocess_dir_only` while linking `cc1`. Cherry-picked
+  4.8.5 `tree-mudflap.o` / `directives-only.o` / `cp/repo.o`
+  (no virtio-net). This branch still dies in libstdc++
+  `functexcept.cc` / `pthread.h` (`32530212770` on `7cd93be42`)
+  until a later LLVM-only fix.
+  历史 P1 #72：从网络分支拣入 gcc 4.8.5 的 `tree-mudflap` 与
+  `directives-only`，避免原生 `cc1` 缺 `mudflap_init`。
+- Former P1 #46: LLVM packaging `32539330823` (`cb5799c36`) and
+  `32530212770` (`7cd93be42`) compiled libstdc++ `functexcept.cc`
+  and died `usr/include/c++/__mutex_base:17:21: fatal error:
+  pthread.h`. That header is libc++ (`external/bsd/libc++/include`,
+  `INCSDIR=/usr/include/c++`), not libstdc++ (`/usr/include/g++`).
+  `bsd.own.mk` defaulted `MKLIBCXX?= yes` after the `HAVE_GCC`
+  check, so `MKLLVM=yes` on riscv64 installed libc++ and
+  `bsd.sys.mk` added `-I${DESTDIR}/usr/include/c++` ahead of g++.
+  Force `MKLIBCXX=no` on riscv64, pass it in LLVM CI, drop stale
+  DESTDIR libc++ headers, and reject `__mutex_base` in the DESTDIR
+  gate. LLVM-only; do not mix onto the network PR (`MKCXX=no`).
+  历史 P1 #46：riscv64 在 `MKLLVM=yes` 时关掉 libc++，避免
+  `/usr/include/c++` 盖住 libstdc++ 并拉进 `pthread.h`。仅本
+  LLVM 分支。
+- `#42` test-CI follow-up: packaging LLVM CI used to stop at
+  `clang --version` after tools, then reuse the GCC full suite
+  after distribution. Host/DESTDIR/guest functional gates now live
+  in `minix/tests/riscv64/llvm_toolchain_gate.sh` and
+  `run_tests.sh llvm`. Host gate is blocking after tools so LLVM
+  frontend/tblgen regressions fail even when a later C++ residual
+  blocks distribution. DESTDIR now also rejects libc++
+  `__mutex_base` (`#46`).
+  `#42` 测试跟进：LLVM packaging CI 在 tools 之后增加 host
+  功能门禁，distribution 之后检查 DESTDIR clang ELF，full suite
+  增加来宾 clang 冒烟。`#46` 后 DESTDIR 门禁拒绝 libc++
+  `__mutex_base`。
+- Former P1 #49: LLVM packaging `32543353223` (`6e97a7c26`) passed
+  tools and every host-gate check except `llvm-tblgen missing
+  (nblvm-tblgen)`. Tools install `${_TOOL_PREFIX}llvm-tblgen` =
+  `nbllvm-tblgen`. Look for that name. LLVM-only gate fix.
+  历史 P1 #49：host 门禁改为查找 `nbllvm-tblgen`（`nb` +
+  `llvm-tblgen`），不再写成 `nblvm-tblgen`。
+- Former P1 #73: LLVM packaging `32545143308` (`2044ddfb4`) passed
+  tools and the host gate, then distribution died compiling guest
+  `libLLVMAnalysis` `BlockFrequencyInfoImpl.cpp`:
+  `std::max(UINT64_C(1), uint64_t)` with conflicting
+  `long long unsigned int` and `__uint64_t` (`unsigned long`).
+  gcc 4.8 `std::max` requires identical types. RISC-V LP64
+  `uint64_t` is `unsigned long`; gcc 4.8 has no
+  `__INTMAX_C_SUFFIX__`, so `machine/int_const.h` makes
+  `UINT64_C` `unsigned long long`. Use `uint64_t(1)` at the three
+  `std::max` sites (`BlockFrequencyInfoImpl.cpp` twice,
+  `SpillPlacement.cpp` once). LLVM-only; do not mix onto the
+  network PR.
+  历史 P1 #73：客端 LLVM 把 `std::max` 的 `UINT64_C(1)` 改成
+  `uint64_t(1)`，避开 gcc 4.8 在 LP64 上 ULL 与 `unsigned long`
+  的模板冲突。
 
 ## Vision / 愿景: pkgsrc on MINIX RV64
 

@@ -54,6 +54,8 @@ const char *Triple::getArchTypeName(ArchType Kind) {
   case spir:        return "spir";
   case spir64:      return "spir64";
   case kalimba:     return "kalimba";
+  case riscv32:     return "riscv32";
+  case riscv64:     return "riscv64";
   }
 
   llvm_unreachable("Invalid ArchType!");
@@ -111,6 +113,8 @@ const char *Triple::getArchTypePrefix(ArchType Kind) {
   case spir:
   case spir64:      return "spir";
   case kalimba:     return "kalimba";
+  case riscv32:
+  case riscv64:     return "riscv";
   }
 }
 
@@ -318,6 +322,8 @@ static Triple::ArchType parseArch(StringRef ArchName) {
     .Case("spir", Triple::spir)
     .Case("spir64", Triple::spir64)
     .StartsWith("kalimba", Triple::kalimba)
+    .Case("riscv32", Triple::riscv32)
+    .Case("riscv64", Triple::riscv64)
     .Default(Triple::UnknownArch);
 }
 
@@ -878,6 +884,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
   case llvm::Triple::hsail:
   case llvm::Triple::spir:
   case llvm::Triple::kalimba:
+  case llvm::Triple::riscv32:
     return 32;
 
   case llvm::Triple::aarch64:
@@ -895,6 +902,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
   case llvm::Triple::amdil64:
   case llvm::Triple::hsail64:
   case llvm::Triple::spir64:
+  case llvm::Triple::riscv64:
     return 64;
   }
   llvm_unreachable("Invalid architecture value");
@@ -944,6 +952,7 @@ Triple Triple::get32BitArchVariant() const {
   case Triple::thumbeb:
   case Triple::x86:
   case Triple::xcore:
+  case Triple::riscv32:
     // Already 32-bit.
     break;
 
@@ -957,6 +966,7 @@ Triple Triple::get32BitArchVariant() const {
   case Triple::amdil64:   T.setArch(Triple::amdil);   break;
   case Triple::hsail64:   T.setArch(Triple::hsail);   break;
   case Triple::spir64:    T.setArch(Triple::spir);    break;
+  case Triple::riscv64:   T.setArch(Triple::riscv32); break;
   }
   return T;
 }
@@ -993,6 +1003,7 @@ Triple Triple::get64BitArchVariant() const {
   case Triple::sparcv9:
   case Triple::systemz:
   case Triple::x86_64:
+  case Triple::riscv64:
     // Already 64-bit.
     break;
 
@@ -1006,6 +1017,7 @@ Triple Triple::get64BitArchVariant() const {
   case Triple::amdil:   T.setArch(Triple::amdil64);   break;
   case Triple::hsail:   T.setArch(Triple::hsail64);   break;
   case Triple::spir:    T.setArch(Triple::spir64);    break;
+  case Triple::riscv32: T.setArch(Triple::riscv64);   break;
   }
   return T;
 }

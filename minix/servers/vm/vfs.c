@@ -28,7 +28,9 @@
 #include "region.h"
 #include "sanitycheck.h"
 
-#define STATELEN 70
+/* riscv64 LP64 messages are 80 bytes (IPC size asserts disabled there);
+ * mmap passes sizeof(message) as statelen. */
+#define STATELEN	((int)sizeof(message))
 
 static struct vfs_request_node {
 	message			reqmsg;

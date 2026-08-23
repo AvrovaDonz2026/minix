@@ -187,6 +187,14 @@ _rtld_relocate_nonplt_objects(Obj_Entry *obj)
 			break;
 		}
 
+		case R_TYPE(COPY):
+			/*
+			 * COPY relocs are resolved by the static linker; the
+			 * dynamic linker only needs to accept them.
+			 */
+			rdbg(("COPY"));
+			break;
+
 		default:
 			rdbg(("sym = %lu, type = %lu, offset = %p, "
 			    "addend = %p, contents = %p, symbol = %s",

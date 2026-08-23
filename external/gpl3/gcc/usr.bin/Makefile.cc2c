@@ -35,6 +35,7 @@ GCC_SRCS_MAPPED+=	${s}
       exists(${DIST}/gcc/lto/${s:R}.c) || \
       exists(${DIST}/gcc/common/${s:R}.c) || \
       exists(${DIST}/gcc/config/${s:R}.c) || \
+      exists(${DIST}/gcc/config/${GCC_MACHINE_ARCH}/${s:R}.c) || \
       exists(${DIST}/libiberty/${s:R}.c)
 GCC_SRCS_MAPPED+=	${s:R}.c
 .elif ${s} == "options.cc"

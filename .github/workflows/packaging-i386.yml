@@ -7,10 +7,13 @@ on:
     tags-ignore:
       - "**"
   pull_request:
+  schedule:
+    # 18:40 UTC daily (02:40 Asia/Shanghai)
+    - cron: "40 18 * * *"
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: i386-packaging-${{ github.ref }}
@@ -27,6 +30,55 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pin reproducible build identity
+        id: pin
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_date_epoch="$(git log -1 --pretty=%ct "${GITHUB_SHA}")"
+          git_commit="${GITHUB_SHA}"
+          short_sha="$(git rev-parse --short=12 "${GITHUB_SHA}")"
+          ref_name="${GITHUB_REF_NAME}"
+
+          echo "SOURCE_DATE_EPOCH=${source_date_epoch}" >>"${GITHUB_ENV}"
+          echo "source_date_epoch=${source_date_epoch}" >>"${GITHUB_OUTPUT}"
+          echo "git_commit=${git_commit}" >>"${GITHUB_OUTPUT}"
+          echo "short_sha=${short_sha}" >>"${GITHUB_OUTPUT}"
+          echo "ref_name=${ref_name}" >>"${GITHUB_OUTPUT}"
+
+          echo "SOURCE_DATE_EPOCH=${source_date_epoch}"
+          echo "git_commit=${git_commit}"
+          echo "short_sha=${short_sha}"
+          echo "ref_name=${ref_name}"
+
+      - name: Reclaim runner disk space
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Disk usage before cleanup"
+          df -h
+
+          sudo swapoff -a || true
+          sudo rm -f /swapfile || true
+
+          sudo rm -rf \
+            /usr/share/dotnet \
+            /usr/local/lib/android \
+            /opt/ghc \
+            /opt/hostedtoolcache/CodeQL || true
+
+          if command -v docker >/dev/null 2>&1; then
+            sudo docker system prune -af || true
+          fi
+
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+
+          echo "Disk usage after cleanup"
+          df -h
 
       - name: Install host dependencies
         shell: bash
@@ -34,17 +86,45 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y \
-            autoconf automake bc bison build-essential byacc \
-            ca-certificates curl e2fsprogs file flex gawk gperf \
-            libelf-dev libncurses-dev libssl-dev m4 make parted \
-            pkg-config python3 qemu-system-x86 rsync texinfo xz-utils zlib1g-dev
+            autoconf \
+            automake \
+            bc \
+            bison \
+            build-essential \
+            byacc \
+            ca-certificates \
+            curl \
+            e2fsprogs \
+            file \
+            flex \
+            gawk \
+            gperf \
+            libelf-dev \
+            libncurses-dev \
+            libssl-dev \
+            m4 \
+            make \
+            parted \
+            pkg-config \
+            python3 \
+            python3-pip \
+            qemu-system-x86 \
+            rsync \
+            texinfo \
+            xz-utils \
+            zlib1g-dev
+
           command -v qemu-system-i386 >/dev/null
 
       - name: Resolve build parallelism
         shell: bash
         run: |
           set -euo pipefail
-          visible_cpus="$(nproc --all 2>/dev/null || nproc 2>/dev/null || echo 4)"
+          visible_cpus="$(nproc --all 2>/dev/null || nproc 2>/dev/null || getconf _NPROCESSORS_ONLN || echo 1)"
+          requested_jobs="${CPU_COUNT:-${NUMBER_OF_PROCESSORS:-${BUILD_JOBS_OVERRIDE:-}}}"
+          if [[ -z "${requested_jobs}" ]]; then
+            requested_jobs="${visible_cpus}"
+          fi
           tools_jobs="${TOOLS_CPU_COUNT:-}"
           if [[ -z "${tools_jobs}" ]]; then
             tools_jobs="${visible_cpus}"
@@ -52,53 +132,638 @@ jobs:
               tools_jobs=8
             fi
           fi
-          world_jobs="${WORLD_CPU_COUNT:-${visible_cpus}}"
+          world_jobs="${WORLD_CPU_COUNT:-${requested_jobs}}"
+
+          case "${requested_jobs}" in
+            ''|*[!0-9]*)
+              echo "Invalid CPU_COUNT/NUMBER_OF_PROCESSORS/BUILD_JOBS_OVERRIDE: ${requested_jobs}" >&2
+              exit 1
+              ;;
+          esac
+          case "${tools_jobs}" in
+            ''|*[!0-9]*)
+              echo "Invalid TOOLS_CPU_COUNT: ${tools_jobs}" >&2
+              exit 1
+              ;;
+          esac
+          case "${world_jobs}" in
+            ''|*[!0-9]*)
+              echo "Invalid WORLD_CPU_COUNT: ${world_jobs}" >&2
+              exit 1
+              ;;
+          esac
+
+          if (( requested_jobs < 1 )); then
+            requested_jobs=1
+          fi
+          if (( tools_jobs < 1 )); then
+            tools_jobs=1
+          fi
+          if (( world_jobs < 1 )); then
+            world_jobs=1
+          fi
+
+          echo "Visible runner CPUs: ${visible_cpus}"
+          echo "Configured CPU_COUNT: ${CPU_COUNT:-unset}"
+          echo "Configured TOOLS_CPU_COUNT: ${TOOLS_CPU_COUNT:-unset}"
+          echo "Configured WORLD_CPU_COUNT: ${WORLD_CPU_COUNT:-unset}"
+          echo "Tools build jobs: ${tools_jobs}"
+          echo "World build jobs: ${world_jobs}"
           echo "TOOLS_BUILD_JOBS=${tools_jobs}" >>"${GITHUB_ENV}"
           echo "WORLD_BUILD_JOBS=${world_jobs}" >>"${GITHUB_ENV}"
+
+      - name: Resolve nightly metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          nightly_stamp="$(date -u +%Y%m%d)"
+          ci_stamp="$(date -u +%Y%m%d%H%M%S)"
+          short_sha="${{ steps.pin.outputs.short_sha }}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            branch_name="${GITHUB_HEAD_REF}"
+          else
+            branch_name="${GITHUB_REF_NAME}"
+          fi
+          branch_slug="${branch_name//\//-}"
+          nightly_tag="nightly-${branch_slug}-i386-${nightly_stamp}-${short_sha}"
+          base_name="minix-cat-${nightly_tag}-ci-${ci_stamp}"
+
+          publish_release=false
+          if [[ "${{ github.event_name }}" == "schedule" ]] || \
+             [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
+             [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/master" ]]; then
+            publish_release=true
+          fi
+
+          image_name="${base_name}.img"
+          image_path="/tmp/${image_name}"
+          image_gz_name="${image_name}.gz"
+          image_gz_path="/tmp/${image_gz_name}"
+          elf_name="${base_name}.elf"
+          elf_path="/tmp/${elf_name}"
+          sysroot_name="${base_name}-sysroot.tar.gz"
+          sysroot_path="/tmp/${sysroot_name}"
+          sums_path="/tmp/SHA256SUMS.txt"
+          buildinfo_path="/tmp/BUILDINFO.txt"
+
+          echo "nightly_stamp=${nightly_stamp}" >>"${GITHUB_OUTPUT}"
+          echo "ci_stamp=${ci_stamp}" >>"${GITHUB_OUTPUT}"
+          echo "short_sha=${short_sha}" >>"${GITHUB_OUTPUT}"
+          echo "branch_slug=${branch_slug}" >>"${GITHUB_OUTPUT}"
+          echo "nightly_tag=${nightly_tag}" >>"${GITHUB_OUTPUT}"
+          echo "publish_release=${publish_release}" >>"${GITHUB_OUTPUT}"
+          echo "artifact_base=${base_name}" >>"${GITHUB_OUTPUT}"
+          echo "image_name=${image_name}" >>"${GITHUB_OUTPUT}"
+          echo "image_path=${image_path}" >>"${GITHUB_OUTPUT}"
+          echo "image_gz_name=${image_gz_name}" >>"${GITHUB_OUTPUT}"
+          echo "image_gz_path=${image_gz_path}" >>"${GITHUB_OUTPUT}"
+          echo "elf_name=${elf_name}" >>"${GITHUB_OUTPUT}"
+          echo "elf_path=${elf_path}" >>"${GITHUB_OUTPUT}"
+          echo "sysroot_name=${sysroot_name}" >>"${GITHUB_OUTPUT}"
+          echo "sysroot_path=${sysroot_path}" >>"${GITHUB_OUTPUT}"
+          echo "sums_path=${sums_path}" >>"${GITHUB_OUTPUT}"
+          echo "buildinfo_path=${buildinfo_path}" >>"${GITHUB_OUTPUT}"
 
       - name: Build tools (obj.i386)
         shell: bash
         run: |
           set -euo pipefail
+          export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH}"
+          echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
+
+          echo "Dropping host-specific tool objects under ${OBJDIR}"
+          rm -rf "${OBJDIR}/tooldir."* "${OBJDIR}/tools"
+
           ./scripts/build-i386-local.sh tools
-          tooldir="$(ls -d "${OBJDIR}"/tooldir.* | head -1)"
+
+          tooldir=""
+          newest=0
+          for d in "${OBJDIR}"/tooldir.*; do
+            [[ -d "${d}" ]] || continue
+            [[ -x "${d}/bin/nbmake" && -x "${d}/bin/i586-elf32-minix-gcc" ]] || continue
+            mt="$(stat -c %Y "${d}")"
+            if (( mt >= newest )); then
+              newest="${mt}"
+              tooldir="$(cd "${d}" && pwd)"
+            fi
+          done
+          if [[ -z "${tooldir}" ]]; then
+            echo "No usable tooldir under ${OBJDIR} after tools build" >&2
+            exit 1
+          fi
           echo "TOOLDIR=${tooldir}" >>"${GITHUB_ENV}"
-          [[ -x "${tooldir}/bin/i586-elf32-minix-gcc" ]]
+          echo "TOOLDIR=${tooldir}"
+          "${tooldir}/bin/i586-elf32-minix-gcc" --version | head -n 5
+
+      - name: Prepare GCC include install dirs (obj.i386)
+        shell: bash
+        run: |
+          set -euo pipefail
+          destdir_root="${PWD}/${OBJDIR}/destdir.${MACHINE}"
+          src_include_root="${PWD}/external/gpl3/gcc/dist/libstdc++-v3/include"
+
+          if [[ ! -d "${src_include_root}" ]]; then
+            echo "Missing libstdc++ include tree: ${src_include_root}" >&2
+            exit 1
+          fi
+
+          mkdir -p "${destdir_root}/usr/include/gcc-4.8"
+          mkdir -p "${destdir_root}/usr/include/g++"
+
+          find "${src_include_root}" -mindepth 1 -type d -print0 | \
+          while IFS= read -r -d '' src_dir; do
+            rel="${src_dir#${src_include_root}/}"
+            mkdir -p "${destdir_root}/usr/include/g++/${rel}"
+          done
+
+      - name: Refresh ramdisk and libstdc++ objs (obj.i386)
+        shell: bash
+        run: |
+          set -euo pipefail
+          destdir_root="${OBJDIR}/destdir.${MACHINE}"
+          rm -rf "${OBJDIR}/minix/drivers/storage/ramdisk"
+          rm -rf "${OBJDIR}/external/gpl3/gcc/lib/libstdc++-v3"
+          rm -f \
+            "${destdir_root}/usr/lib/libstdc++.a" \
+            "${destdir_root}/usr/lib/libstdc++_pic.a" \
+            "${destdir_root}/usr/include/g++/bits/c++config.h"
+          rm -rf "${destdir_root}/usr/include/c++"
+          rm -f \
+            "${destdir_root}/usr/lib/libc++.a" \
+            "${destdir_root}/usr/lib/libc++_pic.a"
+
+          sanitize_cxxconfig() {
+            local cfg="$1"
+            [[ -f "${cfg}" ]] || return 0
+            sed -i -E \
+              's@^#define[[:space:]]+_GLIBCXX_HAS_GTHREADS([[:space:]]+.*)?$@/* #undef _GLIBCXX_HAS_GTHREADS */@' \
+              "${cfg}"
+          }
+
+          sanitize_cxxconfig "${PWD}/external/gpl3/gcc/lib/libstdc++-v3/arch/i386/c++config.h"
+
+          if [[ -d "${destdir_root}/usr/include/g++" ]]; then
+            while IFS= read -r -d '' cfg; do
+              sanitize_cxxconfig "${cfg}"
+            done < <(find "${destdir_root}/usr/include/g++" -type f -name 'c++config.h' -print0)
+          fi
 
       - name: Build distribution (obj.i386)
         shell: bash
         run: |
           set -euo pipefail
+          export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH}"
+          echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
           ./scripts/build-i386-local.sh distribution
-          destdir="${PWD}/${OBJDIR}/destdir.i386"
-          [[ -x "${destdir}/boot/minix/.temp/kernel" ]]
+          [[ -x "${PWD}/${OBJDIR}/destdir.i386/boot/minix/.temp/kernel" ]]
 
-      - name: Create disk image
+      - name: Verify native toolchain payload (DESTDIR)
         shell: bash
         run: |
           set -euo pipefail
-          image="/tmp/minix-i386-ci.img"
-          OBJDIR="${PWD}/${OBJDIR}" DESTDIR="${PWD}/${OBJDIR}/destdir.i386" \
-            OUTPUT="${image}" \
-            minix/releasetools/i386/mkdisk.sh \
-              -d "${PWD}/${OBJDIR}" -o "${image}" -D "${PWD}/${OBJDIR}/destdir.i386"
-          echo "SMOKE_DISK_IMAGE=${image}" >>"${GITHUB_ENV}"
+          root="${PWD}/${OBJDIR}/destdir.i386"
+          missing=()
 
-      - name: QEMU i386 smoke gate
+          if [[ ! -x "${root}/usr/bin/cc" && ! -x "${root}/usr/bin/gcc" ]]; then
+            missing+=("usr/bin/(cc|gcc)")
+          fi
+          if [[ ! -x "${root}/usr/bin/c++" && ! -x "${root}/usr/bin/g++" ]]; then
+            missing+=("usr/bin/(c++|g++)")
+          fi
+          if [[ ! -x "${root}/usr/bin/cpp" && ! -x "${root}/usr/bin/gcpp" ]]; then
+            missing+=("usr/bin/(cpp|gcpp)")
+          fi
+
+          for bin in as ld ar ranlib nm objcopy objdump readelf strip; do
+            if [[ ! -x "${root}/usr/bin/${bin}" ]]; then
+              missing+=("usr/bin/${bin}")
+            fi
+          done
+
+          for entry in \
+            usr/lib/libgcc.a \
+            usr/lib/libgcc_eh.a \
+            usr/lib/libstdc++.a \
+            usr/include/stdio.h \
+            usr/include/g++/bits/c++config.h; do
+            if [[ ! -e "${root}/${entry}" ]]; then
+              missing+=("${entry}")
+            fi
+          done
+
+          if [[ "${#missing[@]}" -ne 0 ]]; then
+            echo "[native-toolchain] missing payload entries:" >&2
+            printf '  - %s\n' "${missing[@]}" >&2
+            exit 1
+          fi
+
+          echo "[native-toolchain] payload check PASS"
+
+      - name: Verify libstdc++ thread profile (DESTDIR)
         shell: bash
         run: |
           set -euo pipefail
+          root="${PWD}/${OBJDIR}/destdir.i386"
+          tooldir="$(find "${PWD}/${OBJDIR}" -maxdepth 1 -type d -name 'tooldir.*' -print -quit)"
+          if [[ -z "${tooldir}" ]]; then
+            echo "Missing tooldir under ${PWD}/${OBJDIR}" >&2
+            exit 1
+          fi
+
+          ar="${tooldir}/bin/i586-elf32-minix-ar"
+          nm="${tooldir}/bin/i586-elf32-minix-nm"
+          lib="${root}/usr/lib/libstdc++.a"
+          for tool in "${ar}" "${nm}"; do
+            if [[ ! -x "${tool}" ]]; then
+              echo "Missing tool: ${tool}" >&2
+              exit 1
+            fi
+          done
+          if [[ ! -f "${lib}" ]]; then
+            echo "Missing libstdc++ archive: ${lib}" >&2
+            exit 1
+          fi
+
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "${tmp}"' EXIT
+          (
+            cd "${tmp}"
+            "${ar}" x "${lib}" functexcept.o
+            "${nm}" -u functexcept.o >undef.txt
+          )
+
+          if grep -Eq 'future_category|future_error' "${tmp}/undef.txt"; then
+            echo "[native-toolchain] libstdc++ mismatch: functexcept.o unexpectedly references future_*" >&2
+            cat "${tmp}/undef.txt" >&2
+            exit 1
+          fi
+
+          echo "[native-toolchain] libstdc++ thread profile check PASS"
+
+      - name: Build nightly artifacts
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          kernel_path="${PWD}/${OBJDIR}/minix/kernel/kernel"
+          destdir_root="${PWD}/${OBJDIR}/destdir.i386"
+
+          minix/releasetools/i386/mkdisk.sh \
+            -d "${OBJDIR}" \
+            -o "${{ steps.meta.outputs.image_path }}" \
+            -D "${destdir_root}"
+
+          gzip -n -9 -c "${{ steps.meta.outputs.image_path }}" >"${{ steps.meta.outputs.image_gz_path }}"
+
+          cp "${kernel_path}" "${{ steps.meta.outputs.elf_path }}"
+
+          sysroot_items=()
+          for path in usr/include usr/lib lib; do
+            if [[ -e "${destdir_root}/${path}" ]]; then
+              sysroot_items+=("${path}")
+            fi
+          done
+          if [[ "${#sysroot_items[@]}" -eq 0 ]]; then
+            echo "No sysroot headers/libs found under ${destdir_root}" >&2
+            exit 1
+          fi
+          if ! tar -C "${destdir_root}" \
+            --sort=name \
+            --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner \
+            -cf - "${sysroot_items[@]}" 2>/dev/null | \
+            gzip -n -9 >"${{ steps.meta.outputs.sysroot_path }}"; then
+            tar -C "${destdir_root}" -czf "${{ steps.meta.outputs.sysroot_path }}" "${sysroot_items[@]}"
+          fi
+
+          {
+            echo "workflow=i386-packaging"
+            echo "event_name=${{ github.event_name }}"
+            echo "git_commit=${{ steps.pin.outputs.git_commit }}"
+            echo "source_date_epoch=${SOURCE_DATE_EPOCH}"
+            echo "ref=${{ github.ref }}"
+            echo "objdir=${OBJDIR}"
+          } >"${{ steps.meta.outputs.buildinfo_path }}"
+
+          (
+            cd /tmp
+            sha256sum \
+              "${{ steps.meta.outputs.image_name }}" \
+              "${{ steps.meta.outputs.image_gz_name }}" \
+              "${{ steps.meta.outputs.elf_name }}" \
+              "${{ steps.meta.outputs.sysroot_name }}" \
+              BUILDINFO.txt \
+              >"$(basename "${{ steps.meta.outputs.sums_path }}")"
+          )
+
+      - name: QEMU interactive smoke test (neofetch + shutdown chain)
+        timeout-minutes: 8
+        shell: bash
+        env:
+          CI_IMAGE_PATH: ${{ steps.meta.outputs.image_path }}
+          QEMU_SMOKE_LOG: /tmp/qemu-i386-neofetch-smoke.log
+        run: |
+          set -euo pipefail
+          smoke_image="${CI_IMAGE_PATH}.smoke"
+          cp -f "${CI_IMAGE_PATH}" "${smoke_image}"
+          cleanup_smoke_image() {
+            rm -f "${smoke_image}" || true
+          }
+          trap cleanup_smoke_image EXIT
+          export CI_SMOKE_IMAGE_PATH="${smoke_image}"
           export OBJDIR="${PWD}/${OBJDIR}"
           export DESTDIR="${OBJDIR}/destdir.i386"
-          export KERNEL="${OBJDIR}/minix/kernel/kernel"
-          export SMOKE_DISK_IMAGE="${SMOKE_DISK_IMAGE}"
-          ./minix/tests/i386/run_tests.sh gate
+          python3 - <<'PY'
+          import os
+          import re
+          import time
+          import fcntl
+          import select
+          import subprocess
+          import sys
 
-      - name: Upload smoke log
+          image_path = os.environ["CI_SMOKE_IMAGE_PATH"]
+          log_path = os.environ["QEMU_SMOKE_LOG"]
+          objdir = os.environ["OBJDIR"]
+          destdir = os.environ["DESTDIR"]
+          qemu_script = os.path.join(os.getcwd(), "minix/scripts/qemu-i386.sh")
+          boot_kernel = os.path.join(destdir, "boot/minix/.temp/kernel")
+
+          if not os.path.isfile(image_path):
+            print(f"[smoke] missing image: {image_path}", file=sys.stderr)
+            sys.exit(1)
+          if not os.path.isfile(boot_kernel):
+            print(f"[smoke] missing boot kernel: {boot_kernel}", file=sys.stderr)
+            sys.exit(1)
+          if not os.path.isfile(qemu_script):
+            print(f"[smoke] missing qemu script: {qemu_script}", file=sys.stderr)
+            sys.exit(1)
+
+          cmd = [
+            qemu_script,
+            "-s",
+            "-k", boot_kernel,
+            "-B", destdir,
+            "-i", image_path,
+            "-m", "256M",
+          ]
+          print("[smoke] launching qemu:", " ".join(cmd))
+
+          proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+          )
+          if proc.stdin is None or proc.stdout is None:
+            print("[smoke] failed to open qemu stdio", file=sys.stderr)
+            sys.exit(1)
+
+          fd = proc.stdout.fileno()
+          flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+          fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
+          os.makedirs(os.path.dirname(log_path), exist_ok=True)
+          logf = open(log_path, "w", encoding="utf-8", errors="ignore")
+          buf = ""
+
+          def pump(seconds=0.4):
+            global buf
+            end = time.time() + seconds
+            while time.time() < end:
+              r, _, _ = select.select([fd], [], [], 0.1)
+              if not r:
+                if proc.poll() is not None:
+                  return
+                continue
+              try:
+                data = os.read(fd, 65536)
+              except BlockingIOError:
+                data = b""
+              if not data:
+                if proc.poll() is not None:
+                  return
+                continue
+              text = data.decode("utf-8", errors="ignore")
+              buf += text
+              if len(buf) > 800000:
+                buf = buf[-400000:]
+              logf.write(text)
+              logf.flush()
+
+          def wait_for(pattern, timeout, label):
+            rx = re.compile(pattern, re.M)
+            end = time.time() + timeout
+            while time.time() < end:
+              if rx.search(buf):
+                print(f"[smoke] ok: {label}")
+                return True
+              if proc.poll() is not None:
+                break
+              pump(0.5)
+            print(f"[smoke] timeout: {label}", file=sys.stderr)
+            return False
+
+          def send_line(line):
+            print(f"[smoke] send: {line}")
+            proc.stdin.write((line + "\n").encode("utf-8"))
+            proc.stdin.flush()
+
+          def shutdown_qemu():
+            if proc.poll() is not None:
+              return
+            try:
+              proc.stdin.write(b"\x01x")
+              proc.stdin.flush()
+            except Exception:
+              pass
+            end = time.time() + 8
+            while time.time() < end and proc.poll() is None:
+              pump(0.3)
+            if proc.poll() is None:
+              proc.terminate()
+              try:
+                proc.wait(timeout=5)
+              except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=5)
+
+          ok = True
+          try:
+            ok &= wait_for(r"(?:login:|(?:^|\n)#\s)", 240, "shell prompt")
+
+            if ok:
+              send_line("neofetch")
+              ok &= wait_for(r"Donz Fetch", 90, "neofetch banner")
+              ok &= wait_for(r"OS:\s+Minix Cat", 90, "neofetch os line")
+              ok &= wait_for(r"(?:^|\n)#\s", 90, "prompt after neofetch")
+
+            if ok:
+              send_line("/sbin/shutdown -p now || /sbin/halt -p || /sbin/poweroff || /sbin/reboot -p || /sbin/reboot")
+              ok &= wait_for(
+                r"MINIX has halted and will now power off|MINIX will now be shut down",
+                150,
+                "shutdown banner",
+              )
+
+            if re.search(r"sh:\s+/sbin/(shutdown|halt|poweroff|reboot): not found", buf):
+              print("[smoke] detected missing shutdown binary in guest output", file=sys.stderr)
+              ok = False
+          finally:
+            shutdown_qemu()
+            pump(1.0)
+            logf.close()
+
+          if not ok:
+            print(f"[smoke] failed. log saved to: {log_path}", file=sys.stderr)
+            sys.exit(1)
+
+          print(f"[smoke] passed. log saved to: {log_path}")
+          PY
+
+      - name: Upload QEMU smoke log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: i386-smoke-log-${{ github.run_id }}
+          name: i386-smoke-log-${{ steps.meta.outputs.nightly_stamp }}-${{ steps.meta.outputs.short_sha }}
           if-no-files-found: ignore
-          path: /tmp/minix-i386/*.log
-          retention-days: 7
+          path: /tmp/qemu-i386-neofetch-smoke.log
+          retention-days: 14
+
+      - name: Full i386 test suite (blocking)
+        id: full_suite
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          log="/tmp/i386-full-suite.log"
+          image="${{ steps.meta.outputs.image_path }}"
+          echo "[full-suite] log: ${log}"
+          : >"${log}"
+          export KERNEL="${OBJDIR}/minix/kernel/kernel"
+          export DESTDIR="${OBJDIR}/destdir.i386"
+          export SMOKE_DISK_IMAGE="${image}"
+          export SMOKE_GATE_TIMEOUT=180
+          export TIMEOUT=180
+          export CMD_TIMEOUT=60
+          run_case() {
+            local name="$1"
+            shift
+            echo "[full-suite] >>> ${name}" | tee -a "${log}"
+            if "$@" >>"${log}" 2>&1; then
+              echo "[full-suite] ${name}: PASS" | tee -a "${log}"
+            else
+              local rc="$?"
+              echo "[full-suite] ${name}: FAIL (rc=${rc})" | tee -a "${log}"
+              return "${rc}"
+            fi
+          }
+
+          if run_case build ./minix/tests/i386/run_tests.sh build \
+             && run_case user ./minix/tests/i386/run_tests.sh user \
+             && run_case native ./minix/tests/i386/run_tests.sh native \
+             && run_case kernel ./minix/tests/i386/run_tests.sh kernel \
+             && run_case gate timeout 900 ./minix/tests/i386/run_tests.sh gate; then
+            echo "rc=0" >>"${GITHUB_OUTPUT}"
+            echo "[full-suite] rc=0"
+          else
+            rc=$?
+            echo "rc=${rc}" >>"${GITHUB_OUTPUT}"
+            echo "[full-suite] rc=${rc}"
+            tail -n 200 "${log}" || true
+            exit "${rc}"
+          fi
+
+      - name: Upload full test suite log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: i386-full-suite-log-${{ steps.meta.outputs.nightly_stamp }}-${{ steps.meta.outputs.short_sha }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            /tmp/i386-full-suite.log
+
+      - name: Upload nightly artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: i386-nightly-${{ steps.meta.outputs.nightly_stamp }}-${{ steps.meta.outputs.short_sha }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            ${{ steps.meta.outputs.image_path }}
+            ${{ steps.meta.outputs.image_gz_path }}
+            ${{ steps.meta.outputs.elf_path }}
+            ${{ steps.meta.outputs.sysroot_path }}
+            ${{ steps.meta.outputs.sums_path }}
+            ${{ steps.meta.outputs.buildinfo_path }}
+
+      - name: Create nightly tag
+        if: steps.meta.outputs.publish_release == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${{ steps.meta.outputs.nightly_tag }}"
+
+          if git ls-remote --tags origin "refs/tags/${tag}" | grep -q .; then
+            echo "Nightly tag already exists: ${tag} (skip)"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${tag}" -m "MINIX i386 nightly ${tag}"
+          git push origin "refs/tags/${tag}"
+          echo "Created nightly tag: ${tag}"
+
+      - name: Publish nightly release
+        if: steps.meta.outputs.publish_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.nightly_tag }}
+          target_commitish: ${{ github.sha }}
+          name: MINIX i386 nightly ${{ steps.meta.outputs.nightly_tag }}
+          prerelease: true
+          make_latest: false
+          generate_release_notes: false
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          files: |
+            ${{ steps.meta.outputs.image_path }}
+            ${{ steps.meta.outputs.image_gz_path }}
+            ${{ steps.meta.outputs.elf_path }}
+            ${{ steps.meta.outputs.sysroot_path }}
+            ${{ steps.meta.outputs.sums_path }}
+            ${{ steps.meta.outputs.buildinfo_path }}
+
+      - name: Write nightly summary
+        if: always()
+        shell: bash
+        run: |
+          suite_rc="${{ steps.full_suite.outputs.rc }}"
+          [ -n "${suite_rc}" ] || suite_rc="n/a"
+          {
+            echo "## i386 Nightly"
+            echo ""
+            echo "- Date (UTC): ${{ steps.meta.outputs.nightly_stamp }}"
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Nightly tag: \`${{ steps.meta.outputs.nightly_tag }}\`"
+            echo "- CI stamp (UTC): \`${{ steps.meta.outputs.ci_stamp }}\`"
+            echo "- Artifact base: \`${{ steps.meta.outputs.artifact_base }}\`"
+            echo "- Image: \`${{ steps.meta.outputs.image_name }}\`"
+            echo "- Compressed image: \`${{ steps.meta.outputs.image_gz_name }}\`"
+            echo "- ELF: \`${{ steps.meta.outputs.elf_name }}\`"
+            echo "- Sysroot: \`${{ steps.meta.outputs.sysroot_name }}\`"
+            echo "- Branch slug: \`${{ steps.meta.outputs.branch_slug }}\`"
+            echo "- Publish release: \`${{ steps.meta.outputs.publish_release }}\`"
+            echo "- SOURCE_DATE_EPOCH: \`${{ steps.pin.outputs.source_date_epoch }}\`"
+            echo ""
+            echo "This lane is the per-commit i386 distribution + QEMU review."
+            echo "GitHub Release publish runs only on master push, schedule, or workflow_dispatch."
+            echo ""
+            echo "### Full Test Suite (blocking)"
+            echo "- Runner sequence: \`build -> user -> native -> kernel -> gate(timeout 900s)\`"
+            echo "- Suite rc: \`${suite_rc}\`"
+            echo "- Logs: artifact \`i386-full-suite-log-${{ steps.meta.outputs.nightly_stamp }}-${{ steps.meta.outputs.short_sha }}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"

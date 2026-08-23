@@ -31,6 +31,13 @@ SRCS+= 	accept.c access.c adjtime.c bind.c brk.c sbrk.c m_closefrom.c getsid.c \
 # Minix specific syscalls / utils.
 SRCS+= kernel_utils.c sprofile.c stack_utils.c _mcontext.c
 
+.if ${MACHINE_ARCH} == "i386"
+# NetBSD nbmake prefers lib/libc/arch/i386/sys/*.S over MINIX C syscall stubs.
+.for _stub in syscall fork pipe sbrk shmat ptrace
+${_stub}.o: ${NETBSDSRCDIR}/minix/lib/libc/sys/${_stub}.c
+.endfor
+.endif
+
 # Emulation for missing lchown/lchmod/lchflags
 OBJS+= lchflags.o lchmod.o lchown.o
 lchflags.go lchflags.o lchflags.pico lchflags.bc: ${NETBSDSRCDIR}/tools/compat/lchflags.c

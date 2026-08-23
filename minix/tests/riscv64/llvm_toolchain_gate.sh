@@ -524,10 +524,10 @@ run_destdir_layer() {
     esac
   fi
 
-  if [ -x "${root}/libexec/ld.elf_so" ]; then
-    log_pass "DESTDIR libexec/ld.elf_so present"
+  if [ -x "${root}/usr/libexec/ld.elf_so" ] || [ -x "${root}/libexec/ld.elf_so" ]; then
+    log_pass "DESTDIR ld.elf_so present (usr/libexec or libexec)"
   else
-    log_fail "DESTDIR missing libexec/ld.elf_so (MKPIC/MKPICINSTALL)"
+    log_fail "DESTDIR missing ld.elf_so under usr/libexec or libexec (MKPIC/MKPICINSTALL)"
   fi
 
   if [ -e "${root}/usr/lib/libgcc_s.so" ]; then

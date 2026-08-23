@@ -1,0 +1,104 @@
+name: i386-packaging
+
+on:
+  push:
+    branches:
+      - "**"
+    tags-ignore:
+      - "**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: i386-packaging-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-i386:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      OBJDIR: obj.i386
+      MACHINE: i386
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install host dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake bc bison build-essential byacc \
+            ca-certificates curl e2fsprogs file flex gawk gperf \
+            libelf-dev libncurses-dev libssl-dev m4 make parted \
+            pkg-config python3 qemu-system-x86 rsync texinfo xz-utils zlib1g-dev
+          command -v qemu-system-i386 >/dev/null
+
+      - name: Resolve build parallelism
+        shell: bash
+        run: |
+          set -euo pipefail
+          visible_cpus="$(nproc --all 2>/dev/null || nproc 2>/dev/null || echo 4)"
+          tools_jobs="${TOOLS_CPU_COUNT:-}"
+          if [[ -z "${tools_jobs}" ]]; then
+            tools_jobs="${visible_cpus}"
+            if (( tools_jobs > 8 )); then
+              tools_jobs=8
+            fi
+          fi
+          world_jobs="${WORLD_CPU_COUNT:-${visible_cpus}}"
+          echo "TOOLS_BUILD_JOBS=${tools_jobs}" >>"${GITHUB_ENV}"
+          echo "WORLD_BUILD_JOBS=${world_jobs}" >>"${GITHUB_ENV}"
+
+      - name: Build tools (obj.i386)
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./scripts/build-i386-local.sh tools
+          tooldir="$(ls -d "${OBJDIR}"/tooldir.* | head -1)"
+          echo "TOOLDIR=${tooldir}" >>"${GITHUB_ENV}"
+          [[ -x "${tooldir}/bin/i586-elf32-minix-gcc" ]]
+
+      - name: Build distribution (obj.i386)
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./scripts/build-i386-local.sh distribution
+          destdir="${PWD}/${OBJDIR}/destdir.i386"
+          [[ -x "${destdir}/boot/minix/.temp/kernel" ]]
+
+      - name: Create disk image
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="/tmp/minix-i386-ci.img"
+          OBJDIR="${PWD}/${OBJDIR}" DESTDIR="${PWD}/${OBJDIR}/destdir.i386" \
+            OUTPUT="${image}" \
+            minix/releasetools/i386/mkdisk.sh \
+              -d "${PWD}/${OBJDIR}" -o "${image}" -D "${PWD}/${OBJDIR}/destdir.i386"
+          echo "SMOKE_DISK_IMAGE=${image}" >>"${GITHUB_ENV}"
+
+      - name: QEMU i386 smoke gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OBJDIR="${PWD}/${OBJDIR}"
+          export DESTDIR="${OBJDIR}/destdir.i386"
+          export KERNEL="${OBJDIR}/minix/kernel/kernel"
+          export SMOKE_DISK_IMAGE="${SMOKE_DISK_IMAGE}"
+          ./minix/tests/i386/run_tests.sh gate
+
+      - name: Upload smoke log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: i386-smoke-log-${{ github.run_id }}
+          if-no-files-found: ignore
+          path: /tmp/minix-i386/*.log
+          retention-days: 7

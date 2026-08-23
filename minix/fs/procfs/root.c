@@ -2,7 +2,7 @@
 
 #include "inc.h"
 
-#if defined (__i386__)
+#if defined(__i386__) && defined(USE_PCI)
 #include <machine/pci.h>
 #endif
 #include <minix/dmap.h>
@@ -12,7 +12,7 @@ static void root_uptime(void);
 static void root_loadavg(void);
 static void root_kinfo(void);
 static void root_meminfo(void);
-#if defined(__i386__)
+#if defined(__i386__) && defined(USE_PCI)
 static void root_pci(void);
 #endif
 static void root_dmap(void);
@@ -25,7 +25,7 @@ struct file root_files[] = {
 	{ "loadavg",	REG_ALL_MODE,	(data_t) root_loadavg	},
 	{ "kinfo",	REG_ALL_MODE,	(data_t) root_kinfo	},
 	{ "meminfo",	REG_ALL_MODE,	(data_t) root_meminfo	},
-#if defined(__i386__)
+#if defined(__i386__) && defined(USE_PCI)
 	{ "pci",	REG_ALL_MODE,	(data_t) root_pci	},
 #endif
 	{ "dmap",	REG_ALL_MODE,	(data_t) root_dmap	},
@@ -110,7 +110,7 @@ root_meminfo(void)
 	    vsi.vsi_free, vsi.vsi_largest, vsi.vsi_cached);
 }
 
-#if defined(__i386__)
+#if defined(__i386__) && defined(USE_PCI)
 /*
  * Print information about PCI devices present in the system.
  */
@@ -151,7 +151,7 @@ root_pci(void)
 		r = pci_next_dev(&devind, &vid, &did);
 	}
 }
-#endif /* defined(__i386__) */
+#endif /* defined(__i386__) && defined(USE_PCI) */
 
 /*
  * Print a list of drivers that have been assigned major device numbers.

@@ -66,6 +66,7 @@ COMMON_FLAGS=(
   -V MKLIBGOMP=no
   -V MKATF=no
   -V CHECKFLIST_FLAGS='-m -e'
+  -V USE_PCI=no
 )
 
 pick_tooldir() {

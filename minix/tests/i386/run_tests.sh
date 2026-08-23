@@ -162,27 +162,38 @@ run_kernel_tests() {
     log_skip "kernel boot (qemu-system-i386 missing)"
     return 0
   fi
-  if [[ ! -f "${KERNEL}" ]]; then
-    log_skip "kernel boot (kernel missing)"
+  if [[ ! -f "${BOOT_KERNEL}" ]]; then
+    log_skip "kernel boot (boot kernel missing)"
     return 0
   fi
   if [[ ! -d "${DESTDIR}" ]]; then
     log_skip "kernel boot (DESTDIR missing)"
     return 0
   fi
+  if [[ ! -f "${RUNTIME_PROBE}" ]]; then
+    log_skip "kernel boot (runtime probe missing)"
+    return 0
+  fi
+
+  if [[ ! -f "${SMOKE_DISK_IMAGE}" ]]; then
+    ensure_smoke_disk
+  fi
 
   log_info "Test: kernel boot"
   set +e
-  timeout "${TIMEOUT}" "${QEMU_SCRIPT}" -s -k "${KERNEL}" -B "${DESTDIR}" \
-    > /tmp/i386_boot_test.log 2>&1
+  python3 "${RUNTIME_PROBE}" \
+    --qemu-script "${QEMU_SCRIPT}" \
+    --kernel "${BOOT_KERNEL}" \
+    --destdir "${DESTDIR}" \
+    --disk "${SMOKE_DISK_IMAGE}" \
+    --timeout "${TIMEOUT}"
   local boot_rc=$?
   set -e
 
-  if [[ "${boot_rc}" -ne 0 && "${boot_rc}" -ne 124 ]]; then
-    log_fail "kernel boot (runner rc=${boot_rc})"
-  elif grep -Eq 'VFS: init_root done|exec path="/bin/sh"|init: exec /bin/sh|login:' \
-    /tmp/i386_boot_test.log 2>/dev/null; then
+  if [[ "${boot_rc}" -eq 0 ]]; then
     log_pass "kernel boot"
+  elif [[ "${boot_rc}" -eq 2 ]]; then
+    log_skip "kernel boot"
   else
     log_fail "kernel boot"
   fi

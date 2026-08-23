@@ -532,6 +532,7 @@ jobs:
           image="${{ steps.meta.outputs.image_path }}"
           echo "[full-suite] log: ${log}"
           : >"${log}"
+          export OBJDIR="${PWD}/${OBJDIR}"
           export KERNEL="${OBJDIR}/minix/kernel/kernel"
           export DESTDIR="${OBJDIR}/destdir.i386"
           export SMOKE_DISK_IMAGE="${image}"

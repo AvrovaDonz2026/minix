@@ -101,6 +101,11 @@ if [[ -z "${KERNEL}" || ! -f "${KERNEL}" ]]; then
   echo "Kernel not found. Pass -k or build distribution first." >&2
   exit 1
 fi
+KERNEL="$(cd "$(dirname "${KERNEL}")" && pwd)/$(basename "${KERNEL}")"
+
+if [[ -n "${DISK}" && -f "${DISK}" ]]; then
+  DISK="$(cd "$(dirname "${DISK}")" && pwd)/$(basename "${DISK}")"
+fi
 
 if [[ -z "${MODROOT}" || ! -d "${MODROOT}" ]]; then
   echo "Boot module directory not found: ${MODROOT:-<unset>}" >&2

@@ -90,7 +90,7 @@ fi
 
 cp "${DESTDIR}/usr/mdec/boot_monitor" "${ROOT_DIR}/boot_monitor"
 cat >"${ROOT_DIR}/boot.cfg" <<EOF
-menu=Start MINIX 3:load_mods /boot/minix/.temp/mod*; multiboot /boot/minix/.temp/kernel rootdevname=c0d0p0
+menu=Start MINIX 3:load_mods /boot/minix/.temp/mod*; multiboot /boot/minix/.temp/kernel rootdevname=c0d0p0 cttyline=0 acpi=no virtio_blk=no
 menu=Drop to boot prompt:prompt
 clear=1
 timeout=1

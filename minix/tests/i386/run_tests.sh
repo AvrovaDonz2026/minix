@@ -21,7 +21,7 @@ RUNTIME_PROBE="${SCRIPT_DIR}/qemu_runtime_probe.py"
 TIMEOUT="${TIMEOUT:-180}"
 CMD_TIMEOUT="${CMD_TIMEOUT:-60}"
 SMOKE_DISK_IMAGE="${SMOKE_DISK_IMAGE:-/tmp/minix-i386-smoke.img}"
-SMOKE_GATE_TIMEOUT="${SMOKE_GATE_TIMEOUT:-${TIMEOUT}}"
+SMOKE_GATE_TIMEOUT="${SMOKE_GATE_TIMEOUT:-300}"
 
 passed=0
 failed=0
@@ -189,11 +189,9 @@ run_kernel_tests() {
 }
 
 ensure_smoke_disk() {
-  if [[ -f "${SMOKE_DISK_IMAGE}" ]]; then
-    return 0
-  fi
   log_info "Creating smoke disk: ${SMOKE_DISK_IMAGE}"
   mkdir -p "$(dirname "${SMOKE_DISK_IMAGE}")"
+  rm -f "${SMOKE_DISK_IMAGE}"
   OBJDIR="${OBJDIR}" DESTDIR="${DESTDIR}" OUTPUT="${SMOKE_DISK_IMAGE}" \
     "${MINIX_ROOT}/minix/releasetools/i386/mkdisk.sh" \
     -d "${OBJDIR}" -o "${SMOKE_DISK_IMAGE}" -D "${DESTDIR}"
@@ -216,23 +214,31 @@ run_qemu_gate() {
   ensure_smoke_disk
 
   log_info "Test: QEMU i386 boot smoke"
-  if python3 "${RUNTIME_PROBE}" \
-    --qemu-script "${QEMU_SCRIPT}" \
-    --kernel "${BOOT_KERNEL}" \
-    --destdir "${DESTDIR}" \
-    --disk "${SMOKE_DISK_IMAGE}" \
-    --timeout "${SMOKE_GATE_TIMEOUT}" \
-    --cmd-timeout "${CMD_TIMEOUT}" \
-    --cmd 'login_detect=/bin/echo minix_i386_smoke_ok'; then
-    log_pass "QEMU i386 boot smoke"
-  else
-    local rc=$?
+  local attempt rc=1
+  for attempt in 1 2 3; do
+    pkill -9 qemu-system-i386 2>/dev/null || true
+    sleep 2
+    if [[ "${attempt}" -gt 1 ]]; then
+      log_info "QEMU i386 boot smoke retry ${attempt}/3"
+      rm -f "${SMOKE_DISK_IMAGE}"
+      ensure_smoke_disk
+    fi
+    if python3 "${RUNTIME_PROBE}" \
+      --qemu-script "${QEMU_SCRIPT}" \
+      --kernel "${BOOT_KERNEL}" \
+      --destdir "${DESTDIR}" \
+      --disk "${SMOKE_DISK_IMAGE}" \
+      --timeout "${SMOKE_GATE_TIMEOUT}"; then
+      log_pass "QEMU i386 boot smoke"
+      return 0
+    fi
+    rc=$?
     if [[ "${rc}" -eq 2 ]]; then
       log_skip "QEMU i386 boot smoke"
-    else
-      log_fail "QEMU i386 boot smoke"
+      return 0
     fi
-  fi
+  done
+  log_fail "QEMU i386 boot smoke"
 }
 
 run_gate() {

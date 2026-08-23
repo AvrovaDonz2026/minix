@@ -12,6 +12,7 @@
 #   -i IMAGE    Disk image path (root/usr/home MFS layout)
 #   -B DIR      Boot module directory (default: DESTDIR/boot/minix/.temp)
 #   -a ARGS     Extra kernel append string
+#   -r          Boot from ramdisk (bootramdisk=1)
 #   -s          Single CPU (ignored; kept for probe compatibility)
 #
 
@@ -43,10 +44,12 @@ elif [[ -d "${OBJDIR}/destdir.i386" ]]; then
 fi
 
 QEMU="${QEMU:-qemu-system-i386}"
+# Deterministic TCG (icount) avoids timer/APIC boot hangs under QEMU in CI.
 KVM_ARGS=()
-if [[ "${QEMU_KVM:-auto}" != "0" ]] && [[ -r /dev/kvm ]] && groups | grep -q '\bkvm\b'; then
-  KVM_ARGS=(-enable-kvm)
-fi
+
+# Serial console on COM1; skip ACPI userspace (hangs in QEMU) and virtio PCI
+# block (QEMU i386 uses PIIX IDE).  Matches releasetools/x86_hdimage.sh.
+QEMU_APPEND_DEFAULTS="${QEMU_APPEND_DEFAULTS:-cttyline=0 acpi=no virtio_blk=no}"
 
 usage() {
   echo "Usage: $0 [-d] [-m size] [-k kernel] [-i image] [-B moddir] [-a append] [-r]" >&2
@@ -111,9 +114,9 @@ if [[ -z "${mods}" ]]; then
 fi
 
 if (( RAMDISK_BOOT == 1 )); then
-  APPEND="bootramdisk=1"
+  APPEND="bootramdisk=1 ${QEMU_APPEND_DEFAULTS}"
 else
-  APPEND="rootdevname=c0d0p0"
+  APPEND="rootdevname=c0d0p0 ${QEMU_APPEND_DEFAULTS}"
 fi
 if [[ -n "${APPEND_EXTRA}" ]]; then
   APPEND="${APPEND} ${APPEND_EXTRA}"
@@ -121,20 +124,28 @@ fi
 
 QEMU_ARGS=(
   "${KVM_ARGS[@]}"
+  -machine pc
+  -accel tcg
+  -icount shift=auto,align=off,sleep=on
   -m "${MEMORY}"
   -nographic
   -serial mon:stdio
   -display none
 )
 
+KERNEL_ARG="${KERNEL}"
+if [[ -n "${MODROOT}" && "${KERNEL}" == "${MODROOT}/"* ]]; then
+  KERNEL_ARG="${KERNEL#${MODROOT}/}"
+fi
+
+QEMU_ARGS+=(
+  -kernel "${KERNEL_ARG}"
+  -append "${APPEND}"
+  -initrd "${mods}"
+)
+
 if [[ -n "${DISK}" ]]; then
-  QEMU_ARGS+=(-drive "file=${DISK},format=raw" -boot order=c)
-else
-  QEMU_ARGS+=(
-    -kernel "${KERNEL}"
-    -append "${APPEND}"
-    -initrd "${mods}"
-  )
+  QEMU_ARGS+=(-drive "file=${DISK},format=raw,if=ide")
 fi
 
 if (( DEBUG == 1 )); then

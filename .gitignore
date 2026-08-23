@@ -8,6 +8,8 @@ cscope.*
 *.patch
 !toolchain/patches/gcc13/**/*.patch
 !toolchain/patches/gcc13/*.patch
+!toolchain/patches/riscv64-guest/**/*.patch
+!toolchain/patches/riscv64-guest/*.patch
 *.rej
 *.[1-9].gz
 *.o

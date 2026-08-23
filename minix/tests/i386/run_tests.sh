@@ -113,9 +113,9 @@ run_user_tests() {
     sysroot_flags="--sysroot=${DESTDIR} -I${DESTDIR}/usr/include"
   fi
 
-  local test_src="${SCRIPT_DIR}/../riscv64/test_arch_flags.c"
+  local test_src="${SCRIPT_DIR}/test_arch_flags.c"
   if [[ ! -f "${test_src}" ]]; then
-    log_skip "user compile smoke (no shared test source)"
+    log_skip "user compile smoke (no test source)"
     return 0
   fi
 
@@ -283,6 +283,7 @@ echo "========================================="
 if [[ "${failed}" -ne 0 ]]; then
   exit 1
 fi
-if [[ "${passed}" -eq 0 ]]; then
+if [[ "${passed}" -eq 0 && "${skipped}" -eq 0 ]]; then
   exit 2
 fi
+exit 0

@@ -140,14 +140,12 @@ int read_write(struct fproc *rfp, int rw_flag, int fd, struct filp *f,
   size_t cum_io, res_cum_io;
   size_t cum_io_incr;
   int op, r;
-  int is_console;
   dev_t dev;
 
   position = f->filp_pos;
   vp = f->filp_vno;
   r = OK;
   cum_io = 0;
-  is_console = 0;
 
   assert(rw_flag == READING || rw_flag == WRITING || rw_flag == PEEKING);
 
@@ -174,6 +172,8 @@ int read_write(struct fproc *rfp, int rw_flag, int fd, struct filp *f,
 	op = (rw_flag == READING ? CDEV_READ : CDEV_WRITE);
 
 #if defined(__riscv) || defined(__riscv64__)
+	int is_console = 0;
+
 	if (rw_flag == WRITING &&
 	    major(dev) == TTY_MAJOR &&
 	    minor(dev) == 0) {

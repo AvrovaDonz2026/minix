@@ -373,8 +373,9 @@ tm-constrs.h: genpreds ${G_md_file}
 # 4.8.5 GTFILES list (gimple.c, tree-flow.h, tree-mudflap.c, ...).
 # Feeding the .cc list to 4.8.5 gengtype drops every missing .cc, then
 # gengtype -r aborts in error_at_line on GTY types whose defining .c
-# was never parsed.
-.if exists(${DIST}/gcc/gengtype.cc)
+# was never parsed. Prefer gtyp-input.list whenever present: the defs.mk
+# G_GTFILES .for loop treats [c] as a make character class and emits c.
+.if exists(${GCCARCH}/gtyp-input.list)
 gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 	{ \
 		while IFS= read -r f; do \
@@ -385,7 +386,7 @@ gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 			    -e 's#${DIST}/gcc/\\.\\./include#${DIST}/include#g' \
 			    -e 's#${G_out_file}#${G_OUT_FILE_SRC}#'); \
 			case "$$f" in \
-			*cpp-id-data.h) continue ;; \
+			*cpp-id-data.h) [ ! -e "${DIST}/libcpp/include/cpp-id-data.h" ] && continue ;; \
 			${DIST}/gcc/lto-symtab.c) if [ -e "${DIST}/gcc/lto/lto-symtab.cc" ]; then f="${DIST}/gcc/lto/lto-symtab.cc"; fi ;; \
 			${DIST}/gcc/lto/lto-symtab.cc) if [ ! -e "$$f" ] && [ -e "${DIST}/gcc/lto-symtab.c" ]; then f="${DIST}/gcc/lto-symtab.c"; fi ;; \
 			*.cc) if [ ! -e "$$f" ] && [ -e "$${f%.cc}.c" ]; then f="$${f%.cc}.c"; fi ;; \

@@ -34,6 +34,7 @@ fi
 DIST_JOBS="${DIST_JOBS:-${WORLD_CPU_COUNT:-${VISIBLE_CPUS}}}"
 LOG_DIR="${LOG_DIR:-/tmp/minix-i386}"
 IMAGE_PATH="${IMAGE_PATH:-${LOG_DIR}/minix-i386.img}"
+GUEST_PATCH_SCRIPT="${REPO_ROOT}/toolchain/patches/riscv64-guest/scripts/apply-guest-dist-patches.sh"
 
 mkdir -p "${LOG_DIR}"
 
@@ -131,6 +132,12 @@ prepare_libstdcxx_guest() {
       sanitize_cxxconfig "${cfg}"
     done < <(find "${destdir_root}/usr/include/g++" -type f -name 'c++config.h' -print0)
   fi
+
+  [[ -x "${GUEST_PATCH_SCRIPT}" ]] || {
+    echo "[i386] ERROR: missing ${GUEST_PATCH_SCRIPT}" >&2
+    exit 1
+  }
+  bash "${GUEST_PATCH_SCRIPT}"
 
   [[ -f "${functexcept_src}" ]] || {
     echo "[i386] ERROR: missing ${functexcept_src}" >&2

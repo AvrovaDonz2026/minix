@@ -309,6 +309,8 @@ jobs:
             done < <(find "${destdir_root}/usr/include/g++" -type f -name 'c++config.h' -print0)
           fi
 
+          bash "${PWD}/toolchain/patches/riscv64-guest/scripts/apply-guest-dist-patches.sh"
+
           functexcept_src="${PWD}/external/gpl3/gcc/dist/libstdc++-v3/src/c++11/functexcept.cc"
           if [[ ! -f "${functexcept_src}" ]]; then
             echo "Missing ${functexcept_src}" >&2

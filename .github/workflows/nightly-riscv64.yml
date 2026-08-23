@@ -329,17 +329,12 @@ jobs:
             done < <(find "${destdir_root}/usr/include/g++" -type f -name 'c++config.h' -print0)
           fi
 
+          bash "${PWD}/toolchain/patches/riscv64-guest/scripts/apply-guest-dist-patches.sh"
+
           functexcept_src="${PWD}/external/gpl3/gcc/dist/libstdc++-v3/src/c++11/functexcept.cc"
           if [[ ! -f "${functexcept_src}" ]]; then
             echo "Missing ${functexcept_src}" >&2
             exit 1
-          fi
-          # Some upstream snapshots don't use _GLIBCXX_HAS_GTHREADS here.
-          # Patch the throw site directly so the no-future profile is stable.
-          if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
-            perl -0777 -i -pe \
-              's@\{\s*_GLIBCXX_THROW_OR_ABORT\s*\(\s*future_error\s*\(\s*make_error_code\s*\(\s*future_errc\s*\(\s*__i\s*\)\s*\)\s*\)\s*\)\s*;@{\n#if !defined(_GLIBCXX_MINIX_NO_FUTURE)\n    _GLIBCXX_THROW_OR_ABORT(future_error(make_error_code(future_errc(__i))));\n#else\n    __throw_system_error(__i);\n#endif\n@g' \
-              "${functexcept_src}"
           fi
           if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
             echo "Failed: no MINIX future fallback found in ${functexcept_src}" >&2

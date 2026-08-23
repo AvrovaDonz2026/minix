@@ -65,8 +65,13 @@ COMMON_FLAGS=(
   -V MKLIBGOMP=no
   -V MKATF=no
   -V USE_PCI=no
+  -V MKPIC=yes
+  -V MKPICLIB=yes
+  -V MKPICINSTALL=yes
   -V CHECKFLIST_FLAGS='-m -e'
 )
+
+GUEST_PATCH_SCRIPT="${REPO_ROOT}/toolchain/patches/riscv64-guest/scripts/apply-guest-dist-patches.sh"
 
 install_cross_as_flock_wrapper() {
   local tooldir="$1"
@@ -99,16 +104,17 @@ install_cross_as_flock_wrapper_all() {
   done
 }
 
+apply_guest_dist_patches() {
+  [[ -x "${GUEST_PATCH_SCRIPT}" ]] || {
+    echo "[local] ERROR: missing ${GUEST_PATCH_SCRIPT}" >&2
+    exit 1
+  }
+  bash "${GUEST_PATCH_SCRIPT}"
+}
+
 prepare_libstdcxx_guest() {
   local destdir_root="${REPO_ROOT}/${OBJDIR}/destdir.evbriscv64"
   local functexcept_src="${REPO_ROOT}/external/gpl3/gcc/dist/libstdc++-v3/src/c++11/functexcept.cc"
-
-  strip_libcxx_from_destdir() {
-    rm -rf "${destdir_root}/usr/include/c++"
-    rm -f \
-      "${destdir_root}/usr/lib/libc++.a" \
-      "${destdir_root}/usr/lib/libc++_pic.a"
-  }
 
   strip_libcxx_from_destdir
 
@@ -127,32 +133,17 @@ prepare_libstdcxx_guest() {
     done < <(find "${destdir_root}/usr/include/g++" -type f -name 'c++config.h' -print0)
   fi
 
+  apply_guest_dist_patches
+
   [[ -f "${functexcept_src}" ]] || {
     echo "[local] ERROR: missing ${functexcept_src}" >&2
     exit 1
   }
   if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
-    perl -0777 -i -pe \
-      's@\{\s*_GLIBCXX_THROW_OR_ABORT\s*\(\s*future_error\s*\(\s*make_error_code\s*\(\s*future_errc\s*\(\s*__i\s*\)\s*\)\s*\)\s*\)\s*;@{\n#if !defined(_GLIBCXX_MINIX_NO_FUTURE)\n    _GLIBCXX_THROW_OR_ABORT(future_error(make_error_code(future_errc(__i))));\n#else\n    __throw_system_error(__i);\n#endif\n@g' \
-      "${functexcept_src}"
-  fi
-  if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
     echo "[local] ERROR: no MINIX future fallback in ${functexcept_src}" >&2
     exit 1
   fi
   echo "[local] libstdc++ guest prep: functexcept no-future profile ok"
-}
-
-prepare_llvm_guest_path() {
-  local path_inc="${REPO_ROOT}/external/bsd/llvm/dist/llvm/lib/Support/Unix/Path.inc"
-  [[ -f "${path_inc}" ]] || return 0
-  if grep -q 'fallback("/usr/bin/")' "${path_inc}"; then
-    return 0
-  fi
-  perl -0777 -i -pe \
-    's@(if \(getprogpath\(exe_path, argv0\) != NULL\)\n    return exe_path;\n)@$1#if defined(__minix)\n  if (argv0 && argv0[0] == '"'"'/'"'"')\n    return argv0;\n  if (argv0 && argv0[0]) {\n    std::string fallback("/usr/bin/");\n    fallback.append(llvm::sys::path::filename(argv0));\n    if (sys::fs::can_execute(fallback))\n      return fallback;\n  }\n#endif\n@' \
-    "${path_inc}"
-  echo "[local] llvm guest prep: Path.inc getMainExecutable fallback ok"
 }
 
 strip_libcxx_from_destdir() {
@@ -192,7 +183,6 @@ run_distribution() {
   [[ -n "${tooldir}" ]] && install_cross_as_flock_wrapper "${tooldir}"
 
   prepare_libstdcxx_guest
-  prepare_llvm_guest_path
 
   echo "[local] building distribution (jobs=${DIST_JOBS}) -> ${LOG_DIR}/distribution.log"
   install_cross_as_flock_wrapper "${tooldir}"

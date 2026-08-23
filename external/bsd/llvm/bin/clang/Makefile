@@ -112,9 +112,4 @@ LDADD+=	-lz
 DPADD+=	${LIBZ}
 .endif
 
-.if defined(__MINIX) && !defined(HOSTPROG) && (${MACHINE_ARCH} == "riscv64" || ${MACHINE_ARCH} == "riscv")
-# bsd.prog.mk defaults to dynamic; static link avoids guest ld.so gaps.
-LDSTATIC.clang=	-static
-.endif
-
 .include <bsd.prog.mk>

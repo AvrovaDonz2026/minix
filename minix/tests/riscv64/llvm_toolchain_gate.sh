@@ -190,6 +190,14 @@ host_machine_of() {
   return 1
 }
 
+elf_has_interp() {
+  local bin="$1"
+  local readelf="$2"
+
+  [ -n "$readelf" ] && [ -x "$readelf" ] || return 1
+  "$readelf" -l "$bin" 2>/dev/null | grep -q 'INTERP'
+}
+
 run_host_layer() {
   local tooldir clang clangxx clangcpp tblgen ctblgen readelf
   local tmp macros ir cxxir obj stderrf src
@@ -514,6 +522,26 @@ run_destdir_layer() {
         log_fail "DESTDIR clang is not RISC-V ELF (${machine})"
         ;;
     esac
+  fi
+
+  if [ -x "${root}/libexec/ld.elf_so" ]; then
+    log_pass "DESTDIR libexec/ld.elf_so present"
+  else
+    log_fail "DESTDIR missing libexec/ld.elf_so (MKPIC/MKPICINSTALL)"
+  fi
+
+  if [ -e "${root}/usr/lib/libgcc_s.so" ]; then
+    log_pass "DESTDIR libgcc_s.so present"
+  else
+    log_fail "DESTDIR missing usr/lib/libgcc_s.so"
+  fi
+
+  if [ -x "$clang" ] && [ -n "$readelf" ]; then
+    if elf_has_interp "$clang" "$readelf"; then
+      log_pass "DESTDIR clang is dynamically linked"
+    else
+      log_fail "DESTDIR clang is not dynamically linked (expected PT_INTERP)"
+    fi
   fi
 }
 

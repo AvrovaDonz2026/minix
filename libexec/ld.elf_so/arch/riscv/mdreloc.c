@@ -144,10 +144,16 @@ _rtld_relocate_nonplt_objects(Obj_Entry *obj)
 			if (def == NULL)
 				return -1;
 
-			Elf_Addr val = (Elf_Addr)defobj->relocbase + rela->r_addend;
+			Elf_Addr val = (Elf_Addr)defobj->relocbase + def->st_value +
+			    rela->r_addend;
 
 			*where = val;
-			rdbg(("ADDR %s in %s --> %p in %s",
+			if (rela->r_offset >= 0x106340 && rela->r_offset <= 0x106350)
+				xprintf("rtld: reloc offset=%lx def=%lx base=%lx val=%lx obj=%s\n",
+				    (unsigned long)rela->r_offset, (unsigned long)def->st_value,
+				    (unsigned long)(uintptr_t)defobj->relocbase, (unsigned long)val,
+				    obj->path);
+			rdbg(("ADDR) %s in %s --> %p in %s",
 			    obj->strtab + obj->symtab[r_symndx].st_name,
 			    obj->path, (void *)val, defobj->path));
 			break;

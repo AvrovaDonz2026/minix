@@ -244,14 +244,24 @@ run_servers() {
   export MKPCI=no
   export MAKEOBJDIR='${.CURDIR:C,^'${REPO_ROOT}','${REPO_ROOT}'/'${OBJDIR}',}'
 
-  echo "[local] rebuilding ramdisk + VFS + VM + kernel"
+  echo "[local] installing headers and rebuilding PM + VFS + VM + rtld + kernel"
+  "${nbmake}" -C lib/csu -j"${JOBS}"
+  "${nbmake}" -C lib/csu install
+  "${nbmake}" -C lib/libc -j"${JOBS}"
+  "${nbmake}" -C lib/libc install
+  "${nbmake}" -C minix/include -j"${JOBS}"
+  "${nbmake}" -C minix/include install
   "${nbmake}" -C minix/drivers/storage/ramdisk -j"${JOBS}"
   "${nbmake}" -C minix/drivers/storage/memory -j"${JOBS}"
   "${nbmake}" -C minix/drivers/storage/memory install
+  "${nbmake}" -C minix/servers/pm -j"${JOBS}"
+  "${nbmake}" -C minix/servers/pm install
   "${nbmake}" -C minix/servers/vfs -j"${JOBS}"
   "${nbmake}" -C minix/servers/vfs install
   "${nbmake}" -C minix/servers/vm -j"${JOBS}"
   "${nbmake}" -C minix/servers/vm install
+  "${nbmake}" -C libexec/ld.elf_so -j"${JOBS}"
+  "${nbmake}" -C libexec/ld.elf_so install
   "${nbmake}" -C minix/kernel -j"${JOBS}"
 }
 

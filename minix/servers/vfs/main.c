@@ -724,7 +724,6 @@ void service_pm_postponed(void)
 	stack_frame = (vir_bytes) job_m_in.VFS_PM_FRAME;
 	stack_frame_len = (size_t) job_m_in.VFS_PM_FRAME_LEN;
 	ps_str = (vir_bytes) job_m_in.VFS_PM_PS_STR;
-
 	assert(proc_e == fp->fp_endpoint);
 
 	r = pm_exec(exec_path, exec_path_len, stack_frame, stack_frame_len,
@@ -736,7 +735,7 @@ void service_pm_postponed(void)
 	m_out.VFS_PM_PC = (void *) pc;
 	m_out.VFS_PM_STATUS = r;
 	m_out.VFS_PM_NEWSP = (void *) newsp;
-	m_out.VFS_PM_NEWPS_STR = ps_str;
+	m_out.VFS_PM_NEWPS_STR = (void *)ps_str;
 
 	break;
 

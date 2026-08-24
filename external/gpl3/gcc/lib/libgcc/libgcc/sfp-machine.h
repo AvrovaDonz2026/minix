@@ -1,1 +1,1 @@
-../../../dist/libgcc/config/no-sfp-machine.h
+/waterloo/minix/external/gpl3/gcc/dist/libgcc/config/i386/sfp-machine.h

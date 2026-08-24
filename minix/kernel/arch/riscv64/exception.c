@@ -163,6 +163,11 @@ static void handle_exception(struct trapframe *tf, u64_t cause)
             NOT_REACHABLE;
         }
         if (from_user && pr != NULL) {
+            direct_print("rv64: sigill pc=");
+            direct_print_hex(tf->tf_sepc);
+            direct_print(" insn=");
+            direct_print_hex(tf->tf_stval);
+            direct_print("\n");
             cause_sig(proc_nr(pr), SIGILL);
             return;
         }

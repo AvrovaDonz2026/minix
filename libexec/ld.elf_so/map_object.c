@@ -100,6 +100,7 @@ _rtld_map_object(const char *path, int fd, const struct stat *sb)
 	size_t		 gap_size;
 #endif /* defined(__minix) */
 	int i;
+	int		 objtype;
 #ifdef RTLD_LOADER
 	Elf_Addr	 clear_vaddr;
 	caddr_t		 clear_addr;
@@ -268,6 +269,7 @@ _rtld_map_object(const char *path, int fd, const struct stat *sb)
 	obj->textsize = text_vlimit - base_vaddr;
 	obj->vaddrbase = base_vaddr;
 	obj->isdynamic = ehdr->e_type == ET_DYN;
+	objtype = ehdr->e_type;
 
 #if defined(__HAVE_TLS_VARIANT_I) || defined(__HAVE_TLS_VARIANT_II)
 	if (phtls != NULL) {
@@ -334,11 +336,11 @@ _rtld_map_object(const char *path, int fd, const struct stat *sb)
 
 #ifdef RTLD_LOADER
 	base_addr = obj->isdynamic ? NULL : (caddr_t)base_vaddr;
-	if (!obj->isdynamic)
-		mapflags |= MAP_FIXED;
 #else
 	base_addr = NULL;
 #endif
+	if (!obj->isdynamic)
+		mapflags |= MAP_FIXED;
 	mapsize = base_vlimit - base_vaddr;
 	mapbase = mmap(base_addr, mapsize, text_flags,
 	    mapflags | MAP_FILE | MAP_PRIVATE, fd, base_offset);
@@ -406,6 +408,10 @@ _rtld_map_object(const char *path, int fd, const struct stat *sb)
 		obj->interp = (void *)(obj->relocbase + (Elf_Addr)(uintptr_t)obj->interp);
 	if (obj->phdr_loaded)
 		obj->phdr =  (void *)(obj->relocbase + (Elf_Addr)(uintptr_t)obj->phdr);
+	xprintf("rtld: map path=%s type=%d base=%lx got=%lx rel=%lx entry=%lx\n",
+	    obj->path, objtype, (unsigned long)base_vaddr, (unsigned long)(uintptr_t)mapbase,
+	    (unsigned long)(uintptr_t)obj->relocbase,
+	    (unsigned long)(uintptr_t)obj->entry);
 #ifdef __ARM_EABI__
 	if (obj->exidx_start)
 		obj->exidx_start = (void *)(obj->relocbase + (Elf_Addr)(uintptr_t)obj->exidx_start);

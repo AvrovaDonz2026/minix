@@ -77,14 +77,6 @@ static int elf_unpack(char *exec_hdr,
   }
 
   *hdr = (Elf_Ehdr *) exec_hdr;
-  printf("libexec: ehdr class=%u data=%u ver=%u phoff=%lu phentsize=%u phnum=%u entry=0x%lx\n",
-      (*hdr)->e_ident[EI_CLASS],
-      (*hdr)->e_ident[EI_DATA],
-      (*hdr)->e_ident[EI_VERSION],
-      (unsigned long)(*hdr)->e_phoff,
-      (*hdr)->e_phentsize,
-      (*hdr)->e_phnum,
-      (unsigned long)(*hdr)->e_entry);
   if(!elf_sane(*hdr)) {
   	return ENOEXEC;
   }

@@ -240,6 +240,7 @@ _rtld_call_init_function(Obj_Entry *obj, sigset_t *mask, u_int cur_objgen)
 		    obj->path, (void *)obj->init,
 		    obj->z_initfirst ? " (DF_1_INITFIRST)" : ""));
 		obj->init_called = 1;
+		xprintf("rtld: init %s func=%lx\n", obj->path, (unsigned long)obj->init);
 		_rtld_call_initfini_function(obj, obj->init, mask);
 	}
 
@@ -256,7 +257,9 @@ _rtld_call_init_function(Obj_Entry *obj, sigset_t *mask, u_int cur_objgen)
 		dbg (("calling init_array function %s at %p%s",
 		    obj->path, (void *)init,
 		    obj->z_initfirst ? " (DF_1_INITFIRST)" : ""));
+		xprintf("rtld: init_array %s func=%lx\n", obj->path, (unsigned long)init);
 		_rtld_call_initfini_function(obj, init, mask);
+		xprintf("rtld: init_array returned %s func=%lx\n", obj->path, (unsigned long)init);
 	}
 #endif /* HAVE_INITFINI_ARRAY */
 }
@@ -608,6 +611,7 @@ _rtld(Elf_Addr *sp, Elf_Addr relocbase)
 		int             fd = pAUX_execfd->a_v;
 		const char *obj_name = argv[0] ? argv[0] : "main program";
 		dbg(("loading main program"));
+		xprintf("rtld: main via fd=%d auxfd=%ld path=%s\n", fd, (long)pAUX_execfd->a_v, obj_name);
 		_rtld_objmain = _rtld_map_object(obj_name, fd, NULL);
 		close(fd);
 		if (_rtld_objmain == NULL)
@@ -626,6 +630,7 @@ _rtld(Elf_Addr *sp, Elf_Addr relocbase)
 		assert(pAUX_phent->a_v == sizeof(Elf_Phdr));
 		assert(pAUX_entry != NULL);
 		entry = (caddr_t) pAUX_entry->a_v;
+		xprintf("rtld: main via phdr=%lx entry=%lx phnum=%d\n", (unsigned long)(uintptr_t)phdr, (unsigned long)(uintptr_t)entry, phnum);
 		_rtld_objmain = _rtld_digest_phdr(phdr, phnum, entry);
 		_rtld_objmain->path = xstrdup(argv[0] ? argv[0] :
 		    "main program");
@@ -741,6 +746,10 @@ _rtld(Elf_Addr *sp, Elf_Addr relocbase)
 
 	dbg(("control at program entry point = %p, obj = %p, exit = %p",
 	     _rtld_objmain->entry, _rtld_objmain, _rtld_exit));
+	xprintf("rtld: final entry=%lx relocbase=%lx mapbase=%lx\n",
+	    (unsigned long)(uintptr_t)_rtld_objmain->entry,
+	    (unsigned long)(uintptr_t)_rtld_objmain->relocbase,
+	    (unsigned long)(uintptr_t)_rtld_objmain->mapbase);
 
 	_rtld_exclusive_exit(&mask);
 

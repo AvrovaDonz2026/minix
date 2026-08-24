@@ -260,7 +260,7 @@ _rtld_symlook_obj(const char *name, unsigned long hash,
 		rdbg(("check \"%s\" vs \"%s\" in %s", name, strp, obj->path));
 		if (name[1] != strp[1] || strcmp(name, strp))
 			continue;
-#if defined(__mips__) || defined(__vax__)
+#if defined(__mips__) || defined(__vax__) || defined(__riscv)
 		if (symp->st_shndx == SHN_UNDEF)
 			continue;
 #else

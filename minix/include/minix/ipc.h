@@ -7,6 +7,15 @@
 #include <sys/signal.h>
 #include <sys/types.h>
 
+/* Old GCC may not define __riscv_xlen. */
+#if defined(__riscv) && !defined(__riscv_xlen)
+#if defined(__riscv64)
+#define __riscv_xlen 64
+#elif defined(__riscv32)
+#define __riscv_xlen 32
+#endif
+#endif
+
 /*==========================================================================* 
  * Types relating to messages. 						    *
  *==========================================================================*/ 
@@ -68,11 +77,24 @@ typedef struct {
 _ASSERT_MSG_SIZE(mess_4);
 
 typedef struct {
-	int m7i1, m7i2, m7i3, m7i4, m7i5;
+	int m7i1, m7i2, m7i3, m7i4;
+	union {
+		int m7i5;
+		char *m7p3;
+	};
 	char *m7p1, *m7p2;
+#if defined(__riscv) && (__riscv_xlen == 64)
+	uint8_t padding[16];
+#else
 	uint8_t padding[28];
+#endif
 } mess_7;
 _ASSERT_MSG_SIZE(mess_7);
+#if defined(__riscv) && (__riscv_xlen == 64)
+typedef int _ASSERT_mess_7_size[sizeof(mess_7) == 56 ? 1 : -1];
+typedef int _ASSERT_mess_7_p3_offset[
+    offsetof(mess_7, m7p3) == 16 ? 1 : -1];
+#endif
 
 typedef struct {
 	uint64_t m9ull1, m9ull2;
@@ -2669,14 +2691,6 @@ typedef struct noxfer_message {
 
 		u8_t size[56];	/* message payload may have 56 bytes at most */
 	};
-/* Old GCC may not define __riscv_xlen. */
-#if defined(__riscv) && !defined(__riscv_xlen)
-#if defined(__riscv64)
-#define __riscv_xlen 64
-#elif defined(__riscv32)
-#define __riscv_xlen 32
-#endif
-#endif
 #if defined(__riscv) && (__riscv_xlen == 64)
 } message __ALIGNED(8);
 #else
@@ -2728,6 +2742,7 @@ typedef int _ASSERT_message[/* CONSTCOND */sizeof(message) == 64 ? 1 : -1];
 #define m7_i5  m_m7.m7i5
 #define m7_p1  m_m7.m7p1
 #define m7_p2  m_m7.m7p2
+#define m7_ps   m_m7.m7p3
 
 #define m9_l1  m_m9.m9l1
 #define m9_l2  m_m9.m9l2

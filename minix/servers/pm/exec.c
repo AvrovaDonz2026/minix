@@ -38,13 +38,6 @@ int
 do_exec(void)
 {
 	message m;
-	static int exec_log_count;
-
-	if (exec_log_count < 16) {
-		printf("PM: exec request from ep=%d\n", mp->mp_endpoint);
-		exec_log_count++;
-	}
-
 	/* Forward call to VFS */
 	memset(&m, 0, sizeof(m));
 	m.m_type = VFS_PM_EXEC;
@@ -53,8 +46,7 @@ do_exec(void)
 	m.VFS_PM_PATH_LEN = m_in.m_lc_pm_exec.namelen;
 	m.VFS_PM_FRAME = (void *)m_in.m_lc_pm_exec.frame;
 	m.VFS_PM_FRAME_LEN = m_in.m_lc_pm_exec.framelen;
-	m.VFS_PM_PS_STR = m_in.m_lc_pm_exec.ps_str;
-
+	m.VFS_PM_PS_STR = (void *)m_in.m_lc_pm_exec.ps_str;
 	tell_vfs(mp, &m);
 
 	/* Do not reply */

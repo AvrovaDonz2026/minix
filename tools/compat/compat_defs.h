@@ -452,7 +452,9 @@ char		*strndup(const char *, size_t);
 size_t		strnlen(const char *, size_t);
 #endif
 #if !HAVE_DECL_LCHFLAGS
+#ifndef __APPLE__
 int		lchflags(const char *, unsigned long);
+#endif
 #endif
 #if !HAVE_DECL_LCHMOD
 int		lchmod(const char *, mode_t);

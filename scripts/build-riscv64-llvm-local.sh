@@ -40,6 +40,19 @@ export HOST_CC=gcc
 export HOST_CXX=g++
 export LIBRARY_PATH="${LIBRARY_PATH:-/usr/lib/gcc/$(gcc -dumpmachine)/$(gcc -dumpversion):/usr/lib/$(gcc -dumpmachine)}"
 
+host_mtime() {
+  stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"
+}
+
+if [[ "$(uname -s)" == Darwin ]]; then
+  # Keep macOS builds isolated from the Linux CI output directory.
+  OBJDIR="${OBJDIR:-obj.macos-riscv64-llvm}"
+  export CC=/opt/homebrew/opt/llvm/bin/clang
+  export CXX=/opt/homebrew/opt/llvm/bin/clang++
+  export HOST_CC="${CC}"
+  export HOST_CXX="${CXX}"
+fi
+
 HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
 COMMON_FLAGS=(
   -m "${MACHINE}"
@@ -206,7 +219,7 @@ pick_tooldir() {
   for d in "${OBJDIR}"/tooldir.*; do
     [[ -d "${d}" ]] || continue
     [[ -x "${d}/bin/nbmake" ]] || continue
-    mt="$(stat -c %Y "${d}" 2>/dev/null || echo 0)"
+    mt="$(host_mtime "${d}" 2>/dev/null || echo 0)"
     if (( mt >= best )); then
       best="${mt}"
       tooldir="${d}"

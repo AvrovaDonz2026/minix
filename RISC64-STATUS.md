@@ -1,7 +1,7 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
 **Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.53
+**Version / 版本**: 1.54 (merges LLVM track 1.46 + virtio-net track 1.53)
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
 **Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
 
@@ -9,6 +9,84 @@
 
 **中文**
 - 构建可通过（GCC + workaround 组合），详见 `README-RISCV64.md`。
+- LLVM/clang 由独立 packaging CI（`packaging-riscv64-llvm.yml`，`MKLLVM=yes`）门禁；
+  世界仍用 GCC，见 `issue.md` `#42`。`c2e1100aa` 的 `build-llvm`（`32482987335`）
+  在 top-level configure 之后因 `bfd Makefile missing after configure` 立刻失败
+  （`#45`）。本轮去掉过早的 nbmake `bfd.h` 依赖，让宿主 GNU make 先
+  `configure-bfd` 再编 `all-binutils`；gcc 4.8.5 `params.opt` 跳过与 RISC-V
+  `_copysignl` 仍在（`#43`/`#44`）。gcov 跳过 gcc13 的 `json.cc`，
+  common-target 跳过 `spellcheck.cc` 等（`#47`）。`#44` 的 128 位
+  long double 与 gcc 4.8.5 冲突（`s_cbrtl.c`）；`#48` 改为在 RISC-V
+  `.S` 上 alias `*l`。`#50` 把 backend 生成器从 gcc13 的 `.cc` 映射到
+  4.8.5 的 `.c`。`#51` 把 `RISCVTargetInfo::array_lengthof` 移到完整
+  寄存器数组定义之后，修复 `Targets.cpp` 编译。`#52` 丢掉 4.8.5 没有的
+  `gcc/common.md`。`#53`：tools gcc 4.8.5 不生成 `version.h` 时改为合成头文件。
+  `#54`：4.8.5 `genmodes` 没有 `-i`，改为空的 `insn-modes-inline.h`；
+  frontend/cc1 的 `.cc` 映射到 `.c`。`#55`：`G_GCC_H` 在 tools 没有
+  `version.h` 时改依赖本地合成文件。`#56`：从网络分支拣入
+  `Makefile.hooks` 的 `genhooks.cc`/`genhooks.c` 映射。`#57`：从网络
+  分支拣入 gengtype 对 4.8.5 `version.c` 的链接。`#58`：从网络分支拣入
+  4.8.5 `G_GTFILES` 作为 gengtype 输入，以及 gcc13 路径的 `.cc` 到 `.c`
+  映射。`#59`：从网络分支拣入 `.for` recipe 展开修复，避免
+  `sh: .for: not found`。`#60`：从网络分支拣入 `echo` 替代独立
+  recipe 里的 `printf '%s\n'`，避免 make 把 `\n` 拆成真换行。`#61`：
+  从网络分支拣入 4.8.5 `cpp-id-data.h` 保留，只在文件不存在时丢掉。`#62`：
+  从网络分支拣入 `GENERATOR_FILE` 下 `config.h` 转到 arch `bconfig.h`。
+  `#63`：从网络分支拣入 libcpp 的 `.cc` 源按 dist 映射到 4.8.5 的 `.c`。
+  `#64`：从网络分支拣入 usr.bin 的 libgcov arch `-I`，让 gcov/cc1
+  找到 `gcov-iov.h`。`#65`：从网络分支拣入把该 `-I` 改从
+  `NETBSDSRCDIR` 解析；`#64` 的 `${.PARSEDIR}` 在 hosted CI 展开为空。
+  `#66`（仅本 LLVM 分支）：`MKCXX=yes` 会编 libstdc++，`adc524d54`
+  （`32521564417`）在 `compatibility-atomic-c++0x.cc` 踩单线程
+  `<atomic>` `#error`；riscv64 与已有 thread skip 一样丢掉该源。
+  `#67`：从网络分支拣入 libcommon 按 dist 映射 diagnostic/pretty-print/
+  intl/input/version；网络 nightly `32524763481`（`7014a3bb6`）编过
+  gcov.c 后 `libcommon.a` 只有 `input.o`。本分支在 `#66` 落地前死在
+  libstdc++，可能尚未重踩 gcov。
+  `#68`：从网络分支拣入 `Makefile.cc2c` 直接追加 `${s}` / `${s:R}.c`；
+  网络 nightly `32527820716`（`c952fa0c1`）把 gcpp 链成三份
+  `ggc-none.o`。本分支在 `#66` 落地前可能尚未重踩 native cpp。
+  `#69`：从网络分支拣入 common-target 的 4.8.5 `params.c`，以及
+  frontend 档案后再链 `-lintl`。网络 nightly `32530101083`
+  （`92237adf3`）链上 `cppspec.o gcc.o ggc-none.o` 后缺
+  `global_init_params` / `dgettext`。本分支 `7cd93be42`
+  （`32530212770`）已过 `#66`，当时死在 libstdc++ `functexcept.cc`
+  缺 `pthread.h`（仅本 LLVM 分支）。
+  `#70`：从网络分支拣入在 `lto1` / `cc1` / `cc1obj` / `cc1plus`
+  里先于 `Makefile.cc2c` 设置 `NOMAN`。网络 nightly
+  `32532469511`（`9cb398c22`）链上 `gcpp` 后报 `don't know how
+  to make lto1.1`。当时仍死在 libstdc++ `functexcept.cc` /
+  `pthread.h`，不要把 pthread 修到网络 PR。
+  `#71`：从网络分支拣入 `:Minsn-*`（不是 `:Mininsn-*`）并补回
+  gcc13 `G_OBJS` 丢掉的 4.8.5 对象。网络 nightly
+  `32534503524`（`88ec45927`）链上 `lto1` 后缺 `pointer_set_*` /
+  `insn_data`。当时仍死在 `pthread.h`，不要把 pthread 修到
+  网络 PR。
+  `#72`：从网络分支拣入 4.8.5 `tree-mudflap.o` /
+  `directives-only.o` / `cp/repo.o`。网络 nightly
+  `32537278919`（`6954a7e6c`）链上 `lto1` 后链 `cc1` 缺
+  `mudflap_init()` / `_cpp_preprocess_dir_only`。本分支当时仍死在
+  `pthread.h`，不要把 pthread 修到网络 PR。
+  `#42` LLVM packaging CI 现已在 tools 之后跑 host 功能门禁
+  （clang 3.6、tblgen、RISC-V/Minix macros、`-fsyntax-only`、
+  `clang -c` 不得产出 RISC-V 对象），distribution 之后跑 DESTDIR
+  ELF 门禁，full suite 增加 `run_tests.sh llvm` 来宾 clang 冒烟。
+  不再只检查 `clang --version`。
+  `#46`（仅本 LLVM 分支）：`32539330823`（`cb5799c36`）编
+  `functexcept.cc` 时 `#include <future>` 打到 libc++ 的
+  `/usr/include/c++/__mutex_base`，再要 `pthread.h`。根因是
+  `MKLLVM=yes` 时 `bsd.own.mk` 仍默认 `MKLIBCXX=yes`，
+  `bsd.sys.mk` 把 `-I .../usr/include/c++` 插到 libstdc++
+  `/usr/include/g++` 前面。riscv64 强制 `MKLIBCXX=no`，CI 再传
+  `-V MKLIBCXX=no`，并清掉 MKUPDATE 留下的 libc++ 头文件。
+  不要把 libc++ / pthread 修到网络 PR。
+  `#49`：`32543353223`（`6e97a7c26`）tools 已装
+  `nbllvm-tblgen`，host 门禁写成 `nblvm-tblgen` 失败；其余
+  host 检查（含 `clang -c` 不得产出 RISC-V 对象）均通过。
+  `#73`：`32545143308`（`2044ddfb4`）host 门禁已过，distribution
+  编客端 `libLLVMAnalysis` 时 `std::max(UINT64_C(1), uint64_t)`
+  在 gcc 4.8 上报类型冲突（ULL vs `unsigned long`）。三处
+  `std::max` 改用 `uint64_t(1)`。
 - QEMU 可稳定进入 shell，并已通过交互冒烟：`echo SMOKE_OK`、`ps -aux`、`cat /proc/meminfo`。
 - 系统大版本已滚动到 `Minix Cat 4.0.0`（`OS_RELEASE=4.0.0`，
   `MINIX_VERSION=4.0.0-riscv64`）。
@@ -173,6 +251,90 @@
 
 **English**
 - Build passes with GCC + workaround flags; see `README-RISCV64.md` for exact commands.
+- LLVM is gated by packaging CI with `MKLLVM=yes` (`issue.md` #42). Hosted
+  tools `c2e1100aa` aborted after top-level configure looking for
+  `build/bfd/Makefile` (#45). Tools binutils now runs GNU `configure-bfd`
+  then `all-binutils`; gcc 4.8.5 still skips `params.opt` (#43). `#44`
+  set `__HAVE_LONG_DOUBLE 128` for `_copysignl`; gcc 4.8.5 long double
+  is 64-bit, so `#48` aliases `*l` from the RISC-V `.S` files. gcov
+  skips `json.cc` and common-target skips gcc13-only sources (#47).
+  `#50` maps backend generators from gcc13 `.cc` to gcc 4.8.5 `.c`.
+  `#51` moves `RISCVTargetInfo` `array_lengthof` after the complete
+  register arrays so `Targets.cpp` compiles. `#52` drops gcc13
+  `gcc/common.md` when the 4.8.5 dist lacks it. `#53` synthesizes
+  `version.h` when tools gcc 4.8.5 does not emit it. `#54` stubs
+  `insn-modes-inline.h` because 4.8.5 `genmodes` has no `-i`, and maps
+  remaining frontend/cc1 `.cc` sources to `.c`. `#55`: if tools gcc has
+  no `version.h`, `G_GCC_H` depends on the local stub. `#56` maps
+  gcc13 `genhooks.cc` to gcc 4.8.5 `genhooks.c`. `#57` links 4.8.5
+  `version.c` into native `gengtype`. `#58` feeds 4.8.5 `G_GTFILES` to
+  `gengtype` and maps `.cc` to `.c` on the gcc13 path. `#59` expands
+  `.for` outside the recipe continuation so the shell does not see it.
+  `#60` echoes each `G_GTFILES` word so make does not split `printf '%s\n'`.
+  `#61` keeps `cpp-id-data.h` on gcc 4.8.5; only drops it when absent.
+  `#62` wraps `config.h` so `-DGENERATOR_FILE` includes arch `bconfig.h`.
+  `#63` maps native libcpp `.cc` SRCS onto gcc 4.8.5 `libcpp/*.c`.
+  `#64` adds the libgcov arch `-I` so native gcov/cc1 find `gcov-iov.h`.
+  `#65` resolves that `-I` from `NETBSDSRCDIR`; `#64` `${.PARSEDIR}`
+  expanded empty on hosted CI.
+  `#66` (this LLVM branch only): `MKCXX=yes` builds libstdc++;
+  `adc524d54` (`32521564417`) failed compiling
+  `compatibility-atomic-c++0x.cc` (`<atomic>` is not supported on
+  this single threaded system). Skip that source next to the existing
+  thread skip. Do not mix onto the network PR.
+  `#67`: cherry-pick mapping libcommon diagnostic/pretty-print/intl/
+  input/version onto gcc 4.8.5 `.c` (no virtio-net). Network nightly
+  `32524763481` (`7014a3bb6`) archived `libcommon.a` from `input.o`
+  only. This branch died in libstdc++ until `#66`, so it may not have
+  re-hit gcov yet.
+  `#68`: cherry-pick expanding `Makefile.cc2c` mapped names
+  immediately (no virtio-net). Network nightly `32527820716`
+  (`c952fa0c1`) linked gcpp as `ggc-none.o` three times. This
+  branch may not have re-hit native cpp until `#66` clears
+  libstdc++.
+  `#69`: cherry-pick gcc 4.8.5 `params.c` in common-target and
+  `-lintl` after frontend archives (no virtio-net). Network
+  nightly `32530101083` (`92237adf3`) missed
+  `global_init_params` / `dgettext`. This branch `7cd93be42`
+  (`32530212770`) got past `#66` then died in libstdc++
+  `functexcept.cc` (`pthread.h` missing). LLVM-only.
+  `#70`: cherry-pick `NOMAN` before `Makefile.cc2c` in `lto1` /
+  `cc1` / `cc1obj` / `cc1plus` (no virtio-net). Network nightly
+  `32532469511` (`9cb398c22`) died `don't know how to make
+  lto1.1` after `#69` linked `gcpp`. This branch still dies in
+  libstdc++ `functexcept.cc` / `pthread.h` until a later
+  LLVM-only fix. Do not mix pthread onto the network PR.
+  `#71`: cherry-pick `:Minsn-*` (not `:Mininsn-*`) and 4.8.5-only
+  backend objects (no virtio-net). Network nightly `32534503524`
+  (`88ec45927`) linked `lto1` then missed `pointer_set_*` /
+  `insn_data`. This branch still dies in `pthread.h`. Do not
+  mix pthread onto the network PR.
+  `#72`: cherry-pick 4.8.5 `tree-mudflap.o` /
+  `directives-only.o` / `cp/repo.o` (no virtio-net). Network
+  nightly `32537278919` (`6954a7e6c`) linked `lto1` then missed
+  `mudflap_init()` / `_cpp_preprocess_dir_only` while linking
+  `cc1`. This branch then still died in `pthread.h`. Do not mix
+  pthread onto the network PR.
+  `#42` LLVM packaging CI now runs a host functional gate after
+  tools (clang 3.6, tblgen, RISC-V/Minix macros, `-fsyntax-only`,
+  `clang -c` must not emit a RISC-V object), a DESTDIR ELF gate
+  after distribution, and `run_tests.sh llvm` in the full suite.
+  It no longer stops at `clang --version`.
+  `#46` (this LLVM branch only): `32539330823` (`cb5799c36`)
+  compiled `functexcept.cc` and `#include <future>` hit libc++
+  `/usr/include/c++/__mutex_base` then `pthread.h`. `MKLLVM=yes`
+  still defaulted `MKLIBCXX=yes` on riscv64, so `bsd.sys.mk`
+  prepended `-I .../usr/include/c++` ahead of libstdc++
+  `/usr/include/g++`. Force `MKLIBCXX=no` on riscv64, pass it in
+  LLVM CI, and drop stale DESTDIR libc++ headers. Do not mix
+  libc++ / pthread onto the network PR.
+  `#49`: `32543353223` (`6e97a7c26`) installed `nbllvm-tblgen`
+  then the host gate looked for `nblvm-tblgen`. Other host checks
+  passed, including `clang -c` not emitting a RISC-V object.
+  `#73`: `32545143308` (`2044ddfb4`) passed the host gate, then
+  guest `libLLVMAnalysis` failed `std::max(UINT64_C(1), uint64_t)`
+  on gcc 4.8 (ULL vs `unsigned long`). Use `uint64_t(1)` at the
+  three `std::max` sites.
 - QEMU now reaches a stable shell and passes interactive smoke commands:
   `echo SMOKE_OK`, `ps -aux`, and `cat /proc/meminfo`.
 - The system major version is now `Minix Cat 4.0.0`
@@ -366,7 +528,8 @@
 
 **中文**
 - 基线命令：使用 GCC、禁用 LLVM/C++、放宽 `checkflist`（见 `README-RISCV64.md`）。
-- 当前产物：`obj.intrgcc/minix/kernel/kernel` 与 `obj.intrgcc/destdir.evbriscv64`。
+- LLVM/clang 由独立 packaging CI（`packaging-riscv64-llvm.yml`，`MKLLVM=yes`）门禁；世界仍用 GCC，见 `issue.md` `#42`。
+- 当前产物：`obj.intrgcc/minix/kernel/kernel` 与 `obj.intrgcc/destdir.evbriscv64`（可直接用于 QEMU）。
 - 历史路径 `minix/kernel/obj/kernel` / `obj/destdir.evbriscv64` 不再作为基线。
 - 限制：`CHECKFLIST_FLAGS='-m -e'` 为临时绕过，需在 sets 完整后移除。
 - ramdisk 更新：新增 `/bin/neofetch`（`pfetch` 兼容包装）与 `/etc/build-id` 注入。
@@ -377,8 +540,9 @@
 
 **English**
 - Baseline: GCC, LLVM/C++ disabled, relaxed `checkflist` (see `README-RISCV64.md`).
+- LLVM/clang gated by packaging CI with `MKLLVM=yes` (`issue.md` #42).
 - Current outputs: `obj.intrgcc/minix/kernel/kernel` and
-  `obj.intrgcc/destdir.evbriscv64`.
+  `obj.intrgcc/destdir.evbriscv64` (bootable in QEMU).
 - Historical `minix/kernel/obj/kernel` / `obj/destdir.evbriscv64` paths are
   no longer the baseline.
 - Limitation: `CHECKFLIST_FLAGS='-m -e'` is a temporary workaround until sets are complete.

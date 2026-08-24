@@ -492,6 +492,8 @@ static bool isSignedCharDefault(const llvm::Triple &Triple) {
   case llvm::Triple::ppc64le:
   case llvm::Triple::systemz:
   case llvm::Triple::xcore:
+  case llvm::Triple::riscv32:
+  case llvm::Triple::riscv64:
     return false;
   }
 }
@@ -7637,6 +7639,14 @@ void minix::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
   // GNU as needs different flags for creating the correct output format
   // on architectures with different ABIs or optional feature sets.
   switch (getToolChain().getArch()) {
+  case llvm::Triple::riscv32:
+    CmdArgs.push_back("-march=rv32imafd");
+    CmdArgs.push_back("-mabi=ilp32d");
+    break;
+  case llvm::Triple::riscv64:
+    CmdArgs.push_back("-march=rv64imafd");
+    CmdArgs.push_back("-mabi=lp64d");
+    break;
   case llvm::Triple::x86:
     CmdArgs.push_back("--32");
     break;
@@ -7733,6 +7743,14 @@ void minix::Link::ConstructJob(Compilation &C, const JobAction &JA,
   // Many NetBSD architectures support more than one ABI.
   // Determine the correct emulation for ld.
   switch (getToolChain().getArch()) {
+  case llvm::Triple::riscv32:
+    CmdArgs.push_back("-m");
+    CmdArgs.push_back("elf32lriscv");
+    break;
+  case llvm::Triple::riscv64:
+    CmdArgs.push_back("-m");
+    CmdArgs.push_back("elf64lriscv");
+    break;
   case llvm::Triple::x86:
     CmdArgs.push_back("-m");
     CmdArgs.push_back("elf_i386_minix");

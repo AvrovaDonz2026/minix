@@ -41,7 +41,9 @@ MCLINKER_INCLUDE_CONFIG= ${LLVM_TOPLEVEL}/config/mclinker
 LLVM_INCLUDE_OBJDIR!=	cd ${NETBSDSRCDIR}/tools/llvm-include && ${PRINTOBJDIR}
 LLVM_TOOLCONF_OBJDIR!=	cd ${NETBSDSRCDIR}/tools/llvm && ${PRINTOBJDIR}
 HOST_CPPFLAGS+=	${CPPFLAGS}
-HOST_CXXFLAGS+=	-O2 -fno-rtti -fno-exceptions
+HOST_CXXFLAGS+=	-O2 -fno-rtti -fno-exceptions -std=c++11
+HOST_CXXFLAGS+=	-Wno-deprecated-copy -Wno-class-memaccess -Wno-register
+HOST_CXXFLAGS+=	-Wno-unused-but-set-variable -Wno-error
 HOST_CPPFLAGS+=	-std=c++11
 .else
 LLVM_INCLUDE_CONFIG=	${LLVM_TOPLEVEL}/config

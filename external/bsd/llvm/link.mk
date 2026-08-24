@@ -50,5 +50,10 @@ DPADD+=	${LIBTERMINFO}
 .if defined(__MINIX) && defined(HOSTPROG) && ${HOST_OSTYPE:C/\-.*//} != "Minix"
 LDADD+=	-lpthread
 .else
+.if defined(__MINIX) && !defined(HOSTPROG) && ${MKLIBCXX:Uno} == "no"
+# riscv64 keeps MKLIBCXX=no; guest LLVM links against libstdc++.
+LDADD+=	-lstdc++
+.else
 LDADD+= -lc++ -lmthread
+.endif
 .endif # defined(__MINIX)

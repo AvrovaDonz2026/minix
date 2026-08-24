@@ -372,10 +372,13 @@ tm-constrs.h: genpreds ${G_md_file}
 # riscv64 gtyp-input.list is gcc13 (.cc names). defs.mk G_GTFILES is the
 # 4.8.5 GTFILES list (gimple.c, tree-flow.h, tree-mudflap.c, ...).
 # Feeding the .cc list to 4.8.5 gengtype drops every missing .cc, then
-# gengtype -r aborts in error_at_line on GTY types whose defining .c
-# was never parsed. Prefer gtyp-input.list whenever present: the defs.mk
-# G_GTFILES .for loop treats [c] as a make character class and emits c.
-.if exists(${GCCARCH}/gtyp-input.list)
+# gengtype -r aborts in error_at_line on GTY types whose defining .c was
+# never parsed. An architecture may explicitly mark its list as incompatible
+# when the generated list and the vendored gengtype come from different GCC
+# releases. The fallback preserves language markers by emitting G_GTFILES one
+# word at a time below.
+.if exists(${GCCARCH}/gtyp-input.list) && \
+    (!defined(G_GTYPE_INPUT_LIST_COMPAT) || ${G_GTYPE_INPUT_LIST_COMPAT} != no)
 gtyp-input.list.tmp: ${GCCARCH}/gtyp-input.list
 	{ \
 		while IFS= read -r f; do \

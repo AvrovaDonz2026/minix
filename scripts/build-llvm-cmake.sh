@@ -86,7 +86,13 @@ build_llvm() {
   [ -n "${TOOLDIR:-}" ] || die "TOOLDIR is not set"
 
   require_cmd cmake
-  require_cmd ninja
+
+  local generator build_cmd=(cmake --build "${LLVM_BUILDDIR}" --parallel "${LLVM_JOBS}")
+  if command -v ninja >/dev/null 2>&1; then
+    generator=Ninja
+  else
+    generator="Unix Makefiles"
+  fi
 
   mkdir -p "${LLVM_BUILDDIR}" "${TOOLDIR}/bin" "${TOOLDIR}/lib"
 
@@ -96,9 +102,9 @@ build_llvm() {
   DESTDIR=
   export DESTDIR
 
-  log "configuring LLVM ${LLVM_VERSION} (jobs=${LLVM_JOBS})"
+  log "configuring LLVM ${LLVM_VERSION} (generator=${generator}, jobs=${LLVM_JOBS})"
   export LIBRARY_PATH="${LIBRARY_PATH:-/usr/lib/gcc/$(gcc -dumpmachine)/$(gcc -dumpversion):/usr/lib/$(gcc -dumpmachine)}"
-  cmake -G Ninja -S "${LLVM_SRCDIR}/llvm" -B "${LLVM_BUILDDIR}" \
+  cmake -G "${generator}" -S "${LLVM_SRCDIR}/llvm" -B "${LLVM_BUILDDIR}" \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX="${TOOLDIR}/llvm-${LLVM_VERSION}" \
     -DCMAKE_CXX_COMPILER="${CXX:-g++}" \
@@ -114,11 +120,13 @@ build_llvm() {
     -DCLANG_ENABLE_ARCMT=OFF \
     -DLLVM_INSTALL_UTILS=ON
 
-  log "building"
-  ninja -C "${LLVM_BUILDDIR}" -j"${LLVM_JOBS}" clang lld
+  # cmake --install installs LLVM libraries and utilities beyond clang/lld.
+  # Build the default target so every installed artifact exists.
+  log "building LLVM, clang, and lld install payload"
+  "${build_cmd[@]}"
 
   log "installing to ${TOOLDIR}/llvm-${LLVM_VERSION}"
-  DESTDIR= ninja -C "${LLVM_BUILDDIR}" install
+  DESTDIR= cmake --install "${LLVM_BUILDDIR}"
 
   install_wrappers
 

@@ -23,11 +23,8 @@ TARGET="${1:-all}"
 OBJDIR="${OBJDIR:-obj.intrgcc}"
 MACHINE="${MACHINE:-evbriscv64}"
 VISIBLE_CPUS="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
-# Mirror packaging-riscv64-llvm.yml: tools capped, world/distribution uses all CPUs.
+# Remote builders may use all visible cores; callers can still cap tools explicitly.
 JOBS="${JOBS:-${TOOLS_CPU_COUNT:-${VISIBLE_CPUS}}}"
-if (( JOBS > 8 )) && [[ -z "${TOOLS_CPU_COUNT:-}" ]]; then
-  JOBS=8
-fi
 DIST_JOBS="${DIST_JOBS:-${WORLD_CPU_COUNT:-${VISIBLE_CPUS}}}"
 LOG_DIR="${LOG_DIR:-/tmp/minix-riscv64-llvm}"
 
@@ -95,7 +92,8 @@ install_cross_as_flock_wrapper() {
     local as_abs
     as="$1"
     [[ -e "${as}" || -x "${as}.real" ]] || return 0
-    as_abs="$(cd "$(dirname "${as}")" && pwd)/$(basename "${as}")"
+    as_abs="$(readlink -f "${as}" 2>/dev/null || true)"
+    [[ -n "${as_abs}" && -x "${as_abs}" ]] || return 0
     [[ -x "${as_abs}.real" ]] || mv "${as_abs}" "${as_abs}.real"
     cat > "${as_abs}" <<EOF
 #!/bin/bash
@@ -196,8 +194,15 @@ run_tools() {
 
 run_distribution() {
   local tooldir
-  tooldir="$(ls -d "${OBJDIR}"/tooldir.* 2>/dev/null | head -1)"
-  [[ -n "${tooldir}" ]] && install_cross_as_flock_wrapper "${tooldir}"
+  tooldir="$(pick_tooldir 2>/dev/null || true)"
+  if [[ -z "${tooldir}" || \
+      ! -x "${tooldir}/bin/riscv64-elf32-minix-clang" || \
+      ! -x "${OBJDIR}/tools/host-mkdep/host-mkdep" ]]; then
+    echo "[local] rebuilding host tools for the current host before distribution"
+    run_tools
+    tooldir="$(pick_tooldir)"
+  fi
+  install_cross_as_flock_wrapper "${tooldir}"
 
   prepare_libstdcxx_guest
 

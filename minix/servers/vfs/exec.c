@@ -48,6 +48,7 @@ struct vfs_exec_info {
     int userflags;			/* exec() flags from userland */
     int is_dyn;				/* Dynamically linked executable */
     int elf_main_fd;			/* Dyn: FD of main program execuatble */
+    vir_bytes elf_main_entry;	/* Dyn: entry point of main executable */
     char execname[PATH_MAX];		/* Full executable invocation */
     int vmfd;
     int vmfd_used;
@@ -292,6 +293,8 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
   if (0 < r) {
 	/* Switch the executable vnode to the interpreter */
 	execi.is_dyn = 1;
+	execi.elf_main_entry =
+	    ((Elf_Ehdr *)execi.args.hdr)->e_entry;
 
 	/* The interpreter (loader) needs an fd to the main program,
 	 * which is currently in finalexec
@@ -487,7 +490,7 @@ static int stack_prepare_elf(struct vfs_exec_info *execi, char *frame, size_t *f
 	} while(0)
 
 	AUXINFO(aux_vec, AT_BASE, execi->args.load_base);
-	AUXINFO(aux_vec, AT_ENTRY, execi->args.pc);
+	AUXINFO(aux_vec, AT_ENTRY, execi->elf_main_entry);
 	AUXINFO(aux_vec, AT_EXECFD, execi->elf_main_fd);
 #if 0
 	AUXINFO(aux_vec, AT_PHDR, XXX ); /* should be &phdr[0] */

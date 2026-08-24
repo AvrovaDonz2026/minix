@@ -244,11 +244,12 @@ run_servers() {
   export MKPCI=no
   export MAKEOBJDIR='${.CURDIR:C,^'${REPO_ROOT}','${REPO_ROOT}'/'${OBJDIR}',}'
 
-  echo "[local] rebuilding ramdisk + vm + kernel"
-  "${nbmake}" -C minix/drivers/storage/ramdisk proto.dev.mtree
+  echo "[local] rebuilding ramdisk + VFS + VM + kernel"
   "${nbmake}" -C minix/drivers/storage/ramdisk -j"${JOBS}"
   "${nbmake}" -C minix/drivers/storage/memory -j"${JOBS}"
   "${nbmake}" -C minix/drivers/storage/memory install
+  "${nbmake}" -C minix/servers/vfs -j"${JOBS}"
+  "${nbmake}" -C minix/servers/vfs install
   "${nbmake}" -C minix/servers/vm -j"${JOBS}"
   "${nbmake}" -C minix/servers/vm install
   "${nbmake}" -C minix/kernel -j"${JOBS}"

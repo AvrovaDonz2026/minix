@@ -106,8 +106,19 @@ run_tools() {
 
 prepare_libstdcxx_guest() {
   local destdir_root="${REPO_ROOT}/${OBJDIR}/destdir.${ARCH}"
+  local src_include_root="${REPO_ROOT}/external/gpl3/gcc/dist/libstdc++-v3/include"
   local functexcept_src="${REPO_ROOT}/external/gpl3/gcc/dist/libstdc++-v3/src/c++11/functexcept.cc"
 
+  [[ -d "${src_include_root}" ]] || {
+    echo "[i386] ERROR: missing libstdc++ include tree: ${src_include_root}" >&2
+    exit 1
+  }
+  mkdir -p "${destdir_root}/usr/include/gcc-4.8" "${destdir_root}/usr/include/g++"
+  while IFS= read -r -d '' src_dir; do
+    mkdir -p "${destdir_root}/usr/include/g++/${src_dir#${src_include_root}/}"
+  done < <(find "${src_include_root}" -mindepth 1 -type d -print0)
+
+  rm -rf "${REPO_ROOT}/${OBJDIR}/minix/drivers/storage/ramdisk"
   rm -rf "${REPO_ROOT}/${OBJDIR}/external/gpl3/gcc/lib/libstdc++-v3"
   rm -f \
     "${destdir_root}/usr/lib/libstdc++.a" \
@@ -175,6 +186,39 @@ run_distribution() {
   }
   echo "[i386] DESTDIR=${destdir}"
   echo "[i386] boot modules in ${moddir}"
+
+  verify_native_payload "${destdir}"
+  verify_libstdcxx_profile "${destdir}" "${tooldir}"
+}
+
+verify_native_payload() {
+  local root="$1" entry
+  local missing=()
+  for bin in cc c++ cpp as ld ar ranlib nm objcopy objdump readelf strip; do
+    [[ -x "${root}/usr/bin/${bin}" || ( "${bin}" == cc && -x "${root}/usr/bin/gcc" ) || ( "${bin}" == c++ && -x "${root}/usr/bin/g++" ) || ( "${bin}" == cpp && -x "${root}/usr/bin/gcpp" ) ]] || missing+=("usr/bin/${bin}")
+  done
+  for entry in usr/lib/libgcc.a usr/lib/libgcc_eh.a usr/lib/libstdc++.a usr/include/stdio.h usr/include/g++/bits/c++config.h; do
+    [[ -e "${root}/${entry}" ]] || missing+=("${entry}")
+  done
+  [[ ${#missing[@]} -eq 0 ]] || { echo "[i386] ERROR: native payload missing: ${missing[*]}" >&2; exit 1; }
+  echo "[i386] native payload check PASS"
+}
+
+verify_libstdcxx_profile() {
+  local root="$1" tooldir="$2" tmp
+  local ar="${tooldir}/bin/i586-elf32-minix-ar"
+  local nm="${tooldir}/bin/i586-elf32-minix-nm"
+  local lib="${root}/usr/lib/libstdc++.a"
+  [[ -x "${ar}" && -x "${nm}" && -f "${lib}" ]] || { echo "[i386] ERROR: libstdc++ profile inputs missing" >&2; exit 1; }
+  tmp="$(mktemp -d)"
+  trap 'rm -rf "${tmp}"' RETURN
+  (cd "${tmp}" && "${ar}" x "${lib}" functexcept.o && "${nm}" -u functexcept.o > undef.txt)
+  if grep -Eq 'future_category|future_error' "${tmp}/undef.txt"; then
+    echo "[i386] ERROR: libstdc++ functexcept.o references future_*" >&2
+    cat "${tmp}/undef.txt" >&2
+    exit 1
+  fi
+  echo "[i386] libstdc++ profile check PASS"
 }
 
 run_image() {

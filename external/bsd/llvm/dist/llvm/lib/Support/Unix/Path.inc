@@ -143,6 +143,16 @@ std::string getMainExecutable(const char *argv0, void *MainAddr) {
 
   if (getprogpath(exe_path, argv0) != NULL)
     return exe_path;
+#if defined(__minix)
+  if (argv0 && argv0[0] == '/')
+    return argv0;
+  if (argv0 && argv0[0]) {
+    std::string fallback("/usr/bin/");
+    fallback.append(llvm::sys::path::filename(argv0));
+    if (sys::fs::can_execute(fallback))
+      return fallback;
+  }
+#endif
 #elif defined(__linux__) || defined(__CYGWIN__)
   char exe_path[MAXPATHLEN];
   StringRef aPath("/proc/self/exe");

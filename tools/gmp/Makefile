@@ -11,6 +11,8 @@ CONFIGURE_ARGS+=--disable-shared
 # PATH needs special treating since "make" tries to expand $PATH
 # when variable is used.
 CONFIGURE_ENV:=	${CONFIGURE_ENV:NPATH=*:NCFLAGS=*:NCXXFLAGS=*} \
+		CC="${HOST_CC:Q} -Wno-implicit-int -Wno-implicit-function-declaration" \
+		HOST_CC="${HOST_CC:Q} -Wno-implicit-int -Wno-implicit-function-declaration" \
 		PATH="${TOOLDIR:Q}/bin:$$$$PATH"
 
 .if ${HOST_OSTYPE:C/\-.*//} != "Minix"

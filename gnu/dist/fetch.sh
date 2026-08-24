@@ -11,8 +11,8 @@ if [ $? -eq 0 ]; then
 fi
 
 # Configure fetch method - TEXINFO
-URL="http://www.minix3.org/pkgsrc/distfiles/minix/3.4.0/texinfo-4.8.tar.bz2"
-BACKUP_URL="ftp://ftp.gnu.org/gnu/texinfo/texinfo-4.8.tar.bz2"
+URL="https://ftp.gnu.org/gnu/texinfo/texinfo-4.8.tar.bz2"
+BACKUP_URL="https://mirrors.kernel.org/gnu/texinfo/texinfo-4.8.tar.bz2"
 
 # Fetch sources if not available
 if [ ! -d texinfo ];

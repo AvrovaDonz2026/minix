@@ -1199,7 +1199,7 @@ namespace std
 
 #if !defined(__minix)
 /* Define if gthreads library is available. */
-#define _GLIBCXX_HAS_GTHREADS 1
+/* #undef _GLIBCXX_HAS_GTHREADS */
 #endif /* !defined(__minix) */
 
 /* Define to 1 if a full hosted library is built, or 0 if freestanding. */

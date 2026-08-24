@@ -244,7 +244,11 @@ run_servers() {
   export MKPCI=no
   export MAKEOBJDIR='${.CURDIR:C,^'${REPO_ROOT}','${REPO_ROOT}'/'${OBJDIR}',}'
 
-  echo "[local] rebuilding vm + kernel (STATELEN / server fixes)"
+  echo "[local] rebuilding ramdisk + vm + kernel"
+  "${nbmake}" -C minix/drivers/storage/ramdisk proto.dev.mtree
+  "${nbmake}" -C minix/drivers/storage/ramdisk -j"${JOBS}"
+  "${nbmake}" -C minix/drivers/storage/memory -j"${JOBS}"
+  "${nbmake}" -C minix/drivers/storage/memory install
   "${nbmake}" -C minix/servers/vm -j"${JOBS}"
   "${nbmake}" -C minix/servers/vm install
   "${nbmake}" -C minix/kernel -j"${JOBS}"
@@ -307,9 +311,7 @@ run_verify() {
   run_gate destdir ./minix/tests/riscv64/llvm_toolchain_gate.sh \
     --mode destdir --require destdir --destdir "${DESTDIR}"
 
-  if [[ ! -f "${image}" ]]; then
-    run_image
-  fi
+  run_image
 
   run_gate llvm-guest ./minix/tests/riscv64/llvm_toolchain_gate.sh \
     --mode guest --require guest \

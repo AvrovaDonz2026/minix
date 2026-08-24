@@ -400,7 +400,7 @@ build_filesystems() {
         TMPDIRS+=("$stage_usr")
     fi
 
-    mkdir -p "$stage_boot" "$stage_root/boot/modules"
+    mkdir -p "$stage_boot" "$stage_root/boot/modules" "$stage_root/etc"
     if [ -n "$stage_usr" ]; then
         mkdir -p "$stage_usr"
     fi
@@ -420,6 +420,7 @@ build_filesystems() {
     cp "$boot_scr" "$stage_boot/boot.scr"
     cp "$KERNEL_BIN_IMAGE" "$stage_root/boot/kernel.bin"
     cp "$modinfo" "$stage_root/boot/minix.modinfo"
+    cp "$MODROOT/etc/system.conf" "$stage_root/etc/system.conf"
 
     for i in "${!MODULE_PATHS[@]}"; do
         cp "${MODULE_PATHS[$i]}" "$stage_root/boot/modules/${MODULE_NAMES[$i]}"

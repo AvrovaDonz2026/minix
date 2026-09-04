@@ -82,6 +82,10 @@ pick_tooldir() {
     fi
   done
   [[ -n "${tooldir}" ]] || return 1
+  case "${tooldir}" in
+  /*) ;;
+  *) tooldir="$(cd "${tooldir}" && pwd)" ;;
+  esac
   printf '%s' "${tooldir}"
 }
 

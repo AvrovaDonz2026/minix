@@ -263,6 +263,19 @@ _rtld_symlook_obj(const char *name, unsigned long hash,
 #if defined(__mips__) || defined(__vax__) || defined(__riscv)
 		if (symp->st_shndx == SHN_UNDEF)
 			continue;
+#if defined(__riscv) && defined(__minix)
+		/*
+		 * Never let a lookup from another object bind to a
+		 * STB_LOCAL definition.  Local symbols (e.g. `_end`
+		 * exported from the main program's .dynsym) are private
+		 * conventions of their object; libc's `_brksize` must
+		 * resolve to libc's own `_end`, not the main program's,
+		 * or phkmalloc's heap base ends up above the main
+		 * program's image and free() rejects libc pointers.
+		 */
+		if (ELF_ST_BIND(symp->st_info) == STB_LOCAL)
+			continue;
+#endif
 #else
 		/*
 		 * XXX DANGER WILL ROBINSON!

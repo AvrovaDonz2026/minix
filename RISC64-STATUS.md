@@ -3,7 +3,7 @@
 **Date / 日期**: 2026-09-17  
 **Version / 版本**: 1.55 (CI IPC/trap fixes + local gate matrix)
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
-**Progress / 进度**: ~82% (host/destdir LLVM gates pass on Donz server; guest `clang` still fails phkmalloc junk-pointer on teardown)
+**Progress / 进度**: ~82% (host/destdir LLVM gates PASS; guest `clang --version` FAIL — root cause `libstdc++` `empty_rep` COPY/dual-address; fix path: `external/bsd/llvm/link.mk` `-Wl,-Bstatic -lstdc++` drops COPY, avoid `LDSTATIC.clang=-static` merge (`-dynamic -static` ~57MB breaks `mkdisk` staging → guest rc=127); rtld text patch blocked — no `mprotect` on MINIX VM; see PR #4)
 
 ## Summary / 摘要
 

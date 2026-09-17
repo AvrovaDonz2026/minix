@@ -112,9 +112,8 @@ LDADD+=	-lz
 DPADD+=	${LIBZ}
 .endif
 
-.if defined(__MINIX) && !defined(HOSTPROG) && (${MACHINE_ARCH} == "riscv64" || ${MACHINE_ARCH} == "riscv")
-# bsd.prog.mk defaults to dynamic; static link avoids guest ld.so gaps.
-LDSTATIC.clang=	-static
-.endif
+# Guest clang: PT_INTERP + dynamic libc; static libstdc++/libgcc via link.mk
+# (-nodefaultlibs, -Wl,-Bstatic -lstdc++ -lgcc).  Do not set LDSTATIC.clang=-static
+# (merges with MINIX LDSTATIC=-dynamic as -dynamic -static).
 
 .include <bsd.prog.mk>

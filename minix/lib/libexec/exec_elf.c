@@ -205,7 +205,8 @@ int libexec_load_elf(struct exec_info *execi)
 		}
 	}
 
-	if(execi->clearproc) execi->clearproc(execi);
+	if (!execi->skip_clear && execi->clearproc)
+		execi->clearproc(execi);
 
 	for (i = 0; i < hdr->e_phnum; i++) {
 		vir_bytes seg_membytes, page_offset, p_vaddr, vaddr;

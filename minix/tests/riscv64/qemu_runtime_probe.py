@@ -37,6 +37,23 @@ def log_tail(buf: str, label: str, limit: int = 4000) -> None:
     log(f"{label} output tail:\n{tail}")
 
 
+def drain_serial(io: ProcIO, quiet: float = 0.5, max_wait: float = 1.5) -> str:
+    """After a fatal signature, keep reading serial output briefly so the
+    kernel finishes printing diagnostics (e.g. stacktrace pc/sp/ra)."""
+    buf = ""
+    deadline = time.time() + max_wait
+    last_rx = time.time()
+    while time.time() < deadline and (time.time() - last_rx) < quiet:
+        rlist, _, _ = select.select([io.read_fd], [], [], 0.2)
+        if io.read_fd in rlist:
+            data = os.read(io.read_fd, 4096)
+            if not data:
+                break
+            buf += data.decode(errors="ignore")
+            last_rx = time.time()
+    return buf
+
+
 class ProcIO:
     def __init__(self, proc: subprocess.Popen, read_fd: int, write_fd: int):
         self.proc = proc
@@ -110,6 +127,7 @@ def run_command(
 
     buf, _ = read_until(io, [rc_pat, FATAL_RE], timeout)
     if FATAL_RE.search(buf):
+        buf += drain_serial(io)
         log_tail(buf, f"Fatal signature while running {cmd_name}")
         return False
 
@@ -191,6 +209,7 @@ def main() -> int:
 
         buf, _ = read_until(io, [login_pat, prompt_pat, FATAL_RE], args.timeout)
         if FATAL_RE.search(buf):
+            buf += drain_serial(io)
             log_tail(buf, "Fatal signature before prompt")
             return 1
 
@@ -198,12 +217,14 @@ def main() -> int:
             send(io, "root\n")
             buf, pat = read_until(io, [passwd_pat, prompt_pat, FATAL_RE], args.timeout)
             if FATAL_RE.search(buf):
+                buf += drain_serial(io)
                 log_tail(buf, "Fatal signature during login")
                 return 1
             if pat == passwd_pat:
                 send(io, "\n")
                 buf, _ = read_until(io, [prompt_pat, FATAL_RE], args.timeout)
                 if FATAL_RE.search(buf):
+                    buf += drain_serial(io)
                     log_tail(buf, "Fatal signature after password")
                     return 1
 
@@ -279,6 +300,7 @@ def main() -> int:
         send(io, "echo __RUNTIME_OK__\n")
         buf, _ = read_until(io, [re.compile(r"__RUNTIME_OK__"), FATAL_RE], args.cmd_timeout)
         if FATAL_RE.search(buf):
+            buf += drain_serial(io)
             log_tail(buf, "Fatal signature at probe tail")
             return 1
         if "__RUNTIME_OK__" not in buf:

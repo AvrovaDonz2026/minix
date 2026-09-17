@@ -26,9 +26,12 @@ VISIBLE_CPUS="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || ec
 # Remote builders may use all visible cores; callers can still cap tools explicitly.
 JOBS="${JOBS:-${TOOLS_CPU_COUNT:-${VISIBLE_CPUS}}}"
 DIST_JOBS="${DIST_JOBS:-${WORLD_CPU_COUNT:-${VISIBLE_CPUS}}}"
-LOG_DIR="${LOG_DIR:-/tmp/minix-riscv64-llvm}"
+LOG_DIR="${LOG_DIR:-${REPO_ROOT}/${OBJDIR}/llvm-local}"
 
 mkdir -p "${LOG_DIR}"
+# mkdisk staging copies the full destdir (~200MiB /usr with LLVM); keep temp off /tmp.
+export TMPDIR="${TMPDIR:-${LOG_DIR}/tmp}"
+mkdir -p "${TMPDIR}"
 
 # Ubuntu cloud images default cc -> clang; host tool configure (gmp, etc.) needs gcc.
 export CC=/usr/bin/gcc
@@ -285,12 +288,14 @@ run_servers() {
 
 run_image() {
   local image="${IMAGE_PATH:-${LOG_DIR}/minix-riscv64-llvm.img}"
-  echo "[local] mkdisk -> ${image}"
+  echo "[local] mkdisk -> ${image} (TMPDIR=${TMPDIR})"
+  # Guest clang is ~54MiB (static LLVM 3.6 + static libstdc++/libgcc); /usr ~200MiB+.
+  # Default mkdisk -u 128 is too small; use -s 1536 -u 1024 for llvm-local images.
   minix/releasetools/riscv64/mkdisk.sh \
     -d "${OBJDIR}" \
     -o "${image}" \
-    -s 1024 \
-    -u 768 \
+    -s 1536 \
+    -u 1024 \
     -U
   echo "[local] IMAGE=${image}"
 }

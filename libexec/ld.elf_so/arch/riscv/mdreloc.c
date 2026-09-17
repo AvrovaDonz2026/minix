@@ -220,13 +220,13 @@ _rtld_relocate_plt_lazy(const Obj_Entry *obj)
 {
 	const Elf_Rela *rela;
 
-	if (obj->relocbase == 0)
-		return 0;
-
 	/*
 	 * Bind every JUMP_SLOT eagerly here.  The file images only
 	 * carry the PLT base in each GOT slot, and the lazy resolver
 	 * path is not reliable for this port, so resolve up front.
+	 * Note: do not skip the main object even when its relocbase
+	 * is 0 (AT_EXECFD ET_EXEC mapped at link address) -- its GOT
+	 * slots still need resolution.
 	 */
 	for (rela = obj->pltrela; rela < obj->pltrelalim; rela++) {
 		assert(ELF_R_TYPE(rela->r_info) == R_TYPE(JMP_SLOT));
@@ -254,8 +254,6 @@ _rtld_relocate_plt_object(const Obj_Entry *obj, const Elf_Rela *rela,
 		return -1;
 
 	if (ELF_ST_TYPE(def->st_info) == STT_GNU_IFUNC) {
-		if (tp == NULL)
-			return 0;
 		new_value = _rtld_resolve_ifunc(defobj, def);
 	} else {
 		new_value = (Elf_Addr)(defobj->relocbase + def->st_value);

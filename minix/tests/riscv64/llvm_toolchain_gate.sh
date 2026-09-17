@@ -9,7 +9,8 @@
 #   host     TOOLDIR clang/tblgen frontend, IR, RISC-V/Minix macros
 #            and i586-elf32-minix when the wrapper is installed
 #   destdir  guest clang ELF payload; /usr/bin/cc stays gcc;
-#            libc++ must not install __mutex_base over libstdc++
+#            libc++ must not install __mutex_base over libstdc++;
+#            clang embeds static libstdc++/libgcc (no NEEDED libstdc++.so)
 #   guest    QEMU: clang --version, -dM, -emit-llvm; LLVM 18+ also tests -c
 #
 # Exit codes:
@@ -199,6 +200,15 @@ elf_has_interp() {
 
   [ -n "$readelf" ] && [ -x "$readelf" ] || return 1
   "$readelf" -l "$bin" 2>/dev/null | grep -q 'INTERP'
+}
+
+elf_needs_shared() {
+  local bin="$1"
+  local readelf="$2"
+  local soname="$3"
+
+  [ -n "$readelf" ] && [ -x "$readelf" ] || return 1
+  "$readelf" -d "$bin" 2>/dev/null | grep -Fq "Shared library: [$soname]"
 }
 
 object_matches_arch() {
@@ -598,6 +608,11 @@ run_destdir_layer() {
       log_pass "DESTDIR clang is dynamically linked"
     else
       log_fail "DESTDIR clang is not dynamically linked (expected PT_INTERP)"
+    fi
+    if elf_needs_shared "$clang" "$readelf" "libstdc++.so.6"; then
+      log_fail "DESTDIR clang lists NEEDED libstdc++.so (guest LLVM embeds static libstdc++ in link.mk)"
+    else
+      log_pass "DESTDIR clang has no NEEDED libstdc++.so"
     fi
   fi
 }

@@ -38,6 +38,7 @@
 
 #define _KERNEL	/* for ELF_AUX_ENTRIES */
 #include <libexec.h>
+#include <machine/elf.h>
 
 /* fields only used by elf and in VFS */
 struct vfs_exec_info {
@@ -49,6 +50,7 @@ struct vfs_exec_info {
     int is_dyn;				/* Dynamically linked executable */
     int elf_main_fd;			/* Dyn: FD of main program execuatble */
     vir_bytes elf_main_entry;	/* Dyn: entry point of main executable */
+    vir_bytes elf_main_phdr;	/* Dyn: user VA of main program PHDR */
     char execname[PATH_MAX];		/* Full executable invocation */
     int vmfd;
     int vmfd_used;
@@ -64,6 +66,7 @@ static int stack_prepare_elf(struct vfs_exec_info *execi,
 	char *curstack, size_t *frame_len, vir_bytes *vsp);
 static int map_header(struct vfs_exec_info *execi);
 static int read_seg(struct exec_info *execi, off_t off, vir_bytes seg_addr, size_t seg_bytes);
+static vir_bytes elf_user_phdr(const Elf_Ehdr *eh, vir_bytes load_offset);
 
 #define PTRSIZE	sizeof(char *) /* Size of pointers in argv[] and envp[]. */
 
@@ -284,19 +287,22 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
 	FAILCHECK(r);
 
   if (0 < r) {
-	/* Switch the executable vnode to the interpreter */
-	execi.is_dyn = 1;
-	execi.elf_main_entry =
-	    ((Elf_Ehdr *)execi.args.hdr)->e_entry;
+	const Elf_Ehdr *main_eh = (const Elf_Ehdr *)execi.args.hdr;
 
-	/* The interpreter (loader) needs an fd to the main program,
-	 * which is currently in finalexec
+	execi.is_dyn = 1;
+	execi.elf_main_entry = main_eh->e_entry;
+
+	/* Map the main program at its link address so rtld can use AT_PHDR
+	 * instead of remapping via AT_EXECFD (avoids broken PLT on riscv64).
 	 */
-	if ((r = execi.elf_main_fd =
-	    common_open(finalexec, O_RDONLY, 0, TRUE /*for_exec*/)) < 0) {
-		printf("VFS: exec: dynamic: open main exec failed %s (%d)\n",
-			fullpath, r);
-		FAILCHECK(r);
+	execi.args.load_offset = 0;
+	execi.args.skip_clear = 0;
+	FAILCHECK(libexec_load_elf(&execi.args));
+	execi.elf_main_phdr = elf_user_phdr(main_eh, 0);
+	if (execi.elf_main_phdr == 0) {
+		printf("VFS: exec: dynamic: cannot locate PHDR for %s\n",
+		    finalexec);
+		FAILCHECK(ENOEXEC);
 	}
 
 	/* ld.so is linked at 0, but it can relocate itself; we
@@ -305,14 +311,10 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
 	 */
 	execi.args.load_offset =
 		 execi.args.stack_high - execi.args.stack_size - 0xa00000;
+	execi.args.skip_clear = 1;
 
-	/* Remember it */
 	strlcpy(execi.execname, finalexec, PATH_MAX);
 
-	/* The executable we need to execute first (loader)
-	 * is in elf_interpreter, and has to be in fullpath to
-	 * be looked up
-	 */
 	strlcpy(fullpath, elf_interpreter, PATH_MAX);
 	strlcpy(firstexec, elf_interpreter, PATH_MAX);
 	Get_read_vp(execi, fullpath, 0, 0, &resolve, fp);
@@ -415,6 +417,24 @@ pm_execfinal:
        sizeof(struct ps_strings) \
 )
 
+static vir_bytes
+elf_user_phdr(const Elf_Ehdr *eh, vir_bytes load_offset)
+{
+	const Elf_Phdr *ph;
+	unsigned int i;
+
+	ph = (const Elf_Phdr *)((const char *)eh + eh->e_phoff);
+	for (i = 0; i < eh->e_phnum; i++) {
+		if (ph[i].p_type != PT_LOAD)
+			continue;
+		if (eh->e_phoff >= ph[i].p_offset &&
+		    eh->e_phoff - ph[i].p_offset < ph[i].p_filesz)
+			return ph[i].p_vaddr + load_offset +
+			    (eh->e_phoff - ph[i].p_offset);
+	}
+	return 0;
+}
+
 static int stack_prepare_elf(struct vfs_exec_info *execi, char *frame, size_t *frame_size,
 	vir_bytes *vsp)
 {
@@ -484,15 +504,9 @@ static int stack_prepare_elf(struct vfs_exec_info *execi, char *frame, size_t *f
 
 	AUXINFO(aux_vec, AT_BASE, execi->args.load_base);
 	AUXINFO(aux_vec, AT_ENTRY, execi->elf_main_entry);
-	AUXINFO(aux_vec, AT_EXECFD, execi->elf_main_fd);
-#if 0
-	AUXINFO(aux_vec, AT_PHDR, XXX ); /* should be &phdr[0] */
+	AUXINFO(aux_vec, AT_PHDR, execi->elf_main_phdr);
 	AUXINFO(aux_vec, AT_PHENT, elf_header->e_phentsize);
 	AUXINFO(aux_vec, AT_PHNUM, elf_header->e_phnum);
-
-	AUXINFO(aux_vec, AT_RUID, XXX);
-	AUXINFO(aux_vec, AT_RGID, XXX);
-#endif
 	AUXINFO(aux_vec, AT_EUID, execi->args.new_uid);
 	AUXINFO(aux_vec, AT_EGID, execi->args.new_gid);
 	AUXINFO(aux_vec, AT_PAGESZ, PAGE_SIZE);

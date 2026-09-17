@@ -1,9 +1,9 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
-**Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.54 (merges LLVM track 1.46 + virtio-net track 1.53)
+**Date / 日期**: 2026-09-17  
+**Version / 版本**: 1.55 (CI IPC/trap fixes + local gate matrix)
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
-**Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
+**Progress / 进度**: ~82% (host/destdir LLVM gates pass on Donz server; guest `clang` still fails phkmalloc junk-pointer on teardown)
 
 ## Summary / 摘要
 

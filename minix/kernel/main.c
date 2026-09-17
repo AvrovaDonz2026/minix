@@ -23,6 +23,9 @@
 
 #ifdef CONFIG_SMP
 #include "smp.h"
+#ifdef __riscv64
+#include "arch_smp.h"
+#endif
 #endif
 #ifdef USE_WATCHDOG
 #include "watchdog.h"
@@ -38,8 +41,10 @@ static void announce(void);
 void bsp_finish_booting(void)
 {
   int i;
-#ifdef __riscv64
-  direct_print("rv64: finish_booting start\n");
+#if defined(CONFIG_SMP) && defined(__riscv64)
+  unsigned char hart = riscv_cpu_to_hart[bsp_cpu_id];
+
+  __asm__ __volatile__("mv tp, %0" :: "r"((unsigned long)hart));
 #endif
 #if SPROFILE
   sprofiling = 0;      /* we're not profiling until instructed to */
@@ -420,11 +425,14 @@ void kmain(kinfo_t *local_cbi)
   add_memmap(&kinfo, kinfo.bootstrap_start, kinfo.bootstrap_len);
 
 #ifdef CONFIG_SMP
+# ifdef USE_APIC
   if (config_no_apic) {
 	  DEBUGBASIC(("APIC disabled, disables SMP, using legacy PIC\n"));
 	  smp_single_cpu_fallback();
-  } else if (config_no_smp) {
-	  DEBUGBASIC(("SMP disabled, using legacy PIC\n"));
+  } else
+# endif
+  if (config_no_smp) {
+	  DEBUGBASIC(("SMP disabled\n"));
 	  smp_single_cpu_fallback();
   } else {
 	  smp_init();
@@ -541,8 +549,9 @@ void cstart(void)
 
   /* Initialize clock variables. */
   init_clock();
-#ifdef __riscv64
-  direct_print("rv64: init_clock\n");
+
+#ifdef CONFIG_SMP
+  riscv_smp_early_init();
 #endif
 
   /* Get memory parameters. */
@@ -587,8 +596,10 @@ void cstart(void)
 #endif
 
 #ifdef CONFIG_SMP
+# ifdef USE_APIC
   if (config_no_apic)
 	  config_no_smp = 1;
+# endif
   value = env_get("no_smp");
   if(value)
 	config_no_smp = atoi(value);
@@ -599,7 +610,14 @@ void cstart(void)
 
   intr_init(0);
 
+#ifdef __riscv64
+  direct_print("rv64: intr_init done\n");
+#endif
+
   arch_init();
+#ifdef __riscv64
+  direct_print("rv64: arch_init done\n");
+#endif
 }
 
 /*===========================================================================*

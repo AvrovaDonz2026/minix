@@ -69,6 +69,10 @@ SRCS+=	protect.c direct_tty_utils.c arch_reset.c
 SRCS+=	pg_utils.c phys_copy.S phys_memset.S
 SRCS+=	sbi.c plic.c console.c pre_init.c kernel.c
 
+.ifdef CONFIG_SMP
+SRCS+=	arch_smp.c
+.endif
+
 OBJS.kernel+=	${UNPAGED_OBJS}
 OBJS.kernel+=	${LIBSYS_OBJS} ${LIBMINC_OBJS}
 

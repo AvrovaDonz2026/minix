@@ -219,14 +219,58 @@ level0:
 /*
  * int cpu_number(void)
  *
- * Get current CPU (hart) ID
+ * Return physical hart ID (mhartid).
  */
     .globl cpu_number
     .type cpu_number, @function
 cpu_number:
-    /* Hart ID stored in tp during boot */
     mv      a0, tp
     ret
+
+#ifdef CONFIG_SMP
+
+/*
+ * void arch_spinlock_lock(atomic_t *lock)
+ */
+    .globl arch_spinlock_lock
+    .type arch_spinlock_lock, @function
+arch_spinlock_lock:
+    mv      t0, a0
+    li      t1, 1
+1:
+    amoswap.w.aq t2, t1, (t0)
+    beqz    t2, 2f
+3:
+    lw      t2, (t0)
+    bnez    t2, 3b
+    j       1b
+2:
+    fence   rw, rw
+    ret
+
+/*
+ * void arch_spinlock_unlock(atomic_t *lock)
+ */
+    .globl arch_spinlock_unlock
+    .type arch_spinlock_unlock, @function
+arch_spinlock_unlock:
+    sw      zero, (a0)
+    fence   rw, rw
+    ret
+
+#endif /* CONFIG_SMP */
+
+#ifdef CONFIG_SMP
+
+/*
+ * Unpaged trampoline: head.S (objcopy-prefixed) calls __k_unpaged_smp_ap_entry.
+ */
+    .globl smp_ap_entry
+    .type smp_ap_entry, @function
+smp_ap_entry:
+    tail    riscv_smp_ap_entry
+
+#endif /* CONFIG_SMP */
 
 /*
  * void halt_cpu(void)

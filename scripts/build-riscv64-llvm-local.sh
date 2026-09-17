@@ -151,10 +151,27 @@ prepare_libstdcxx_guest() {
     exit 1
   }
   if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
+    perl -0777 -i -pe \
+      's@\{\s*_GLIBCXX_THROW_OR_ABORT\s*\(\s*future_error\s*\(\s*make_error_code\s*\(\s*future_errc\s*\(\s*__i\s*\)\s*\)\s*\)\s*\)\s*;@{\n#if !defined(_GLIBCXX_MINIX_NO_FUTURE)\n    _GLIBCXX_THROW_OR_ABORT(future_error(make_error_code(future_errc(__i))));\n#else\n    __throw_system_error(__i);\n#endif\n@g' \
+      "${functexcept_src}"
+  fi
+  if ! grep -q '__throw_system_error(__i);' "${functexcept_src}"; then
     echo "[local] ERROR: no MINIX future fallback in ${functexcept_src}" >&2
     exit 1
   fi
   echo "[local] libstdc++ guest prep: functexcept no-future profile ok"
+}
+
+prepare_llvm_guest_path() {
+  local path_inc="${REPO_ROOT}/external/bsd/llvm/dist/llvm/lib/Support/Unix/Path.inc"
+  [[ -f "${path_inc}" ]] || return 0
+  if grep -q 'fallback("/usr/bin/")' "${path_inc}"; then
+    return 0
+  fi
+  perl -0777 -i -pe \
+    's@(if \(getprogpath\(exe_path, argv0\) != NULL\)\n    return exe_path;\n)@$1#if defined(__minix)\n  if (argv0 && argv0[0] == '"'"'/'"'"')\n    return argv0;\n  if (argv0 && argv0[0]) {\n    std::string fallback("/usr/bin/");\n    fallback.append(llvm::sys::path::filename(argv0));\n    if (sys::fs::can_execute(fallback))\n      return fallback;\n  }\n#endif\n@' \
+    "${path_inc}"
+  echo "[local] llvm guest prep: Path.inc getMainExecutable fallback ok"
 }
 
 strip_libcxx_from_destdir() {
@@ -205,6 +222,7 @@ run_distribution() {
   install_cross_as_flock_wrapper "${tooldir}"
 
   prepare_libstdcxx_guest
+  prepare_llvm_guest_path
 
   echo "[local] building distribution (jobs=${DIST_JOBS}) -> ${LOG_DIR}/distribution.log"
   install_cross_as_flock_wrapper "${tooldir}"

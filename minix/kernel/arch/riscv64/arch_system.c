@@ -27,14 +27,21 @@ void arch_system_init(void)
 {
     /* Initialize exception handling */
     exception_init();
+#ifdef __riscv64
+    direct_print("rv64: exception_init done\n");
+#endif
 
     /* Initialize hardware interrupts (PLIC) */
     hw_intr_init();
+#ifdef __riscv64
+    direct_print("rv64: hw_intr_init done\n");
+#endif
 
     /* Initialize clock */
     arch_init_clock();
-
-    /* TODO: Initialize other subsystems */
+#ifdef __riscv64
+    direct_print("rv64: arch_init_clock done\n");
+#endif
 }
 
 /*
@@ -104,11 +111,15 @@ void do_ser_debug(void)
 
 void cpu_identify(void)
 {
+#ifdef CONFIG_SMP
+	unsigned cpu = 0;
+#else
 	unsigned cpu = cpuid;
+#endif
 	u64_t freq = CLOCK_FREQ;
 
 #ifdef CONFIG_SMP
-	cpu_info[cpu].hartid = cpu_number();
+	cpu_info[cpu].hartid = csr_read_hartid();
 #else
 	cpu_info[cpu].hartid = 0;
 #endif
@@ -118,8 +129,15 @@ void cpu_identify(void)
 
 void fpu_init(void)
 {
+#ifdef CONFIG_SMP
+	unsigned cpu = bsp_cpu_id;
+
+	get_cpu_var(cpu, fpu_presence) = 1;
+	get_cpu_var(cpu, fpu_owner) = NULL;
+#else
 	get_cpulocal_var(fpu_presence) = 1;
 	get_cpulocal_var(fpu_owner) = NULL;
+#endif
 }
 
 void save_local_fpu(struct proc *pr, int retain)
@@ -262,8 +280,17 @@ struct proc *arch_finish_switch_to_user(void)
 void arch_init(void)
 {
 	arch_system_init();
+#ifdef __riscv64
+	direct_print("rv64: arch_system_init returned\n");
+#endif
 	cpu_identify();
+#ifdef __riscv64
+	direct_print("rv64: cpu_identify done\n");
+#endif
 	fpu_init();
+#ifdef __riscv64
+	direct_print("rv64: fpu_init done\n");
+#endif
 }
 
 void arch_pause(void)

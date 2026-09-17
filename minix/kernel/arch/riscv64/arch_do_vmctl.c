@@ -9,6 +9,10 @@
 #include "archconst.h"
 #include "arch_proto.h"
 
+#ifdef CONFIG_SMP
+#include "kernel/smp.h"
+#endif
+
 static phys_bytes get_current_pgdir(void);
 static void set_satp(struct proc *p, phys_bytes root, reg_t *root_v);
 
@@ -99,6 +103,10 @@ int arch_do_vmctl(message *m_ptr, struct proc *p)
                 vmctl_trace_count++;
             }
             set_satp(p, root, root_v);
+            if (p->p_nr == VM_PROC_NR) {
+                if (arch_enable_paging(p) != OK)
+                    panic("arch_enable_paging failed");
+            }
             return OK;
         }
 

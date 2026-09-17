@@ -215,7 +215,7 @@ verify_libstdcxx_profile() {
   local lib="${root}/usr/lib/libstdc++.a"
   [[ -x "${ar}" && -x "${nm}" && -f "${lib}" ]] || { echo "[i386] ERROR: libstdc++ profile inputs missing" >&2; exit 1; }
   tmp="$(mktemp -d)"
-  trap 'rm -rf "${tmp}"' RETURN
+  trap "rm -rf '${tmp}'" RETURN
   (cd "${tmp}" && "${ar}" x "${lib}" functexcept.o && "${nm}" -u functexcept.o > undef.txt)
   if grep -Eq 'future_category|future_error' "${tmp}/undef.txt"; then
     echo "[i386] ERROR: libstdc++ functexcept.o references future_*" >&2

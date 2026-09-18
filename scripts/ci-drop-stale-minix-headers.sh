@@ -35,8 +35,9 @@ if [ -d "${src_inc}/sys" ]; then
 	done
 fi
 
-# minix/include/arch/<cpu>/include installs to /usr/include/<cpu>, with
-# extra copies under MACHINE (evbriscv64). <machine/vm.h> follows these.
-for arch in riscv64 i386 earm evbriscv64; do
+# minix/include/arch/<cpu>/include installs to /usr/include/<cpu> except
+# earm, which uses /usr/include/arm. MACHINE copies live under evbriscv64.
+# <machine/vm.h> follows these directories.
+for arch in riscv64 i386 earm arm evbriscv64; do
 	rm -rf "${inc}/${arch}"
 done

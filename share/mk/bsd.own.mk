@@ -461,10 +461,9 @@ CPPFLAGS+=	--sysroot=${DESTDIR}
 LDFLAGS+=	--sysroot=${DESTDIR}
 .    if defined(__MINIX) && defined(NETBSDSRCDIR)
 # MKUPDATE / tracked DESTDIR snapshots can lag source. Prefer in-tree
-# MINIX headers so ipc.h and libexec.h match this tree. Do not add
-# arch/${MACHINE_ARCH}/include: that directory also contains elf.h and
-# memory.h, which would shadow dest <elf.h> and POSIX <memory.h>.
-CPPFLAGS+=	-I${NETBSDSRCDIR}/minix/include \
+# <minix/*.h> and libexec.h. Do not -I minix/include itself: that
+# directory also contains lib.h, which shadows pkg_install's "lib.h".
+CPPFLAGS+=	-I${NETBSDSRCDIR}/minix/include-cppflags \
 		-I${NETBSDSRCDIR}/minix/lib/libexec
 .    endif
 CPPFLAGS+=	-I${DESTDIR}/usr/include
@@ -522,10 +521,9 @@ CPPFLAGS+=	--sysroot=${DESTDIR}
 LDFLAGS+=	--sysroot=${DESTDIR}
 .    if defined(__MINIX) && defined(NETBSDSRCDIR)
 # MKUPDATE / tracked DESTDIR snapshots can lag source. Prefer in-tree
-# MINIX headers so ipc.h and libexec.h match this tree. Do not add
-# arch/${MACHINE_ARCH}/include: that directory also contains elf.h and
-# memory.h, which would shadow dest <elf.h> and POSIX <memory.h>.
-CPPFLAGS+=	-I${NETBSDSRCDIR}/minix/include \
+# <minix/*.h> and libexec.h. Do not -I minix/include itself: that
+# directory also contains lib.h, which shadows pkg_install's "lib.h".
+CPPFLAGS+=	-I${NETBSDSRCDIR}/minix/include-cppflags \
 		-I${NETBSDSRCDIR}/minix/lib/libexec
 .    endif
 CPPFLAGS+=	-I${DESTDIR}/usr/include

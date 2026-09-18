@@ -293,6 +293,11 @@ jobs:
             "${destdir_root}/usr/lib/libc++.a" \
             "${destdir_root}/usr/lib/libc++_pic.a"
 
+          # MKUPDATE reuses tracked DESTDIR. Drop MINIX headers that lag
+          # source (ipc.h, com.h, libexec.h) so includes reinstall them.
+          rm -f "${destdir_root}/usr/include/libexec.h"
+          rm -rf "${destdir_root}/usr/include/minix"
+
           sanitize_cxxconfig() {
             local cfg="$1"
             [[ -f "${cfg}" ]] || return 0

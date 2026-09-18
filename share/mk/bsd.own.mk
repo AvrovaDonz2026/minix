@@ -459,6 +459,12 @@ TOOL_LLC.clang=		${EXTERNAL_TOOLCHAIN}/bin/llc
 .  if ${DESTDIR:U} != ""
 CPPFLAGS+=	--sysroot=${DESTDIR}
 LDFLAGS+=	--sysroot=${DESTDIR}
+.    if defined(__MINIX) && defined(NETBSDSRCDIR)
+# MKUPDATE / tracked DESTDIR snapshots can lag source. Prefer in-tree
+# MINIX headers so ipc.h and libexec.h match the tree being compiled.
+CPPFLAGS+=	-I${NETBSDSRCDIR}/minix/include \
+		-I${NETBSDSRCDIR}/minix/lib/libexec
+.    endif
 CPPFLAGS+=	-I${DESTDIR}/usr/include
 .  else
 CPPFLAGS+=	--sysroot=/
@@ -512,6 +518,12 @@ DESTDIR?=
 .  if ${DESTDIR} != ""
 CPPFLAGS+=	--sysroot=${DESTDIR}
 LDFLAGS+=	--sysroot=${DESTDIR}
+.    if defined(__MINIX) && defined(NETBSDSRCDIR)
+# MKUPDATE / tracked DESTDIR snapshots can lag source. Prefer in-tree
+# MINIX headers so ipc.h and libexec.h match the tree being compiled.
+CPPFLAGS+=	-I${NETBSDSRCDIR}/minix/include \
+		-I${NETBSDSRCDIR}/minix/lib/libexec
+.    endif
 CPPFLAGS+=	-I${DESTDIR}/usr/include
 .  else
 CPPFLAGS+=	--sysroot=/

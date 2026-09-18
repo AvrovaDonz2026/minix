@@ -43,12 +43,6 @@ LDFLAGS+= ${${ACTIVE_CC} == "gcc":? -lgcc_eh:}
 # Get (more) internal minix definitions and declarations.
 CPPFLAGS += -D_MINIX_SYSTEM=1
 
-# Prefer in-tree MINIX headers over a stale ${DESTDIR}/usr/include snapshot.
-.if defined(NETBSDSRCDIR)
-CPPFLAGS:= -I${NETBSDSRCDIR}/minix/include \
-	-I${NETBSDSRCDIR}/minix/lib/libexec ${CPPFLAGS}
-.endif
-
 # For MKMAGIC builds, link services against libmagicrt and run the magic pass
 # on them, unless they have specifically requested to be built without bitcode.
 .if ${USE_BITCODE:Uno} == "yes" && ${USE_MAGIC:Uno} == "yes"

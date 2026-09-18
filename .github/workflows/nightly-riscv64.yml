@@ -311,6 +311,11 @@ jobs:
             "${destdir_root}/usr/lib/libstdc++_pic.a" \
             "${destdir_root}/usr/include/g++/bits/c++config.h"
 
+          # MKUPDATE reuses tracked DESTDIR. Drop MINIX headers that lag
+          # source (ipc.h, com.h, libexec.h) so includes reinstall them.
+          rm -f "${destdir_root}/usr/include/libexec.h"
+          rm -rf "${destdir_root}/usr/include/minix"
+
           # Keep gthreads profile deterministic even when obj.intrgcc carries
           # stale generated headers from earlier CI iterations.
           sanitize_cxxconfig() {

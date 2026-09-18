@@ -46,7 +46,7 @@ do_exec(void)
 	m.VFS_PM_PATH_LEN = m_in.m_lc_pm_exec.namelen;
 	m.VFS_PM_FRAME = (void *)m_in.m_lc_pm_exec.frame;
 	m.VFS_PM_FRAME_LEN = m_in.m_lc_pm_exec.framelen;
-	m.m_m7.m7p3 = (char *)(unsigned long)m_in.m_lc_pm_exec.ps_str;
+	m.VFS_PM_PS_STR = (char *)(unsigned long)m_in.m_lc_pm_exec.ps_str;
 	tell_vfs(mp, &m);
 
 	/* Do not reply */

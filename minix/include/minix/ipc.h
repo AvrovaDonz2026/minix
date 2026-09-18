@@ -78,10 +78,11 @@ _ASSERT_MSG_SIZE(mess_4);
 
 typedef struct {
 	int m7i1, m7i2, m7i3, m7i4;
+	/* Named so GCC 4.8 gnu99 can see m7i5/m7p3; anonymous unions are C11. */
 	union {
 		int m7i5;
 		char *m7p3;
-	};
+	} m7_extra;
 	char *m7p1, *m7p2;
 #if defined(__riscv) && (__riscv_xlen == 64)
 	uint8_t padding[16];
@@ -93,7 +94,7 @@ _ASSERT_MSG_SIZE(mess_7);
 #if defined(__riscv) && (__riscv_xlen == 64)
 typedef int _ASSERT_mess_7_size[sizeof(mess_7) == 56 ? 1 : -1];
 typedef int _ASSERT_mess_7_p3_offset[
-    offsetof(mess_7, m7p3) == 16 ? 1 : -1];
+    offsetof(mess_7, m7_extra.m7p3) == 16 ? 1 : -1];
 #endif
 
 typedef struct {
@@ -2739,10 +2740,10 @@ typedef int _ASSERT_message[/* CONSTCOND */sizeof(message) == 64 ? 1 : -1];
 #define m7_i2  m_m7.m7i2
 #define m7_i3  m_m7.m7i3
 #define m7_i4  m_m7.m7i4
-#define m7_i5  m_m7.m7i5
+#define m7_i5  m_m7.m7_extra.m7i5
 #define m7_p1  m_m7.m7p1
 #define m7_p2  m_m7.m7p2
-#define m7_ps   m_m7.m7p3
+#define m7_ps   m_m7.m7_extra.m7p3
 
 #define m9_l1  m_m9.m9l1
 #define m9_l2  m_m9.m9l2

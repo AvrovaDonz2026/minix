@@ -45,7 +45,8 @@ CPPFLAGS += -D_MINIX_SYSTEM=1
 
 # Prefer in-tree MINIX headers over a stale ${DESTDIR}/usr/include snapshot.
 .if defined(NETBSDSRCDIR)
-CPPFLAGS:= -I${NETBSDSRCDIR}/minix/include ${CPPFLAGS}
+CPPFLAGS:= -I${NETBSDSRCDIR}/minix/include \
+	-I${NETBSDSRCDIR}/minix/lib/libexec ${CPPFLAGS}
 .endif
 
 # For MKMAGIC builds, link services against libmagicrt and run the magic pass

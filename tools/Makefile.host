@@ -49,6 +49,11 @@ HOST_CPPFLAGS:=	${HOST_CPPFLAGS:N-Wp,-iremap,*:N--sysroot=*}
 .else
 HOST_CPPFLAGS:=	${HOST_CPPFLAGS:N-Wp,-iremap,*:N--sysroot=*:N-I${DESTDIR}/usr/include}
 .endif
+.if defined(__MINIX) && defined(NETBSDSRCDIR)
+# tools/Makefile.host includes bsd.own.mk before HOSTPROG is set, so the
+# target-only MINIX -I flags can leak into host compiles. Drop them.
+HOST_CPPFLAGS:=	${HOST_CPPFLAGS:N-I${NETBSDSRCDIR}/minix/include:N-I${NETBSDSRCDIR}/minix/include/arch/${MACHINE_ARCH}/include:N-I${NETBSDSRCDIR}/minix/lib/libexec}
+.endif
 HOST_INSTALLPROG?=${HOST_BINDIR}/${HOSTPROGNAME}${HOSTEXEEXT}
 .undef LINKS
 

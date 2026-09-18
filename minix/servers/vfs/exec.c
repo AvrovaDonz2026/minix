@@ -309,9 +309,9 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
 	execi.elf_main_phnum = main_eh->e_phnum;
 	execi.args.filesize = execi.vp->v_size;
 
-	/* mmap the main program (guest clang is tens of MB). Keep a
-	 * vnode ref so Get_read_vp() of ld.so does not free it while
-	 * VM still pages from this fd.
+	/* mmap the main program (guest clang is tens of MB). The VM
+	 * filp inherits the eat_path vnode (same as the ld.so mmap
+	 * path below); do not dup_vnode.
 	 */
 	{
 		struct vnode *vp = execi.vp;
@@ -326,7 +326,6 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
 				newfilp->filp_vno = vp;
 				newfilp->filp_flags = O_RDONLY;
 				vmfp->fp_filp[newfd] = newfilp;
-				dup_vnode(vp);
 				execi.vmfd = newfd;
 				execi.args.memmap = vfs_memmap;
 			}
@@ -358,6 +357,14 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
 
 	strlcpy(fullpath, elf_interpreter, PATH_MAX);
 	strlcpy(firstexec, elf_interpreter, PATH_MAX);
+	/*
+	 * Get_read_vp() unlocks and puts the current vp. The VM filp
+	 * still needs that vnode locked: get_fd() does not lock_filp(),
+	 * so pm_execfinal's unlock_filp() asserts tll_islocked. Detach
+	 * so lookup of ld.so cannot drop the main program.
+	 */
+	if (newfilp != NULL)
+		execi.vp = NULL;
 	Get_read_vp(execi, fullpath, 0, 0, &resolve, fp);
   }
 
@@ -429,7 +436,7 @@ pm_execfinal:
 	put_vnode(execi.vp);
   }
 
-  if(execi.vmfd >= 0 && !execi.vmfd_used) {
+  if(execi.vmfd >= 0 && (!execi.vmfd_used || r != OK)) {
 	if(OK != close_fd(vmfp, execi.vmfd, FALSE /*may_suspend*/)) {
 		printf("VFS: unexpected close fail of vm fd\n");
 	}

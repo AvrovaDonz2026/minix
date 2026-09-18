@@ -526,8 +526,18 @@ _rtld_symlook_default(const char *name, unsigned long hash,
 
 	_rtld_donelist_init(&donelist);
 
-	/* Look first in the referencing object if linked symbolically. */
-	if (refobj->symbolic && !_rtld_donelist_check(&donelist, refobj)) {
+	/*
+	 * Look first in the referencing object if linked symbolically.
+	 * On MINIX/riscv, also do this for every DSO: guest clang is
+	 * ET_EXEC with a static libc and still NEEDED libc.so, so it
+	 * exports _libc_init / __minix_init.  ELF interposition would
+	 * run those for libc.so and leave libc.so's IPC vectors unset.
+	 */
+	if ((refobj->symbolic
+#if defined(__riscv) && defined(__minix)
+	    || !refobj->mainprog
+#endif
+	    ) && !_rtld_donelist_check(&donelist, refobj)) {
 		rdbg(("search referencing object for %s", name));
 		symp = _rtld_symlook_obj(name, hash, refobj, flags, ventry);
 		if (symp != NULL) {

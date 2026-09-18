@@ -174,11 +174,12 @@ int libexec_load_elf(struct exec_info *execi)
 		return e;
 	 }
 
-	/* this function can load the dynamic linker, but that
-	 * shouldn't require an interpreter itself.
+	/* VFS may preload a PT_INTERP main program (allow_pt_interp)
+	 * before loading ld.so. The interpreter itself must not have
+	 * a nested interpreter.
 	 */
 	i = elf_has_interpreter(execi->hdr, execi->hdr_len, NULL, 0);
-	if(i > 0) {
+	if(i > 0 && !execi->allow_pt_interp) {
 	      printf("libexec: unexpected PT_INTERP\n");
 	      return ENOEXEC;
 	}
@@ -351,8 +352,10 @@ int libexec_load_elf(struct exec_info *execi)
 
 	execi->seg_flags = PF_W;
 
-	/* Make it a stack */
-	if(execi->allocmem_ondemand(execi, stacklow, execi->stack_size) != OK) {
+	/* Make it a stack. A dynlink preload already mapped one. */
+	if (!execi->skip_clear &&
+	    execi->allocmem_ondemand(execi, stacklow,
+		execi->stack_size) != OK) {
 		if(execi->clearproc) execi->clearproc(execi);
 		return ENOMEM;
 	}

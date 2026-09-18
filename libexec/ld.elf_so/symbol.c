@@ -265,15 +265,17 @@ _rtld_symlook_obj(const char *name, unsigned long hash,
 			continue;
 #if defined(__riscv) && defined(__minix)
 		/*
-		 * Never let a lookup from another object bind to a
-		 * STB_LOCAL definition.  Local symbols (e.g. `_end`
-		 * exported from the main program's .dynsym) are private
-		 * conventions of their object; libc's `_brksize` must
+		 * Never let a lookup bind to a STB_LOCAL definition
+		 * in the main program.  Local symbols (e.g. `_end`
+		 * exported from the executable's .dynsym) are private
+		 * conventions of that object; libc's `_brksize` must
 		 * resolve to libc's own `_end`, not the main program's,
 		 * or phkmalloc's heap base ends up above the main
 		 * program's image and free() rejects libc pointers.
+		 * Do not skip LOCAL in DSOs: that would hide libc's
+		 * own `_end` and fall through to the executable.
 		 */
-		if (ELF_ST_BIND(symp->st_info) == STB_LOCAL)
+		if (obj->mainprog && ELF_ST_BIND(symp->st_info) == STB_LOCAL)
 			continue;
 #endif
 #else

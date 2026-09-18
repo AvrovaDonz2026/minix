@@ -832,6 +832,38 @@ _rtld(Elf_Addr *sp, Elf_Addr relocbase)
 
 	dbg(("control at program entry point = %p, obj = %p, exit = %p",
 	     _rtld_objmain->entry, _rtld_objmain, _rtld_exit));
+#if defined(__minix) && defined(__riscv)
+	/*
+	 * Prefer the executable's _start/__start when AT_ENTRY does not
+	 * match it.  Jumping into .dynsym/.rodata of a large ET_EXEC
+	 * (guest clang) SIGILLs in a DSO's data after rtld handoff.
+	 */
+	{
+		const Elf_Sym *startdef;
+		caddr_t startaddr;
+		unsigned long hash;
+
+		hash = _rtld_elf_hash("_start");
+		startdef = _rtld_symlook_obj("_start", hash, _rtld_objmain,
+		    0, NULL);
+		if (startdef == NULL || startdef->st_shndx == SHN_UNDEF) {
+			hash = _rtld_elf_hash("__start");
+			startdef = _rtld_symlook_obj("__start", hash,
+			    _rtld_objmain, 0, NULL);
+		}
+		if (startdef != NULL && startdef->st_shndx != SHN_UNDEF) {
+			startaddr = _rtld_objmain->relocbase +
+			    startdef->st_value;
+			if (startaddr != _rtld_objmain->entry) {
+				xprintf("rtld: AT_ENTRY %lx != _start %lx, "
+				    "using _start\n",
+				    (unsigned long)(uintptr_t)_rtld_objmain->entry,
+				    (unsigned long)(uintptr_t)startaddr);
+				_rtld_objmain->entry = startaddr;
+			}
+		}
+	}
+#endif
 	xprintf("rtld: final entry=%lx relocbase=%lx mapbase=%lx\n",
 	    (unsigned long)(uintptr_t)_rtld_objmain->entry,
 	    (unsigned long)(uintptr_t)_rtld_objmain->relocbase,

@@ -255,11 +255,35 @@ _rtld_relocate_plt_object(const Obj_Entry *obj, const Elf_Rela *rela,
 
 	if (ELF_ST_TYPE(def->st_info) == STT_GNU_IFUNC) {
 		new_value = _rtld_resolve_ifunc(defobj, def);
+	} else if (__predict_false(ELF_ST_TYPE(def->st_info) == STT_OBJECT ||
+	    ELF_ST_TYPE(def->st_info) == STT_TLS)) {
+		/*
+		 * A JUMP_SLOT must land in a function.  Binding to
+		 * STT_OBJECT writes a data address into the GOT; the
+		 * RISC-V PLT then jalr's into .rodata (guest clang
+		 * SIGILL after rtld handoff).
+		 */
+		_rtld_error("%s: JUMP_SLOT for %s binds to %s %s in %s",
+		    obj->path,
+		    obj->strtab + obj->symtab[ELF_R_SYM(rela->r_info)].st_name,
+		    ELF_ST_TYPE(def->st_info) == STT_TLS ? "TLS" : "object",
+		    defobj->strtab + def->st_name, defobj->path);
+		return -1;
 	} else {
-		new_value = (Elf_Addr)(defobj->relocbase + def->st_value);
+		/* R_RISCV_JUMP_SLOT: S + A */
+		new_value = (Elf_Addr)(defobj->relocbase + def->st_value +
+		    rela->r_addend);
 	}
 	rdbg(("bind now/fixup in %s --> new=%p",
 	    defobj->strtab + def->st_name, (void *)new_value));
+#if defined(__minix)
+	if (obj->mainprog) {
+		xprintf("rtld: JUMP_SLOT %s -> %s+%lx in %s\n",
+		    obj->strtab + obj->symtab[ELF_R_SYM(rela->r_info)].st_name,
+		    defobj->strtab + def->st_name,
+		    (unsigned long)new_value, defobj->path);
+	}
+#endif
 	*(Elf_Addr *)(obj->relocbase + rela->r_offset) = new_value;
 
 	if (tp)

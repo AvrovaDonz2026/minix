@@ -461,8 +461,9 @@ CPPFLAGS+=	--sysroot=${DESTDIR}
 LDFLAGS+=	--sysroot=${DESTDIR}
 .    if defined(__MINIX) && defined(NETBSDSRCDIR)
 # MKUPDATE / tracked DESTDIR snapshots can lag source. Prefer in-tree
-# MINIX headers so ipc.h and libexec.h match the tree being compiled.
+# MINIX headers so ipc.h, libexec.h, and <machine/*.h> match this tree.
 CPPFLAGS+=	-I${NETBSDSRCDIR}/minix/include \
+		-I${NETBSDSRCDIR}/minix/include/arch/${MACHINE_ARCH}/include \
 		-I${NETBSDSRCDIR}/minix/lib/libexec
 .    endif
 CPPFLAGS+=	-I${DESTDIR}/usr/include
@@ -520,8 +521,9 @@ CPPFLAGS+=	--sysroot=${DESTDIR}
 LDFLAGS+=	--sysroot=${DESTDIR}
 .    if defined(__MINIX) && defined(NETBSDSRCDIR)
 # MKUPDATE / tracked DESTDIR snapshots can lag source. Prefer in-tree
-# MINIX headers so ipc.h and libexec.h match the tree being compiled.
+# MINIX headers so ipc.h, libexec.h, and <machine/*.h> match this tree.
 CPPFLAGS+=	-I${NETBSDSRCDIR}/minix/include \
+		-I${NETBSDSRCDIR}/minix/include/arch/${MACHINE_ARCH}/include \
 		-I${NETBSDSRCDIR}/minix/lib/libexec
 .    endif
 CPPFLAGS+=	-I${DESTDIR}/usr/include

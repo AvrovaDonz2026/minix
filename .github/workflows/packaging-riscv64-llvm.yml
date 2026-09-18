@@ -2,8 +2,10 @@ name: riscv64-packaging-llvm
 
 on:
   push:
+    # Feature-branch pushes already create a pull_request event. Restrict
+    # push to master so each PR commit is not built twice.
     branches:
-      - "**"
+      - master
     tags-ignore:
       - "**"
   pull_request:
@@ -351,10 +353,10 @@ jobs:
             "${destdir_root}/usr/lib/libc++.a" \
             "${destdir_root}/usr/lib/libc++_pic.a"
 
-          # MKUPDATE reuses tracked DESTDIR. Drop MINIX headers that lag
-          # source (ipc.h, com.h, libexec.h) so includes reinstall them.
-          rm -f "${destdir_root}/usr/include/libexec.h"
-          rm -rf "${destdir_root}/usr/include/minix"
+          # MKUPDATE reuses tracked DESTDIR. Drop MINIX-owned headers so
+          # includes reinstalls them even when dest mtime is newer.
+          sh "${PWD}/scripts/ci-drop-stale-minix-headers.sh" "${destdir_root}"
+          rm -rf "${OBJDIR}/minix/lib/libexec"
 
           # Keep gthreads profile deterministic even when obj.intrgcc carries
           # stale generated headers from earlier CI iterations.

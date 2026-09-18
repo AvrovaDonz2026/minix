@@ -2,11 +2,12 @@ name: riscv64-release
 
 on:
   push:
+    # Nightly already reviews PRs. This lane publishes tags and re-checks
+    # master; do not duplicate the GCC world build on every PR commit.
     branches:
-      - "**"
+      - master
     tags:
       - "v*"
-  pull_request:
   workflow_dispatch:
     inputs:
       tag:
@@ -310,10 +311,10 @@ jobs:
             "${destdir_root}/usr/lib/libstdc++_pic.a" \
             "${destdir_root}/usr/include/g++/bits/c++config.h"
 
-          # MKUPDATE reuses tracked DESTDIR. Drop MINIX headers that lag
-          # source (ipc.h, com.h, libexec.h) so includes reinstall them.
-          rm -f "${destdir_root}/usr/include/libexec.h"
-          rm -rf "${destdir_root}/usr/include/minix"
+          # MKUPDATE reuses tracked DESTDIR. Drop MINIX-owned headers so
+          # includes reinstalls them even when dest mtime is newer.
+          sh "${PWD}/scripts/ci-drop-stale-minix-headers.sh" "${destdir_root}"
+          rm -rf "${OBJDIR}/minix/lib/libexec"
 
           # Keep gthreads profile deterministic even when obj.intrgcc carries
           # stale generated headers from earlier CI iterations.

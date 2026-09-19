@@ -54,7 +54,8 @@ __weakref_visible void cxa_finalize(void *)
 __dso_hidden void *__dso_handle;
 #endif
 
-#if !defined(__ARM_EABI__) || defined(__ARM_DWARF_EH__)
+#if (!defined(__ARM_EABI__) || defined(__ARM_DWARF_EH__)) && \
+    !(defined(__riscv) && defined(__minix))
 __dso_hidden
 #if !defined(__mips__)
 	const
@@ -81,13 +82,16 @@ __do_global_ctors_aux(void)
 
 	__initialized = 1;
 
-#if !defined(__ARM_EABI__) || defined(__ARM_DWARF_EH__)
+#if (!defined(__ARM_EABI__) || defined(__ARM_DWARF_EH__)) && \
+    !(defined(__riscv) && defined(__minix))
 	if (register_frame_info)
 		register_frame_info(__EH_FRAME_LIST__, &dwarf_eh_object);
 #endif
 
+#if !(defined(__riscv) && defined(__minix))
 	if (Jv_RegisterClasses && __JCR_LIST__[0] != 0)
 		Jv_RegisterClasses(__JCR_LIST__);
+#endif
 
 #if !defined(HAVE_INITFINI_ARRAY)
 	for (const fptr_t *p = __CTOR_LIST_END__; p > __CTOR_LIST__ + 1; ) {
@@ -117,8 +121,17 @@ __do_global_dtors_aux(void)
 	__finished = 1;
 
 #ifdef SHARED
+	/*
+	 * GCC 4.8 RISC-V emits `la` (R_RISCV_PCREL_HI20) for this
+	 * weakref even with -fPIC.  Legacy bfd cannot relocate that
+	 * against UND, so it binds to .rodata and DSO fini SIGILL's.
+	 * MINIX RISC-V DSOs skip __cxa_finalize; C libraries here
+	 * do not register C++ cxa dtors.
+	 */
+#if !(defined(__riscv) && defined(__minix))
 	if (cxa_finalize)
 		(*cxa_finalize)(__dso_handle);
+#endif
 #endif
 
 #if !defined(HAVE_INITFINI_ARRAY)
@@ -127,7 +140,8 @@ __do_global_dtors_aux(void)
 	}
 #endif
 
-#if !defined(__ARM_EABI__) || defined(__ARM_DWARF_EH__)
+#if (!defined(__ARM_EABI__) || defined(__ARM_DWARF_EH__)) && \
+    !(defined(__riscv) && defined(__minix))
 	if (deregister_frame_info)
 		deregister_frame_info(__EH_FRAME_LIST__);
 #endif

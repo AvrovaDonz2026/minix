@@ -4,9 +4,9 @@
 
 # XXX: FIXME: This is defined in bsd.lib.mk
 PICFLAGS ?= -fPIC
-.if ${MACHINE_CPU} == "riscv"
-PICFLAGS+= -mno-plt
-.endif
+# NOTE: no -mno-plt for riscv.  Same constraint as share/mk/bsd.lib.mk:
+# legacy bfd cannot relocate %pcrel pairs against undefined symbols
+# (crtbeginS weak __cxa_finalize), so the GOT/PLT path must be used.
 
 COMMON_DIR:=	${.CURDIR}/common
 .PATH:		${COMMON_DIR}

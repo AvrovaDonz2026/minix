@@ -260,9 +260,24 @@ _rtld_symlook_obj(const char *name, unsigned long hash,
 		rdbg(("check \"%s\" vs \"%s\" in %s", name, strp, obj->path));
 		if (name[1] != strp[1] || strcmp(name, strp))
 			continue;
-#if defined(__mips__) || defined(__vax__)
+#if defined(__mips__) || defined(__vax__) || defined(__riscv)
 		if (symp->st_shndx == SHN_UNDEF)
 			continue;
+#if defined(__riscv) && defined(__minix)
+		/*
+		 * Never let a lookup bind to a STB_LOCAL definition
+		 * in the main program.  Local symbols (e.g. `_end`
+		 * exported from the executable's .dynsym) are private
+		 * conventions of that object; libc's `_brksize` must
+		 * resolve to libc's own `_end`, not the main program's,
+		 * or phkmalloc's heap base ends up above the main
+		 * program's image and free() rejects libc pointers.
+		 * Do not skip LOCAL in DSOs: that would hide libc's
+		 * own `_end` and fall through to the executable.
+		 */
+		if (obj->mainprog && ELF_ST_BIND(symp->st_info) == STB_LOCAL)
+			continue;
+#endif
 #else
 		/*
 		 * XXX DANGER WILL ROBINSON!
@@ -513,8 +528,18 @@ _rtld_symlook_default(const char *name, unsigned long hash,
 
 	_rtld_donelist_init(&donelist);
 
-	/* Look first in the referencing object if linked symbolically. */
-	if (refobj->symbolic && !_rtld_donelist_check(&donelist, refobj)) {
+	/*
+	 * Look first in the referencing object if linked symbolically.
+	 * On MINIX/riscv, also do this for every DSO: guest clang is
+	 * ET_EXEC with a static libc and still NEEDED libc.so, so it
+	 * exports _libc_init / __minix_init.  ELF interposition would
+	 * run those for libc.so and leave libc.so's IPC vectors unset.
+	 */
+	if ((refobj->symbolic
+#if defined(__riscv) && defined(__minix)
+	    || !refobj->mainprog
+#endif
+	    ) && !_rtld_donelist_check(&donelist, refobj)) {
 		rdbg(("search referencing object for %s", name));
 		symp = _rtld_symlook_obj(name, hash, refobj, flags, ventry);
 		if (symp != NULL) {

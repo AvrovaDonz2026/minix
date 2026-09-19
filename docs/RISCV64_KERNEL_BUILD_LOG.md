@@ -2683,3 +2683,24 @@ GitHub Actions `riscv64-packaging-llvm` (360 min). See `issue.md` `#42`.
 - `external/bsd/llvm/dist/llvm/lib/Analysis/BlockFrequencyInfoImpl.cpp`
 - `external/bsd/llvm/dist/llvm/lib/CodeGen/SpillPlacement.cpp`
 
+### Entry 71 — Donz server local LLVM gate (2026-09-17) / 本地 LLVM 门禁
+**Workspace / 工作区**: `/waterloo/minix` (Linux x86_64, `nproc` parallel)  
+**Target / 目标**: `obj.intrgcc` + `scripts/build-riscv64-llvm-local.sh`
+
+**Commands / 命令**:
+```bash
+./minix/tests/riscv64/llvm_toolchain_gate.sh --mode host --require host --tooldir obj.intrgcc/tooldir.*
+./minix/tests/riscv64/llvm_toolchain_gate.sh --mode destdir --require destdir --destdir obj.intrgcc/destdir.evbriscv64
+DIST_JOBS=$(nproc) ./scripts/build-riscv64-llvm-local.sh servers
+DIST_JOBS=$(nproc) ./scripts/build-riscv64-llvm-local.sh verify
+```
+
+**Results / 结果**:
+- Host LLVM gate: **PASS** (riscv64 + i586 cross wrappers, 20 checks).
+- DESTDIR LLVM gate: **PASS** (guest `clang`, `ld.elf_so`, `libgcc_s.so`).
+- `nbmake` rebuild: **PASS** for `vfs/main.c` and `pm/exec.c` (`-Werror`) after RV64 `mess_7.m7p3` ps_strings IPC fix.
+- Guest QEMU `clang --version`: **FAIL** — `malloc: free ptr=0x36d7388 ... junk pointer, too high` during dynamic-linker teardown (same as prior `verify.log`).
+
+**CI follow-up / CI**:
+- PR #4 fixes: i386 `build-i386-local.sh` RETURN trap quoting; VFS/PM `m7p3` ps_str assignments (pushed `2b54fcad6`).
+

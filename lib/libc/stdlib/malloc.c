@@ -449,11 +449,13 @@ static void *irealloc(void *ptr, size_t size);
 static void
 wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
 {
+    static const char empty[] = "";
 
-    write(STDERR_FILENO, p1, strlen(p1));
-    write(STDERR_FILENO, p2, strlen(p2));
-    write(STDERR_FILENO, p3, strlen(p3));
-    write(STDERR_FILENO, p4, strlen(p4));
+    /* NULL-tolerant: getprogname() may be unset in dynamic processes. */
+    write(STDERR_FILENO, p1 ? p1 : empty, p1 ? strlen(p1) : 0);
+    write(STDERR_FILENO, p2 ? p2 : empty, p2 ? strlen(p2) : 0);
+    write(STDERR_FILENO, p3 ? p3 : empty, p3 ? strlen(p3) : 0);
+    write(STDERR_FILENO, p4 ? p4 : empty, p4 ? strlen(p4) : 0);
 }
 
 void (*_malloc_message)(const char *p1, const char *p2, const char *p3,
@@ -470,6 +472,16 @@ wrterror(const char *p)
 static void
 wrtwarning(const char *p)
 {
+
+#if defined(__minix)
+	/*
+	 * MINIX guests often run as uid 0 under QEMU; NetBSD's root check
+	 * would turn recoverable junk-pointer free() into abort().  ifree()
+	 * already returns without freeing after this warning.
+	 */
+	_malloc_message(getprogname(), malloc_func, " warning: ", p);
+	return;
+#endif
 
     /*
      * Sensitive processes, somewhat arbitrarily defined here as setuid,
@@ -1271,11 +1283,24 @@ ifree(void *ptr)
     idx = ptr2idx(ptr);
 
     if (idx < malloc_pageshift) {
+	char dbuf[128];
+	int n = snprintf(dbuf, sizeof(dbuf),
+	    "malloc: free ptr=%p idx=%zu origo=%zu last_idx=%zu\n",
+	    ptr, idx, malloc_origo, last_idx);
+	if (n > 0)
+	    write(2, dbuf, (size_t)n);
 	wrtwarning("junk pointer, too low to make sense.\n");
 	return;
     }
 
     if (idx > last_idx) {
+	char dbuf[160];
+	int n = snprintf(dbuf, sizeof(dbuf),
+	    "malloc: free ptr=%p idx=%zu origo=%zu last_idx=%zu "
+	    "heapbase=%p\n", ptr, idx, malloc_origo, last_idx,
+	    (void *)((size_t)malloc_origo << malloc_pageshift));
+	if (n > 0)
+	    write(2, dbuf, (size_t)n);
 	wrtwarning("junk pointer, too high to make sense.\n");
 	return;
     }

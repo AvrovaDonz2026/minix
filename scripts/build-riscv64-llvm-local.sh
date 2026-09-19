@@ -23,15 +23,15 @@ TARGET="${1:-all}"
 OBJDIR="${OBJDIR:-obj.intrgcc}"
 MACHINE="${MACHINE:-evbriscv64}"
 VISIBLE_CPUS="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
-# Mirror packaging-riscv64-llvm.yml: tools capped, world/distribution uses all CPUs.
+# Remote builders may use all visible cores; callers can still cap tools explicitly.
 JOBS="${JOBS:-${TOOLS_CPU_COUNT:-${VISIBLE_CPUS}}}"
-if (( JOBS > 8 )) && [[ -z "${TOOLS_CPU_COUNT:-}" ]]; then
-  JOBS=8
-fi
 DIST_JOBS="${DIST_JOBS:-${WORLD_CPU_COUNT:-${VISIBLE_CPUS}}}"
-LOG_DIR="${LOG_DIR:-/tmp/minix-riscv64-llvm}"
+LOG_DIR="${LOG_DIR:-${REPO_ROOT}/${OBJDIR}/llvm-local}"
 
 mkdir -p "${LOG_DIR}"
+# mkdisk staging copies the full destdir (~200MiB /usr with LLVM); keep temp off /tmp.
+export TMPDIR="${TMPDIR:-${LOG_DIR}/tmp}"
+mkdir -p "${TMPDIR}"
 
 # Ubuntu cloud images default cc -> clang; host tool configure (gmp, etc.) needs gcc.
 export CC=/usr/bin/gcc
@@ -39,6 +39,19 @@ export CXX=/usr/bin/g++
 export HOST_CC=gcc
 export HOST_CXX=g++
 export LIBRARY_PATH="${LIBRARY_PATH:-/usr/lib/gcc/$(gcc -dumpmachine)/$(gcc -dumpversion):/usr/lib/$(gcc -dumpmachine)}"
+
+host_mtime() {
+  stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"
+}
+
+if [[ "$(uname -s)" == Darwin ]]; then
+  # Keep macOS builds isolated from the Linux CI output directory.
+  OBJDIR="${OBJDIR:-obj.macos-riscv64-llvm}"
+  export CC=/opt/homebrew/opt/llvm/bin/clang
+  export CXX=/opt/homebrew/opt/llvm/bin/clang++
+  export HOST_CC="${CC}"
+  export HOST_CXX="${CXX}"
+fi
 
 HARDENING_OFF="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -fno-stack-protector"
 COMMON_FLAGS=(
@@ -65,8 +78,13 @@ COMMON_FLAGS=(
   -V MKLIBGOMP=no
   -V MKATF=no
   -V USE_PCI=no
+  -V MKPIC=yes
+  -V MKPICLIB=yes
+  -V MKPICINSTALL=yes
   -V CHECKFLIST_FLAGS='-m -e'
 )
+
+GUEST_PATCH_SCRIPT="${REPO_ROOT}/toolchain/patches/riscv64-guest/scripts/apply-guest-dist-patches.sh"
 
 install_cross_as_flock_wrapper() {
   local tooldir="$1"
@@ -77,7 +95,8 @@ install_cross_as_flock_wrapper() {
     local as_abs
     as="$1"
     [[ -e "${as}" || -x "${as}.real" ]] || return 0
-    as_abs="$(cd "$(dirname "${as}")" && pwd)/$(basename "${as}")"
+    as_abs="$(readlink -f "${as}" 2>/dev/null || true)"
+    [[ -n "${as_abs}" && -x "${as_abs}" ]] || return 0
     [[ -x "${as_abs}.real" ]] || mv "${as_abs}" "${as_abs}.real"
     cat > "${as_abs}" <<EOF
 #!/bin/bash
@@ -99,16 +118,17 @@ install_cross_as_flock_wrapper_all() {
   done
 }
 
+apply_guest_dist_patches() {
+  [[ -x "${GUEST_PATCH_SCRIPT}" ]] || {
+    echo "[local] ERROR: missing ${GUEST_PATCH_SCRIPT}" >&2
+    exit 1
+  }
+  bash "${GUEST_PATCH_SCRIPT}"
+}
+
 prepare_libstdcxx_guest() {
   local destdir_root="${REPO_ROOT}/${OBJDIR}/destdir.evbriscv64"
   local functexcept_src="${REPO_ROOT}/external/gpl3/gcc/dist/libstdc++-v3/src/c++11/functexcept.cc"
-
-  strip_libcxx_from_destdir() {
-    rm -rf "${destdir_root}/usr/include/c++"
-    rm -f \
-      "${destdir_root}/usr/lib/libc++.a" \
-      "${destdir_root}/usr/lib/libc++_pic.a"
-  }
 
   strip_libcxx_from_destdir
 
@@ -126,6 +146,8 @@ prepare_libstdcxx_guest() {
       sanitize_cxxconfig "${cfg}"
     done < <(find "${destdir_root}/usr/include/g++" -type f -name 'c++config.h' -print0)
   fi
+
+  apply_guest_dist_patches
 
   [[ -f "${functexcept_src}" ]] || {
     echo "[local] ERROR: missing ${functexcept_src}" >&2
@@ -180,6 +202,10 @@ run_tools() {
     echo "[local] ERROR: missing ${tooldir}/bin/riscv64-elf32-minix-clang" >&2
     exit 1
   }
+  [[ -x "${tooldir}/bin/i586-elf32-minix-clang" ]] || {
+    echo "[local] ERROR: missing ${tooldir}/bin/i586-elf32-minix-clang" >&2
+    exit 1
+  }
   echo "[local] TOOLDIR=${tooldir}"
   install_cross_as_flock_wrapper "${tooldir}"
   TOOLDIR="${tooldir}" ./minix/tests/riscv64/llvm_toolchain_gate.sh \
@@ -188,8 +214,15 @@ run_tools() {
 
 run_distribution() {
   local tooldir
-  tooldir="$(ls -d "${OBJDIR}"/tooldir.* 2>/dev/null | head -1)"
-  [[ -n "${tooldir}" ]] && install_cross_as_flock_wrapper "${tooldir}"
+  tooldir="$(pick_tooldir 2>/dev/null || true)"
+  if [[ -z "${tooldir}" || \
+      ! -x "${tooldir}/bin/riscv64-elf32-minix-clang" || \
+      ! -x "${OBJDIR}/tools/host-mkdep/host-mkdep" ]]; then
+    echo "[local] rebuilding host tools for the current host before distribution"
+    run_tools
+    tooldir="$(pick_tooldir)"
+  fi
+  install_cross_as_flock_wrapper "${tooldir}"
 
   prepare_libstdcxx_guest
   prepare_llvm_guest_path
@@ -212,7 +245,7 @@ pick_tooldir() {
   for d in "${OBJDIR}"/tooldir.*; do
     [[ -d "${d}" ]] || continue
     [[ -x "${d}/bin/nbmake" ]] || continue
-    mt="$(stat -c %Y "${d}" 2>/dev/null || echo 0)"
+    mt="$(host_mtime "${d}" 2>/dev/null || echo 0)"
     if (( mt >= best )); then
       best="${mt}"
       tooldir="${d}"
@@ -232,20 +265,37 @@ run_servers() {
   export MKPCI=no
   export MAKEOBJDIR='${.CURDIR:C,^'${REPO_ROOT}','${REPO_ROOT}'/'${OBJDIR}',}'
 
-  echo "[local] rebuilding vm + kernel (STATELEN / server fixes)"
+  echo "[local] installing headers and rebuilding PM + VFS + VM + rtld + kernel"
+  "${nbmake}" -C lib/csu -j"${JOBS}"
+  "${nbmake}" -C lib/csu install
+  "${nbmake}" -C lib/libc -j"${JOBS}"
+  "${nbmake}" -C lib/libc install
+  "${nbmake}" -C minix/include -j"${JOBS}"
+  "${nbmake}" -C minix/include install
+  "${nbmake}" -C minix/drivers/storage/ramdisk -j"${JOBS}"
+  "${nbmake}" -C minix/drivers/storage/memory -j"${JOBS}"
+  "${nbmake}" -C minix/drivers/storage/memory install
+  "${nbmake}" -C minix/servers/pm -j"${JOBS}"
+  "${nbmake}" -C minix/servers/pm install
+  "${nbmake}" -C minix/servers/vfs -j"${JOBS}"
+  "${nbmake}" -C minix/servers/vfs install
   "${nbmake}" -C minix/servers/vm -j"${JOBS}"
   "${nbmake}" -C minix/servers/vm install
+  "${nbmake}" -C libexec/ld.elf_so -j"${JOBS}"
+  "${nbmake}" -C libexec/ld.elf_so install
   "${nbmake}" -C minix/kernel -j"${JOBS}"
 }
 
 run_image() {
   local image="${IMAGE_PATH:-${LOG_DIR}/minix-riscv64-llvm.img}"
-  echo "[local] mkdisk -> ${image}"
+  echo "[local] mkdisk -> ${image} (TMPDIR=${TMPDIR})"
+  # Guest clang is ~54MiB (static LLVM 3.6 + static libstdc++/libgcc); /usr ~200MiB+.
+  # Default mkdisk -u 128 is too small; use -s 1536 -u 1024 for llvm-local images.
   minix/releasetools/riscv64/mkdisk.sh \
     -d "${OBJDIR}" \
     -o "${image}" \
-    -s 1024 \
-    -u 768 \
+    -s 1536 \
+    -u 1024 \
     -U
   echo "[local] IMAGE=${image}"
 }
@@ -295,9 +345,7 @@ run_verify() {
   run_gate destdir ./minix/tests/riscv64/llvm_toolchain_gate.sh \
     --mode destdir --require destdir --destdir "${DESTDIR}"
 
-  if [[ ! -f "${image}" ]]; then
-    run_image
-  fi
+  run_image
 
   run_gate llvm-guest ./minix/tests/riscv64/llvm_toolchain_gate.sh \
     --mode guest --require guest \

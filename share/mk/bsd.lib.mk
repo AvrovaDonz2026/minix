@@ -145,9 +145,10 @@ SHLIB_FULLVERSION=${SHLIB_MAJOR}
 # SHLIB_LDENDFILE:	support .o file, call C++ file-level destructors
 
 PICFLAGS ?= -fPIC
-.if ${MACHINE_CPU} == "riscv"
-PICFLAGS+= -mno-plt
-.endif
+# NOTE: no -mno-plt for riscv.  The legacy bfd 2.23 RISC-V backend cannot
+# relocate %pcrel pairs against undefined symbols, which -mno-plt forces for
+# external calls in shared objects; the default PLT path uses GOT-relative
+# relocations that bfd handles correctly.
 
 .if ${MKPICLIB} != "no"
 CSHLIBFLAGS+= ${PICFLAGS}

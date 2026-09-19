@@ -66,6 +66,7 @@ ENTRY(_rtld_start)
 	move	a2, s1			# restore ps_strings
 	move	sp, s0			# readjust stack
 	move	s0, zero		# break stack chain
+	fence.i				# GOT/text writes vs first user insn
 	jr	t0			# _start(cleanup, obj_main, ps_strings);
 END(_rtld_start)
 

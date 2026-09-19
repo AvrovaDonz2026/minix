@@ -23,7 +23,8 @@ import time
 SKIP_RC = 2
 
 FATAL_RE = re.compile(
-    r"\bpanic\b|SIGSEGV|Segmentation fault|assertion failed|kernel panic|PM: coredump signal",
+    r"\bpanic\b|SIGSEGV|Segmentation fault|assertion failed|"
+    r"kernel panic|PM: coredump signal|Illegal instruction|\bsigill\b",
     re.IGNORECASE,
 )
 
@@ -35,6 +36,35 @@ def log(msg: str) -> None:
 def log_tail(buf: str, label: str, limit: int = 4000) -> None:
     tail = buf[-limit:] if buf else ""
     log(f"{label} output tail:\n{tail}")
+
+
+def read_serial(io: ProcIO, nbytes: int = 4096) -> str | None:
+    """Read serial bytes. None means the PTY closed (QEMU exited)."""
+    try:
+        data = os.read(io.read_fd, nbytes)
+    except OSError as e:
+        log(f"serial read failed: {e}")
+        return None
+    if not data:
+        return None
+    return data.decode(errors="ignore")
+
+
+def drain_serial(io: ProcIO, quiet: float = 0.5, max_wait: float = 1.5) -> str:
+    """After a fatal signature, keep reading serial output briefly so the
+    kernel finishes printing diagnostics (e.g. stacktrace pc/sp/ra)."""
+    buf = ""
+    deadline = time.time() + max_wait
+    last_rx = time.time()
+    while time.time() < deadline and (time.time() - last_rx) < quiet:
+        rlist, _, _ = select.select([io.read_fd], [], [], 0.2)
+        if io.read_fd in rlist:
+            chunk = read_serial(io)
+            if chunk is None:
+                break
+            buf += chunk
+            last_rx = time.time()
+    return buf
 
 
 class ProcIO:
@@ -86,10 +116,9 @@ def read_until(
     while time.time() < deadline:
         rlist, _, _ = select.select([io.read_fd], [], [], 0.2)
         if io.read_fd in rlist:
-            data = os.read(io.read_fd, 4096)
-            if not data:
+            chunk = read_serial(io)
+            if chunk is None:
                 break
-            chunk = data.decode(errors="ignore")
             buf += chunk
             for pat in patterns:
                 if pat.search(buf):
@@ -110,6 +139,7 @@ def run_command(
 
     buf, _ = read_until(io, [rc_pat, FATAL_RE], timeout)
     if FATAL_RE.search(buf):
+        buf += drain_serial(io)
         log_tail(buf, f"Fatal signature while running {cmd_name}")
         return False
 
@@ -168,6 +198,8 @@ def main() -> int:
     qemu_cmd = [
         args.qemu_script,
         "-s",
+        "-m",
+        os.environ.get("QEMU_MEMORY", "512M"),
         "-k",
         args.kernel,
         "-B",
@@ -191,6 +223,7 @@ def main() -> int:
 
         buf, _ = read_until(io, [login_pat, prompt_pat, FATAL_RE], args.timeout)
         if FATAL_RE.search(buf):
+            buf += drain_serial(io)
             log_tail(buf, "Fatal signature before prompt")
             return 1
 
@@ -198,12 +231,14 @@ def main() -> int:
             send(io, "root\n")
             buf, pat = read_until(io, [passwd_pat, prompt_pat, FATAL_RE], args.timeout)
             if FATAL_RE.search(buf):
+                buf += drain_serial(io)
                 log_tail(buf, "Fatal signature during login")
                 return 1
             if pat == passwd_pat:
                 send(io, "\n")
                 buf, _ = read_until(io, [prompt_pat, FATAL_RE], args.timeout)
                 if FATAL_RE.search(buf):
+                    buf += drain_serial(io)
                     log_tail(buf, "Fatal signature after password")
                     return 1
 
@@ -279,6 +314,7 @@ def main() -> int:
         send(io, "echo __RUNTIME_OK__\n")
         buf, _ = read_until(io, [re.compile(r"__RUNTIME_OK__"), FATAL_RE], args.cmd_timeout)
         if FATAL_RE.search(buf):
+            buf += drain_serial(io)
             log_tail(buf, "Fatal signature at probe tail")
             return 1
         if "__RUNTIME_OK__" not in buf:

@@ -138,6 +138,22 @@ _rtld_do_copy_relocations(const Obj_Entry *dstobj)
 	return (0);
 }
 
+#if defined(__minix) && defined(__riscv)
+/*
+ * Re-apply COPY relocations after shared-library .init_array has run.
+ * BSS-backed COPY targets (e.g. libstdc++ _S_empty_rep_storage) are still
+ * zero when the first COPY pass runs at load time.  Syncs the main
+ * program's COPY slot with the initialized DSO object (dual-address
+ * workaround; see rtld.c _rtld_prime_libstdcxx_empty_rep).
+ */
+int
+_rtld_refresh_copy_relocations(const Obj_Entry *dstobj)
+{
+
+	return _rtld_do_copy_relocations(dstobj);
+}
+#endif
+
 /*
  * Relocate newly-loaded shared objects.  The argument is a pointer to
  * the Obj_Entry for the first such object.  All objects from the first

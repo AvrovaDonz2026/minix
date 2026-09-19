@@ -232,6 +232,16 @@ restart:
 static void
 _rtld_call_init_function(Obj_Entry *obj, sigset_t *mask, u_int cur_objgen)
 {
+#if defined(__minix)
+	/*
+	 * crt0 ___start runs the main program's .init / .init_array.
+	 * Running them here as well breaks large C++ programs (e.g. guest
+	 * clang) by double-constructing libstdc++ globals.
+	 */
+	if (obj->mainprog)
+		return;
+#endif
+
 	if (obj->init_arraysz == 0 && (obj->init_called || obj->init == 0))
 		return;
 
@@ -240,6 +250,7 @@ _rtld_call_init_function(Obj_Entry *obj, sigset_t *mask, u_int cur_objgen)
 		    obj->path, (void *)obj->init,
 		    obj->z_initfirst ? " (DF_1_INITFIRST)" : ""));
 		obj->init_called = 1;
+		xprintf("rtld: init %s func=%lx\n", obj->path, (unsigned long)obj->init);
 		_rtld_call_initfini_function(obj, obj->init, mask);
 	}
 
@@ -256,7 +267,9 @@ _rtld_call_init_function(Obj_Entry *obj, sigset_t *mask, u_int cur_objgen)
 		dbg (("calling init_array function %s at %p%s",
 		    obj->path, (void *)init,
 		    obj->z_initfirst ? " (DF_1_INITFIRST)" : ""));
+		xprintf("rtld: init_array %s func=%lx\n", obj->path, (unsigned long)init);
 		_rtld_call_initfini_function(obj, init, mask);
+		xprintf("rtld: init_array returned %s func=%lx\n", obj->path, (unsigned long)init);
 	}
 #endif /* HAVE_INITFINI_ARRAY */
 }
@@ -300,6 +313,42 @@ restart:
 
         _rtld_objlist_clear(&initlist);
 }
+
+#if defined(__minix) && defined(__riscv)
+/*
+ * libstdc++ _S_empty_rep_storage dual-address issue: the main executable
+ * gets a COPY relocation into its BSS, while libstdc++.so still holds its
+ * own copy and PC-relative helpers that return the DSO address.  Clang
+ * may compare or refcount through the main COPY slot; the first COPY pass
+ * at load time often sees zeroed libstdc++ BSS, so we prime the DSO
+ * object after shared-library .init_array and re-apply COPY relocs.
+ *
+ * Rewriting the auipc/addi/jr stubs in libstdc++ text to return the main
+ * COPY address is not done here: the PC for auipc is the auipc insn itself
+ * (not pc+4), and MINIX may not implement mprotect for DSO text (see
+ * reloc.c textrel handling).
+ */
+static void
+_rtld_prime_libstdcxx_empty_rep(void)
+{
+	typedef const void *(*empty_rep_fn)(void);
+	static const char fnname[] = "_ZNSs12_S_empty_repEv";
+	const Obj_Entry *obj;
+	unsigned long hash;
+	const Elf_Sym *def;
+
+	hash = _rtld_elf_hash(fnname);
+	for (obj = _rtld_objlist->next; obj != NULL; obj = obj->next) {
+		if (obj->path == NULL || strstr(obj->path, "libstdc++") == NULL)
+			continue;
+		def = _rtld_symlook_obj(fnname, hash, obj, 0, NULL);
+		if (def == NULL || def->st_shndx == SHN_UNDEF)
+			continue;
+		(void)((empty_rep_fn)(obj->relocbase + def->st_value))();
+		break;
+	}
+}
+#endif /* __minix && __riscv */
 
 /*
  * Initialize the dynamic linker.  The argument is the address at which
@@ -608,6 +657,7 @@ _rtld(Elf_Addr *sp, Elf_Addr relocbase)
 		int             fd = pAUX_execfd->a_v;
 		const char *obj_name = argv[0] ? argv[0] : "main program";
 		dbg(("loading main program"));
+		xprintf("rtld: main via fd=%d auxfd=%ld path=%s\n", fd, (long)pAUX_execfd->a_v, obj_name);
 		_rtld_objmain = _rtld_map_object(obj_name, fd, NULL);
 		close(fd);
 		if (_rtld_objmain == NULL)
@@ -626,6 +676,7 @@ _rtld(Elf_Addr *sp, Elf_Addr relocbase)
 		assert(pAUX_phent->a_v == sizeof(Elf_Phdr));
 		assert(pAUX_entry != NULL);
 		entry = (caddr_t) pAUX_entry->a_v;
+		xprintf("rtld: main via phdr=%lx entry=%lx phnum=%d\n", (unsigned long)(uintptr_t)phdr, (unsigned long)(uintptr_t)entry, phnum);
 		_rtld_objmain = _rtld_digest_phdr(phdr, phnum, entry);
 		_rtld_objmain->path = xstrdup(argv[0] ? argv[0] :
 		    "main program");
@@ -727,9 +778,43 @@ _rtld(Elf_Addr *sp, Elf_Addr relocbase)
 	real_environ = _rtld_objmain_sym("environ");
 	if (real_environ)
 		*real_environ = environ;
+#if defined(__minix) && defined(__riscv)
 	/*
-	 * Set __mainprog_obj for old binaries.
+	 * MINIX libc exports its own copies of `environ` (sentinel
+	 * 0x53535353, see lib/libc/sys/environ.c) and `__progname`
+	 * (NULL).  Every copy must be patched or getenv()/getprogname()
+	 * in library constructors dereference the sentinel / NULL.
+	 * Walk all loaded objects and patch every definition found.
 	 */
+	{
+		const char *progname_tail;
+
+		progname_tail = (argv[0] != NULL) ?
+		    ((strrchr(argv[0], '/') == NULL) ? argv[0] :
+		    strrchr(argv[0], '/') + 1) : NULL;
+
+		for (obj = _rtld_objlist->next; obj != NULL; obj = obj->next) {
+			const Elf_Sym *def;
+			char ***ep;
+			const char **pp;
+
+			def = _rtld_symlook_obj("environ",
+			    _rtld_elf_hash("environ"), obj, 0, NULL);
+			if (def != NULL && def->st_shndx != SHN_UNDEF) {
+				ep = (char ***)(obj->relocbase +
+				    def->st_value);
+				*ep = (char **)environ;
+			}
+			def = _rtld_symlook_obj("__progname",
+			    _rtld_elf_hash("__progname"), obj, 0, NULL);
+			if (def != NULL && def->st_shndx != SHN_UNDEF) {
+				pp = (const char **)(obj->relocbase +
+				    def->st_value);
+				*pp = progname_tail;
+			}
+		}
+	}
+#endif
 	real___mainprog_obj = _rtld_objmain_sym("__mainprog_obj");
 	if (real___mainprog_obj)
 		*real___mainprog_obj = _rtld_objmain;
@@ -738,10 +823,51 @@ _rtld(Elf_Addr *sp, Elf_Addr relocbase)
 
 	dbg(("calling _init functions"));
 	_rtld_call_init_functions(&mask);
+#if defined(__minix) && defined(__riscv)
+	/* See _rtld_prime_libstdcxx_empty_rep() re empty_rep / COPY. */
+	_rtld_prime_libstdcxx_empty_rep();
+	if (_rtld_refresh_copy_relocations(_rtld_objmain) == -1)
+		_rtld_die();
+#endif
 
 	dbg(("control at program entry point = %p, obj = %p, exit = %p",
 	     _rtld_objmain->entry, _rtld_objmain, _rtld_exit));
+#if defined(__minix) && defined(__riscv)
+	/*
+	 * Prefer the executable's _start/__start when AT_ENTRY does not
+	 * match it.  Jumping into .dynsym/.rodata of a large ET_EXEC
+	 * (guest clang) SIGILLs in a DSO's data after rtld handoff.
+	 */
+	{
+		const Elf_Sym *startdef;
+		caddr_t startaddr;
+		unsigned long hash;
 
+		hash = _rtld_elf_hash("_start");
+		startdef = _rtld_symlook_obj("_start", hash, _rtld_objmain,
+		    0, NULL);
+		if (startdef == NULL || startdef->st_shndx == SHN_UNDEF) {
+			hash = _rtld_elf_hash("__start");
+			startdef = _rtld_symlook_obj("__start", hash,
+			    _rtld_objmain, 0, NULL);
+		}
+		if (startdef != NULL && startdef->st_shndx != SHN_UNDEF) {
+			startaddr = _rtld_objmain->relocbase +
+			    startdef->st_value;
+			if (startaddr != _rtld_objmain->entry) {
+				xprintf("rtld: AT_ENTRY %lx != _start %lx, "
+				    "using _start\n",
+				    (unsigned long)(uintptr_t)_rtld_objmain->entry,
+				    (unsigned long)(uintptr_t)startaddr);
+				_rtld_objmain->entry = startaddr;
+			}
+		}
+	}
+#endif
+	xprintf("rtld: final entry=%lx relocbase=%lx mapbase=%lx\n",
+	    (unsigned long)(uintptr_t)_rtld_objmain->entry,
+	    (unsigned long)(uintptr_t)_rtld_objmain->relocbase,
+	    (unsigned long)(uintptr_t)_rtld_objmain->mapbase);
 	_rtld_exclusive_exit(&mask);
 
 	/*

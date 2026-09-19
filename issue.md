@@ -1562,6 +1562,15 @@ Issue IDs are historically stable and intentionally non-contiguous; some IDs wer
   - No in-tree RISC-V LLVM backend, so `clang -c` for RV64 still cannot
     emit code. Guest native compile stays on gcc until a later backend
     import.
+  - Guest `clang --version` (PR #4 dynlink): root cause was dynamic
+    `libstdc++.so` + `R_RISCV_COPY` / dual `empty_rep`. Guest LLVM
+    `external/bsd/llvm/link.mk` now uses `-nodefaultlibs`,
+    `-Wl,-Bstatic -lstdc++ -lgcc`, dynamic `-lc`/`-lm` (no
+    `NEEDED libstdc++.so.6`; ~57MB clang). Do not use
+    `LDSTATIC.clang=-static` (`-dynamic -static` bloat). Guest gate
+    still fails (e.g. PLT/GOT at early crt); rtld text patch needs
+    `VM_MPROTECT` (no libc `mprotect` on MINIX today). Logs under
+    `obj.intrgcc/llvm-local/`.
   - Push `c2e1100aa` (`32482987335` / `32482990730`) still aborted in
     tools with `error: bfd Makefile missing after configure`. The extra
     nbmake `bfd.h` prerequisite ran right after top-level configure,

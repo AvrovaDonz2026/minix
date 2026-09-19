@@ -121,8 +121,17 @@ __do_global_dtors_aux(void)
 	__finished = 1;
 
 #ifdef SHARED
+	/*
+	 * GCC 4.8 RISC-V emits `la` (R_RISCV_PCREL_HI20) for this
+	 * weakref even with -fPIC.  Legacy bfd cannot relocate that
+	 * against UND, so it binds to .rodata and DSO fini SIGILL's.
+	 * MINIX RISC-V DSOs skip __cxa_finalize; C libraries here
+	 * do not register C++ cxa dtors.
+	 */
+#if !(defined(__riscv) && defined(__minix))
 	if (cxa_finalize)
 		(*cxa_finalize)(__dso_handle);
+#endif
 #endif
 
 #if !defined(HAVE_INITFINI_ARRAY)

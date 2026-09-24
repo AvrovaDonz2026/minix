@@ -10,6 +10,7 @@ cscope.*
 !toolchain/patches/gcc13/*.patch
 !toolchain/patches/riscv64-guest/**/*.patch
 !toolchain/patches/riscv64-guest/*.patch
+!external/gpl3/binutils/patches/0013-riscv-shared-pcrel-plt.patch
 *.rej
 *.[1-9].gz
 *.o

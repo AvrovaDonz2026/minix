@@ -1,0 +1,33 @@
+$NetBSD$
+--- a/bfd/elfnn-riscv.c
++++ b/bfd/elfnn-riscv.c
+@@ -582,9 +582,27 @@
+ 	case R_RISCV_JAL:
+ 	case R_RISCV_BRANCH:
+ 	case R_RISCV_PCREL_HI20:
+-	  /* In shared libs, these relocs are known to bind locally.  */
++	  /*
++	   * GCC 4.8 emits CALL/PCREL pairs for external calls even with
++	   * -fPIC.  They do not bind locally when the symbol is undefined:
++	   * reserve a PLT entry so the pair can be redirected there at the
++	   * final relocation pass.  Without this, bfd resolves the pair as
++	   * if the symbol were local and shared objects jump into arbitrary
++	   * text or rodata.
++	   */
+ 	  if (info->shared)
+-	    break;
++	    {
++	      if (h != NULL
++		  && (h->root.type == bfd_link_hash_undefined
++		      || h->root.type == bfd_link_hash_undefweak)
++		  && (h->type == STT_FUNC || h->type == STT_GNU_IFUNC
++		      || h->type == STT_NOTYPE))
++		{
++		  h->needs_plt = 1;
++		  h->plt.refcount += 1;
++		}
++	      break;
++	    }
+ 	  goto static_reloc;
+ 
+ 	case R_RISCV_TPREL_HI20:

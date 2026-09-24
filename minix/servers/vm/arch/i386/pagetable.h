@@ -37,6 +37,7 @@
 #define PFERR_PROT(e)	(((e) & I386_VM_PFE_P))
 #define PFERR_WRITE(e)	((e) & I386_VM_PFE_W)
 #define PFERR_READ(e)	(!((e) & I386_VM_PFE_W))
+#define PFERR_EXEC(e)	((e) & I386_VM_PFE_I)
 
 #define VM_PAGE_SIZE	I386_PAGE_SIZE
 

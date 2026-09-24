@@ -261,7 +261,7 @@ etc/master.passwd: ${NETBSDSRCDIR}/etc/master.passwd
 	${INSTALL} $> $@
 	${TOOL_PWD_MKDB} -V 0 -p -d . etc/master.passwd
 
-proto.dev.mtree:
+${.OBJDIR}/proto.dev.mtree:
 	@echo ". type=dir uname=root gname=wheel mode=0755" \
 		>${.TARGET}.tmp && \
 	echo "./dev type=dir uname=root gname=wheel mode=0755" \
@@ -272,8 +272,8 @@ proto.dev.mtree:
 # We have to remove the two first entries of the generated proto file, as
 # well as the two last ones (closing $).
 # Do not forget to double $ so that make doesn't try to expand it.
-proto.dev: proto.dev.mtree etc/pwd.db etc/spwd.db etc/passwd etc/group
-	${TOOL_MTREE} -f ${.TARGET}.mtree -N ${.OBJDIR}/etc -C -K device | \
+proto.dev: ${.OBJDIR}/proto.dev.mtree etc/pwd.db etc/spwd.db etc/passwd etc/group
+	${TOOL_MTREE} -f ${.OBJDIR}/proto.dev.mtree -N ${.OBJDIR}/etc -C -K device | \
 		${TOOL_TOPROTO} | ${TOOL_SED} -e '1,4d' | \
 		${TOOL_SED} -e '$$d' |${TOOL_SED} -e '$$d' > ${.TARGET}.tmp
 	grep console ${.TARGET}.tmp	# sanity check; is there a console entry?

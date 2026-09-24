@@ -47,6 +47,8 @@ validate_host_gate() {
   log "host gate with TOOLDIR=${tooldir}"
   [[ -x "${tooldir}/bin/riscv64-elf32-minix-clang" ]] || \
     die "missing riscv64-elf32-minix-clang (run tools build with MKLLVM_CMAKE=yes)"
+  [[ -x "${tooldir}/bin/i586-elf32-minix-clang" ]] || \
+    die "missing i586-elf32-minix-clang (run tools build with MKLLVM_CMAKE=yes)"
   ./minix/tests/riscv64/llvm_toolchain_gate.sh \
     --mode host \
     --require host \

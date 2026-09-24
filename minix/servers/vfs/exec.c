@@ -38,6 +38,7 @@
 
 #define _KERNEL	/* for ELF_AUX_ENTRIES */
 #include <libexec.h>
+#include <machine/elf.h>
 
 /* fields only used by elf and in VFS */
 struct vfs_exec_info {
@@ -48,6 +49,10 @@ struct vfs_exec_info {
     int userflags;			/* exec() flags from userland */
     int is_dyn;				/* Dynamically linked executable */
     int elf_main_fd;			/* Dyn: FD of main program execuatble */
+    vir_bytes elf_main_entry;	/* Dyn: entry point of main executable */
+    vir_bytes elf_main_phdr;	/* Dyn: user VA of main program PHDR */
+    unsigned int elf_main_phent;	/* Dyn: e_phentsize of main */
+    unsigned int elf_main_phnum;	/* Dyn: e_phnum of main */
     char execname[PATH_MAX];		/* Full executable invocation */
     int vmfd;
     int vmfd_used;
@@ -63,6 +68,7 @@ static int stack_prepare_elf(struct vfs_exec_info *execi,
 	char *curstack, size_t *frame_len, vir_bytes *vsp);
 static int map_header(struct vfs_exec_info *execi);
 static int read_seg(struct exec_info *execi, off_t off, vir_bytes seg_addr, size_t seg_bytes);
+static vir_bytes elf_user_phdr(const Elf_Ehdr *eh, vir_bytes load_offset);
 
 #define PTRSIZE	sizeof(char *) /* Size of pointers in argv[] and envp[]. */
 
@@ -245,13 +251,6 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
 
   /* Get the exec file name. */
   FAILCHECK(fetch_name(path, path_len, fullpath));
-  {
-	static int exec_log_count;
-	if (exec_log_count < 32) {
-		printf("VFS: exec path=\"%s\" ep=%d\n", fullpath, fp->fp_endpoint);
-		exec_log_count++;
-	}
-  }
   strlcpy(finalexec, fullpath, PATH_MAX);
   strlcpy(firstexec, fullpath, PATH_MAX);
 
@@ -279,10 +278,22 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
 	Get_read_vp(execi, fullpath, 1, 0, &resolve, fp);
   }
 
+  /* callback functions and data; needed before a dynlink preload */
+  execi.args.copymem = read_seg;
+  execi.args.clearproc = libexec_clearproc_vm_procctl;
+  execi.args.clearmem = libexec_clear_sys_memset;
+  execi.args.allocmem_prealloc_cleared = libexec_alloc_mmap_prealloc_cleared;
+  execi.args.allocmem_prealloc_junk = libexec_alloc_mmap_prealloc_junk;
+  execi.args.allocmem_ondemand = libexec_alloc_mmap_ondemand;
+  execi.args.opaque = &execi;
+  execi.args.proc_e = fp->fp_endpoint;
+  execi.args.frame_len = frame_len;
+
   /* If this is a dynamically linked executable, retrieve
    * the name of that interpreter in elf_interpreter and open that
-   * executable instead. But open the current executable in an
-   * fd for the current process.
+   * executable instead. Preload the main binary at its link
+   * address so rtld can use AT_PHDR instead of remapping via
+   * AT_EXECFD (avoids broken PLT on riscv64).
    */
   r = elf_has_interpreter(execi.args.hdr, execi.args.hdr_len,
 	elf_interpreter, sizeof(elf_interpreter));
@@ -290,17 +301,48 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
 	FAILCHECK(r);
 
   if (0 < r) {
-	/* Switch the executable vnode to the interpreter */
-	execi.is_dyn = 1;
+	const Elf_Ehdr *main_eh = (const Elf_Ehdr *)execi.args.hdr;
 
-	/* The interpreter (loader) needs an fd to the main program,
-	 * which is currently in finalexec
+	execi.is_dyn = 1;
+	execi.elf_main_entry = main_eh->e_entry;
+	execi.elf_main_phent = main_eh->e_phentsize;
+	execi.elf_main_phnum = main_eh->e_phnum;
+	execi.args.filesize = execi.vp->v_size;
+
+	/* mmap the main program (guest clang is tens of MB). The VM
+	 * filp inherits the eat_path vnode (same as the ld.so mmap
+	 * path below); do not dup_vnode.
 	 */
-	if ((r = execi.elf_main_fd =
-	    common_open(finalexec, O_RDONLY, 0, TRUE /*for_exec*/)) < 0) {
-		printf("VFS: exec: dynamic: open main exec failed %s (%d)\n",
-			fullpath, r);
-		FAILCHECK(r);
+	{
+		struct vnode *vp = execi.vp;
+		assert(vp);
+		if ((vp->v_vmnt->m_fs_flags & RES_HASPEEK) &&
+			major(vp->v_dev) != MEMORY_MAJOR) {
+			int newfd = -1;
+			if(get_fd(vmfp, 0, R_BIT, &newfd, &newfilp) == OK) {
+				assert(newfd >= 0 && newfd < OPEN_MAX);
+				assert(!vmfp->fp_filp[newfd]);
+				newfilp->filp_count = 1;
+				newfilp->filp_vno = vp;
+				newfilp->filp_flags = O_RDONLY;
+				vmfp->fp_filp[newfd] = newfilp;
+				execi.vmfd = newfd;
+				execi.args.memmap = vfs_memmap;
+			}
+		}
+	}
+
+	execi.args.load_offset = 0;
+	execi.args.skip_clear = 0;
+	execi.args.allow_pt_interp = 1;
+	FAILCHECK(libexec_load_elf(&execi.args));
+	execi.args.allow_pt_interp = 0;
+	execi.args.memmap = NULL;
+	execi.elf_main_phdr = elf_user_phdr(main_eh, 0);
+	if (execi.elf_main_phdr == 0) {
+		printf("VFS: exec: dynamic: cannot locate PHDR for %s\n",
+		    finalexec);
+		FAILCHECK(ENOEXEC);
 	}
 
 	/* ld.so is linked at 0, but it can relocate itself; we
@@ -309,20 +351,25 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
 	 */
 	execi.args.load_offset =
 		 execi.args.stack_high - execi.args.stack_size - 0xa00000;
+	execi.args.skip_clear = 1;
 
-	/* Remember it */
 	strlcpy(execi.execname, finalexec, PATH_MAX);
 
-	/* The executable we need to execute first (loader)
-	 * is in elf_interpreter, and has to be in fullpath to
-	 * be looked up
-	 */
 	strlcpy(fullpath, elf_interpreter, PATH_MAX);
 	strlcpy(firstexec, elf_interpreter, PATH_MAX);
+	/*
+	 * Get_read_vp() unlocks and puts the current vp. The VM filp
+	 * still needs that vnode locked: get_fd() does not lock_filp(),
+	 * so pm_execfinal's unlock_filp() asserts tll_islocked. Detach
+	 * so lookup of ld.so cannot drop the main program.
+	 */
+	if (newfilp != NULL)
+		execi.vp = NULL;
 	Get_read_vp(execi, fullpath, 0, 0, &resolve, fp);
   }
 
   /* We also want an FD for VM to mmap() the process in if possible. */
+  if (execi.vmfd < 0)
   {
 	struct vnode *vp = execi.vp;
 	assert(vp);
@@ -343,17 +390,6 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
 	}
   }
 
-  /* callback functions and data */
-  execi.args.copymem = read_seg;
-  execi.args.clearproc = libexec_clearproc_vm_procctl;
-  execi.args.clearmem = libexec_clear_sys_memset;
-  execi.args.allocmem_prealloc_cleared = libexec_alloc_mmap_prealloc_cleared;
-  execi.args.allocmem_prealloc_junk = libexec_alloc_mmap_prealloc_junk;
-  execi.args.allocmem_ondemand = libexec_alloc_mmap_ondemand;
-  execi.args.opaque = &execi;
-
-  execi.args.proc_e = fp->fp_endpoint;
-  execi.args.frame_len = frame_len;
   execi.args.filesize = execi.vp->v_size;
 
   for (i = 0; exec_loaders[i].load_object != NULL; i++) {
@@ -394,12 +430,13 @@ int pm_exec(vir_bytes path, size_t path_len, vir_bytes frame, size_t frame_len,
 
 pm_execfinal:
   if(newfilp) unlock_filp(newfilp);
-  else if (execi.vp != NULL) {
+  if (execi.vp != NULL &&
+	(newfilp == NULL || newfilp->filp_vno != execi.vp)) {
 	unlock_vnode(execi.vp);
 	put_vnode(execi.vp);
   }
 
-  if(execi.vmfd >= 0 && !execi.vmfd_used) {
+  if(execi.vmfd >= 0 && (!execi.vmfd_used || r != OK)) {
 	if(OK != close_fd(vmfp, execi.vmfd, FALSE /*may_suspend*/)) {
 		printf("VFS: unexpected close fail of vm fd\n");
 	}
@@ -418,6 +455,28 @@ pm_execfinal:
        sizeof(AuxInfo) * PMEF_AUXVECTORS + PMEF_EXECNAMELEN1 + \
        sizeof(struct ps_strings) \
 )
+
+static vir_bytes
+elf_user_phdr(const Elf_Ehdr *eh, vir_bytes load_offset)
+{
+	const Elf_Phdr *ph;
+	unsigned int i;
+
+	ph = (const Elf_Phdr *)((const char *)eh + eh->e_phoff);
+	for (i = 0; i < eh->e_phnum; i++) {
+		if (ph[i].p_type == PT_PHDR)
+			return ph[i].p_vaddr + load_offset;
+	}
+	for (i = 0; i < eh->e_phnum; i++) {
+		if (ph[i].p_type != PT_LOAD)
+			continue;
+		if (eh->e_phoff >= ph[i].p_offset &&
+		    eh->e_phoff - ph[i].p_offset < ph[i].p_filesz)
+			return ph[i].p_vaddr + load_offset +
+			    (eh->e_phoff - ph[i].p_offset);
+	}
+	return 0;
+}
 
 static int stack_prepare_elf(struct vfs_exec_info *execi, char *frame, size_t *frame_size,
 	vir_bytes *vsp)
@@ -487,16 +546,10 @@ static int stack_prepare_elf(struct vfs_exec_info *execi, char *frame, size_t *f
 	} while(0)
 
 	AUXINFO(aux_vec, AT_BASE, execi->args.load_base);
-	AUXINFO(aux_vec, AT_ENTRY, execi->args.pc);
-	AUXINFO(aux_vec, AT_EXECFD, execi->elf_main_fd);
-#if 0
-	AUXINFO(aux_vec, AT_PHDR, XXX ); /* should be &phdr[0] */
-	AUXINFO(aux_vec, AT_PHENT, elf_header->e_phentsize);
-	AUXINFO(aux_vec, AT_PHNUM, elf_header->e_phnum);
-
-	AUXINFO(aux_vec, AT_RUID, XXX);
-	AUXINFO(aux_vec, AT_RGID, XXX);
-#endif
+	AUXINFO(aux_vec, AT_ENTRY, execi->elf_main_entry);
+	AUXINFO(aux_vec, AT_PHDR, execi->elf_main_phdr);
+	AUXINFO(aux_vec, AT_PHENT, execi->elf_main_phent);
+	AUXINFO(aux_vec, AT_PHNUM, execi->elf_main_phnum);
 	AUXINFO(aux_vec, AT_EUID, execi->args.new_uid);
 	AUXINFO(aux_vec, AT_EGID, execi->args.new_gid);
 	AUXINFO(aux_vec, AT_PAGESZ, PAGE_SIZE);

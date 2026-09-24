@@ -459,6 +459,13 @@ TOOL_LLC.clang=		${EXTERNAL_TOOLCHAIN}/bin/llc
 .  if ${DESTDIR:U} != ""
 CPPFLAGS+=	--sysroot=${DESTDIR}
 LDFLAGS+=	--sysroot=${DESTDIR}
+.    if defined(__MINIX) && defined(NETBSDSRCDIR)
+# MKUPDATE / tracked DESTDIR snapshots can lag source. Prefer in-tree
+# <minix/*.h> and libexec.h. Do not -I minix/include itself: that
+# directory also contains lib.h, which shadows pkg_install's "lib.h".
+CPPFLAGS+=	-I${NETBSDSRCDIR}/minix/include-cppflags \
+		-I${NETBSDSRCDIR}/minix/lib/libexec
+.    endif
 CPPFLAGS+=	-I${DESTDIR}/usr/include
 .  else
 CPPFLAGS+=	--sysroot=/
@@ -512,6 +519,13 @@ DESTDIR?=
 .  if ${DESTDIR} != ""
 CPPFLAGS+=	--sysroot=${DESTDIR}
 LDFLAGS+=	--sysroot=${DESTDIR}
+.    if defined(__MINIX) && defined(NETBSDSRCDIR)
+# MKUPDATE / tracked DESTDIR snapshots can lag source. Prefer in-tree
+# <minix/*.h> and libexec.h. Do not -I minix/include itself: that
+# directory also contains lib.h, which shadows pkg_install's "lib.h".
+CPPFLAGS+=	-I${NETBSDSRCDIR}/minix/include-cppflags \
+		-I${NETBSDSRCDIR}/minix/lib/libexec
+.    endif
 CPPFLAGS+=	-I${DESTDIR}/usr/include
 .  else
 CPPFLAGS+=	--sysroot=/

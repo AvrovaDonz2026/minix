@@ -1,0 +1,90 @@
+$NetBSD$
+--- a/bfd/elfnn-riscv.c
++++ b/bfd/elfnn-riscv.c
+@@ -83,6 +83,10 @@
+ #define GOT_TLS_IE      4
+ #define GOT_TLS_LE      8
+   char tls_type;
++
++  /* Shared-link CALL/PCREL_HI20 references that may need a PLT once
++     the symbol's final definition is known.  */
++  bfd_signed_vma pcrel_plt_refcount;
+ };
+ 
+ #define riscv_elf_hash_entry(ent) \
+@@ -244,6 +248,7 @@
+       eh = (struct riscv_elf_link_hash_entry *) entry;
+       eh->dyn_relocs = NULL;
+       eh->tls_type = GOT_UNKNOWN;
++      eh->pcrel_plt_refcount = 0;
+     }
+ 
+   return entry;
+@@ -422,6 +427,8 @@
+       edir->tls_type = eind->tls_type;
+       eind->tls_type = GOT_UNKNOWN;
+     }
++  edir->pcrel_plt_refcount += eind->pcrel_plt_refcount;
++  eind->pcrel_plt_refcount = 0;
+   _bfd_elf_link_hash_copy_indirect (info, dir, ind);
+ }
+ 
+@@ -579,9 +586,23 @@
+ 	  break;
+ 
+ 	case R_RISCV_CALL:
++	case R_RISCV_PCREL_HI20:
++	  /*
++	   * GCC 4.8 emits CALL/PCREL pairs for external calls even with
++	   * -fPIC.  Whether one needs a PLT depends on where the symbol
++	   * is finally defined, which is not known until every input has
++	   * been read; riscv_elf_adjust_dynamic_symbol decides.
++	   */
++	  if (info->shared)
++	    {
++	      if (h != NULL)
++		riscv_elf_hash_entry (h)->pcrel_plt_refcount += 1;
++	      break;
++	    }
++	  goto static_reloc;
++
+ 	case R_RISCV_JAL:
+ 	case R_RISCV_BRANCH:
+-	case R_RISCV_PCREL_HI20:
+ 	  /* In shared libs, these relocs are known to bind locally.  */
+ 	  if (info->shared)
+ 	    break;
+@@ -874,6 +895,19 @@
+ 		      && h->ref_regular
+ 		      && !h->def_regular)));
+ 
++  /* Only symbols this shared object does not define itself go through
++     the PLT; data symbols never do (a JUMP_SLOT must bind a function).  */
++  eh = (struct riscv_elf_link_hash_entry *) h;
++  if (info->shared
++      && eh->pcrel_plt_refcount > 0
++      && !h->def_regular
++      && h->type != STT_OBJECT
++      && h->type != STT_TLS)
++    {
++      h->needs_plt = 1;
++      h->plt.refcount += eh->pcrel_plt_refcount;
++    }
++
+   /* If this is a function, put it in the procedure linkage table.  We
+      will fill in the contents of the procedure linkage table later
+      (although we could actually do it here).  */
+@@ -1944,6 +1978,13 @@
+ 	  }
+ 
+ 	case R_RISCV_PCREL_HI20:
++	  if (info->shared && h != NULL && h->plt.offset != MINUS_ONE
++	      && !h->def_regular)
++	    {
++	      /* Resolve external PIC address materialization through the PLT. */
++	      relocation = sec_addr (htab->elf.splt) + h->plt.offset;
++	      unresolved_reloc = FALSE;
++	    }
+ 	  if (!riscv_record_pcrel_hi_reloc (&pcrel_relocs, pc,
+ 					    relocation + rel->r_addend))
+ 	    r = bfd_reloc_overflow;

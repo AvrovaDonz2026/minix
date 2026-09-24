@@ -1,9 +1,9 @@
 # MINIX RISC-V 64-bit Port Status / MINIX RISC-V 64 位移植状态
 
-**Date / 日期**: 2026-08-22  
-**Version / 版本**: 1.54 (merges LLVM track 1.46 + virtio-net track 1.53)
+**Date / 日期**: 2026-09-17  
+**Version / 版本**: 1.55 (CI IPC/trap fixes + local gate matrix)
 **Status / 状态**: Phase 2 stabilization — boots to shell; P0 closed and key P1 hygiene fixes landed
-**Progress / 进度**: ~80% (boot/userland path stabilized; runtime-aware gate hardened; core follow-ups remain)
+**Progress / 进度**: ~82% (host/destdir LLVM gates PASS; guest `clang --version` FAIL — root cause `libstdc++` `empty_rep` COPY/dual-address; fix path: `external/bsd/llvm/link.mk` `-Wl,-Bstatic -lstdc++` drops COPY, avoid `LDSTATIC.clang=-static` merge (`-dynamic -static` ~57MB breaks `mkdisk` staging → guest rc=127); rtld text patch blocked — no `mprotect` on MINIX VM; see PR #4)
 
 ## Summary / 摘要
 
@@ -245,9 +245,11 @@
   `minix/tests/riscv64/native_toolchain_gate.sh`，用于来宾内验证
   `as/ld/ar/ranlib` 与本地 `hello.c` 编译运行闭环。
 - 仍有待闭环风险：`procfs` safecopy 回退噪声（#17）；SMP（#15）；`MKPIC`/`ld.elf_so`（A2）；multiboot 32 位模块界（#83）。
-- Nightly 与 Release 两条 OS 打包 CI 现已在每次提交时运行，作为完整性与可复现性
-  门禁；GitHub Release / nightly tag 发布仍仅限官方触发（tag、`workflow_dispatch`、
-  nightly 的 schedule / `master` push）。Runner 为 GitHub-hosted `ubuntu-24.04`。
+- Nightly / LLVM / i386 打包 CI 在 PR 与 `master` push 上运行；Release 仅
+  `master`、tag 与 `workflow_dispatch`（避免每个 PR commit 因 push+pull_request
+  把同一套 GCC world 编四遍）。GitHub Release / nightly tag 发布仍仅限官方触发
+  （tag、`workflow_dispatch`、nightly 的 schedule / `master` push）。Runner 为
+  GitHub-hosted `ubuntu-24.04`。
 
 **English**
 - Build passes with GCC + workaround flags; see `README-RISCV64.md` for exact commands.
@@ -519,10 +521,12 @@
   gate (`minix/tests/riscv64/native_toolchain_gate.sh`) to validate
   `as/ld/ar/ranlib` and native `hello.c` compile-and-run closure.
 - Remaining open risk: procfs safecopy retry noise (#17); SMP (#15); `MKPIC`/`ld.elf_so` (A2); multiboot u32 module bounds (#83).
-- Nightly and Release OS packaging CIs now run on every commit as
-  completeness/reproducibility gates; GitHub Release / nightly tag publish
-  remains gated to official triggers (tag, `workflow_dispatch`, nightly
-  schedule / `master` push). Runners are GitHub-hosted `ubuntu-24.04`.
+- Nightly / LLVM / i386 packaging CIs run on pull requests and `master`
+  pushes; Release is `master`, tags, and `workflow_dispatch` only so a PR
+  commit is not built twice via push plus pull_request. GitHub Release /
+  nightly tag publish remains gated to official triggers (tag,
+  `workflow_dispatch`, nightly schedule / `master` push). Runners are
+  GitHub-hosted `ubuntu-24.04`.
 
 ## Build Status / 构建状态
 

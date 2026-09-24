@@ -38,7 +38,7 @@
 #define HAVE_STRUCT_STAT_ST_FLAGS 1
 #endif /* !defined(__minix) && !defined(_LIBC) */
 
-#if !HAVE_LCHFLAGS && HAVE_STRUCT_STAT_ST_FLAGS
+#if !HAVE_LCHFLAGS && HAVE_STRUCT_STAT_ST_FLAGS && !defined(__APPLE__)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>

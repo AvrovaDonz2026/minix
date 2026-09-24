@@ -69,6 +69,7 @@ i386/vm.h
 				 */
 #define I386_VM_PFE_W	0x02	/* Caused by write (otherwise read) */
 #define I386_VM_PFE_U	0x04	/* CPU in user mode (otherwise supervisor) */
+#define I386_VM_PFE_I	0x10	/* Caused by instruction fetch */
 
 /* CPUID flags */
 #define CPUID1_EDX_FPU		(1L)		/* FPU presence */

@@ -7,9 +7,10 @@ This document summarizes the top-level, git-tracked contents of `minix/scripts`.
 ### Directories (0)
 - (none)
 
-### Files (3)
+### Files (4)
 - `arch.md`
 - `gdb-riscv64.sh`
+- `qemu-i386.sh`
 - `qemu-riscv64.sh`
 
 ## Notes

@@ -51,6 +51,10 @@ LDFLAGS+=	${${ACTIVE_CC} == "clang":? -Wl,-Bsymbolic : -symbolic} \
 .if defined(__MINIX) && ${HAVE_GOLD:Uno} == "no"
 LDFLAGS+=	-Wl,-static
 .endif
+.if defined(__MINIX)
+# libc_pic also provides __diagassert13; keep rtld's minimal copy.
+LDFLAGS+=	-Wl,-z,muldefs
+.endif
 LDFLAGS+=	-Wl,--warn-shared-textrel
 LDFLAGS+=	-Wl,-Map=${.TARGET}.map
 

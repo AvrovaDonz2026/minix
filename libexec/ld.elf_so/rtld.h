@@ -399,6 +399,9 @@ int _rtld_sysctl(const char *, void *, size_t *);
 
 /* reloc.c */
 int _rtld_do_copy_relocations(const Obj_Entry *);
+#if defined(__minix) && defined(__riscv)
+int _rtld_refresh_copy_relocations(const Obj_Entry *);
+#endif
 int _rtld_relocate_objects(Obj_Entry *, bool);
 int _rtld_relocate_nonplt_objects(Obj_Entry *);
 int _rtld_relocate_plt_lazy(const Obj_Entry *);

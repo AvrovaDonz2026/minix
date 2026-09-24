@@ -121,9 +121,9 @@ native-binutils: .native/.configure_done
 	PATH=${TOOLDIR}/bin:$$PATH; export PATH; \
 		(cd .native && ${MAKE} configure-host)
 	PATH=${TOOLDIR}/bin:$$PATH; export PATH; \
-		(cd .native/bfd && ${MAKE} bfd.h bfdver.h)
+		(cd .native/bfd && ${MAKE_PROGRAM} bfd.h bfdver.h)
 	PATH=${TOOLDIR}/bin:$$PATH; export PATH; \
-		(cd .native/ld && ${MAKE} ldemul-list.h)
+		(cd .native/ld && ${MAKE_PROGRAM} ldemul-list.h)
 	@touch $@
 
 clean: clean.native

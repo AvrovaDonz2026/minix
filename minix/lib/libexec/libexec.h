@@ -32,6 +32,8 @@ struct exec_info {
     int allow_setuid;                   /* Allow set{u,g}id execution? */
     vir_bytes stack_size;		/* Desired stack size */
     vir_bytes load_offset;		/* Desired load offset */
+    int skip_clear;			/* Skip VM clear (main already loaded) */
+    int allow_pt_interp;		/* Allow PT_INTERP (VFS preload of main) */
     vir_bytes text_size;		/* Text segment size */
     vir_bytes data_size;		/* Data segment size */
     int seg_flags;			/* Current segment flags (PF_*) */

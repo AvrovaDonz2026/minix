@@ -77,14 +77,6 @@ static int elf_unpack(char *exec_hdr,
   }
 
   *hdr = (Elf_Ehdr *) exec_hdr;
-  printf("libexec: ehdr class=%u data=%u ver=%u phoff=%lu phentsize=%u phnum=%u entry=0x%lx\n",
-      (*hdr)->e_ident[EI_CLASS],
-      (*hdr)->e_ident[EI_DATA],
-      (*hdr)->e_ident[EI_VERSION],
-      (unsigned long)(*hdr)->e_phoff,
-      (*hdr)->e_phentsize,
-      (*hdr)->e_phnum,
-      (unsigned long)(*hdr)->e_entry);
   if(!elf_sane(*hdr)) {
   	return ENOEXEC;
   }
@@ -182,11 +174,12 @@ int libexec_load_elf(struct exec_info *execi)
 		return e;
 	 }
 
-	/* this function can load the dynamic linker, but that
-	 * shouldn't require an interpreter itself.
+	/* VFS may preload a PT_INTERP main program (allow_pt_interp)
+	 * before loading ld.so. The interpreter itself must not have
+	 * a nested interpreter.
 	 */
 	i = elf_has_interpreter(execi->hdr, execi->hdr_len, NULL, 0);
-	if(i > 0) {
+	if(i > 0 && !execi->allow_pt_interp) {
 	      printf("libexec: unexpected PT_INTERP\n");
 	      return ENOEXEC;
 	}
@@ -213,7 +206,8 @@ int libexec_load_elf(struct exec_info *execi)
 		}
 	}
 
-	if(execi->clearproc) execi->clearproc(execi);
+	if (!execi->skip_clear && execi->clearproc)
+		execi->clearproc(execi);
 
 	for (i = 0; i < hdr->e_phnum; i++) {
 		vir_bytes seg_membytes, page_offset, p_vaddr, vaddr;
@@ -358,8 +352,10 @@ int libexec_load_elf(struct exec_info *execi)
 
 	execi->seg_flags = PF_W;
 
-	/* Make it a stack */
-	if(execi->allocmem_ondemand(execi, stacklow, execi->stack_size) != OK) {
+	/* Make it a stack. A dynlink preload already mapped one. */
+	if (!execi->skip_clear &&
+	    execi->allocmem_ondemand(execi, stacklow,
+		execi->stack_size) != OK) {
 		if(execi->clearproc) execi->clearproc(execi);
 		return ENOMEM;
 	}

@@ -52,7 +52,14 @@ LDADD+=	-lpthread
 .else
 .if defined(__MINIX) && !defined(HOSTPROG) && ${MKLIBCXX:Uno} == "no"
 # riscv64 keeps MKLIBCXX=no; guest LLVM links against libstdc++.
-LDADD+=	-lstdc++
+# Pull libstdc++/libgcc into the main image (avoid libstdc++ COPY / dual
+# empty_rep).  Keep libc and friends dynamic (PT_INTERP).  Do not use
+# LDSTATIC.clang=-static (merges to -dynamic -static and bloats the link).
+# Stop the g++ driver from appending -lstdc++ after our static link.
+LDFLAGS+=	-nodefaultlibs
+LDFLAGS+=	-static-libgcc
+LDFLAGS+=	-Wl,-z,now
+LDADD+=	-Wl,-Bstatic -lstdc++ -lgcc -Wl,-Bdynamic -lc -lm
 .else
 LDADD+= -lc++ -lmthread
 .endif

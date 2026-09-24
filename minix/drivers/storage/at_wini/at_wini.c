@@ -369,10 +369,19 @@ static void w_init(int devind, u16_t vid, u16_t did)
   irq = pci_attr_r8(devind, PCI_ILR);
   base_dma = pci_attr_r32(devind, PCI_BAR_5) & PCI_BAR_IO_MASK;
 
+  /*
+   * Firmware/QEMU may leave PCI ILR unset (0).  Native-mode IRQ setup
+   * rejects IRQ 0; force IDE compatibility BARs and legacy IRQ routing.
+   */
+  if (irq == 0) {
+	interface &= ~(ATA_IF_NATIVE0 | ATA_IF_NATIVE1);
+	is_ide = 1;
+  }
+
   nhooks = 0;	/* we don't care about notify IDs, but they must be unique */
 
   /* Any native drives? Then register their native IRQ first. */
-  if (!is_ide || (interface & (ATA_IF_NATIVE0 | ATA_IF_NATIVE1))) {
+  if (is_ide && (interface & (ATA_IF_NATIVE0 | ATA_IF_NATIVE1))) {
 	native_hook = nhooks++;
 	if ((r = sys_irqsetpolicy(irq, 0, &native_hook)) != OK)
 		panic("couldn't set native IRQ policy %d: %d", irq, r);

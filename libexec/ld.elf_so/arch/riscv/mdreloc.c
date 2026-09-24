@@ -144,10 +144,11 @@ _rtld_relocate_nonplt_objects(Obj_Entry *obj)
 			if (def == NULL)
 				return -1;
 
-			Elf_Addr val = (Elf_Addr)defobj->relocbase + rela->r_addend;
+			Elf_Addr val = (Elf_Addr)defobj->relocbase + def->st_value +
+			    rela->r_addend;
 
 			*where = val;
-			rdbg(("ADDR %s in %s --> %p in %s",
+			rdbg(("ADDR) %s in %s --> %p in %s",
 			    obj->strtab + obj->symtab[r_symndx].st_name,
 			    obj->path, (void *)val, defobj->path));
 			break;
@@ -212,23 +213,40 @@ _rtld_relocate_nonplt_objects(Obj_Entry *obj)
 	return 0;
 }
 
+static int _rtld_relocate_plt_object(const Obj_Entry *, const Elf_Rela *, Elf_Addr *);
+
 int
 _rtld_relocate_plt_lazy(const Obj_Entry *obj)
 {
-	/* PLT fixups were done above in the GOT relocation. */
+	const Elf_Rela *rela;
+
+	/*
+	 * Bind every JUMP_SLOT eagerly here.  The file images only
+	 * carry the PLT base in each GOT slot, and the lazy resolver
+	 * path is not reliable for this port, so resolve up front.
+	 * Note: do not skip the main object even when its relocbase
+	 * is 0 (AT_EXECFD ET_EXEC mapped at link address) -- its GOT
+	 * slots still need resolution.
+	 */
+	for (rela = obj->pltrela; rela < obj->pltrelalim; rela++) {
+		assert(ELF_R_TYPE(rela->r_info) == R_TYPE(JMP_SLOT));
+		if (_rtld_relocate_plt_object(obj, rela, NULL) < 0)
+			return -1;
+	}
+
 	return 0;
 }
 
 static int
-_rtld_relocate_plt_object(const Obj_Entry *obj, const Elf_Rel *rel,
+_rtld_relocate_plt_object(const Obj_Entry *obj, const Elf_Rela *rela,
     Elf_Addr *tp)
 {
 	const Obj_Entry *defobj;
 	Elf_Addr new_value;
 
-        assert(ELF_R_TYPE(rel->r_info) == R_TYPE(JMP_SLOT));
+	assert(ELF_R_TYPE(rela->r_info) == R_TYPE(JMP_SLOT));
 
-	const Elf_Sym *def = _rtld_find_plt_symdef(ELF_R_SYM(rel->r_info),
+	const Elf_Sym *def = _rtld_find_plt_symdef(ELF_R_SYM(rela->r_info),
 	    obj, &defobj, tp != NULL);
 	if (__predict_false(def == NULL))
 		return -1;
@@ -236,15 +254,37 @@ _rtld_relocate_plt_object(const Obj_Entry *obj, const Elf_Rel *rel,
 		return -1;
 
 	if (ELF_ST_TYPE(def->st_info) == STT_GNU_IFUNC) {
-		if (tp == NULL)
-			return 0;
 		new_value = _rtld_resolve_ifunc(defobj, def);
+	} else if (__predict_false(ELF_ST_TYPE(def->st_info) == STT_OBJECT ||
+	    ELF_ST_TYPE(def->st_info) == STT_TLS)) {
+		/*
+		 * A JUMP_SLOT must land in a function.  Binding to
+		 * STT_OBJECT writes a data address into the GOT; the
+		 * RISC-V PLT then jalr's into .rodata (guest clang
+		 * SIGILL after rtld handoff).
+		 */
+		_rtld_error("%s: JUMP_SLOT for %s binds to %s %s in %s",
+		    obj->path,
+		    obj->strtab + obj->symtab[ELF_R_SYM(rela->r_info)].st_name,
+		    ELF_ST_TYPE(def->st_info) == STT_TLS ? "TLS" : "object",
+		    defobj->strtab + def->st_name, defobj->path);
+		return -1;
 	} else {
-		new_value = (Elf_Addr)(defobj->relocbase + def->st_value);
+		/* R_RISCV_JUMP_SLOT: S + A */
+		new_value = (Elf_Addr)(defobj->relocbase + def->st_value +
+		    rela->r_addend);
 	}
 	rdbg(("bind now/fixup in %s --> new=%p",
 	    defobj->strtab + def->st_name, (void *)new_value));
-	*(Elf_Addr *)(obj->relocbase + rel->r_offset) = new_value;
+#if defined(__minix)
+	if (obj->mainprog) {
+		xprintf("rtld: JUMP_SLOT %s -> %s+%lx in %s\n",
+		    obj->strtab + obj->symtab[ELF_R_SYM(rela->r_info)].st_name,
+		    defobj->strtab + def->st_name,
+		    (unsigned long)new_value, defobj->path);
+	}
+#endif
+	*(Elf_Addr *)(obj->relocbase + rela->r_offset) = new_value;
 
 	if (tp)
 		*tp = new_value;
@@ -254,12 +294,13 @@ _rtld_relocate_plt_object(const Obj_Entry *obj, const Elf_Rel *rel,
 void *
 _rtld_bind(const Obj_Entry *obj, Elf_Word reloff)
 {
-	const Elf_Rel *pltrel = (const Elf_Rel *)(obj->pltrel + reloff);
+	const Elf_Rela *pltrela = (const Elf_Rela *)
+	    ((const uint8_t *)obj->pltrela + reloff);
 	Elf_Addr new_value;
 	int err;
 
 	_rtld_shared_enter();
-	err = _rtld_relocate_plt_object(obj, pltrel, &new_value);
+	err = _rtld_relocate_plt_object(obj, pltrela, &new_value);
 	if (err)
 		_rtld_die();
 	_rtld_shared_exit();
@@ -271,8 +312,8 @@ int
 _rtld_relocate_plt_objects(const Obj_Entry *obj)
 {
 	
-	for (const Elf_Rel *rel = obj->pltrel; rel < obj->pltrellim; rel++) {
-		if (_rtld_relocate_plt_object(obj, rel, NULL) < 0)
+	for (const Elf_Rela *rela = obj->pltrela; rela < obj->pltrelalim; rela++) {
+		if (_rtld_relocate_plt_object(obj, rela, NULL) < 0)
 			return -1;
 	}
 
